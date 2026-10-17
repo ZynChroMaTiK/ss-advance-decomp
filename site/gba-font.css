@@ -1,0 +1,12 @@
+@font-face{font-family:'Serious Advance White';src:url('assets/fonts/serious-advance-white.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Serious Advance Green';src:url('assets/fonts/serious-advance-green.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
+/* Original 16px glyphs at integer scales; normal text retains the UI typeface. */
+.hero h1,.content-page>h1,.tool-heading h1,.wiki-heading h1,.section-heading h2,.wiki-entry-heading h2{font-family:'Serious Advance White',Segoe UI,sans-serif;font-weight:400;font-synthesis:none;letter-spacing:0;line-height:1.25;overflow-wrap:anywhere}
+.hero h1{font-size:48px}.content-page>h1{font-size:48px}.tool-heading h1,.wiki-heading h1,.section-heading h2,.wiki-entry-heading h2{font-size:32px}
+.hero h1 em,.content-page>h1 em{font-family:'Serious Advance Green',Segoe UI,sans-serif}
+.wiki-heading h1 span{font-family:Inter,Segoe UI,Arial,sans-serif;letter-spacing:-.03em}
+.wiki-entry-heading>div{min-width:0}
+.section-heading .eyebrow,.tool-heading .eyebrow,.wiki-heading .eyebrow{font-family:'Serious Advance Green',Segoe UI,sans-serif;font-size:16px;font-weight:400;font-synthesis:none;letter-spacing:0;line-height:1.5}
+@media(min-width:1450px){.hero h1{font-size:64px}}
+@media(max-width:900px){.hero h1,.content-page>h1{font-size:32px}.wiki-entry-heading{flex-wrap:wrap}.wiki-entry-heading>div{flex-basis:240px}}
+@media(max-width:650px){.wiki-entry-heading h2{font-size:32px}.wiki-entry-sprite{width:96px;height:96px}.tool-heading .eyebrow,.wiki-heading .eyebrow{font-family:Consolas,monospace;font-size:10px;letter-spacing:.1em}}

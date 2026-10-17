@@ -1,0 +1,32 @@
+{
+  "source": "Original Serious Sam Advance 16px font, exported ROM character map and palettes 03/04",
+  "validation": {
+    "white": {
+      "glyphs_pixel_exact": 126,
+      "character_mappings": 198,
+      "original_advances": "PASS",
+      "rgba_palette": "PASS"
+    },
+    "green": {
+      "glyphs_pixel_exact": 126,
+      "character_mappings": 198,
+      "original_advances": "PASS",
+      "rgba_palette": "PASS"
+    }
+  },
+  "files": {
+    "serious-advance-white.woff": {
+      "sha256": "14a467392989efcbbbc6bad89756a04c075d746775a36c9db27c736f41a43dba",
+      "bytes": 21232
+    },
+    "serious-advance-green.woff": {
+      "sha256": "eb4069d13bfa4658324f0140126f2ff5b2296558e98802ffb6eb6d4fdff73185",
+      "bytes": 21220
+    }
+  },
+  "inputs": {
+    "assets/fonts/gba-16px-metrics.json": "12bf460748a0f44609d318e0e1bc77da37441bb3560249b7999ed282637a74af",
+    "assets/theme/white.png": "af2a54ea9909d07d6e473834faf3bc3725a9d06cb2b15972cf7dc66731ed55a5",
+    "assets/theme/green.png": "d70c5d487a666841b2b4ea679444fc4091c9ba90068a7417106c7f7f1026387c"
+  }
+}

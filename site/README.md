@@ -15,6 +15,14 @@ exports, `scripts/wiki_entities.json` and original artwork. No ROM is needed.
 `node scripts/test_site_wiki.mjs` checks entries, filtering, artwork and links.
 Target: https://zynchromatik.github.io/ss-advance-decomp/
 
+Prominent page titles, section headings and NETRICSA entry titles use the original
+16px GBA font. The white/green color web fonts preserve the exported glyph pixels,
+palettes and spacing, with normal text selection, wrapping and accessible heading
+semantics. Body text, controls and small labels keep the readable UI font.
+Rebuild with `python scripts/build_site_fonts.py` after installing
+`scripts/site-font-requirements.txt`. Inputs and pixel-equivalence hashes are in
+`assets/fonts/`; the converter checks all 126 glyphs in both saved WOFF files.
+
 Serve this directory over HTTP. ES modules and JSON fetches do not work by opening
 index.html as a file. Example from the repository root:
 
