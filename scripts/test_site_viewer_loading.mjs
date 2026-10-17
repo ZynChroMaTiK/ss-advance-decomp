@@ -26,8 +26,11 @@ assert.equal(get('view-name').textContent,`01 / ${data.title}`);
 assert.equal(get('object-results').children.length,1,'room available without a pointer pick');
 const firstRoom=get('object-results').children[0];
 get('object-results').value=firstRoom.value;const before=camera.position.clone();
-let prevented=false;get('object-results').listeners.keydown[0]({code:'Enter',preventDefault(){prevented=true}});
-assert(prevented);assert(!before.equals(camera.position));assert.equal(canvas.focusCount,0,'inspection keeps keyboard focus in the object list');
+for(const event of [{key:'Enter',code:''},{key:'Enter',code:'NumpadEnter'},{code:'Enter'}]){
+ camera.position.copy(before);let prevented=false;
+ get('object-results').listeners.keydown[0]({...event,preventDefault(){prevented=true}});
+ assert(prevented);assert(!before.equals(camera.position));assert.equal(canvas.focusCount,0,'inspection keeps keyboard focus in the object list');
+}
 assert.equal(get('selection').children[0].textContent,firstRoom.textContent);
 get('object-search').value='no matching record';get('object-search').listeners.input[0]();
 assert.equal(get('object-results').children.length,0);assert(get('object-inspect').disabled);

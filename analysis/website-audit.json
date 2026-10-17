@@ -218,11 +218,29 @@
       "id": "QA-01",
       "priority": "P2",
       "area": "Browser and assistive-technology verification",
-      "status": "Unverified: no browser is connected to this session.",
+      "status": "Partially verified in desktop Opera via computer use. The browser window became unavailable; recovery timed out before responsive and post-fix keyboard checks.",
       "next_action": "Check current Chrome, Firefox and Safari at 320/390/768/1440px, 200% zoom, keyboard-only, a screen reader, touch and WebGL context loss. In particular check sbix font support, focus announcements, nested scroll regions and the taller map toolbar.",
       "note": "Source and logic checks are not screenshots, real touch tests, browser performance scores or an accessibility conformance certification."
     }
   ],
+  "browser_review": {
+    "date": "2026-10-17",
+    "published_baseline": "c106b9799f65cea4217383366fd2f0071ac18d62",
+    "browser": "Opera GX on Windows; version not inspected",
+    "observed": [
+      "Homepage hero, original bitmap headings and desktop navigation rendered.",
+      "Level 1 loaded in the embedded 2D atlas, without the duplicate level rail.",
+      "Switching to 3D loaded the actual scene with original textures and sprites and 570 object records.",
+      "Searching shotgun returned two records. Inspect and focus moved the camera to the selected original placement.",
+      "Search and native result selection showed visible focus outlines.",
+      "The desktop layout remained usable after one browser zoom increment. This is not the planned 200-percent or mobile-width validation."
+    ],
+    "findings_and_changes": [
+      "Enter and keypad Enter did not activate the selected record during automation. The handler now accepts semantic key=Enter as well as physical Enter/NumpadEnter codes. All three event variants pass the actual-viewer regression test; browser verification of the change remains pending.",
+      "Small monospace viewer captions were difficult to read. Viewer captions now use 12px UI text and wrap; small hero, inspector, artwork and level-select labels were enlarged. Post-change visual verification remains pending."
+    ],
+    "limits": "No screen-reader, physical touch, mobile viewport, 200-percent zoom, cross-browser or actual WebGL context-loss validation. Accessibility-tree capture was unavailable for the site. Recovery failed with: computer-use request timed out: get_window_state."
+  },
   "positive_findings": [
     "Original artwork and bitmap heading fonts retained; body copy uses a readable UI typeface.",
     "Lazy initialization keeps the 3D module out of the initial route and pauses rendering while inactive.",

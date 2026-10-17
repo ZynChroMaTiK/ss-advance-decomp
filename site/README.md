@@ -97,7 +97,9 @@ choose a result with the keyboard and press Enter or Inspect to focus it.
 In free flight, hold the on-screen direction buttons to move on touch devices;
 multiple fingers allow diagonal movement. Releasing or cancelling a press stops
 that direction. `test_site_explorer_controls.mjs` covers object records and input
-state, but real touch, screen-reader and browser visual QA remain unverified.
+state. Desktop Opera has been spot-checked for rendering, map switching, search
+and button-based inspection. Physical touch, screen-reader and responsive/cross-browser
+QA remain incomplete; see `analysis/website-audit.json` in the repository.
 
 Floor polygons come from cleaned convex BSP leaves. Walls use original mip0
 textures, offsets, peg flags, palette and decoded heights. Every sector includes

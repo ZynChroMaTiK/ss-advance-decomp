@@ -7,6 +7,8 @@
 summary:focus-visible,canvas:focus-visible,[tabindex="-1"]:focus-visible{outline:2px solid var(--lime);outline-offset:4px}
 .viewport canvas:focus-visible{outline-offset:-4px}
 .fine,.subtle,.tool-heading .fine,.inspector .fine,.feature-num,.tag{font-size:12px}
+.view-caption{font:12px/1.5 Segoe UI,Arial,sans-serif;flex-wrap:wrap;gap:6px 20px}
+.hero .eyebrow,.inspector .eyebrow,.art-caption span,.tool-actions>label{font-size:12px;letter-spacing:.08em}
 footer{font-size:11px}
 .view-options label{min-height:32px}
 .no-script{padding:24px;text-align:center;border-top:1px solid var(--border)}
