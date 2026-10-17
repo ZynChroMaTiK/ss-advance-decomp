@@ -6,6 +6,11 @@ import {revealReference} from '../site/reference.js';
 let count=0;
 for(let i=1;i<=16;i++){
  const d=JSON.parse(readFileSync(new URL(`../site/data/level-${String(i).padStart(2,'0')}.json`,import.meta.url)));
+ for(const open of [false,true]){
+  const triggers=filterObjects(objectRecords(d,open),'','triggers');
+  assert.equal(triggers.length,d.sectors.filter(s=>s.flags&256).length);
+  for(const r of triggers){const s=d.sectors.find(s=>'trigger:'+s.id===r.id);assert.equal(r.fields.Script,s.flags&255);assert(filterObjects(triggers,`sector ${s.id} script ${s.flags&255}`).includes(r));}
+ }
  for(const open of [false,true]){const records=objectRecords(d,open);count+=records.length;assert.equal(new Set(records.map(r=>r.id)).size,records.length);assert(records.every(r=>r.point.length===3&&r.point.every(Number.isFinite)));assert.equal(filterObjects(records,'','rooms').length,d.sectors.length);assert.equal(filterObjects(records,'','doors').length,d.movers.length);for(const m of d.markers)assert(records.some(r=>r.id==='marker:'+m.id));assert(filterObjects(records,'sector 0','rooms').length>0);assert.equal(filterObjects(records,'impossible-query-xyz').length,0);}
 }
 const buttons=['KeyW','KeyD','KeyE'].map(code=>({dataset:{flightKey:code},events:{},attrs:{},addEventListener(e,f){this.events[e]=f},setAttribute(k,v){this.attrs[k]=v},setPointerCapture(){}}));

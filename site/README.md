@@ -92,7 +92,7 @@ fingers zoom/pan. Free flight: drag to look; WASD moves, Q/E changes height,
 Shift speeds up, Escape returns to orbit. The canvas must have keyboard focus.
 Player start moves to the original start location. Select a wall, floor or sprite
 for its data. Secret buttons focus their original locations and link evidence.
-The object browser searches items, enemies, rooms, walls, doors and secrets;
+The object browser searches items, enemies, rooms, walls, doors, entry triggers and secrets;
 choose a result with the keyboard and press Enter or Inspect to focus it.
 In free flight, hold the on-screen direction buttons to move on touch devices;
 multiple fingers allow diagonal movement. Releasing or cancelling a press stops
@@ -106,7 +106,10 @@ textures, offsets, peg flags, palette and decoded heights. Every sector includes
 its floor; indoor ceilings are included and sky boundary planes are omitted. All surfaces
 render one-sided, with backface culling. Floors face upward and ceilings face into rooms. Walls, floors, ceilings, items,
 enemies, scripted placements and secret pins are visible by default; individual
-layers can be hidden. Hide ceilings for an unobstructed overhead view.
+layers can be hidden. Entry triggers are also visible by default as transparent green
+floor footprints with black original sector boundaries, without internal BSP seams.
+Select a footprint or search Entry triggers to inspect its sector and script ID.
+The overlay represents sector entry, not a simulated gameplay effect. Hide ceilings for an unobstructed overhead view.
 Open-door preview uses recovered ceiling-door height floor+224; lifts retain their
 initialized height. This is a static inspection tool with no collision or gameplay
 simulation. Sprites mark locations; co-located records are preserved and scripted

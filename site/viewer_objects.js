@@ -1,7 +1,11 @@
+export function triggerRecord(s) {
+  return {id:'trigger:'+s.id,kind:'triggers',label:`Entry trigger / sector ${s.id} / script ${s.flags&255}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Script:s.flags&255,Floor:s.initial_floor},note:'Entering this sector activates its original level script. The green footprint marks the sector area; scripts are not simulated in this viewer.'};
+}
 export function objectRecords(data, opened = false) {
   const records = data.markers.map(m => ({id:'marker:'+m.id, kind:m.group.includes('enemies')?'enemies':'items', label:`${m.id} / ${m.name}${m.origin==='script'?' / scripted':''}`, point:[m.x,m.y,m.initial_floor], fields:{ID:m.id,Sector:m.sector,Placement:m.origin,Group:m.group}, marker:m}));
   for (const s of data.sectors) records.push({id:'sector:'+s.id,kind:'rooms',label:`Room / sector ${s.id}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Floor:s.initial_floor,Ceiling:opened?s.open_ceiling:s.initial_ceiling,Flags:s.flags}});
   const seen = new Set();
+  for (const s of data.sectors) if(s.flags&256) records.push(triggerRecord(s));
   for (const f of data.walls[opened?'open':'initial']) {
     const id=`wall:${f.line}:${f.sector}:${f.layer}`;if(seen.has(id))continue;seen.add(id);
     const p=f.positions,average=k=>(p[k]+p[k+3]+p[k+6]+p[k+9])/4;
