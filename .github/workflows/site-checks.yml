@@ -17,5 +17,7 @@ jobs:
         run: node scripts/test_site.mjs
       - name: Verify unified routing and iframe bridge
         run: node scripts/test_site_routes.mjs
+      - name: Verify NETRICSA entries, search, links and artwork
+        run: node scripts/test_site_wiki.mjs
       - name: Verify resources below the Pages project prefix
         run: python3 scripts/test_site_http.py

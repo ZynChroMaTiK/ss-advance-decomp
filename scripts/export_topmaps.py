@@ -80,8 +80,8 @@ ITEMS={32:('Pistol','PI','weapons'),33:('Shotgun','SG','weapons'),34:('Tommygun'
  49:('50 health','H50','health'),50:('100 health (200 cap)','H100','health'),51:('Backpack','BP','items'),52:('Pistol bullets','PB','ammo'),
  53:('Shotgun cartridges','SC','ammo'),54:('U.M.T yellow cell','YC','ammo'),55:('Serious power','SP','items'),56:('Rockets','RK','ammo'),
  57:('Cannon balls','CB','ammo'),58:('Tommygun ammo','TA','ammo'),59:('Minigun ammo','MA','ammo'),60:('Timestrike blue cell','BC','ammo'),61:('Prion red cell','RC','ammo'),63:('Ankh / trigger pickup','X','exits')}
-ENEMIES={205:'Kamikaze',206:'Werebull',207:'Methug soldier',208:'Methug commander',209:'Hermit Crabuloid',210:'Bladder beast',
- 211:'Arachnoid',212:'Reptiloid',213:'Gunrilla',214:'Cyclops',215:'Sirian Sphinx',216:'Wolfiator'}
+ENEMIES={205:'Kamikaze',206:'Werebull',207:'Methug soldier',208:'Methug commander',209:'Cyclops',210:'Bladder beast',
+ 211:'Arachnoid',212:'Reptiloid',213:'Hermit Crabuloid',214:'Gunrilla',215:'Sirian Sphinx',216:'Wolfiator'}
 COLORS={'weapons':'#f2c94c','ammo':'#b5a2ff','health':'#6ce0b1','armor':'#68bdff','items':'#eeeeee','enemies':'#e77a80',
  'starts':'#4be3df','respawn':'#9fa9bc','exits':'#ffffff','doors':'#ffad5a','switches':'#57d5ec','secrets':'#ff7bd5','triggers':'#9ae1aa','unknown':'#eeeeee'}
 SOURCES={0:'https://tasvideos.org/10399S',1:'https://serioussam.fandom.com/wiki/Thompson_submachine_gun',

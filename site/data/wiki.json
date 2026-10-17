@@ -1,0 +1,3156 @@
+{
+  "version": 1,
+  "description": "Project-authored field guide with original NETRICSA artwork and recovered map evidence.",
+  "entries": [
+    {
+      "id": "field-guide",
+      "title": "Your portable field guide",
+      "category": "systems",
+      "summary": "The worlds, creatures and equipment of Serious Sam Advance, brought together in a growing NETRICSA-style reference.",
+      "sections": [
+        {
+          "title": "Start with a subject",
+          "text": "Search for a name, choose a category, or follow a related record. Every level links directly to its 2D atlas and 3D world view. Weapons and enemies list maps where placement records identify them."
+        },
+        {
+          "title": "Original intel, recovered behavior",
+          "text": "Weapon and enemy illustrations come from the original NETRICSA archive. Descriptions are short project summaries, with original lore kept separate from verified native behavior. Expand Sources & coverage for the underlying evidence."
+        }
+      ],
+      "related": [
+        "pc-controls",
+        "level-1",
+        "weapon-chainsaw"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/README.html"
+        }
+      ],
+      "image": "assets/netricsa/netricsa-22.png"
+    },
+    {
+      "id": "level-1",
+      "title": "Temple Of Herkat Upper",
+      "category": "levels",
+      "level": 0,
+      "summary": "Egypt campaign level 1. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 1",
+        "level 1"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          63
+        ],
+        [
+          "Placements",
+          31
+        ],
+        [
+          "Scripts",
+          5
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Methug Soldier (6), Beheaded Kamikaze (11), Sirian Werebull (2). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 6 sector movers and 0 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-methug-soldier",
+        "enemy-kamikaze",
+        "enemy-werebull",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-01.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-2",
+      "title": "Temple Of Herkat Lower",
+      "category": "levels",
+      "level": 1,
+      "summary": "Egypt campaign level 2. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 2",
+        "level 2"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          112
+        ],
+        [
+          "Placements",
+          91
+        ],
+        [
+          "Scripts",
+          12
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Methug Soldier (13), Aludran Arachnoid (3), Methug Commander (2), Beheaded Kamikaze (22), Cyclops (2), Hermit Crabuloid (12). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 15 sector movers and 1 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-methug-soldier",
+        "enemy-arachnoid",
+        "enemy-methug-commander",
+        "enemy-kamikaze",
+        "enemy-cyclops",
+        "enemy-hermit-crabuloid",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-02.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-3",
+      "title": "Amon Thule",
+      "category": "levels",
+      "level": 2,
+      "summary": "Egypt campaign level 3. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 3",
+        "level 3"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          85
+        ],
+        [
+          "Placements",
+          125
+        ],
+        [
+          "Scripts",
+          10
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Methug Commander (11), Cyclops (13), Beheaded Kamikaze (32), Methug Soldier (9), Sirian Werebull (2), Aludran Arachnoid (6). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 10 sector movers and 2 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-methug-commander",
+        "enemy-cyclops",
+        "enemy-kamikaze",
+        "enemy-methug-soldier",
+        "enemy-werebull",
+        "enemy-arachnoid",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-03.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-4",
+      "title": "Slave Compound",
+      "category": "levels",
+      "level": 3,
+      "summary": "Egypt campaign level 4. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 4",
+        "level 4"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          93
+        ],
+        [
+          "Placements",
+          147
+        ],
+        [
+          "Scripts",
+          11
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Aludran Arachnoid (3), Hermit Crabuloid (9), Cyclops (21), Methug Commander (8), Beheaded Kamikaze (48), Aludran Reptiloid (2), Sirian Werebull (2), Methug Soldier (8), Bladder Beast (3). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 11 sector movers and 3 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-arachnoid",
+        "enemy-hermit-crabuloid",
+        "enemy-cyclops",
+        "enemy-methug-commander",
+        "enemy-kamikaze",
+        "enemy-reptiloid",
+        "enemy-werebull",
+        "enemy-methug-soldier",
+        "enemy-bladder-beast",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-04.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-5",
+      "title": "Pyramid Entrance",
+      "category": "levels",
+      "level": 4,
+      "summary": "Egypt campaign level 5. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 5",
+        "level 5"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          109
+        ],
+        [
+          "Placements",
+          171
+        ],
+        [
+          "Scripts",
+          10
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Cyclops (16), Beheaded Kamikaze (61), Sirian Werebull (2), Methug Soldier (15), Methug Commander (12), Aludran Arachnoid (5), Hermit Crabuloid (8). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 16 sector movers and 0 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-cyclops",
+        "enemy-kamikaze",
+        "enemy-werebull",
+        "enemy-methug-soldier",
+        "enemy-methug-commander",
+        "enemy-arachnoid",
+        "enemy-hermit-crabuloid",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-05.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-6",
+      "title": "Tomb Of Ramses",
+      "category": "levels",
+      "level": 5,
+      "summary": "Egypt campaign level 6. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Egypt",
+        "map 6",
+        "level 6"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Egypt"
+        ],
+        [
+          "Sectors",
+          51
+        ],
+        [
+          "Placements",
+          165
+        ],
+        [
+          "Scripts",
+          13
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Sirian Werebull (2), Beheaded Kamikaze (81), Bladder Beast (2), Cyclops (35), Methug Soldier (11), Methug Commander (3), Aludran Arachnoid (5), Hermit Crabuloid (8), Sirian Sphinx (1). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 12 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-werebull",
+        "enemy-kamikaze",
+        "enemy-bladder-beast",
+        "enemy-cyclops",
+        "enemy-methug-soldier",
+        "enemy-methug-commander",
+        "enemy-arachnoid",
+        "enemy-hermit-crabuloid",
+        "enemy-sirian-sphinx",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-06.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-7",
+      "title": "The Forum Of Mars",
+      "category": "levels",
+      "level": 6,
+      "summary": "Rome campaign level 7. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 7",
+        "level 7"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          46
+        ],
+        [
+          "Placements",
+          138
+        ],
+        [
+          "Scripts",
+          10
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Beheaded Kamikaze (58), Aludran Arachnoid (8), Bladder Beast (22), Aludran Reptiloid (11), Sirian Werebull (13). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 9 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-kamikaze",
+        "enemy-arachnoid",
+        "enemy-bladder-beast",
+        "enemy-reptiloid",
+        "enemy-werebull",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-07.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-8",
+      "title": "Slave Quarters",
+      "category": "levels",
+      "level": 7,
+      "summary": "Rome campaign level 8. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 8",
+        "level 8"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          77
+        ],
+        [
+          "Placements",
+          137
+        ],
+        [
+          "Scripts",
+          15
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Aludran Arachnoid (16), Hermit Crabuloid (19), Gunrilla (24), Beheaded Kamikaze (37), Bladder Beast (6). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 11 sector movers and 2 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-arachnoid",
+        "enemy-hermit-crabuloid",
+        "enemy-gunrilla",
+        "enemy-kamikaze",
+        "enemy-bladder-beast",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-08.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-9",
+      "title": "Gladiator School",
+      "category": "levels",
+      "level": 8,
+      "summary": "Rome campaign level 9. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 9",
+        "level 9"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          33
+        ],
+        [
+          "Placements",
+          128
+        ],
+        [
+          "Scripts",
+          9
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Hermit Crabuloid (5), Gunrilla (24), Aludran Arachnoid (7), Sirian Werebull (5), Beheaded Kamikaze (52), Methug Commander (2), Methug Soldier (3), Bladder Beast (8). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 12 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-hermit-crabuloid",
+        "enemy-gunrilla",
+        "enemy-arachnoid",
+        "enemy-werebull",
+        "enemy-kamikaze",
+        "enemy-methug-commander",
+        "enemy-methug-soldier",
+        "enemy-bladder-beast",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-09.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-10",
+      "title": "Baths Of Diocletian",
+      "category": "levels",
+      "level": 9,
+      "summary": "Rome campaign level 10. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 10",
+        "level 10"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          30
+        ],
+        [
+          "Placements",
+          63
+        ],
+        [
+          "Scripts",
+          3
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Playable in the current native Windows prototype."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Aludran Arachnoid (9), Beheaded Kamikaze (22), Gunrilla (14), Aludran Reptiloid (5). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 2 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-arachnoid",
+        "enemy-kamikaze",
+        "enemy-gunrilla",
+        "enemy-reptiloid",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-10.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-11",
+      "title": "Praetorian Fort",
+      "category": "levels",
+      "level": 10,
+      "summary": "Rome campaign level 11. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 11",
+        "level 11"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          97
+        ],
+        [
+          "Placements",
+          120
+        ],
+        [
+          "Scripts",
+          7
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Decoded and available in the atlas and 3D viewer. Native campaign progression is still being validated; this map remains unavailable in the playable level selector."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Bladder Beast (13), Beheaded Kamikaze (23), Gunrilla (41), Cyclops (4), Aludran Arachnoid (14), Aludran Reptiloid (4). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 15 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-bladder-beast",
+        "enemy-kamikaze",
+        "enemy-gunrilla",
+        "enemy-cyclops",
+        "enemy-arachnoid",
+        "enemy-reptiloid",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-11.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-12",
+      "title": "Caesar'S Palace",
+      "category": "levels",
+      "level": 11,
+      "summary": "Rome campaign level 12. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Rome",
+        "map 12",
+        "level 12"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Rome"
+        ],
+        [
+          "Sectors",
+          77
+        ],
+        [
+          "Placements",
+          137
+        ],
+        [
+          "Scripts",
+          11
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Decoded and available in the atlas and 3D viewer. Native campaign progression is still being validated; this map remains unavailable in the playable level selector."
+        },
+        {
+          "title": "Encounter records",
+          "text": "Aludran Arachnoid (14), Beheaded Kamikaze (68), Hermit Crabuloid (5), Gunrilla (24), Bladder Beast (12), Wolfiator (1), Methug Soldier (2). Counts include scripted placement records, which need not be active together."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 11 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "enemy-arachnoid",
+        "enemy-kamikaze",
+        "enemy-hermit-crabuloid",
+        "enemy-gunrilla",
+        "enemy-bladder-beast",
+        "enemy-wolfiator",
+        "enemy-methug-soldier",
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-12.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-13",
+      "title": "Egypt Multiplayer 1",
+      "category": "levels",
+      "level": 12,
+      "summary": "Multiplayer arena 1. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Multiplayer",
+        "map 13",
+        "level 13"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Multiplayer"
+        ],
+        [
+          "Sectors",
+          22
+        ],
+        [
+          "Placements",
+          27
+        ],
+        [
+          "Scripts",
+          0
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+        },
+        {
+          "title": "Encounter records",
+          "text": "No enemy placement records are present in this export."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-13.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-14",
+      "title": "Egypt Multiplayer 2",
+      "category": "levels",
+      "level": 13,
+      "summary": "Multiplayer arena 2. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Multiplayer",
+        "map 14",
+        "level 14"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Multiplayer"
+        ],
+        [
+          "Sectors",
+          9
+        ],
+        [
+          "Placements",
+          21
+        ],
+        [
+          "Scripts",
+          0
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+        },
+        {
+          "title": "Encounter records",
+          "text": "No enemy placement records are present in this export."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-14.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-15",
+      "title": "Rome Multiplayer 1",
+      "category": "levels",
+      "level": 14,
+      "summary": "Multiplayer arena 3. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Multiplayer",
+        "map 15",
+        "level 15"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Multiplayer"
+        ],
+        [
+          "Sectors",
+          25
+        ],
+        [
+          "Placements",
+          19
+        ],
+        [
+          "Scripts",
+          0
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+        },
+        {
+          "title": "Encounter records",
+          "text": "No enemy placement records are present in this export."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-15.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "level-16",
+      "title": "Rome Multiplayer 2",
+      "category": "levels",
+      "level": 15,
+      "summary": "Multiplayer arena 4. Explore its recovered architecture, original placements and scripted encounters.",
+      "aliases": [
+        "Multiplayer",
+        "map 16",
+        "level 16"
+      ],
+      "facts": [
+        [
+          "Region",
+          "Multiplayer"
+        ],
+        [
+          "Sectors",
+          13
+        ],
+        [
+          "Placements",
+          21
+        ],
+        [
+          "Scripts",
+          0
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Native port availability",
+          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+        },
+        {
+          "title": "Encounter records",
+          "text": "No enemy placement records are present in this export."
+        },
+        {
+          "title": "Doors, switches and secrets",
+          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+        }
+      ],
+      "related": [
+        "doors-and-scripts",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Exported level data",
+          "href": "data/level-16.json"
+        },
+        {
+          "title": "Map recovery",
+          "href": "docs/map-assets.html"
+        }
+      ],
+      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+    },
+    {
+      "id": "weapon-chainsaw",
+      "title": "Chainsaw",
+      "category": "weapons",
+      "weapon_id": 1,
+      "pickup_names": [],
+      "aliases": [
+        "melee"
+      ],
+      "image": "assets/netricsa/netricsa-00.png",
+      "original_text_id": 84,
+      "summary": "Sam's close-range cutting tool. Hold fire to keep attacking without spending ammunition.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original NETRICSA entry describes a forestry tool repurposed for fighting monsters. Its short reach makes positioning essential."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Hold fire to keep cutting at close range without consuming ammunition. Its running and stopping sounds follow the actual attack state."
+        }
+      ],
+      "sources": [
+        {
+          "title": "weapon controller",
+          "href": "docs/weapon-controller.html"
+        },
+        {
+          "title": "weapon fixes",
+          "href": "docs/weapon-fixes.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "1"
+        ],
+        [
+          "Recorded levels",
+          0
+        ]
+      ],
+      "appearances": [],
+      "related": []
+    },
+    {
+      "id": "weapon-shotgun",
+      "title": "Double Barrel Coach Gun",
+      "category": "weapons",
+      "weapon_id": 3,
+      "pickup_names": [
+        "Shotgun"
+      ],
+      "aliases": [
+        "coach gun",
+        "double barrel",
+        "Shotgun"
+      ],
+      "image": "assets/netricsa/netricsa-02.png",
+      "original_text_id": 86,
+      "summary": "A slow-firing shotgun built for close encounters.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original briefing emphasizes the coach gun's short-range power. Its firing cycle leaves a pause between blasts."
+        },
+        {
+          "title": "In the PC port",
+          "text": "A blast checks a central hit and two offset hits. It fires both cartridges when available, with a separate firing animation when only one cartridge remains."
+        }
+      ],
+      "sources": [
+        {
+          "title": "weapon controller",
+          "href": "docs/weapon-controller.html"
+        },
+        {
+          "title": "weapon hit",
+          "href": "docs/weapon-hit.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "3"
+        ],
+        [
+          "Recorded levels",
+          2
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 0,
+          "title": "Temple Of Herkat Upper",
+          "count": 1
+        },
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-minigun",
+      "title": "Mini Gun",
+      "category": "weapons",
+      "weapon_id": 5,
+      "pickup_names": [
+        "Minigun"
+      ],
+      "aliases": [
+        "Mini Gun",
+        "Minigun"
+      ],
+      "image": "assets/netricsa/netricsa-04.png",
+      "original_text_id": 88,
+      "summary": "A rotary gun that trades ammunition for sustained firepower.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original tips call attention to its heavy ammunition use. It is introduced early in the Pyramid Entrance Maze."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Holding fire produces a continuous stream of immediate hits. The firing loop and the wind-down sound follow different stages of the weapon cycle."
+        }
+      ],
+      "sources": [
+        {
+          "title": "weapon controller",
+          "href": "docs/weapon-controller.html"
+        },
+        {
+          "title": "weapon fixes",
+          "href": "docs/weapon-fixes.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "5"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-rocket-launcher",
+      "title": "Rocket Launcher",
+      "category": "weapons",
+      "weapon_id": 6,
+      "pickup_names": [
+        "Rocket launcher"
+      ],
+      "aliases": [
+        "rockets",
+        "Rocket launcher"
+      ],
+      "image": "assets/netricsa/netricsa-05.png",
+      "original_text_id": 89,
+      "summary": "Launches explosive projectiles with area damage.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original description combines direct projectile damage with an explosion around the impact. Reloading separates each launch."
+        },
+        {
+          "title": "PC behavior",
+          "text": "Player rockets travel independently after launch. Their trajectory follows the launch aim, including vertical mouse aim, rather than continuing to move with later changes to the player's view."
+        }
+      ],
+      "sources": [
+        {
+          "title": "projectile controller",
+          "href": "docs/projectile-controller.html"
+        },
+        {
+          "title": "weapon fixes",
+          "href": "docs/weapon-fixes.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "6"
+        ],
+        [
+          "Recorded levels",
+          2
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 1
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-prion",
+      "title": "Rogue Prion Gun",
+      "category": "weapons",
+      "weapon_id": 7,
+      "pickup_names": [
+        "Prion gun"
+      ],
+      "aliases": [
+        "conversion",
+        "Rogue Prion",
+        "Prion gun"
+      ],
+      "image": "assets/netricsa/netricsa-06.png",
+      "original_text_id": 90,
+      "summary": "Turns eligible enemies against other enemies while their health drains away.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA describes the weapon as disrupting Mental's control over his troops. The recovered effect changes target selection and applies periodic health drain; it is not a freeze weapon."
+        },
+        {
+          "title": "PC behavior",
+          "text": "Shots leave along the sight line and continue independently. Converted living regular enemies receive the requested double-speed behavior and animation updates. Their projectiles and other actors retain their normal clocks."
+        }
+      ],
+      "sources": [
+        {
+          "title": "projectile conversion",
+          "href": "docs/projectile-conversion.html"
+        },
+        {
+          "title": "weapon fixes",
+          "href": "docs/weapon-fixes.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "7"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-cannon",
+      "title": "SBC Cannon",
+      "category": "weapons",
+      "weapon_id": 10,
+      "pickup_names": [
+        "Cannon"
+      ],
+      "aliases": [
+        "cannonball",
+        "SBC",
+        "Cannon"
+      ],
+      "image": "assets/netricsa/netricsa-09.png",
+      "original_text_id": 93,
+      "summary": "Fires a large cannonball that can bounce off walls and pass through enemies.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original NETRICSA entry highlights the cannonball's ricochets and ability to plow through a group."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Cannonballs can reflect from walls, penetrate targets and eventually explode. Hits retain credit for the player who fired the shot."
+        }
+      ],
+      "sources": [
+        {
+          "title": "projectile bounce",
+          "href": "docs/projectile-bounce.html"
+        },
+        {
+          "title": "projectile runtime",
+          "href": "docs/projectile-runtime.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "10"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 9,
+          "title": "Baths Of Diocletian",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-pistol",
+      "title": "Schofield Pistol",
+      "category": "weapons",
+      "weapon_id": 2,
+      "pickup_names": [
+        "Pistol"
+      ],
+      "aliases": [
+        "revolver",
+        "Pistol"
+      ],
+      "image": "assets/netricsa/netricsa-01.png",
+      "original_text_id": 85,
+      "summary": "A reliable revolver and the first firearm introduced in the campaign.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA presents the Schofield as Sam's dependable old-fashioned sidearm. A pistol pickup is available in the Upper Temple of Herkat."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Each shot hits immediately along the aim line. The pistol finishes its firing animation before returning to its ready pose."
+        }
+      ],
+      "sources": [
+        {
+          "title": "weapon controller",
+          "href": "docs/weapon-controller.html"
+        },
+        {
+          "title": "weapon hit",
+          "href": "docs/weapon-hit.html"
+        },
+        {
+          "title": "weapon selection",
+          "href": "docs/weapon-selection.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "2"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 0,
+          "title": "Temple Of Herkat Upper",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-tommygun",
+      "title": "Thompson Sub Machine Gun",
+      "category": "weapons",
+      "weapon_id": 4,
+      "pickup_names": [
+        "Tommygun"
+      ],
+      "aliases": [
+        "Tommy Gun",
+        "Thompson",
+        "machine gun",
+        "Tommygun"
+      ],
+      "image": "assets/netricsa/netricsa-03.png",
+      "original_text_id": 87,
+      "summary": "An automatic weapon for sustained fire against groups of enemies.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA describes the Thompson as a classic trench sweeper suited to nearby and medium-range threats."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Holding fire produces repeated immediate hits while ammunition remains. Its firing sound stops when the attack ends, including after switching weapons or pausing."
+        }
+      ],
+      "sources": [
+        {
+          "title": "weapon controller",
+          "href": "docs/weapon-controller.html"
+        },
+        {
+          "title": "weapon fixes",
+          "href": "docs/weapon-fixes.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "4"
+        ],
+        [
+          "Recorded levels",
+          2
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 1
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-time-strike",
+      "title": "Time Strike",
+      "category": "weapons",
+      "weapon_id": 9,
+      "pickup_names": [
+        "Timestrike"
+      ],
+      "aliases": [
+        "Time Strike",
+        "falling objects",
+        "Timestrike"
+      ],
+      "image": "assets/netricsa/netricsa-08.png",
+      "original_text_id": 92,
+      "summary": "Marks an enemy's position for a falling object from another time.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA's explanation involves scientists sending heavy everyday objects back to Sam's recorded target coordinates. The effect captures a position rather than following the target indefinitely."
+        },
+        {
+          "title": "PC behavior",
+          "text": "The falling effect lands, then explodes on its next update. The PC targeting policy requires an eligible living enemy; an invalid attempt completes the weapon gesture without spending ammunition. Tougher enemies can survive its original damage."
+        }
+      ],
+      "sources": [
+        {
+          "title": "special weapons",
+          "href": "docs/special-weapons.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "9"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "weapon-umt",
+      "title": "Uni-Directional Microwave Transmitter",
+      "category": "weapons",
+      "weapon_id": 8,
+      "pickup_names": [
+        "U.M.T"
+      ],
+      "aliases": [
+        "UMT",
+        "microwave transmitter",
+        "U.M.T"
+      ],
+      "image": "assets/netricsa/netricsa-07.png",
+      "original_text_id": 91,
+      "summary": "A special blast weapon with a palette flash and a cooldown between attacks.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original fiction describes a repurposed communications device that heats its targets. Its familiar pickup label is U.M.T."
+        },
+        {
+          "title": "In the PC port",
+          "text": "The attack uses the original sector-based targeting checks and deals heavy damage to eligible regular enemies. It has a cooldown and excludes players and both bosses."
+        }
+      ],
+      "sources": [
+        {
+          "title": "special weapons",
+          "href": "docs/special-weapons.html"
+        },
+        {
+          "title": "combat explosion",
+          "href": "docs/combat-explosion.html"
+        }
+      ],
+      "facts": [
+        [
+          "Weapon slot",
+          "8"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-arachnoid",
+      "title": "Aludran Arachnoid",
+      "category": "enemies",
+      "entity_type": 211,
+      "pickup_names": [
+        "Arachnoid"
+      ],
+      "aliases": [
+        "D3",
+        "Arachnoid"
+      ],
+      "image": "assets/netricsa/netricsa-16.png",
+      "original_text_id": 122,
+      "health": 100,
+      "summary": "A scorpion-like ranged enemy that can threaten Sam before he reaches it.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original dossier describes an armed, many-legged hybrid that prefers to open fire from a distance."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Can launch projectiles from a distance and hurt Sam on contact. Movement, attacks and death behavior are implemented natively."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy ranged",
+          "href": "docs/enemy-ranged.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "100"
+        ],
+        [
+          "Recorded levels",
+          11
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 3
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 6
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 3
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 5
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 5
+        },
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 8
+        },
+        {
+          "level": 7,
+          "title": "Slave Quarters",
+          "count": 16
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 7
+        },
+        {
+          "level": 9,
+          "title": "Baths Of Diocletian",
+          "count": 9
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 14
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 14
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-reptiloid",
+      "title": "Aludran Reptiloid",
+      "category": "enemies",
+      "entity_type": 212,
+      "pickup_names": [
+        "Reptiloid"
+      ],
+      "aliases": [
+        "D4",
+        "Reptiloid"
+      ],
+      "image": "assets/netricsa/netricsa-17.png",
+      "original_text_id": 123,
+      "health": 130,
+      "summary": "A tough projectile attacker often encountered as a distant sentry.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original briefing describes rapid acid-missile attacks and recommends heavy weapons against this durable enemy."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Its attack animation triggers a projectile launch. When sufficiently high above Sam, it uses a different aiming behavior rather than its ordinary approach."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy ranged",
+          "href": "docs/enemy-ranged.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "130"
+        ],
+        [
+          "Recorded levels",
+          4
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 2
+        },
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 11
+        },
+        {
+          "level": 9,
+          "title": "Baths Of Diocletian",
+          "count": 5
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 4
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-kamikaze",
+      "title": "Beheaded Kamikaze",
+      "category": "enemies",
+      "entity_type": 205,
+      "pickup_names": [
+        "Kamikaze"
+      ],
+      "aliases": [
+        "Beheaded Kamikazi",
+        "CD",
+        "Kamikaze"
+      ],
+      "image": "assets/netricsa/netricsa-10.png",
+      "original_text_id": 116,
+      "health": 30,
+      "summary": "An explosive pursuer that becomes dangerous when it closes the distance.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original intel describes a reanimated attacker carrying bombs. Its cry provides an audible warning of the approaching threat."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Runs toward its target and detonates at close range. Its explosion damages nearby actors; defeating it also contributes to its scripted encounter group."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy cd",
+          "href": "docs/enemy-cd.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "30"
+        ],
+        [
+          "Recorded levels",
+          12
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 0,
+          "title": "Temple Of Herkat Upper",
+          "count": 11
+        },
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 22
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 32
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 48
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 61
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 81
+        },
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 58
+        },
+        {
+          "level": 7,
+          "title": "Slave Quarters",
+          "count": 37
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 52
+        },
+        {
+          "level": 9,
+          "title": "Baths Of Diocletian",
+          "count": 22
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 23
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 68
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-bladder-beast",
+      "title": "Bladder Beast",
+      "category": "enemies",
+      "entity_type": 210,
+      "pickup_names": [
+        "Bladder beast"
+      ],
+      "aliases": [
+        "Bladderbeast",
+        "D2",
+        "Bladder beast"
+      ],
+      "image": "assets/netricsa/netricsa-15.png",
+      "original_text_id": 121,
+      "health": 80,
+      "summary": "A swollen Methug relative that threatens Sam with spit and close contact.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA attributes its unusual movement to inflatable body sacs and describes a corrosive ranged attack."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Moves toward a target and can attack both on contact and with a projectile."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy control",
+          "href": "docs/enemy-control.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "80"
+        ],
+        [
+          "Recorded levels",
+          7
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 3
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 2
+        },
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 22
+        },
+        {
+          "level": 7,
+          "title": "Slave Quarters",
+          "count": 6
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 8
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 13
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 12
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-cyclops",
+      "title": "Cyclops",
+      "category": "enemies",
+      "entity_type": 209,
+      "pickup_names": [
+        "Cyclops"
+      ],
+      "aliases": [
+        "D1",
+        "Cyclops"
+      ],
+      "image": "assets/netricsa/netricsa-14.png",
+      "original_text_id": 120,
+      "health": 100,
+      "summary": "A mutated cyclopean attacker with prominent club-like arms.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original intel emphasizes the danger of letting this fast-moving creature reach Sam."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Approaches its target, hurts Sam on contact and can fire a projectile. Its starting health is 100."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy control",
+          "href": "docs/enemy-control.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "100"
+        ],
+        [
+          "Recorded levels",
+          6
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 2
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 13
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 21
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 16
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 35
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 4
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-gunrilla",
+      "title": "Gunrilla",
+      "category": "enemies",
+      "entity_type": 214,
+      "pickup_names": [
+        "Gunrilla"
+      ],
+      "aliases": [
+        "D6",
+        "Gunrilla"
+      ],
+      "image": "assets/netricsa/netricsa-19.png",
+      "original_text_id": 125,
+      "health": 150,
+      "summary": "A heavily armed gorilla mutant with a large projectile weapon grafted onto its body.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original description portrays a slow, heavily armed opponent that is dangerous both at range and up close."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Fires cannonball projectiles and has a strong close-range attack. Its starting health is 150."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy ranged",
+          "href": "docs/enemy-ranged.html"
+        },
+        {
+          "title": "enemy control",
+          "href": "docs/enemy-control.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "150"
+        ],
+        [
+          "Recorded levels",
+          5
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 7,
+          "title": "Slave Quarters",
+          "count": 24
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 24
+        },
+        {
+          "level": 9,
+          "title": "Baths Of Diocletian",
+          "count": 14
+        },
+        {
+          "level": 10,
+          "title": "Praetorian Fort",
+          "count": 41
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 24
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-hermit-crabuloid",
+      "title": "Hermit Crabuloid",
+      "category": "enemies",
+      "entity_type": 213,
+      "pickup_names": [
+        "Hermit Crabuloid"
+      ],
+      "aliases": [
+        "Hermit Crab",
+        "D5",
+        "Hermit Crabuloid"
+      ],
+      "image": "assets/netricsa/netricsa-18.png",
+      "original_text_id": 124,
+      "health": 60,
+      "summary": "A shelled enemy that alternates between exposed movement and hiding.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA describes the shell as protection and directs attention to the vulnerable body revealed while the creature is active."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Burrows, hides and emerges again according to its distance from the target. It can also jump during a close approach."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy ranged",
+          "href": "docs/enemy-ranged.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "60"
+        ],
+        [
+          "Recorded levels",
+          7
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 12
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 9
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 8
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 8
+        },
+        {
+          "level": 7,
+          "title": "Slave Quarters",
+          "count": 19
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 5
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 5
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-methug-commander",
+      "title": "Methug Commander",
+      "category": "enemies",
+      "entity_type": 208,
+      "pickup_names": [
+        "Methug commander"
+      ],
+      "aliases": [
+        "D0",
+        "Methug commander"
+      ],
+      "image": "assets/netricsa/netricsa-13.png",
+      "original_text_id": 119,
+      "health": 40,
+      "summary": "A compact hovering Methug variant with a dangerous contact attack.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA describes a commander associated with other Methugs. Its eye and suspended body distinguish it from the soldier."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Attacks by contact. The recovered behavior contains no ranged attack, although the original NETRICSA description mentions a bolt fired from its eye."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy control",
+          "href": "docs/enemy-control.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "40"
+        ],
+        [
+          "Recorded levels",
+          6
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 2
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 11
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 8
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 12
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 3
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 2
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-methug-soldier",
+      "title": "Methug Soldier",
+      "category": "enemies",
+      "entity_type": 207,
+      "pickup_names": [
+        "Methug soldier"
+      ],
+      "aliases": [
+        "CF",
+        "Methug soldier"
+      ],
+      "image": "assets/netricsa/netricsa-12.png",
+      "original_text_id": 118,
+      "health": 50,
+      "summary": "A floating soldier with a ranged bolt attack and harmful close contact.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "The original intel describes its useless trailing legs and the bolt fired from its body. It is among the first enemies encountered in the campaign."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Bobs above the floor as it moves. It can hurt Sam on contact and attack with a projectile; attack and death animations run natively."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy control",
+          "href": "docs/enemy-control.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "50"
+        ],
+        [
+          "Recorded levels",
+          8
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 0,
+          "title": "Temple Of Herkat Upper",
+          "count": 6
+        },
+        {
+          "level": 1,
+          "title": "Temple Of Herkat Lower",
+          "count": 13
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 9
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 8
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 15
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 11
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 3
+        },
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 2
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-sirian-sphinx",
+      "title": "Sirian Sphinx",
+      "category": "enemies",
+      "entity_type": 215,
+      "pickup_names": [
+        "Sirian Sphinx"
+      ],
+      "aliases": [
+        "Syrian Sphinx",
+        "D7",
+        "Egypt boss",
+        "Sirian Sphinx"
+      ],
+      "image": "assets/netricsa/netricsa-20.png",
+      "original_text_id": 126,
+      "health": 3000,
+      "summary": "The Egyptian chapter's boss, combining projectile volleys with scripted reinforcements.",
+      "sections": [
+        {
+          "title": "Encounter",
+          "text": "The Sphinx has its own health gauge, battle music and scripted encounter. Its controller alternates attack cycles with reinforcement phases."
+        },
+        {
+          "title": "PC port coverage",
+          "text": "The sixth campaign level has a normal-input completion with earned inventory and native boss combat. Summoning phases also have separate controller and integration tests."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy boss",
+          "href": "docs/enemy-boss.html"
+        },
+        {
+          "title": "native game",
+          "href": "docs/native-game.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "3000"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-werebull",
+      "title": "Sirian Werebull",
+      "category": "enemies",
+      "entity_type": 206,
+      "pickup_names": [
+        "Werebull"
+      ],
+      "aliases": [
+        "Syrian Werebull",
+        "CE",
+        "Werebull"
+      ],
+      "image": "assets/netricsa/netricsa-11.png",
+      "original_text_id": 117,
+      "health": 100,
+      "summary": "A charging beast whose close-range contact can knock Sam back.",
+      "sections": [
+        {
+          "title": "In the field",
+          "text": "NETRICSA recommends dodging the charge and taking advantage of the time it needs to turn for another approach."
+        },
+        {
+          "title": "In the PC port",
+          "text": "Its close attack deals damage and pushes the target in the direction of impact. The charging sound warns of its approach."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy ranged",
+          "href": "docs/enemy-ranged.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "100"
+        ],
+        [
+          "Recorded levels",
+          7
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 0,
+          "title": "Temple Of Herkat Upper",
+          "count": 2
+        },
+        {
+          "level": 2,
+          "title": "Amon Thule",
+          "count": 2
+        },
+        {
+          "level": 3,
+          "title": "Slave Compound",
+          "count": 2
+        },
+        {
+          "level": 4,
+          "title": "Pyramid Entrance",
+          "count": 2
+        },
+        {
+          "level": 5,
+          "title": "Tomb Of Ramses",
+          "count": 2
+        },
+        {
+          "level": 6,
+          "title": "The Forum Of Mars",
+          "count": 13
+        },
+        {
+          "level": 8,
+          "title": "Gladiator School",
+          "count": 5
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "enemy-wolfiator",
+      "title": "Wolfiator",
+      "category": "enemies",
+      "entity_type": 216,
+      "pickup_names": [
+        "Wolfiator"
+      ],
+      "aliases": [
+        "D8",
+        "Rome boss",
+        "Wolfiator"
+      ],
+      "image": "assets/netricsa/netricsa-21.png",
+      "original_text_id": 127,
+      "health": 3000,
+      "summary": "An armored wolf-like boss commanding the final Roman encounter.",
+      "sections": [
+        {
+          "title": "Encounter",
+          "text": "The original intel describes a towering enemy with a plumed helmet and summoned minions. Its recovered controller combines five-shot volleys with alternating scripted reinforcement phases."
+        },
+        {
+          "title": "PC port coverage",
+          "text": "The boss controller and its native integration are implemented and tested. Natural progression through the final campaign level remains to be validated; those tests do not yet establish a complete playable final encounter."
+        }
+      ],
+      "sources": [
+        {
+          "title": "enemy boss",
+          "href": "docs/enemy-boss.html"
+        },
+        {
+          "title": "native game",
+          "href": "docs/native-game.html"
+        },
+        {
+          "title": "enemy activation",
+          "href": "docs/enemy-activation.html"
+        }
+      ],
+      "facts": [
+        [
+          "Initial health",
+          "3000"
+        ],
+        [
+          "Recorded levels",
+          1
+        ]
+      ],
+      "appearances": [
+        {
+          "level": 11,
+          "title": "Caesar'S Palace",
+          "count": 1
+        }
+      ],
+      "related": []
+    },
+    {
+      "id": "items-ammo",
+      "title": "Ammunition",
+      "category": "items",
+      "summary": "Keep the original weapon set supplied.",
+      "image": "atlas/icons/p0-r053.png",
+      "aliases": [
+        "Cannon balls",
+        "Minigun ammo",
+        "Prion red cell",
+        "Rockets",
+        "Shotgun cartridges",
+        "Timestrike blue cell",
+        "Tommygun ammo"
+      ],
+      "facts": [
+        [
+          "Recorded variants",
+          7
+        ],
+        [
+          "Placement records",
+          159
+        ]
+      ],
+      "sections": [
+        {
+          "title": "How they work",
+          "text": "Ammo records include bullets, shotgun cartridges, rockets, cannon balls and colored energy cells. In single player, pickup acceptance depends on owning the corresponding weapon and available capacity."
+        },
+        {
+          "title": "Atlas labels",
+          "text": "Cannon balls, Minigun ammo, Prion red cell, Rockets, Shotgun cartridges, Timestrike blue cell, Tommygun ammo."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "doors-and-scripts"
+      ],
+      "sources": [
+        {
+          "title": "Recovered behavior",
+          "href": "docs/pickups.html"
+        },
+        {
+          "title": "Atlas data",
+          "href": "data/catalog.json"
+        }
+      ]
+    },
+    {
+      "id": "items-exits",
+      "title": "Ankhs and trigger pickups",
+      "category": "items",
+      "summary": "Pickups can participate in level scripts.",
+      "image": "atlas/icons/p0-r063.png",
+      "aliases": [
+        "Level exit / ankh trigger"
+      ],
+      "facts": [
+        [
+          "Recorded variants",
+          1
+        ],
+        [
+          "Placement records",
+          11
+        ]
+      ],
+      "sections": [
+        {
+          "title": "How they work",
+          "text": "A pickup can carry a script trigger. The recovered handler may dispatch that trigger before deciding whether the inventory accepts the item. Consult the map’s script and exit records to understand its role."
+        },
+        {
+          "title": "Atlas labels",
+          "text": "Level exit / ankh trigger."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "doors-and-scripts"
+      ],
+      "sources": [
+        {
+          "title": "Recovered behavior",
+          "href": "docs/level-script.html"
+        },
+        {
+          "title": "Atlas data",
+          "href": "data/catalog.json"
+        }
+      ]
+    },
+    {
+      "id": "items-armor",
+      "title": "Armor and shields",
+      "category": "items",
+      "summary": "Protection pickups in several sizes.",
+      "image": "atlas/icons/p0-r045.png",
+      "aliases": [
+        "100 armor",
+        "25 armor",
+        "50 armor"
+      ],
+      "facts": [
+        [
+          "Recorded variants",
+          3
+        ],
+        [
+          "Placement records",
+          63
+        ]
+      ],
+      "sections": [
+        {
+          "title": "How they work",
+          "text": "The atlas identifies separate shield and armor families in 25-, 50- and 100-point variants. The recovered inventory helpers gate protection pickups at 100; damage resolves through the original ordered protection fields."
+        },
+        {
+          "title": "Atlas labels",
+          "text": "100 armor, 25 armor, 50 armor."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "doors-and-scripts"
+      ],
+      "sources": [
+        {
+          "title": "Recovered behavior",
+          "href": "docs/combat-damage.html"
+        },
+        {
+          "title": "Atlas data",
+          "href": "data/catalog.json"
+        }
+      ]
+    },
+    {
+      "id": "items-items",
+      "title": "Backpacks and power-ups",
+      "category": "items",
+      "summary": "Other inventory and power-up records.",
+      "image": "atlas/icons/p0-r051.png",
+      "aliases": [
+        "Backpack",
+        "Serious power"
+      ],
+      "facts": [
+        [
+          "Recorded variants",
+          2
+        ],
+        [
+          "Placement records",
+          24
+        ]
+      ],
+      "sections": [
+        {
+          "title": "How they work",
+          "text": "Backpacks and Serious power appear in the extracted placements. Item effects and eligibility follow the recovered pickup dispatch; the atlas separates these from health, protection and ammunition."
+        },
+        {
+          "title": "Atlas labels",
+          "text": "Backpack, Serious power."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "doors-and-scripts"
+      ],
+      "sources": [
+        {
+          "title": "Recovered behavior",
+          "href": "docs/pickups.html"
+        },
+        {
+          "title": "Atlas data",
+          "href": "data/catalog.json"
+        }
+      ]
+    },
+    {
+      "id": "items-health",
+      "title": "Health pickups",
+      "category": "items",
+      "summary": "Restore Sam’s health.",
+      "image": "atlas/icons/p0-r049.png",
+      "aliases": [
+        "100 health (200 cap)",
+        "25 health",
+        "50 health"
+      ],
+      "facts": [
+        [
+          "Recorded variants",
+          3
+        ],
+        [
+          "Placement records",
+          61
+        ]
+      ],
+      "sections": [
+        {
+          "title": "How they work",
+          "text": "The export records 25-, 50- and 100-point health pickups. Smaller pickups use a 100-health gate; the large health pickup supports the 200-health limit. Acceptance depends on the current inventory."
+        },
+        {
+          "title": "Atlas labels",
+          "text": "100 health (200 cap), 25 health, 50 health."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "doors-and-scripts"
+      ],
+      "sources": [
+        {
+          "title": "Recovered behavior",
+          "href": "docs/inventory.html"
+        },
+        {
+          "title": "Atlas data",
+          "href": "data/catalog.json"
+        }
+      ]
+    },
+    {
+      "id": "doors-and-scripts",
+      "title": "Doors, switches and encounters",
+      "category": "systems",
+      "summary": "The map can change as you move through it.",
+      "sections": [
+        {
+          "title": "A connected world",
+          "text": "Switches and trigger regions activate scripts. Scripts can request moving sectors, spawn groups of enemies and advance level progression. Defeating an encounter group can unlock a later scripted event."
+        },
+        {
+          "title": "Reading the atlas",
+          "text": "The atlas exposes doors, lifts, switches, trigger regions and script records. The 3D open-door preview shows a static alternate ceiling height; it does not play the script or move a lift."
+        }
+      ],
+      "related": [
+        "secrets-and-exploration",
+        "level-1"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/level-script.html"
+        }
+      ]
+    },
+    {
+      "id": "inventory-and-loadouts",
+      "title": "Inventory and loadouts",
+      "category": "systems",
+      "summary": "Weapons, ammunition and carried progress belong to the campaign.",
+      "sections": [
+        {
+          "title": "Starting a level",
+          "text": "Standalone and password starts use the original level-start weapons and ammunition. Advancing from an earlier level carries the earned inventory and score; restarting restores the level-entry state."
+        },
+        {
+          "title": "Picking things up",
+          "text": "Weapon pickups queue acquisition, while ammunition checks ownership and capacity. Health and protection pickups have their own eligibility and caps."
+        }
+      ],
+      "related": [
+        "items-health",
+        "items-armor",
+        "items-ammo",
+        "saving-and-passwords"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/weapon-loadout.html"
+        }
+      ]
+    },
+    {
+      "id": "saving-and-passwords",
+      "title": "Progress and passwords",
+      "category": "systems",
+      "summary": "Return to completed campaign levels from the native menu.",
+      "sections": [
+        {
+          "title": "Campaign progress",
+          "text": "The prototype saves beaten levels and language preferences in save.dat. Finishing a level unlocks its successor; the last two campaign maps remain unavailable until supported."
+        },
+        {
+          "title": "Original password starts",
+          "text": "The Password menu accepts the original case-insensitive codes and restores starting weapons, ammunition and difficulty for supported maps. Select Level also uses original starting loadouts."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "pc-controls"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/profile.html"
+        }
+      ]
+    },
+    {
+      "id": "secrets-and-exploration",
+      "title": "Reading the hidden world",
+      "category": "systems",
+      "summary": "The atlas exposes every decoded room, while secret identifications remain a work in progress.",
+      "sections": [
+        {
+          "title": "Documented locations",
+          "text": "Five secret locations are documented across the first five campaign maps. Their entries retain the existing guide evidence and recovered map details. This does not establish that every secret has been found."
+        },
+        {
+          "title": "Two views, one level",
+          "text": "Use 2D for labels and original sprite markers. Use 3D for room heights and spatial relationships. All surfaces render from both sides; hide ceilings for an unobstructed overhead view."
+        }
+      ],
+      "related": [
+        "level-1",
+        "level-2",
+        "level-3",
+        "level-4",
+        "level-5"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/map-assets.html"
+        }
+      ]
+    },
+    {
+      "id": "pc-controls",
+      "title": "Sam on PC",
+      "category": "systems",
+      "summary": "Keyboard and mouse controls, with deliberate additions to the handheld original.",
+      "sections": [
+        {
+          "title": "Movement and view",
+          "text": "WASD moves, the mouse looks, Space jumps, and H switches between first- and third-person views. Jump and the third-person toggle are PC additions. The camera checks nearby geometry."
+        },
+        {
+          "title": "Combat and interaction",
+          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Escape releases the mouse."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "field-guide"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/README.html"
+        }
+      ]
+    },
+    {
+      "id": "secret-1-s1",
+      "title": "Shotgun",
+      "category": "secrets",
+      "level": 0,
+      "summary": "Temple Of Herkat Upper / S1",
+      "facts": [
+        [
+          "Map",
+          1
+        ],
+        [
+          "Location",
+          "-2432, -128"
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Finding the location",
+          "text": "Hidden shotgun. Exact position matches the only shotgun in this ROM map; identified as secret in the TAS notes."
+        },
+        {
+          "title": "Evidence",
+          "text": "Guide identification + exact ROM pickup"
+        }
+      ],
+      "related": [
+        "level-1",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Secret coverage and source links",
+          "href": "atlas/sources-and-secret-coverage.json"
+        }
+      ],
+      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+    },
+    {
+      "id": "secret-2-s1",
+      "title": "Tommygun",
+      "category": "secrets",
+      "level": 1,
+      "summary": "Temple Of Herkat Lower / S1",
+      "facts": [
+        [
+          "Map",
+          2
+        ],
+        [
+          "Location",
+          "-2752, -448"
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Finding the location",
+          "text": "Hidden Tommygun. Exact position is the only Tommygun pickup in this ROM map; the weapon guide identifies this early pickup as a secret."
+        },
+        {
+          "title": "Evidence",
+          "text": "Guide identification + exact ROM pickup"
+        }
+      ],
+      "related": [
+        "level-2",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Secret coverage and source links",
+          "href": "atlas/sources-and-secret-coverage.json"
+        }
+      ],
+      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+    },
+    {
+      "id": "secret-3-s1",
+      "title": "Rocket launcher",
+      "category": "secrets",
+      "level": 2,
+      "summary": "Amon Thule / S1",
+      "facts": [
+        [
+          "Map",
+          3
+        ],
+        [
+          "Location",
+          "1536, 64"
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Finding the location",
+          "text": "Hidden rocket launcher. After the arena stairs, approach the central part of the right wall with flower decorations."
+        },
+        {
+          "title": "Evidence",
+          "text": "Guide identification + exact ROM pickup"
+        }
+      ],
+      "related": [
+        "level-3",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Secret coverage and source links",
+          "href": "atlas/sources-and-secret-coverage.json"
+        }
+      ],
+      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+    },
+    {
+      "id": "secret-4-s1",
+      "title": "100 health (200 cap)",
+      "category": "secrets",
+      "level": 3,
+      "summary": "Slave Compound / S1",
+      "facts": [
+        [
+          "Map",
+          4
+        ],
+        [
+          "Location",
+          "384, -3392"
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Finding the location",
+          "text": "Elevated health. Use switch B3 (S1 access); ROM script 7 unlocks and opens D9 beside the ledge. Return to collect the health. The guide describes the switch through an opening after the corridor stairs."
+        },
+        {
+          "title": "Evidence",
+          "text": "Guide identification + exact ROM pickup"
+        }
+      ],
+      "related": [
+        "level-4",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Secret coverage and source links",
+          "href": "atlas/sources-and-secret-coverage.json"
+        }
+      ],
+      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+    },
+    {
+      "id": "secret-5-s1",
+      "title": "Hidden armor room",
+      "category": "secrets",
+      "level": 4,
+      "summary": "Pyramid Entrance / S1",
+      "facts": [
+        [
+          "Map",
+          5
+        ],
+        [
+          "Location",
+          "-2368, 1152"
+        ]
+      ],
+      "sections": [
+        {
+          "title": "Finding the location",
+          "text": "Enter the marked S1 access area on the right-hand route. Script 8 opens D16 and spawns an Arachnoid inside. The reward is 25 armor in this ROM; the guide calls it Medium Armor."
+        },
+        {
+          "title": "Evidence",
+          "text": "Guide description corroborated by room, item, guardian and opening script"
+        }
+      ],
+      "related": [
+        "level-5",
+        "secrets-and-exploration"
+      ],
+      "sources": [
+        {
+          "title": "Secret coverage and source links",
+          "href": "atlas/sources-and-secret-coverage.json"
+        }
+      ],
+      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+    }
+  ]
+}

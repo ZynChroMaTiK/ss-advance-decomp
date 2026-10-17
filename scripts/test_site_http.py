@@ -14,6 +14,8 @@ with http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler) as server:
         paths += [e['path'] for e in json.loads((SITE/'data/catalog.json').read_text())]
         paths += [str(p.relative_to(SITE)) for p in (SITE/'assets/textures').rglob('*.png')]
         paths += [str(p.relative_to(SITE)) for p in (SITE/'atlas/icons').glob('*.png')]
+        paths += ['wiki.js','wiki.css','data/wiki.json']
+        paths += [str(p.relative_to(SITE)) for p in (SITE/'assets/netricsa').glob('*.png')]
         for path in paths:
             with urllib.request.urlopen(f'http://127.0.0.1:{server.server_port}/ss-advance-decomp/'+path) as response:
                 assert response.status==200

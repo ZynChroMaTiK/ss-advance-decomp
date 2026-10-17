@@ -1,0 +1,94 @@
+{
+  "netricsa-00.png": {
+    "source": "netricsa/netricsa-00.png",
+    "sha256": "7851337246bac9c70bfde823c54599d6f8cdcdca2280b119681c094a2b5a7640"
+  },
+  "netricsa-01.png": {
+    "source": "netricsa/netricsa-01.png",
+    "sha256": "422ba0755520b3ee9c210e7c5d4fc59df5e270dabbbedc1c7769527625802ceb"
+  },
+  "netricsa-02.png": {
+    "source": "netricsa/netricsa-02.png",
+    "sha256": "61fd0193cbade66771525c805e7f597a077585b13115746651a1f555d3b8b43b"
+  },
+  "netricsa-03.png": {
+    "source": "netricsa/netricsa-03.png",
+    "sha256": "8d1c6ddfd3c40b6f39694a69e49702b4e1812defffdefc6263debab9a2a57dd4"
+  },
+  "netricsa-04.png": {
+    "source": "netricsa/netricsa-04.png",
+    "sha256": "18ec5090bfc346dcb90d7852c3edea228310c9cc6657f8e33de62733c1639921"
+  },
+  "netricsa-05.png": {
+    "source": "netricsa/netricsa-05.png",
+    "sha256": "c1f7bd95dceeded52cdf16c8c94401738bc5af179eca045f272620eef51bd5d2"
+  },
+  "netricsa-06.png": {
+    "source": "netricsa/netricsa-06.png",
+    "sha256": "cb0a1fbe8d80dd963c82e7cc4a8e0942feb7104a2a1a654b9a371617115330f4"
+  },
+  "netricsa-07.png": {
+    "source": "netricsa/netricsa-07.png",
+    "sha256": "a45342f0574e2591b921ccf30514c7bee2c32d63adc193aefec68b82870b60f6"
+  },
+  "netricsa-08.png": {
+    "source": "netricsa/netricsa-08.png",
+    "sha256": "5dbf50f082a1ca440ab37996c36b661bd18ecc70eadfd01d04c72260b004505d"
+  },
+  "netricsa-09.png": {
+    "source": "netricsa/netricsa-09.png",
+    "sha256": "4ae4fe5ad86c76d51997f91db8ea4fefb01a187c78aa972f1410a0fac588853b"
+  },
+  "netricsa-10.png": {
+    "source": "netricsa/netricsa-10.png",
+    "sha256": "427cbbbf07431f9cb011d449b0452aebb0b3746cde06bcf484fe25c00822fa94"
+  },
+  "netricsa-11.png": {
+    "source": "netricsa/netricsa-11.png",
+    "sha256": "7d3c33507843a1c17a602c310016d06daf4a373ad06a4c23c925e48c63a31c99"
+  },
+  "netricsa-12.png": {
+    "source": "netricsa/netricsa-12.png",
+    "sha256": "9e93ff46e962194ff6a325d5f1e96396edc9e5059150c068f697f6521a07cd75"
+  },
+  "netricsa-13.png": {
+    "source": "netricsa/netricsa-13.png",
+    "sha256": "936d563954ce0eb22afd4cd0653343a1886e4831c984091a5d565761822d656e"
+  },
+  "netricsa-14.png": {
+    "source": "netricsa/netricsa-14.png",
+    "sha256": "b6f99530844e172840527a010aaafd13063097c12c420e1e447e89b9d182f294"
+  },
+  "netricsa-15.png": {
+    "source": "netricsa/netricsa-15.png",
+    "sha256": "3876b69474333cda7ff78f2302b8a38c40c832bd1bc906d6d62bb325241c0e1b"
+  },
+  "netricsa-16.png": {
+    "source": "netricsa/netricsa-16.png",
+    "sha256": "643e036d40d175d124fff16f4ffd1397e43ccec8a7a6d7aecda49d685060abe5"
+  },
+  "netricsa-17.png": {
+    "source": "netricsa/netricsa-17.png",
+    "sha256": "0de151a2a929bb4858c47317cdc1ebac9928db96898493b4e6934b523040b489"
+  },
+  "netricsa-18.png": {
+    "source": "netricsa/netricsa-18.png",
+    "sha256": "3f54e39fb0fdf0f9f765a5225197636f07afda86adbca1339a53e7ef40fb2c61"
+  },
+  "netricsa-19.png": {
+    "source": "netricsa/netricsa-19.png",
+    "sha256": "ee88c26ebec417bcad5965aaedf00574782297f7444ac4f43c48563289b70cde"
+  },
+  "netricsa-20.png": {
+    "source": "netricsa/netricsa-20.png",
+    "sha256": "dc056dce9059d8bfca7316bea856867729b4813fbb4d1ff10e20726d43d55e6f"
+  },
+  "netricsa-21.png": {
+    "source": "netricsa/netricsa-21.png",
+    "sha256": "400951a721e1460cf853339e9807f186a8d5cb868850f3c353c1fa40e4a777c8"
+  },
+  "netricsa-22.png": {
+    "source": "netricsa/netricsa-22.png",
+    "sha256": "1b2132a84670ced507fee5cbc02dd1561d46c0f19127da40ba24f945b40a9c5b"
+  }
+}

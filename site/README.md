@@ -1,9 +1,18 @@
 # Serious Sam Advance project website
 
-A buildless, static frontend with PC Port, Features & Roadmap, Levels, and
-Build & Source sections. Levels combines the 2D atlas and 3D world viewer with
+A buildless, static frontend with PC Port, Features & Roadmap, Levels, NETRICSA,
+and Build & Source sections. Levels combines the 2D atlas and 3D world viewer with
 one selection and shareable `#levels/1/2d` or `#levels/1/3d` URLs. Legacy
 `#atlas/1` and `#explorer/1` URLs redirect to the corresponding view.
+
+NETRICSA is a searchable field guide with 54 entries: 16 levels, 10 weapons,
+12 enemies, 5 item families, 6 game-system guides and 5 documented secrets.
+Entries have shareable URLs such as `#wiki/weapon-pistol`. Original NETRICSA
+illustrations accompany project-authored summaries; source and coverage links
+distinguish original intel from recovered behavior and PC additions.
+`python scripts/build_wiki.py` regenerates the data from the committed map
+exports, `scripts/wiki_entities.json` and original artwork. No ROM is needed.
+`node scripts/test_site_wiki.mjs` checks entries, filtering, artwork and links.
 Target: https://zynchromatik.github.io/ss-advance-decomp/
 
 Serve this directory over HTTP. ES modules and JSON fetches do not work by opening

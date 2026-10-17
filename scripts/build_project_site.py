@@ -67,6 +67,8 @@ def main():
     for path in [ROOT/'README.md',*sorted((ROOT/'analysis').glob('*.md'))]:
         (SITE/'docs'/f'{path.stem}.html').write_text(document(path),encoding='utf8')
         shutil.copy2(path,SITE/'docs'/path.name)
+    from build_wiki import main as build_wiki
+    build_wiki()
     (SITE/'.nojekyll').touch()
     print('Site assembled:',len(list(SITE.rglob('*'))),'paths')
 

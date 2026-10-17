@@ -1,6 +1,7 @@
-export function createApp(catalog, loadViewer = () => import('./viewer3d.js').then(m => m.createViewer())) {
+export function createApp(catalog, loadViewer = () => import('./viewer3d.js').then(m => m.createViewer()), loadWiki = () => import('./wiki.js').then(m => m.createWiki())) {
   const $ = id => document.getElementById(id);
   let level = 0, route = 'project', mode = '2d', viewer, viewerPromise, atlasReady = false, revision = 0;
+  let wikiPromise;
   const levelUrl = () => `#levels/${level + 1}/${mode}`;
   for (const select of document.querySelectorAll('.level-select')) {
     for (const entry of catalog) {
@@ -18,9 +19,9 @@ export function createApp(catalog, loadViewer = () => import('./viewer3d.js').th
     const ticket = ++revision;
     const parts = location.hash.slice(1).split('/');
     const legacy = ['atlas', 'explorer'].includes(parts[0]);
-    route = legacy ? 'levels' : ['project', 'features', 'levels', 'development'].includes(parts[0]) ? parts[0] : 'project';
+    route = legacy ? 'levels' : ['project', 'features', 'levels', 'wiki', 'development'].includes(parts[0]) ? parts[0] : 'project';
     const n = Number(parts[1]);
-    if (Number.isInteger(n) && n >= 1 && n <= catalog.length) level = n - 1;
+    if (route === 'levels' && Number.isInteger(n) && n >= 1 && n <= catalog.length) level = n - 1;
     if (legacy) mode = parts[0] === 'atlas' ? '2d' : '3d';
     else if (['2d', '3d'].includes(parts[2])) mode = parts[2];
     if (route === 'levels') history.replaceState(null, '', levelUrl());
@@ -35,13 +36,25 @@ export function createApp(catalog, loadViewer = () => import('./viewer3d.js').th
     $('atlas-panel').hidden = mode !== '2d';
     $('explorer-panel').hidden = mode !== '3d';
     $('level-status').textContent = level < 10 ? 'Campaign · supported by the native prototype' : level < 12 ? 'Campaign · native progression still in development' : 'Multiplayer arena · exploration available; multiplayer integration remains unfinished';
-    document.title = `${{project:'Native PC Port', features:'Features & Roadmap', levels:'Level Browser', development:'Build & Development'}[route]} — Serious Sam Advance`;
+    document.title = `${{project:'Native PC Port', features:'Features & Roadmap', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Build & Development'}[route]} — Serious Sam Advance`;
     if (route === 'levels' && mode === '2d') {
       if (!atlasReady) { $('atlas-frame').src = `atlas/index.html#level-${level + 1}`; atlasReady = true; }
       else $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin);
     }
     const active3d = route === 'levels' && mode === '3d';
     viewer?.setActive(active3d);
+    if (route === 'wiki') {
+      try {
+        wikiPromise ??= loadWiki();
+        const wiki = await wikiPromise;
+        if (ticket !== revision) return;
+        wiki.open(parts[1] || 'field-guide');
+      } catch (error) {
+        wikiPromise = null;
+        if (ticket !== revision) return;
+        $('wiki-article').textContent = `The field guide could not load: ${error.message}. Reload the page to retry.`;
+      }
+    }
     if (active3d) {
       try {
         viewerPromise ??= loadViewer();

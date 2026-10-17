@@ -31,12 +31,12 @@ def main():
             checks+=1
         for script in p.scripts:context.eval('new Function('+json.dumps(script)+')');checks+=1
     page=Page();page.feed((SITE/'index.html').read_text())
-    for filename in ['app.js','viewer3d.js','geometry.js']:
+    for filename in ['app.js','viewer3d.js','geometry.js','wiki.js']:
         source=(SITE/filename).read_text();plain=re.sub(r'^import .*?;\s*','',source,flags=re.M);plain=plain.replace('export function ','function ')
         context.eval('new Function('+json.dumps('return (async()=>{'+plain+'})')+')')
         for dom_id in re.findall(r"\$\('([^']+)'\)",source):assert dom_id in page.ids,dom_id
         for ref in re.findall(r"from '([^']+)'",source):assert (SITE/ref).is_file(),ref
-    for css in [SITE/'styles.css']:
+    for css in [SITE/'styles.css',SITE/'wiki.css']:
         rules=tinycss2.parse_stylesheet(css.read_text(),skip_comments=True,skip_whitespace=True)
         assert not [r for r in rules if r.type=='error']
     context.eval((SITE/'geometry.js').read_text().replace('export function ','function '))
@@ -65,7 +65,7 @@ def main():
         for p in sorted(SITE.rglob('*')):
             if p.is_file():z.write(p,p.relative_to(ROOT).as_posix())
         z.write(ROOT/'.github/workflows/pages.yml','.github/workflows/pages.yml')
-        for name in ['build_project_site.py','export_site_levels.py','fetch_site_vendor.py','validate_project_site.py','test_site.mjs','test_site_routes.mjs','test_site_http.py']:z.write(ROOT/'scripts'/name,'scripts/'+name)
+        for name in ['build_project_site.py','build_wiki.py','wiki_entities.json','export_site_levels.py','fetch_site_vendor.py','validate_project_site.py','test_site.mjs','test_site_routes.mjs','test_site_wiki.mjs','test_site_http.py']:z.write(ROOT/'scripts'/name,'scripts/'+name)
         assert z.testzip() is None
     result['archive_sha256']=hashlib.sha256(archive.read_bytes()).hexdigest();result['archive_bytes']=archive.stat().st_size
     (ROOT/'build/exports/ssa-project-site-validation.json').write_text(json.dumps(result,indent=2)+'\n')

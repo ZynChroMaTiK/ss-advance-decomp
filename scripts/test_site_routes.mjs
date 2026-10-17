@@ -8,18 +8,19 @@ class Element {
  toggleAttribute(k,v){if(v)this.attrs[k]='';else delete this.attrs[k]}
  addEventListener(k,f){this.listeners[k]=f}
 }
-const pages=['project','features','levels','development'].map(id=>new Element(id));
+const pages=['project','features','levels','development','wiki'].map(id=>new Element(id));
 const links=pages.map(p=>{const e=new Element();e.dataset.route=p.id;return e});
 const selects=[new Element()], modes=['2d','3d'].map(mode=>{const e=new Element();e.dataset.mode=mode;return e});
 const elements=new Map(pages.map(p=>[p.id,p]));
-for(const id of ['atlas-frame','atlas-panel','explorer-panel','view-message','level-status'])elements.set(id,new Element(id));
+for(const id of ['atlas-frame','atlas-panel','explorer-panel','view-message','level-status','wiki-article'])elements.set(id,new Element(id));
 let hash='#project';globalThis.location={get hash(){return hash},set hash(v){hash=v.startsWith('#')?v:'#'+v},origin:'https://example.test'};
 globalThis.history={replaceState:(_a,_b,path)=>location.hash=path};
 globalThis.document={getElementById:id=>elements.get(id),createElement:()=>new Element(),querySelectorAll:s=>({'.page':pages,'[data-route]':links,'.level-select':selects,'[data-mode]':modes}[s])};
 const events={};globalThis.window={addEventListener:(name,fn)=>events[name]=fn};
 const catalog=JSON.parse(readFileSync(new URL('../site/data/catalog.json',import.meta.url)));
 let loads=[],active=false,resolveViewer;const viewer={setActive:v=>active=v,load:async(n,e)=>loads.push([n,e.level])};
-const app=createApp(catalog,()=>new Promise(resolve=>resolveViewer=resolve));
+let resolveWiki,openedWiki=[];
+const app=createApp(catalog,()=>new Promise(resolve=>resolveViewer=resolve),()=>new Promise(resolve=>resolveWiki=resolve));
 assert.equal(selects[0].children.length,16);assert.equal(pages[0].hidden,false);
 location.hash='#atlas/16';await app.render();assert.equal(location.hash,'#levels/16/2d');assert.equal(elements.get('atlas-frame').src,'atlas/index.html#level-16');assert.match(elements.get('level-status').textContent,/Multiplayer/);
 selects[0].value='2';selects[0].onchange();await app.render();assert.equal(location.hash,'#levels/3/2d');
@@ -37,4 +38,7 @@ modes[0].onclick();await app.render();assert.equal(active,false);assert.equal(lo
 location.hash='#levels/999/3d';await app.render();assert.equal(selects[0].value,10);assert.equal(location.hash,'#levels/11/3d');
 location.hash='#development';await app.render();assert.equal(pages[3].hidden,false);assert.equal(active,false);
 assert.equal(document.title,'Build & Development — Serious Sam Advance');
+location.hash='#wiki/weapon-pistol';const pendingWiki=app.render();location.hash='#project';await app.render();resolveWiki({open:id=>openedWiki.push(id)});await pendingWiki;assert.equal(openedWiki.length,0);
+location.hash='#wiki/weapon-pistol';await app.render();assert.equal(pages[4].hidden,false);assert.equal(pages[0].hidden,true);assert.equal(openedWiki.at(-1),'weapon-pistol');assert.equal(active,false);
+location.hash='#wiki';await app.render();assert.equal(openedWiki.at(-1),'field-guide');assert.equal(links[4].attrs['aria-current'],'page');
 console.log(JSON.stringify({status:'PASS',level_options:16,checks:'unified modes, legacy links, shared selection, stale async activation, iframe synchronization, origin/source/range guards'}));

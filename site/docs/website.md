@@ -122,3 +122,30 @@ unified routing, legacy links, selection synchronization and async navigation.
 Pages continues to upload only `site/`. Separate workflows compile the Windows
 source without a ROM and validate site geometry, routing and HTTP resources.
 Browser/WebGL visual QA remains unavailable because no browser is connected.
+
+## NETRICSA field guide (2026-10-17)
+
+Added a searchable website wiki at #wiki with 54 entries: 16 levels, 10 weapons,
+12 enemies, five item families, six system guides and five documented secrets.
+Original NETRICSA illustrations accompany project-authored summaries. Entries
+separate original intel from native behavior, link their sources and expose
+level-browser links, related records and map/script placement counts.
+
+scripts/build_wiki.py rebuilds the guide from committed exported maps,
+scripts/wiki_entities.json and committed artwork, without requiring the ROM.
+The main site builder invokes it. Tests render every entry through the actual
+wiki UI module and check searches, aliases, category filters, reset, unknown
+entries, deep links, artwork hashes and source/related links. Router tests cover
+lazy initialization and stale navigation into or away from NETRICSA.
+
+Original English dossiers and portraits established three corrected atlas names:
+D1/209 is Cyclops, D5/213 is Hermit Crabuloid, and D6/214 is Gunrilla. Corrected
+the exporter, 2D/3D map data, embedded atlas and downloadable ZIP. No sheet
+geometry or visible SVG labels changed, so PNG regeneration was unnecessary.
+All 16 maps retain their legend-free sheets and all default-visible, double-sided
+3D layers. The guide identifies all ten original weapons, including Chainsaw1.
+
+The website wiki is distinct from the unfinished original in-game NETRICSA UI.
+Browser visual QA remains unavailable: the connected-surface inventory has no
+browsers. Local module, HTML/CSS, data, geometry and Pages-prefix HTTP checks
+remain the verification path. The HTTP check now covers 343 resources.
