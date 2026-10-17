@@ -107,8 +107,10 @@ its floor; indoor ceilings are included and sky boundary planes are omitted. All
 render one-sided, with backface culling. Floors face upward and ceilings face into rooms. Walls, floors, ceilings, items,
 enemies, scripted placements and secret pins are visible by default; individual
 layers can be hidden. Entry triggers are also visible by default as transparent green
-floor footprints with black original sector boundaries, without internal BSP seams.
-Select a footprint or search Entry triggers to inspect its sector and script ID.
+volumes from floor to ceiling, with black perimeter and vertical edges and no
+internal BSP seams. Their height follows open-door preview; closed doors have
+zero height until opened. Select a volume or search Entry triggers to inspect
+its sector and script ID.
 The overlay represents sector entry, not a simulated gameplay effect. Hide ceilings for an unobstructed overhead view.
 Open-door preview uses recovered ceiling-door height floor+224; lifts retain their
 initialized height. This is a static inspection tool with no collision or gameplay

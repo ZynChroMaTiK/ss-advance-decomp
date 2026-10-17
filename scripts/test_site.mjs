@@ -19,14 +19,30 @@ for(const entry of catalog){const d=JSON.parse(readFileSync(new URL('../site/'+e
   assert.equal(border.material.color.getHex(),0);assert(border.material.depthTest);
   assert(border.renderOrder>fill.renderOrder);
   const p=fill.geometry.attributes.position;
-  assert.equal(p.count,floorPositions(s.mesh_loops,s.initial_floor).length/3);
-  for(let i=0;i<p.count;i++)assert.equal(p.getY(i),(s.initial_floor+1)/64);
   const boundary=d.lines.filter(l=>(l.front===s.id)!==(l.back===s.id));
-  assert(boundary.length>0);assert.equal(border.geometry.attributes.position.count,boundary.length*2);
-  assert.deepEqual(Array.from(border.geometry.attributes.position.array),boundary.flatMap(l=>[l.a,l.b].flatMap(id=>[d.vertices[id][0]/64,(s.initial_floor+1.25)/64,-d.vertices[id][1]/64])));
-  fill.updateMatrixWorld();const center=new THREE.Vector3();
-  for(let i=0;i<3;i++)center.add(new THREE.Vector3().fromBufferAttribute(p,i));center.divideScalar(3);
-  for(const side of [-1,1])assert.equal(new THREE.Raycaster(center.clone().add(new THREE.Vector3(0,side,0)),new THREE.Vector3(0,-side,0)).intersectObject(fill).length>0,side===1);
+  const corners=new Set(boundary.flatMap(l=>[l.a,l.b]).map(id=>d.vertices[id].join(',')));
+  assert.equal(p.count,2*floorPositions(s.mesh_loops,0).length/3+boundary.length*6);
+  assert.equal(border.geometry.attributes.position.count,boundary.length*4+corners.size*2);
+  assert.equal(trigger.position.y,s.initial_floor/64);
+  assert.equal(trigger.scale.y,(s.initial_ceiling-s.initial_floor)/64);
+  // Check a unit-height volume, including initially closed door sectors.
+  trigger.scale.y=1;trigger.updateMatrixWorld(true);
+  let volume=0,area=0;
+  for(const loop of s.mesh_loops)for(let i=1;i<loop.length-1;i++){
+   const [a,b,c]=[loop[0],loop[i],loop[i+1]];
+   area+=((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/8192;
+  }
+  for(let i=0;i<p.count;i+=3){
+   const [a,b,c]=[0,1,2].map(j=>new THREE.Vector3().fromBufferAttribute(p,i+j));
+   const n=b.clone().sub(a).cross(c.clone().sub(a)).normalize();assert(n.length()>.99);
+   volume+=a.dot(b.clone().cross(c))/6;
+   const center=a.clone().add(b).add(c).divideScalar(3).applyMatrix4(fill.matrixWorld);
+   for(const side of [-1,1]){
+    const hits=new THREE.Raycaster(center.clone().addScaledVector(n,.001*side),n.clone().multiplyScalar(-side),0,.002).intersectObject(fill);
+    assert.equal(hits.length>0,side===1,`trigger ${entry.level}/${s.id} face ${i/3} culling`);
+   }
+  }
+  assert(Math.abs(volume-area)<.001,`trigger ${entry.level}/${s.id} encloses sector area with outward faces`);
   trigger.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});
  }
  for(const s of d.sectors){const pair=sectorMeshes(s),sky=s.ceiling_color===0;if(sky)skyCeilingsSkipped++;assert.deepEqual(pair.map(m=>m.userData.kind),sky?['floor']:['floor','ceiling']);for(const m of pair){assert.equal(m.material.side,THREE.FrontSide);assert.equal(m.geometry.attributes.position.count,floorPositions(s.mesh_loops,s.initial_floor).length/3);m.updateMatrixWorld();const attr=m.geometry.attributes.position,ids=m.geometry.index?Array.from(m.geometry.index.array):Array.from({length:attr.count},(_,i)=>i);
@@ -57,5 +73,5 @@ const page=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 for(const id of ['show-floors','show-ceilings','show-walls','show-items','show-enemies','show-scripted','show-secrets'])assert(new RegExp(`id="${id}"[^>]*checked`).test(page),`${id} defaults visible`);
 assert(skyCeilingsSkipped>0);
 assert.equal(triggers,53);assert(/id="show-triggers"[^>]*checked/.test(page));
-console.log(JSON.stringify({status:'PASS',entry_triggers:triggers,trigger_checks:'original sector boundaries, transparent green fill, black borders, floor offset, front-side picking, default visibility'}));
+console.log(JSON.stringify({status:'PASS',entry_triggers:triggers,trigger_checks:'original sector boundaries, transparent green fill, black borders, closed volumes, floor/ceiling heights, outward faces, front-side picking, default visibility'}));
 console.log(JSON.stringify({status:'PASS',three_revision:THREE.REVISION,levels:catalog.length,meshes,triangles,camera_fits:48,sky_ceilings_skipped:skyCeilingsSkipped,indoor_ceilings_retained:true,front_side_raycast:'PASS',wall_culling_rays:wallSideChecks,all_layers_visible_by_default:true}));

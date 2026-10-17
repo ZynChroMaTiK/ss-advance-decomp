@@ -7,19 +7,32 @@ const $=id=>document.getElementById(id);
 export function surfaceMaterial(options){return new T.MeshBasicMaterial({...options,side:T.FrontSide})}
 export function entryTrigger(sector,data){
  if(!(sector.flags&256))return null;
- const group=new T.Group(),geometry=new T.BufferGeometry();
- // Lift the footprint one map unit above the floor to avoid z-fighting.
- geometry.setAttribute('position',new T.Float32BufferAttribute(floorPositions(sector.mesh_loops,sector.initial_floor+1),3));
- const fill=new T.Mesh(geometry,surfaceMaterial({color:0x00ff66,transparent:true,opacity:.32,depthWrite:false}));
- fill.userData={trigger:sector};fill.renderOrder=1;group.add(fill);
- // Original boundary lines exclude internal BSP seams and same-sector lines.
- const positions=[];
- for(const line of data.lines)if((line.front===sector.id)!==(line.back===sector.id)){
-  for(const id of [line.a,line.b]){const [x,y]=data.vertices[id];positions.push(x/64,(sector.initial_floor+1.25)/64,-y/64)}
+ const group=new T.Group(),geometry=new T.BufferGeometry(),positions=[],edges=[],corners=new Map();
+ // Unit-height closed volume; scaling follows the displayed ceiling height.
+ // Caps face outward: downward at the floor, upward at the ceiling.
+ const cap=floorPositions(sector.mesh_loops,0);
+ for(let i=0;i<cap.length;i+=9){
+  const a=cap.slice(i,i+3),b=cap.slice(i+3,i+6),c=cap.slice(i+6,i+9);
+  positions.push(...a,...c,...b,...[a,b,c].flatMap(p=>[p[0],1,p[2]]));
  }
- const borderGeometry=new T.BufferGeometry();borderGeometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+ // Original sector boundaries exclude internal BSP seams and same-sector lines.
+ for(const line of data.lines)if((line.front===sector.id)!==(line.back===sector.id)){
+  const ids=line.front===sector.id?[line.b,line.a]:[line.a,line.b];
+  const [a,b]=ids.map(id=>{const [x,y]=data.vertices[id],p=[x/64,0,-y/64];corners.set(`${x},${y}`,p);return p});
+  if(a[0]===b[0]&&a[2]===b[2])continue;
+  const at=[a[0],1,a[2]],bt=[b[0],1,b[2]];
+  positions.push(...a,...b,...bt,...a,...bt,...at);
+  edges.push(...a,...b,...at,...bt);
+ }
+ for(const p of corners.values())edges.push(...p,p[0],1,p[2]);
+ geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+ const fill=new T.Mesh(geometry,surfaceMaterial({color:0x00ff66,transparent:true,opacity:.32,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));
+ fill.userData={trigger:sector};fill.renderOrder=1;group.add(fill);
+ const borderGeometry=new T.BufferGeometry();borderGeometry.setAttribute('position',new T.Float32BufferAttribute(edges,3));
  const border=new T.LineSegments(borderGeometry,new T.LineBasicMaterial({color:0x000000,transparent:true,opacity:1,depthWrite:false}));
- border.renderOrder=2;group.add(border);return group;
+ border.renderOrder=2;group.add(border);group.userData={trigger:sector};
+ group.position.y=sector.initial_floor/64;group.scale.y=(sector.initial_ceiling-sector.initial_floor)/64;
+ return group;
 }
 export function sectorMeshes(sector){
  return [['floor',sector.initial_floor,sector.floor_rgb],['ceiling',sector.initial_ceiling,sector.ceiling_rgb]].filter(([kind])=>kind==='floor'||sector.ceiling_color!==0).map(([kind,height,color])=>{
@@ -43,7 +56,7 @@ export function createViewer(makeRenderer=()=>new T.WebGLRenderer({antialias:tru
  function focus(x,y,h=0,focusCanvas=true){setFlight(false,focusCanvas);const p=new T.Vector3(x/64,h/64,-y/64);controls.target.copy(p);camera.position.copy(p).add(new T.Vector3(8,13,12));controls.update()}
  function showInfo(title,fields,note,source){const dest=$('selection');dest.replaceChildren();const h=document.createElement('h3');h.textContent=title;dest.append(h);const dl=document.createElement('dl');for(const [k,v] of Object.entries(fields)){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd)}dest.append(dl);if(note){const p=document.createElement('p');p.textContent=note;dest.append(p)}if(source&&/^https:\/\//.test(source)){const a=document.createElement('a');a.href=source;a.textContent='Identification source ↗';a.target='_blank';a.rel='noopener';dest.append(a)}}
  function secretInfo(s){const m=data.markers.find(m=>m.id===s.marker);showInfo(s.title,{Location:s.id,X:s.x,Y:s.y,Status:s.status},s.note,s.source);focus(s.x,s.y,m?.initial_floor??0);if(s.access?.point){const button=document.createElement('button');button.className='secret-button';button.textContent='Show opening trigger ↗';button.onclick=()=>{focus(...s.access.point,m?.initial_floor??0);showInfo('Secret access',s.access,s.note,s.source)};$('selection').append(button)}}
- function settings(){if(!root)return;const opened=$('open-doors').checked;groups.closed.visible=!opened&&$('show-walls').checked;groups.open.visible=opened&&$('show-walls').checked;groups.floors.visible=$('show-floors').checked;groups.ceilings.visible=$('show-ceilings').checked;groups.ceilings.children.forEach(o=>{o.position.y=opened?o.userData.openOffset:0});groups.markers.children.forEach(o=>{const m=o.userData.marker;const enemy=m.group.includes('enemies');o.visible=(enemy?$('show-enemies').checked:$('show-items').checked)&&(m.origin==='map'||$('show-scripted').checked)});groups.secrets.visible=$('show-secrets').checked;groups.triggers.visible=$('show-triggers').checked;for(const name of ['floors','ceilings','closed','open'])groups[name].traverse(o=>{if(o.material)o.material.wireframe=$('show-wireframe').checked})}
+ function settings(){if(!root)return;const opened=$('open-doors').checked;groups.closed.visible=!opened&&$('show-walls').checked;groups.open.visible=opened&&$('show-walls').checked;groups.floors.visible=$('show-floors').checked;groups.ceilings.visible=$('show-ceilings').checked;groups.ceilings.children.forEach(o=>{o.position.y=opened?o.userData.openOffset:0});groups.markers.children.forEach(o=>{const m=o.userData.marker;const enemy=m.group.includes('enemies');o.visible=(enemy?$('show-enemies').checked:$('show-items').checked)&&(m.origin==='map'||$('show-scripted').checked)});groups.secrets.visible=$('show-secrets').checked;groups.triggers.visible=$('show-triggers').checked;groups.triggers.children.forEach(o=>{const s=o.userData.trigger;o.scale.y=((opened?s.open_ceiling:s.initial_ceiling)-s.initial_floor)/64});for(const name of ['floors','ceilings','closed','open'])groups[name].traverse(o=>{if(o.material)o.material.wireframe=$('show-wireframe').checked})}
  function levelInfo(){records=objectRecords(data,$('open-doors').checked);renderObjects();$('view-name').textContent=`${String(index+1).padStart(2,'0')} / ${data.title}`;$('secret-list').replaceChildren();if(!data.secrets.length)$('secret-list').textContent='No documented pins for this level.';for(const s of data.secrets){const button=document.createElement('button');button.className='secret-button';button.textContent=`${s.id} / ${s.title} ↗`;button.onclick=()=>secretInfo(s);$('secret-list').append(button)}showInfo(data.title,{Sectors:data.sectors.length,Placements:data.markers.length,Secrets:data.secrets.length},'Select a surface or sprite for original level data.');}
  async function load(n,entry){const mine=++token;if(index===n&&root){root.visible=true;levelInfo();message.hidden=true;return}if(root)root.visible=false;keys.clear();touch.clear();records=[];renderObjects();$('selection').replaceChildren();$('secret-list').replaceChildren();$('view-name').textContent='Loading selected level…';message.hidden=false;message.textContent='Loading the view…';let next=null;try{const response=await fetch(entry?.path??`data/level-${String(n+1).padStart(2,'0')}.json`);if(!response.ok)throw Error(`Level data unavailable (${response.status})`);const d=await response.json();if(mine!==token)return;
    const paths=new Set([...d.walls.initial,...d.walls.open].map(f=>f.texture).filter(Boolean));d.markers.forEach(m=>{if(m.sprite)paths.add('atlas/'+m.sprite)});const textures=new Map(await Promise.all([...paths].map(async p=>[p,await texture(p)])));if(mine!==token)return;

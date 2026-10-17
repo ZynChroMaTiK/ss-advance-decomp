@@ -11,20 +11,22 @@ class Element {
  getContext(){return {fillRect(){},strokeRect(){},fillText(){}}}
 }
 const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)};
-globalThis.document={getElementById:get,createElement:()=>new Element(),querySelectorAll:s=>s==='.view-options input'?[get('show-triggers'),get('show-floors')]:[],addEventListener(){},removeEventListener(){},hidden:false};
+globalThis.document={getElementById:get,createElement:()=>new Element(),querySelectorAll:s=>s==='.view-options input'?[get('show-triggers'),get('show-floors'),get('open-doors')]:[],addEventListener(){},removeEventListener(){},hidden:false};
 globalThis.window={addEventListener(){}};globalThis.devicePixelRatio=1;globalThis.ResizeObserver=class{observe(){}};
 let tick,scene,camera;globalThis.requestAnimationFrame=f=>tick=f;
 const canvas=new Element(),renderer={domElement:canvas,setPixelRatio(){},setSize(){},render:(s,c)=>{scene=s;camera=c}};
 const pending=[];globalThis.fetch=path=>new Promise((resolve,reject)=>pending.push({path,resolve,reject}));
 const catalog=JSON.parse(readFileSync(new URL('../site/data/catalog.json',import.meta.url)));
 const source=JSON.parse(readFileSync(new URL('../site/'+catalog[0].path,import.meta.url)));
-const data={...source,sectors:[source.sectors[0],source.sectors.find(s=>s.flags&256)],walls:{initial:[],open:[]},markers:[],movers:[],secrets:[]};
+const data={...source,sectors:[source.sectors[0],{...source.sectors.find(s=>s.flags&256),initial_ceiling:0,open_ceiling:224}],walls:{initial:[],open:[]},markers:[],movers:[],secrets:[]};
 const viewer=createViewer(()=>renderer);viewer.setActive(true);
 let load=viewer.load(0,catalog[0]);pending.shift().resolve({ok:true,json:async()=>data});await load;tick(16);
 const original=scene.children[0];assert(original.visible);assert.equal(canvas.focusCount,0,'async loads must not steal focus');
 assert.equal(get('view-name').textContent,`01 / ${data.title}`);
 assert.equal(get('object-results').children.length,3,'rooms and entry trigger available without a pointer pick');
 const triggers=original.getObjectByName('triggers');assert(triggers.visible);assert.equal(triggers.children.length,1);
+get('open-doors').checked=false;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,0);
+get('open-doors').checked=true;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,3.5);
 get('show-triggers').checked=false;get('show-triggers').onchange();assert(!triggers.visible);
 get('show-triggers').checked=true;get('show-triggers').onchange();assert(triggers.visible);
 get('show-floors').checked=false;get('show-floors').onchange();assert(triggers.visible,'trigger visibility is independent of floors');

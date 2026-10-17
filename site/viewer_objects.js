@@ -1,5 +1,5 @@
 export function triggerRecord(s) {
-  return {id:'trigger:'+s.id,kind:'triggers',label:`Entry trigger / sector ${s.id} / script ${s.flags&255}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Script:s.flags&255,Floor:s.initial_floor},note:'Entering this sector activates its original level script. The green footprint marks the sector area; scripts are not simulated in this viewer.'};
+  return {id:'trigger:'+s.id,kind:'triggers',label:`Entry trigger / sector ${s.id} / script ${s.flags&255}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Script:s.flags&255,Floor:s.initial_floor},note:'Entering this sector activates its original level script. The green volume shows the sector from floor to ceiling; scripts are not simulated in this viewer.'};
 }
 export function objectRecords(data, opened = false) {
   const records = data.markers.map(m => ({id:'marker:'+m.id, kind:m.group.includes('enemies')?'enemies':'items', label:`${m.id} / ${m.name}${m.origin==='script'?' / scripted':''}`, point:[m.x,m.y,m.initial_floor], fields:{ID:m.id,Sector:m.sector,Placement:m.origin,Group:m.group}, marker:m}));
