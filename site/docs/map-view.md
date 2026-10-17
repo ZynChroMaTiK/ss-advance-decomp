@@ -1,0 +1,104 @@
+# Original pre-level map view
+
+Every supported level start, restart and advancement now shows the original map
+before gameplay. Fire confirms the screen; left mouse, Space and Enter map to
+that action on PC. The route dots, blinking prompt, title, password, fonts,
+palette and fades come from the supplied ROM. The map remains at its original
+240x160 artwork resolution and scales to the window. Gameplay retains the
+requested dynamic PC resolution and camera features after the map closes.
+
+The prior frontend started music command1 with live gameplay. That was a parity
+error. Original01ACBC requests command3 for the map, while020A0 requests command2
+at gameplay initialization. Both1 and3 select84/85, but only1 automatically
+returns to level music on song completion. A map therefore stays on screen,
+silent after its cue ends, until fire is pressed. Song completion is not a
+permission to start gameplay.
+
+## Recovered behavior and data
+
+`src/map_view.c` reconstructs the presentation at01A9A4,01AAA0 and01AC80. The
+original graphic setup uses palette0A8168, compressed Egypt/Rome tiles at0AB39C
+and0AFE4C, and tilemap0B4EEC. The actual images contain600 eight-bit tiles,
+38,400 bytes. The original temporary transfer copies an oversized48,000-byte
+window; the native decoder uses the actual image length. Fonts0B697C/0B7A60
+contain126 four-bit glyphs each,16 and8 pixels square. Metrics, character mapping
+and all three language tables are retained; no replacement host font is used.
+
+Route table44D1C4 contains ten points per stage. Prior stages in the current
+region draw all dots; the current route reveals one every32 frames. The fire
+prompt toggles on frame bit5. The title and password use the original alignment,
+palette banks and glyph bearings. Equal-priority overlap follows original OAM
+ordering. The core supports the twelve campaign map presentations, all three
+languages and three difficulty/password tiers. The Windows menus now select
+all three languages and difficulty tiers for its five validated gameplay levels.
+Password entry remains unfinished. See [menu.md](menu.md).
+
+The original screen fade routines15614/15698 begin at0F00 with step-0040.
+Fire is read after each fade step, starts the exit fade from zero with+0040,
+plays command13's confirmation effect (song2), and requests audio fade5 when
+music is enabled. Repeated presses do not restart it. The screen exits on the
+61st subsequent fade tick. Audio-disabled starts follow the same screen timing.
+
+The PC map drawing completes the darkest endpoint on solid black; the original
+BLDY coefficient stops at15/16 darkness and otherwise leaves a faint map visible.
+User feedback showed that a single black frame followed by a fully bright level
+was still not a noticeable transition. The frontend now adds15 displayed black
+hold ticks (at least250ms), then60 displayed level-reveal ticks (at least1second).
+These are explicitly requested PC presentation additions; the recovered ROM
+map fade/input state machine remains unchanged.
+
+Each outgoing map/hold/reveal tick is presented separately. Its presentation
+clock restarts after the completed window blit, so rendering delays or a queued
+simulation batch cannot consume the following transition ticks. The map retains
+ownership through its black hold. At handoff, queued map audio is flushed and
+level music begins. One native bootstrap tick constructs a valid level image,
+then gameplay remains frozen at counter1 throughout the reveal. The compositor
+scales the completed image, including HUD/text, from black to full brightness;
+the underlying world/reference render buffers remain unchanged. Mouse capture
+and gameplay input start after full brightness. Mute and Escape still work.
+
+`SsaMapView` borrows the ROM and contains only presentation state. The frontend
+does not tick `SsaNativeGame` during it, so enemies, scripts, player input and
+gameplay time remain at their level-entry state. Its first native bootstrap tick
+runs after the map fade. Map command3 starts on audio open/restart; the backend
+flushes queued map buffers and resets fade/voices before command2 at the handoff.
+Mute and music settings persist. A missing audio device cannot stall the screen.
+
+## Validation
+
+`tests/test_map_view_rom.py` executes original routines only in an isolated test
+oracle. It compares864 complete glyph-submission frames across12 maps,3 languages
+and3 difficulties,4,147,200 background pixels from original VRAM,691,200 composed
+pixels against original OAM/VRAM, and8,976 fade/input frames. This catches actual
+artwork, positioning, font and frame-order differences. The ROM is unchanged.
+
+`tests/test_map_view.c` passes8,084 ASan/UBSan/leak checks, also under MSVC. Both
+real map cue families are allowed to finish, then stay on their map for another
+180 frames. Three modes cover audible mixing without a device, muted and music
+disabled;1,080 terminal-wait frames never start level music or gameplay by time.
+The checks exercise confirmation, repeated presses, complete fade, reset/gain,
+malformed artwork, API bounds and output sentinels.
+They also inspect intermediate dimming and require every pixel to be black at
+the final fade endpoint in both map families and all three music modes.
+
+Windows launcher tests exercise two map views for startup/restart and nine for
+campaign advancement/restart, with both renderers and a real muted audio device. Each map
+waits and fades for70 ticks under test inputs while the native gameplay counter
+stays zero. Audio checks verify command3 on the map and command2 at each start.
+Before each handoff, the Windows tests require an actual terminal presentation
+and inspect the entire composed window bitmap for solid black, including bars.
+The tests now also measure the minimum black/reveal wall times for every map,
+require all15/60 presentation ticks, and require gameplay counter1 during reveal.
+With `SSA_TRANSITION_CAPTURE_DIR` set, the campaign test captures the actual
+first reveal's black/midpoint/full window bitmaps for each renderer. An external
+pixel comparison checks every RGB sample: initial black, half brightness at
+the midpoint and a nonempty full image. These files are under
+`build/native-campaign/{pc,reference}-{black,mid,full}.bmp`; their hashes and
+comparison results are in the Windows campaign report. This extends the old
+single-black-frame check with visible fade-in and real elapsed-time evidence.
+The normal-input full level route separately has no map cue in its gameplay mix.
+
+Run `.\decomp.ps1 test-map-view-rom`, `.\decomp.ps1 test-map-view`, and
+`scripts/test-native-campaign.ps1`. Reports are `map-view-rom-validation.json`,
+`map-view-validation.json` and `windows-native-campaign-validation.json`.
+This recovers one original screen; full original feature parity is unfinished.

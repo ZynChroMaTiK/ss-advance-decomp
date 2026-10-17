@@ -1,0 +1,1262 @@
+{
+  "p0-r101-shirt3": {
+    "path": "icons/p0-r101-shirt3.png",
+    "width": 21,
+    "height": 61,
+    "palette": 0,
+    "sha256": "42cceda93c8ded3d1d20cbffc0c32b506cca5e918e3bb84700058c187a9b26f6",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 121,
+        "image": 1,
+        "rom_offset": 3632004,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p0-r007": {
+    "path": "icons/p0-r007.png",
+    "width": 40,
+    "height": 53,
+    "palette": 0,
+    "sha256": "787334991a0ef70638cd29bf4a7c6231eb385380a7904cf1eb2b7fa7f911e1e5",
+    "layers": [
+      {
+        "resource": 7,
+        "image": 1,
+        "rom_offset": 1248304,
+        "origin_x": -19,
+        "origin_y": -52,
+        "width": 40,
+        "height": 53
+      }
+    ]
+  },
+  "p0-r049": {
+    "path": "icons/p0-r049.png",
+    "width": 16,
+    "height": 18,
+    "palette": 0,
+    "sha256": "aecb86525656ba457663d84c5014be319d7380e1189fa7a8d559b03312f04b90",
+    "layers": [
+      {
+        "resource": 49,
+        "image": 15,
+        "rom_offset": 3408034,
+        "origin_x": -7,
+        "origin_y": -22,
+        "width": 16,
+        "height": 18
+      }
+    ]
+  },
+  "p0-r033": {
+    "path": "icons/p0-r033.png",
+    "width": 30,
+    "height": 30,
+    "palette": 0,
+    "sha256": "f8b179b9341bfc60227aa06da11059231061996092919ca9c7a18cd907337e81",
+    "layers": [
+      {
+        "resource": 33,
+        "image": 2,
+        "rom_offset": 3401310,
+        "origin_x": -13,
+        "origin_y": -29,
+        "width": 30,
+        "height": 30
+      }
+    ]
+  },
+  "p0-r032": {
+    "path": "icons/p0-r032.png",
+    "width": 29,
+    "height": 16,
+    "palette": 0,
+    "sha256": "b52ab80a3dac83b7c26174f34a2126e2fab0608b9697a3952ddccd11b1ae85c0",
+    "layers": [
+      {
+        "resource": 32,
+        "image": 1,
+        "rom_offset": 3400928,
+        "origin_x": -13,
+        "origin_y": -18,
+        "width": 29,
+        "height": 16
+      }
+    ]
+  },
+  "p0-r045": {
+    "path": "icons/p0-r045.png",
+    "width": 24,
+    "height": 25,
+    "palette": 0,
+    "sha256": "7fefddf264295673cc28229249d29973f32a5b7956bed64c7d443b88eda1cc63",
+    "layers": [
+      {
+        "resource": 45,
+        "image": 11,
+        "rom_offset": 3405900,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 25
+      }
+    ]
+  },
+  "p0-r048": {
+    "path": "icons/p0-r048.png",
+    "width": 21,
+    "height": 21,
+    "palette": 0,
+    "sha256": "01995fc8e3b2da7de493b01314e7aa6b2bb9a7fab4979d270773cdbb30163c51",
+    "layers": [
+      {
+        "resource": 48,
+        "image": 14,
+        "rom_offset": 3407700,
+        "origin_x": -9,
+        "origin_y": -24,
+        "width": 21,
+        "height": 21
+      }
+    ]
+  },
+  "p0-r046": {
+    "path": "icons/p0-r046.png",
+    "width": 32,
+    "height": 20,
+    "palette": 0,
+    "sha256": "70071b70c7e9d9f220361abffd2aa61ea54550c4d9186053257ef5e008585156",
+    "layers": [
+      {
+        "resource": 46,
+        "image": 12,
+        "rom_offset": 3406444,
+        "origin_x": -15,
+        "origin_y": -27,
+        "width": 32,
+        "height": 20
+      }
+    ]
+  },
+  "p0-r063": {
+    "path": "icons/p0-r063.png",
+    "width": 20,
+    "height": 34,
+    "palette": 0,
+    "sha256": "1a67e1f8e22510577d5164adf439e98555bd4fcd5b35ca11b05dbe11c77370c8",
+    "layers": [
+      {
+        "resource": 63,
+        "image": 28,
+        "rom_offset": 3415302,
+        "origin_x": -9,
+        "origin_y": -35,
+        "width": 20,
+        "height": 34
+      }
+    ]
+  },
+  "p0-r008": {
+    "path": "icons/p0-r008.png",
+    "width": 42,
+    "height": 66,
+    "palette": 0,
+    "sha256": "8360b6c696f73db8c86b7509cde6e036b37184dbe168adfbafa1b93f9a8ca909",
+    "layers": [
+      {
+        "resource": 8,
+        "image": 1,
+        "rom_offset": 1143424,
+        "origin_x": -21,
+        "origin_y": -64,
+        "width": 42,
+        "height": 66
+      }
+    ]
+  },
+  "p0-r010": {
+    "path": "icons/p0-r010.png",
+    "width": 39,
+    "height": 58,
+    "palette": 0,
+    "sha256": "4a53ff10ebdd55ff65fea6f6a2addd35e88611def4b474cd028193dddeadab9f",
+    "layers": [
+      {
+        "resource": 10,
+        "image": 1,
+        "rom_offset": 1553120,
+        "origin_x": -18,
+        "origin_y": -56,
+        "width": 39,
+        "height": 58
+      }
+    ]
+  },
+  "p0-r047": {
+    "path": "icons/p0-r047.png",
+    "width": 32,
+    "height": 28,
+    "palette": 0,
+    "sha256": "824e6ff11e4a060ac7825a4c873fe408567daaa9109731b63ff4140b6c281a87",
+    "layers": [
+      {
+        "resource": 47,
+        "image": 13,
+        "rom_offset": 3406996,
+        "origin_x": -15,
+        "origin_y": -27,
+        "width": 32,
+        "height": 28
+      }
+    ]
+  },
+  "p0-r069": {
+    "path": "icons/p0-r069.png",
+    "width": 57,
+    "height": 80,
+    "palette": 0,
+    "sha256": "28d4a52a5df8f3bf84d56625e054a4876728ba20431c666aa3888f4c3871866e",
+    "layers": [
+      {
+        "resource": 69,
+        "image": 1,
+        "rom_offset": 1759268,
+        "origin_x": -27,
+        "origin_y": -76,
+        "width": 57,
+        "height": 80
+      }
+    ]
+  },
+  "p0-r053": {
+    "path": "icons/p0-r053.png",
+    "width": 29,
+    "height": 25,
+    "palette": 0,
+    "sha256": "79f47b0874cbed859a22deb8c3f7ff3471cc81b69a68937cdacd2f8fd017c1b3",
+    "layers": [
+      {
+        "resource": 53,
+        "image": 19,
+        "rom_offset": 3410144,
+        "origin_x": -14,
+        "origin_y": -25,
+        "width": 29,
+        "height": 25
+      }
+    ]
+  },
+  "p0-r034": {
+    "path": "icons/p0-r034.png",
+    "width": 29,
+    "height": 29,
+    "palette": 0,
+    "sha256": "951d81fe828dc1fe5b4d24fbf5d1abf3df974e611721e1c665b6637a1fa00fb7",
+    "layers": [
+      {
+        "resource": 34,
+        "image": 3,
+        "rom_offset": 3401746,
+        "origin_x": -13,
+        "origin_y": -28,
+        "width": 29,
+        "height": 29
+      }
+    ]
+  },
+  "p0-r006": {
+    "path": "icons/p0-r006.png",
+    "width": 24,
+    "height": 35,
+    "palette": 0,
+    "sha256": "a54341f47f418812bd89993f836af29c219612176f0339d3738cc6a9c0ddfd8a",
+    "layers": [
+      {
+        "resource": 6,
+        "image": 1,
+        "rom_offset": 1106776,
+        "origin_x": -11,
+        "origin_y": -34,
+        "width": 24,
+        "height": 35
+      }
+    ]
+  },
+  "p0-r004": {
+    "path": "icons/p0-r004.png",
+    "width": 57,
+    "height": 70,
+    "palette": 0,
+    "sha256": "19febb7d50048c8b7b00a48951fb848886fbab66e08b6528e8214b596d0c2804",
+    "layers": [
+      {
+        "resource": 4,
+        "image": 1,
+        "rom_offset": 917424,
+        "origin_x": -27,
+        "origin_y": -69,
+        "width": 57,
+        "height": 70
+      }
+    ]
+  },
+  "p0-r064": {
+    "path": "icons/p0-r064.png",
+    "width": 27,
+    "height": 25,
+    "palette": 0,
+    "sha256": "dabb2ec16e99a98955ae5410f9c9d8e02b415cddd160e8224f02a8fb5da7b893",
+    "layers": [
+      {
+        "resource": 64,
+        "image": 1,
+        "rom_offset": 2418684,
+        "origin_x": -14,
+        "origin_y": -23,
+        "width": 27,
+        "height": 25
+      }
+    ]
+  },
+  "p0-r058": {
+    "path": "icons/p0-r058.png",
+    "width": 17,
+    "height": 17,
+    "palette": 0,
+    "sha256": "d9e0edf99b3c93690095288b9d9937768fe175c04dcde0690ce776afbd4de3d0",
+    "layers": [
+      {
+        "resource": 58,
+        "image": 26,
+        "rom_offset": 3414440,
+        "origin_x": -7,
+        "origin_y": -18,
+        "width": 17,
+        "height": 17
+      }
+    ]
+  },
+  "p0-r035": {
+    "path": "icons/p0-r035.png",
+    "width": 32,
+    "height": 27,
+    "palette": 0,
+    "sha256": "ac3de1b56978fdc307bbac4c861fa12ecd37d45fdcdb580bc648df1c019d73b9",
+    "layers": [
+      {
+        "resource": 35,
+        "image": 5,
+        "rom_offset": 3402832,
+        "origin_x": -15,
+        "origin_y": -26,
+        "width": 32,
+        "height": 27
+      }
+    ]
+  },
+  "p0-r051": {
+    "path": "icons/p0-r051.png",
+    "width": 24,
+    "height": 25,
+    "palette": 0,
+    "sha256": "6c3c5741626f143984b87266bcbdd1ee927df9e66045b5c4194c81826b1f515d",
+    "layers": [
+      {
+        "resource": 51,
+        "image": 17,
+        "rom_offset": 3408992,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 25
+      }
+    ]
+  },
+  "p0-r056": {
+    "path": "icons/p0-r056.png",
+    "width": 19,
+    "height": 25,
+    "palette": 0,
+    "sha256": "ec97d5f2a53750d561049d7e76394fb3886fd7c11d9d9b0aadc1d82af56c62f4",
+    "layers": [
+      {
+        "resource": 56,
+        "image": 22,
+        "rom_offset": 3412320,
+        "origin_x": -6,
+        "origin_y": -26,
+        "width": 19,
+        "height": 25
+      }
+    ]
+  },
+  "p0-r050": {
+    "path": "icons/p0-r050.png",
+    "width": 25,
+    "height": 24,
+    "palette": 0,
+    "sha256": "2de4c18e288f034fc9997f9a357983ae22af8246d77badef41aa61d84b38618e",
+    "layers": [
+      {
+        "resource": 50,
+        "image": 16,
+        "rom_offset": 3408402,
+        "origin_x": -11,
+        "origin_y": -24,
+        "width": 25,
+        "height": 24
+      }
+    ]
+  },
+  "p0-r073": {
+    "path": "icons/p0-r073.png",
+    "width": 91,
+    "height": 70,
+    "palette": 0,
+    "sha256": "c3ea111fdb53d58e5a0f1b8a1eb811afcf83a76c597e04e9307aa2c06d2262ae",
+    "layers": [
+      {
+        "resource": 73,
+        "image": 1,
+        "rom_offset": 1933232,
+        "origin_x": -44,
+        "origin_y": -67,
+        "width": 91,
+        "height": 70
+      }
+    ]
+  },
+  "p0-r009": {
+    "path": "icons/p0-r009.png",
+    "width": 56,
+    "height": 68,
+    "palette": 0,
+    "sha256": "0060beabd0dfe8339d2b1881d8576ca8d607ff2fb5b21056b19a74daf455ec41",
+    "layers": [
+      {
+        "resource": 9,
+        "image": 1,
+        "rom_offset": 1330644,
+        "origin_x": -32,
+        "origin_y": -67,
+        "width": 56,
+        "height": 68
+      }
+    ]
+  },
+  "p0-r037": {
+    "path": "icons/p0-r037.png",
+    "width": 32,
+    "height": 9,
+    "palette": 0,
+    "sha256": "a285fa259e96da476304b43a03346f96f0ca1c35a05746316e0d034b88fb99dc",
+    "layers": [
+      {
+        "resource": 37,
+        "image": 6,
+        "rom_offset": 3403512,
+        "origin_x": -15,
+        "origin_y": -19,
+        "width": 32,
+        "height": 9
+      }
+    ]
+  },
+  "p0-r059": {
+    "path": "icons/p0-r059.png",
+    "width": 24,
+    "height": 18,
+    "palette": 0,
+    "sha256": "dd553c731e1f3d15a3e2405b156359ab09119eed2c5caa9053ea97801b94abc8",
+    "layers": [
+      {
+        "resource": 59,
+        "image": 27,
+        "rom_offset": 3414786,
+        "origin_x": -9,
+        "origin_y": -20,
+        "width": 24,
+        "height": 18
+      }
+    ]
+  },
+  "p0-r083": {
+    "path": "icons/p0-r083.png",
+    "width": 97,
+    "height": 94,
+    "palette": 0,
+    "sha256": "fd13fe57a142c73af73354d1aa47e79537fbfc3543691efabd8641c61b54c905",
+    "layers": [
+      {
+        "resource": 83,
+        "image": 1,
+        "rom_offset": 3360156,
+        "origin_x": -49,
+        "origin_y": -94,
+        "width": 97,
+        "height": 94
+      }
+    ]
+  },
+  "p1-r101-shirt3": {
+    "path": "icons/p1-r101-shirt3.png",
+    "width": 21,
+    "height": 61,
+    "palette": 1,
+    "sha256": "b40127eb8d526eaa137f5d38835f8bd7b78241dc0136b97e09cb3f1b68d63b90",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 121,
+        "image": 1,
+        "rom_offset": 3632004,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p1-r047": {
+    "path": "icons/p1-r047.png",
+    "width": 32,
+    "height": 28,
+    "palette": 1,
+    "sha256": "3c58ef013d2cd2da1c2f6c32e7fefacafed9de3850f49c0211e16c3e74d1814f",
+    "layers": [
+      {
+        "resource": 47,
+        "image": 13,
+        "rom_offset": 3406996,
+        "origin_x": -15,
+        "origin_y": -27,
+        "width": 32,
+        "height": 28
+      }
+    ]
+  },
+  "p1-r048": {
+    "path": "icons/p1-r048.png",
+    "width": 21,
+    "height": 21,
+    "palette": 1,
+    "sha256": "a4e56fd030447b3ef74cf1ad0541c1c99c28ec633241bd899a61c59ca4fdca64",
+    "layers": [
+      {
+        "resource": 48,
+        "image": 14,
+        "rom_offset": 3407700,
+        "origin_x": -9,
+        "origin_y": -24,
+        "width": 21,
+        "height": 21
+      }
+    ]
+  },
+  "p1-r049": {
+    "path": "icons/p1-r049.png",
+    "width": 16,
+    "height": 18,
+    "palette": 1,
+    "sha256": "fdc5f00965d3c3aa1df6aa98f09f67adc656d440663ed7abe2b6f79f5e07268d",
+    "layers": [
+      {
+        "resource": 49,
+        "image": 15,
+        "rom_offset": 3408034,
+        "origin_x": -7,
+        "origin_y": -22,
+        "width": 16,
+        "height": 18
+      }
+    ]
+  },
+  "p1-r041": {
+    "path": "icons/p1-r041.png",
+    "width": 32,
+    "height": 30,
+    "palette": 1,
+    "sha256": "1a550e83e8e26e55e11fed0721e152ab2ca8bc55bb315ce436360562cd14b56e",
+    "layers": [
+      {
+        "resource": 41,
+        "image": 8,
+        "rom_offset": 3404446,
+        "origin_x": -15,
+        "origin_y": -28,
+        "width": 32,
+        "height": 30
+      }
+    ]
+  },
+  "p1-r046": {
+    "path": "icons/p1-r046.png",
+    "width": 32,
+    "height": 20,
+    "palette": 1,
+    "sha256": "ef90711811fb30342f497d88fbdac8bf019a3bc52a0dff0f0f89ea5a642bccbd",
+    "layers": [
+      {
+        "resource": 46,
+        "image": 12,
+        "rom_offset": 3406444,
+        "origin_x": -15,
+        "origin_y": -27,
+        "width": 32,
+        "height": 20
+      }
+    ]
+  },
+  "p1-r051": {
+    "path": "icons/p1-r051.png",
+    "width": 24,
+    "height": 25,
+    "palette": 1,
+    "sha256": "4270dd8a9de1fab53cb1bf6527a05045c1159a5bff18f62171327b337b4dd78f",
+    "layers": [
+      {
+        "resource": 51,
+        "image": 17,
+        "rom_offset": 3408992,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 25
+      }
+    ]
+  },
+  "p1-r061": {
+    "path": "icons/p1-r061.png",
+    "width": 24,
+    "height": 24,
+    "palette": 1,
+    "sha256": "c06dfc519d5b33c2b6b7ba112232298acac60c8b08e8c9cda7827a8816d46025",
+    "layers": [
+      {
+        "resource": 61,
+        "image": 23,
+        "rom_offset": 3412730,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 24
+      }
+    ]
+  },
+  "p1-r058": {
+    "path": "icons/p1-r058.png",
+    "width": 17,
+    "height": 17,
+    "palette": 1,
+    "sha256": "80c4687951297b068260c8ace8de1698e2fc2d2ea35cf9a530baffe7df62f02f",
+    "layers": [
+      {
+        "resource": 58,
+        "image": 26,
+        "rom_offset": 3414440,
+        "origin_x": -7,
+        "origin_y": -18,
+        "width": 17,
+        "height": 17
+      }
+    ]
+  },
+  "p1-r045": {
+    "path": "icons/p1-r045.png",
+    "width": 24,
+    "height": 25,
+    "palette": 1,
+    "sha256": "5468e01a7d0cea0a60336ddff12b9709a0b8847d95d01a1f95437080ff61e0bc",
+    "layers": [
+      {
+        "resource": 45,
+        "image": 11,
+        "rom_offset": 3405900,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 25
+      }
+    ]
+  },
+  "p1-r059": {
+    "path": "icons/p1-r059.png",
+    "width": 24,
+    "height": 18,
+    "palette": 1,
+    "sha256": "30ef09540a6cc87482f60649f5098a6673e158f71fb834731fe3d3f1641761a4",
+    "layers": [
+      {
+        "resource": 59,
+        "image": 27,
+        "rom_offset": 3414786,
+        "origin_x": -9,
+        "origin_y": -20,
+        "width": 24,
+        "height": 18
+      }
+    ]
+  },
+  "p1-r053": {
+    "path": "icons/p1-r053.png",
+    "width": 29,
+    "height": 25,
+    "palette": 1,
+    "sha256": "dcdbaea624f6288eed82e96e3ace91544272aabf31c5531b34db0cb85cb501c0",
+    "layers": [
+      {
+        "resource": 53,
+        "image": 19,
+        "rom_offset": 3410144,
+        "origin_x": -14,
+        "origin_y": -25,
+        "width": 29,
+        "height": 25
+      }
+    ]
+  },
+  "p1-r063": {
+    "path": "icons/p1-r063.png",
+    "width": 20,
+    "height": 34,
+    "palette": 1,
+    "sha256": "d3006a1f80dcd30634ffdc6035721fcbb23c659bf62b61ee048303507a5fcdfa",
+    "layers": [
+      {
+        "resource": 63,
+        "image": 28,
+        "rom_offset": 3415302,
+        "origin_x": -9,
+        "origin_y": -35,
+        "width": 20,
+        "height": 34
+      }
+    ]
+  },
+  "p1-r008": {
+    "path": "icons/p1-r008.png",
+    "width": 42,
+    "height": 66,
+    "palette": 1,
+    "sha256": "42dddfc032742e25450ed32aa5fe2a4d37ed199814b268dd79bde58fb968e0ac",
+    "layers": [
+      {
+        "resource": 8,
+        "image": 1,
+        "rom_offset": 1143424,
+        "origin_x": -21,
+        "origin_y": -64,
+        "width": 42,
+        "height": 66
+      }
+    ]
+  },
+  "p1-r069": {
+    "path": "icons/p1-r069.png",
+    "width": 57,
+    "height": 80,
+    "palette": 1,
+    "sha256": "78aba4b4486ea774c0c1d69203bee99dfa6d8e27047e08cd7aa832adbe40638d",
+    "layers": [
+      {
+        "resource": 69,
+        "image": 1,
+        "rom_offset": 1759268,
+        "origin_x": -27,
+        "origin_y": -76,
+        "width": 57,
+        "height": 80
+      }
+    ]
+  },
+  "p1-r009": {
+    "path": "icons/p1-r009.png",
+    "width": 56,
+    "height": 68,
+    "palette": 1,
+    "sha256": "47857ad96a42cc070d7aad47b7482b973ecb753ddaa56c168a1e8f61fbb827cc",
+    "layers": [
+      {
+        "resource": 9,
+        "image": 1,
+        "rom_offset": 1330644,
+        "origin_x": -32,
+        "origin_y": -67,
+        "width": 56,
+        "height": 68
+      }
+    ]
+  },
+  "p1-r073": {
+    "path": "icons/p1-r073.png",
+    "width": 91,
+    "height": 70,
+    "palette": 1,
+    "sha256": "094abe7f75591d48f99c761ab8389fbb824aad8062b64ac9d83da4c09bf631bc",
+    "layers": [
+      {
+        "resource": 73,
+        "image": 1,
+        "rom_offset": 1933232,
+        "origin_x": -44,
+        "origin_y": -67,
+        "width": 91,
+        "height": 70
+      }
+    ]
+  },
+  "p1-r010": {
+    "path": "icons/p1-r010.png",
+    "width": 39,
+    "height": 58,
+    "palette": 1,
+    "sha256": "db3fc6757d6d0a0963d71f2af346355596c67f0b1d7453e1851bb38dfd8c55f6",
+    "layers": [
+      {
+        "resource": 10,
+        "image": 1,
+        "rom_offset": 1553120,
+        "origin_x": -18,
+        "origin_y": -56,
+        "width": 39,
+        "height": 58
+      }
+    ]
+  },
+  "p1-r056": {
+    "path": "icons/p1-r056.png",
+    "width": 19,
+    "height": 25,
+    "palette": 1,
+    "sha256": "db8368e011636930b18ce843daa21215f78d7f98fdb7aac333ce017bf0bb38fe",
+    "layers": [
+      {
+        "resource": 56,
+        "image": 22,
+        "rom_offset": 3412320,
+        "origin_x": -6,
+        "origin_y": -26,
+        "width": 19,
+        "height": 25
+      }
+    ]
+  },
+  "p1-r064": {
+    "path": "icons/p1-r064.png",
+    "width": 27,
+    "height": 25,
+    "palette": 1,
+    "sha256": "f77d1c779fee0e5a0bc848e056e93e82919cf0961f852e08172c0bab67dcc462",
+    "layers": [
+      {
+        "resource": 64,
+        "image": 1,
+        "rom_offset": 2418684,
+        "origin_x": -14,
+        "origin_y": -23,
+        "width": 27,
+        "height": 25
+      }
+    ]
+  },
+  "p1-r025": {
+    "path": "icons/p1-r025.png",
+    "width": 63,
+    "height": 51,
+    "palette": 1,
+    "sha256": "7f3eadea6a90a9321d7075f6fd5439b64ee81f6f3d133517cb2be9f32767cb4d",
+    "layers": [
+      {
+        "resource": 25,
+        "image": 1,
+        "rom_offset": 2288868,
+        "origin_x": -33,
+        "origin_y": -49,
+        "width": 63,
+        "height": 51
+      }
+    ]
+  },
+  "p1-r006": {
+    "path": "icons/p1-r006.png",
+    "width": 24,
+    "height": 35,
+    "palette": 1,
+    "sha256": "b935e150646e8951b5d8e97ad4d799b06e452c1342d0404798238dfcc535fd08",
+    "layers": [
+      {
+        "resource": 6,
+        "image": 1,
+        "rom_offset": 1106776,
+        "origin_x": -11,
+        "origin_y": -34,
+        "width": 24,
+        "height": 35
+      }
+    ]
+  },
+  "p1-r007": {
+    "path": "icons/p1-r007.png",
+    "width": 40,
+    "height": 53,
+    "palette": 1,
+    "sha256": "82581c39e0302a873bd1a917b30dab63c112d097267a1c4763eb3b09e6f381f0",
+    "layers": [
+      {
+        "resource": 7,
+        "image": 1,
+        "rom_offset": 1248304,
+        "origin_x": -19,
+        "origin_y": -52,
+        "width": 40,
+        "height": 53
+      }
+    ]
+  },
+  "p1-r040": {
+    "path": "icons/p1-r040.png",
+    "width": 15,
+    "height": 21,
+    "palette": 1,
+    "sha256": "3a9af8e9982a5ec00221312f71c55e3a7c97d7bc840be3da060988b98cf22c3b",
+    "layers": [
+      {
+        "resource": 40,
+        "image": 9,
+        "rom_offset": 3405082,
+        "origin_x": -6,
+        "origin_y": -23,
+        "width": 15,
+        "height": 21
+      }
+    ]
+  },
+  "p1-r038": {
+    "path": "icons/p1-r038.png",
+    "width": 31,
+    "height": 17,
+    "palette": 1,
+    "sha256": "702ac6a698a77e18f6fed5f6fa88abe6f8306a30f9b6a527498fd37438b30e62",
+    "layers": [
+      {
+        "resource": 38,
+        "image": 7,
+        "rom_offset": 3403880,
+        "origin_x": -14,
+        "origin_y": -21,
+        "width": 31,
+        "height": 17
+      }
+    ]
+  },
+  "p1-r057": {
+    "path": "icons/p1-r057.png",
+    "width": 27,
+    "height": 24,
+    "palette": 1,
+    "sha256": "262d6ebf7959b9bb35bb22a534aceae27bbb2390e2eb93e8a07190f1666d0642",
+    "layers": [
+      {
+        "resource": 57,
+        "image": 25,
+        "rom_offset": 3413898,
+        "origin_x": -12,
+        "origin_y": -25,
+        "width": 27,
+        "height": 24
+      }
+    ]
+  },
+  "p1-r050": {
+    "path": "icons/p1-r050.png",
+    "width": 25,
+    "height": 24,
+    "palette": 1,
+    "sha256": "20c18ccb89df7130db7614f0855198320a66f64d27c818db119c1bcec7b46e49",
+    "layers": [
+      {
+        "resource": 50,
+        "image": 16,
+        "rom_offset": 3408402,
+        "origin_x": -11,
+        "origin_y": -24,
+        "width": 25,
+        "height": 24
+      }
+    ]
+  },
+  "p1-r004": {
+    "path": "icons/p1-r004.png",
+    "width": 57,
+    "height": 70,
+    "palette": 1,
+    "sha256": "7b9c90e4795cb82bd6905697501e7c757472890f063cd6b431fa7b4abde86e82",
+    "layers": [
+      {
+        "resource": 4,
+        "image": 1,
+        "rom_offset": 917424,
+        "origin_x": -27,
+        "origin_y": -69,
+        "width": 57,
+        "height": 70
+      }
+    ]
+  },
+  "p1-r060": {
+    "path": "icons/p1-r060.png",
+    "width": 24,
+    "height": 24,
+    "palette": 1,
+    "sha256": "86389db7bdd3cbe706bc12a20fb3bcdc504b129c96ba9eb142c2d0adcec9fcab",
+    "layers": [
+      {
+        "resource": 60,
+        "image": 24,
+        "rom_offset": 3413314,
+        "origin_x": -11,
+        "origin_y": -25,
+        "width": 24,
+        "height": 24
+      }
+    ]
+  },
+  "p1-r039": {
+    "path": "icons/p1-r039.png",
+    "width": 32,
+    "height": 18,
+    "palette": 1,
+    "sha256": "f5cd08ac3310f1f385c3a5ba362263ff7c77f56dc0254a167ec32ab31ef16821",
+    "layers": [
+      {
+        "resource": 39,
+        "image": 10,
+        "rom_offset": 3405384,
+        "origin_x": -15,
+        "origin_y": -23,
+        "width": 32,
+        "height": 18
+      }
+    ]
+  },
+  "p1-r077": {
+    "path": "icons/p1-r077.png",
+    "width": 80,
+    "height": 95,
+    "palette": 1,
+    "sha256": "ee338c1c406770a50abc5f2475c88fbb750c937c4771cf683e23825257a17cc8",
+    "layers": [
+      {
+        "resource": 77,
+        "image": 1,
+        "rom_offset": 2962840,
+        "origin_x": -40,
+        "origin_y": -87,
+        "width": 80,
+        "height": 95
+      }
+    ]
+  },
+  "p0-r101-shirt0": {
+    "path": "icons/p0-r101-shirt0.png",
+    "width": 21,
+    "height": 61,
+    "palette": 0,
+    "sha256": "d6f54bf5da46bb62a02871f799b6877ecea79b33d62d1b95461cfce9e9a41ba0",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 106,
+        "image": 1,
+        "rom_offset": 3620952,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p0-r055": {
+    "path": "icons/p0-r055.png",
+    "width": 31,
+    "height": 32,
+    "palette": 0,
+    "sha256": "c76b3dcd424f2f7c2b1e3f58659956e39cb50d8f8fd0922812db15cd6d2e8ef5",
+    "layers": [
+      {
+        "resource": 55,
+        "image": 21,
+        "rom_offset": 3411422,
+        "origin_x": -14,
+        "origin_y": -29,
+        "width": 31,
+        "height": 32
+      }
+    ]
+  },
+  "p0-r101-shirt2": {
+    "path": "icons/p0-r101-shirt2.png",
+    "width": 21,
+    "height": 61,
+    "palette": 0,
+    "sha256": "3ea8de99dbd62d31ae1564ef128ef36d482d015475293c274be4372a5cea8792",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 116,
+        "image": 1,
+        "rom_offset": 3598848,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p0-r101-shirt1": {
+    "path": "icons/p0-r101-shirt1.png",
+    "width": 21,
+    "height": 61,
+    "palette": 0,
+    "sha256": "08b95b5613b2453a09b1d37b3397fea4da2fccfcd1a57cae42bec352d09184f6",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 111,
+        "image": 1,
+        "rom_offset": 3609900,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p1-r101-shirt2": {
+    "path": "icons/p1-r101-shirt2.png",
+    "width": 21,
+    "height": 61,
+    "palette": 1,
+    "sha256": "385e64d77a540db969eacb4ebc973fa356e9e6d3c168a63269c4538c4760c7a2",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 116,
+        "image": 1,
+        "rom_offset": 3598848,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p1-r101-shirt1": {
+    "path": "icons/p1-r101-shirt1.png",
+    "width": 21,
+    "height": 61,
+    "palette": 1,
+    "sha256": "e7029dcf7810ceb931f678806ce950cf9c82485cb9eecdd4b3ac2b8c5e8c20bb",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 111,
+        "image": 1,
+        "rom_offset": 3609900,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  },
+  "p1-r101-shirt0": {
+    "path": "icons/p1-r101-shirt0.png",
+    "width": 21,
+    "height": 61,
+    "palette": 1,
+    "sha256": "d8e0ce74e4af6409ef62179a8e7fba69d4d10095e6de21253a56a16470cef5bd",
+    "layers": [
+      {
+        "resource": 101,
+        "image": 1,
+        "rom_offset": 3539236,
+        "origin_x": -11,
+        "origin_y": -61,
+        "width": 21,
+        "height": 61
+      },
+      {
+        "resource": 106,
+        "image": 1,
+        "rom_offset": 3620952,
+        "origin_x": -6,
+        "origin_y": -53,
+        "width": 12,
+        "height": 16
+      }
+    ]
+  }
+}

@@ -1,0 +1,258 @@
+[
+  {
+    "level": 0,
+    "title": "Temple Of Herkat Upper",
+    "path": "data/level-01.json",
+    "sectors": 63,
+    "markers": 31,
+    "secrets": 1,
+    "bounds": {
+      "min_x": -5888,
+      "max_x": 5440,
+      "min_y": -4096,
+      "max_y": 4032,
+      "min_height": -32,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 1,
+    "title": "Temple Of Herkat Lower",
+    "path": "data/level-02.json",
+    "sectors": 112,
+    "markers": 91,
+    "secrets": 1,
+    "bounds": {
+      "min_x": -4160,
+      "max_x": 4160,
+      "min_y": -4160,
+      "max_y": 5248,
+      "min_height": -128,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 2,
+    "title": "Amon Thule",
+    "path": "data/level-03.json",
+    "sectors": 85,
+    "markers": 125,
+    "secrets": 1,
+    "bounds": {
+      "min_x": -6528,
+      "max_x": 5184,
+      "min_y": -4800,
+      "max_y": 4224,
+      "min_height": 0,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 3,
+    "title": "Slave Compound",
+    "path": "data/level-04.json",
+    "sectors": 93,
+    "markers": 147,
+    "secrets": 1,
+    "bounds": {
+      "min_x": -3136,
+      "max_x": 5696,
+      "min_y": -4416,
+      "max_y": 7616,
+      "min_height": 0,
+      "max_height": 768
+    }
+  },
+  {
+    "level": 4,
+    "title": "Pyramid Entrance",
+    "path": "data/level-05.json",
+    "sectors": 109,
+    "markers": 171,
+    "secrets": 1,
+    "bounds": {
+      "min_x": -4992,
+      "max_x": 6656,
+      "min_y": -4416,
+      "max_y": 5120,
+      "min_height": -128,
+      "max_height": 704
+    }
+  },
+  {
+    "level": 5,
+    "title": "Tomb Of Ramses",
+    "path": "data/level-06.json",
+    "sectors": 51,
+    "markers": 165,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -1984,
+      "max_x": 6528,
+      "min_y": -5056,
+      "max_y": 4416,
+      "min_height": -64,
+      "max_height": 448
+    }
+  },
+  {
+    "level": 6,
+    "title": "The Forum Of Mars",
+    "path": "data/level-07.json",
+    "sectors": 46,
+    "markers": 138,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -6592,
+      "max_x": 6400,
+      "min_y": -6272,
+      "max_y": 5056,
+      "min_height": 0,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 7,
+    "title": "Slave Quarters",
+    "path": "data/level-08.json",
+    "sectors": 77,
+    "markers": 137,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -6656,
+      "max_x": 4928,
+      "min_y": -3072,
+      "max_y": 5184,
+      "min_height": -64,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 8,
+    "title": "Gladiator School",
+    "path": "data/level-09.json",
+    "sectors": 33,
+    "markers": 128,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -4992,
+      "max_x": 9152,
+      "min_y": -6528,
+      "max_y": 5312,
+      "min_height": -32,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 9,
+    "title": "Baths Of Diocletian",
+    "path": "data/level-10.json",
+    "sectors": 30,
+    "markers": 63,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -7040,
+      "max_x": 5440,
+      "min_y": -2048,
+      "max_y": 2688,
+      "min_height": -256,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 10,
+    "title": "Praetorian Fort",
+    "path": "data/level-11.json",
+    "sectors": 97,
+    "markers": 120,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -4416,
+      "max_x": 4032,
+      "min_y": -5440,
+      "max_y": 3328,
+      "min_height": -384,
+      "max_height": 384
+    }
+  },
+  {
+    "level": 11,
+    "title": "Caesar'S Palace",
+    "path": "data/level-12.json",
+    "sectors": 77,
+    "markers": 137,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -4928,
+      "max_x": 4736,
+      "min_y": -5120,
+      "max_y": 4992,
+      "min_height": -64,
+      "max_height": 576
+    }
+  },
+  {
+    "level": 12,
+    "title": "Egypt Multiplayer 1",
+    "path": "data/level-13.json",
+    "sectors": 22,
+    "markers": 27,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -2752,
+      "max_x": 2752,
+      "min_y": -2688,
+      "max_y": 3584,
+      "min_height": 0,
+      "max_height": 256
+    }
+  },
+  {
+    "level": 13,
+    "title": "Egypt Multiplayer 2",
+    "path": "data/level-14.json",
+    "sectors": 9,
+    "markers": 21,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -3328,
+      "max_x": 2880,
+      "min_y": -3456,
+      "max_y": 2688,
+      "min_height": 0,
+      "max_height": 512
+    }
+  },
+  {
+    "level": 14,
+    "title": "Rome Multiplayer 1",
+    "path": "data/level-15.json",
+    "sectors": 25,
+    "markers": 19,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -1984,
+      "max_x": 1984,
+      "min_y": -1984,
+      "max_y": 1984,
+      "min_height": 0,
+      "max_height": 384
+    }
+  },
+  {
+    "level": 15,
+    "title": "Rome Multiplayer 2",
+    "path": "data/level-16.json",
+    "sectors": 13,
+    "markers": 21,
+    "secrets": 0,
+    "bounds": {
+      "min_x": -3008,
+      "max_x": 1280,
+      "min_y": 2880,
+      "max_y": 7360,
+      "min_height": 0,
+      "max_height": 512
+    }
+  }
+]

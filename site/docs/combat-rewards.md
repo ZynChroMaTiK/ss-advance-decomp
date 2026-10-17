@@ -1,0 +1,20 @@
+# Kill reward 080125E0
+
+`ssa_combat_reward` recovers the entire original routine. Entity types CD through
+D6 add 2000 to the unsigned 32-bit value at GAME+88, wrapping on overflow. All
+other types leave it unchanged, including bosses D7/D8. There are no callbacks,
+allocations, entity releases, or entity mutations. In particular, this reward
+cannot change the active entity prefix during an explosion traversal.
+
+The caller decides eligibility: this helper does not inspect kill credit,
+health, player count, or prior awards. It does not implement group release.
+The damage adapter should pass its shared GAME+88 counter directly, ensuring
+later credited kills see earlier increments. A NULL counter is a native error
+and returns -1; other calls return 0.
+
+`tests/test_combat_rewards_rom.py` passes 65,910 complete original-routine
+comparisons with no hooked dependencies. It tests all 65,536 entity types and
+score overflow boundaries, compares the complete 0x74-byte entity and 0xC0-byte
+GAME region, and tests the native NULL guard. The native shared library is built
+with undefined-behavior sanitization. Machine-readable results and source hash
+are in `native-combat-rewards-validation.json`.

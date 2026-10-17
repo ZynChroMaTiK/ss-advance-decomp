@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "checks": {
+    "html_links_and_inline_scripts": 396,
+    "viewer_javascript": "syntax and DOM bindings",
+    "geometry_helpers": "executed against all exported levels",
+    "css": "parsed",
+    "vendor": "pinned SHA256 verified",
+    "embedded_atlas_hashes": "PASS",
+    "rom": "unchanged"
+  },
+  "levels": 16,
+  "floor_triangles": 6539,
+  "wall_triangles": 29090,
+  "markers": 1541,
+  "secrets": 5,
+  "http": {
+    "status": "PASS",
+    "prefix": "/ss-advance-decomp/",
+    "http_resources": 315,
+    "javascript_mime": "PASS"
+  },
+  "browser_webgl_visual_qa": "unavailable: no browser connected"
+}

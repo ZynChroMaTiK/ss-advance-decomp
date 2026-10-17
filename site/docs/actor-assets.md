@@ -1,0 +1,142 @@
+# Original world actor images and pixel drawing
+
+`actor_assets.c` loads the game's actor artwork into owned native memory.
+`actor_raster.c` implements the complete `08009258` drawing routine and its
+ARM pixel loop (`08000638`, copied to `03000110`). It consumes the projection
+record produced by D490/D884 and the signed clipping pairs produced by1238.
+The original09238 wrapper is also an exact32-byte match in
+`recovered/actor_draw.c`, verified by decomp.wtf on the first manual compile.
+The matcher released the claim automatically and the findings were saved as
+an engine note. Native asset decoding and pixel comparisons are separate from
+this exact-match result.
+
+These are actual world sprites. The earlier `sprite_assets.c` module handles
+hardware OAM artwork such as weapon overlays and uses a different format and
+resource table. This module does not substitute those images for actors.
+
+## Resource and image layout
+
+The original0890 initializer walks142 descriptors at `08449D2C`, each12 bytes:
+
+| Offset | Meaning |
+| --- | --- |
+| +0 | ROM pointer to image-pointer table, or zero |
+| +4 | ROM pointer to animation data |
+| +8 | unsigned16 directional count |
+| +A | unsigned16 available resolution flags |
+
+The image table's first32-bit word is its count. Following words are image
+pointers, numbered from1. Original0890 computes the per-resource frame byte
+as `count / directions / popcount(flags)` with truncating division, then byte
+truncation. The native loader preserves that behavior: it does not demand
+divisibility. For example resource15 has7 images,5 directions and one
+resolution, yielding1 frame. The four null image tables (IDs0..3) get explicit
+zero native frame bytes; the original initializer leaves their allocated bytes
+untouched. The animation pointer is retained only as a ROM offset for metadata;
+this decoder does not implement animation playback.
+
+There are138 nonempty descriptors,5,407 image references and2,607 unique image
+addresses. Shared image references are copied separately for simple ownership:
+7,053,920 decoded bytes across152,440 referenced columns. The largest actual
+width and height are both100 pixels.
+
+Each image starts with a32-byte header:
+
+| Offset | Meaning consumed here |
+| --- | --- |
+| +0 | ASCII `AGB*` magic |
+| +18 | signed16 horizontal origin |
+| +1A | signed16 vertical origin |
+| +1C | unsigned16 width |
+| +1E | unsigned16 height |
+| +20 | `width` little-endian unsigned16 column offsets |
+
+Column offsets are relative to the byte immediately after the offset array.
+Each column decompresses to exactly `height` palette-index bytes. A packet
+with bit80 set emits `packet & 7F` transparent zeros. A packet with bit80 clear
+copies that many following literal bytes. Zero-count packets are invalid: the
+original assembly would enter a decrement loop rather than safely terminate.
+Literal index0 is also transparent at drawing time. Decoded storage remains
+column-major, `pixels[x * height + y]`; the preview/export helper transposes
+to rows. Other header bytes are retained in the original ROM but are not
+assigned speculative meanings here.
+
+## Sampling and clipping
+
+The36-byte `SsaActorProjection` layout is shared through `actor_queue.h`.
+09238 truncates its index to16 bits and forwards the selected record and clip
+pointer. 09258 resolves resource+image, reads its dimensions and uses the
+original reciprocal data at08034934 for12-bit sampling steps. The native asset
+loader copies all65,536 entries rather than recreating a reciprocal formula.
+Scale65536 has the original special case, selecting entries4096 and6144.
+Other scales select the horizontal entry directly and the vertical entry at
+`scale + arithmetic_shift_right(scale,1)`; out-of-range indices produce zero
+steps. Horizontal flip starts at `(width << 12)-1` and negates the step.
+The original image-index left shift discards bit30 as well as the mirror bit31;
+the native sampler preserves that wrap.
+
+Screen clipping is to the original120x120 indexed world framebuffer. Each
+drawn column consumes one signed16 `{top,bottom}` pair; bottom is exclusive.
+Top clipping from the screen and from the per-column aperture uses separate
+integer/fraction calculations. Combining those fractions would change sampled
+rows, so the native code retains the separate floors. Transparent samples leave
+the destination unchanged. Original scratch column caching affects speed only;
+native decoded columns avoid that scratch without changing output pixels.
+
+The loader also copies121 bytes each from0844A9FC and0844AA74. These are the
+closed top/bottom clipping arrays, including the original following byte read
+by1238's inclusive-right endpoint. Keeping these bytes prevents adapters from
+inventing zero padding at column120.
+
+## Native ownership and failure behavior
+
+Zero-initialize `SsaActorAssets` before first load. Successful loads replace a
+previous load; failed loads leave it unchanged. Free before owner teardown,
+and never load/free while another subsystem borrows its metadata or pixels.
+No ROM pointer remains after loading. Resource dimensions and packet streams
+are fully bounded. Allocation limits are3,000 images per resource,1,024 pixels
+per dimension, and64MiB of decoded payload. These are native safety limits,
+not a claim that the original engine supported malformed resources safely.
+
+`ssa_actor_raster_draw` checks framebuffer capacity, aperture storage, projection
+bounds and every source sample before changing pixels. Its second pass draws
+only after validation succeeds. Invalid input returns-1 with the framebuffer
+unchanged; successful and empty draws return1. Inputs must stay stable and must
+not alias the framebuffer. Invalid source indexing, negative draw dimensions,
+and original zero-count loops are guarded instead of being emulated as memory
+corruption. Framebuffer pitch is exactly120, matching the recovered renderer.
+
+## Sam/body artwork
+
+Original05E4C initializes the player with animation101 (`0x65`). Resource101
+contains five directional standing images. Resources102/103 and adjacent
+five-resource families provide further original directional frames. D338's
+player-flag branch temporarily adds `(entity.byte54 + 1) * 5` to the image
+resource before a second projection call. The projection adapter owns the
+precise layer selection; this decoder exposes all resources without guessing
+a replacement image or a new animation mapping.
+
+Original-data previews are generated under `build/native-tests/`, including
+`actor-101-001.png`, `actor-101-003.png`, `actor-102-001.png`, and
+`actor-106-001.png`. They use the original world RGB555 palette with index0
+transparent. Their four-times enlargement is nearest-neighbor inspection only;
+the native renderer samples the original dimensions.
+
+## Verification and remaining integration
+
+Run `tests/test_actor_assets.py` with the workspace Linux Python environment.
+It compiles strict C11 native modules, validates every resource/image and every
+column against independent decoding, executes original0890 metadata setup,
+then executes whole09238 ->09258 ->ARM0638 with real image streams. Original
+ROM code executes only inside the Unicorn test oracle.
+
+The final counts and file hashes are in `native-actor-assets-validation.json`.
+Cases include all5,407 image references, mirrored and clipped unique images,
+scale65536 and zero-step branches, source-index wrap,2,617 malformed loads and
+11 atomic raster guards. A separate ASan+UBSan executable draws all references
+and their mirrors, checking37,860 assertions. Sanitizer settings use `-no-pie`
+and `detect_leaks=0`, consistent with the other workspace suites.
+
+This module supplies real actor pixels to the projection/occlusion adapters.
+It alone does not render a complete gameplay scene, spawn or animate enemies,
+add a third-person body to an executable, or finish the native game port.

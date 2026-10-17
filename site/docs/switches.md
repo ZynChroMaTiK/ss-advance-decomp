@@ -1,0 +1,50 @@
+# Switch registration and activation
+
+`src/switches.c` recovers `0801C3B4` initialization, its texture lookup helper
+`0801C374`, and `0801C518` activation. These are native behavioral ports, not
+new byte-exact matches.
+
+Initialization registers every line whose type at `+24` is 2, in line order.
+Each 12-byte record retains the line index, trigger at line `+26`, type, two
+one-byte texture indices, and flags. The front side's signed middle-texture
+index selects the current texture. Four texture names are read from the user's
+ROM pointer table at `0844DD8C`; adjacent names form off/on pairs. Matching uses
+the original case-insensitive comparison of at most eight bytes, with the ROM
+character-class table. Pair lookup selects the first matching texture. Texture
+indices deliberately truncate to eight bits, including indices above 255.
+An on-name sets flag 1; an off-name clears it.
+
+The original allocator does not initialize storage. Native allocation is
+explicitly zero-filled: unknown texture names leave both texture indices and
+flags zero, and reserved bytes remain zero. Differential initialization supplies
+zero-filled storage at the original allocator boundary, so it does not claim
+that the original heap was always zero. A recognized name whose paired texture
+is missing is a native error. The original instead performs arithmetic on a
+null lookup result. Invalid signed side/texture indices and truncated records
+are also rejected before binding the output object.
+
+Activation selects the first record for the requested line. Flag 1 makes it a
+no-op. Otherwise it sets that flag, writes the on-texture to the front side,
+enqueues the stored trigger, then requests sound 41. Callback observers therefore
+see the changed flag and texture. A missing record is a native error; original
+code can use the final record or uninitialized state when callers violate its
+registration assumption.
+
+The switch collection owns its records and borrows stable mutable map storage.
+Initialize its structure to zero and free it before reuse. Enqueue and sound
+callbacks are required and return nonnegative values on success. Failure stops
+subsequent callbacks, clears the reentry guard, and preserves earlier effects.
+Callbacks must not replace pointers or mutate map layout; activation and free
+reject reentry. This module supplies neither script execution nor sound playback.
+
+`tests/test_switches_rom.py` passes **6,582 original-routine comparisons**:
+530 complete initializations, 2,120 texture lookups and 3,932 activations. Tests
+cover all 16 real maps plus generated maps, empty registration, duplicate
+records, mixed-case names, unknown names, texture indices above 255, randomized
+record fields, and ordered callback snapshots with controlled record mutation.
+Original comparator instructions execute intact. Only allocation and activation's
+enqueue/sound boundaries are hooked. Full map buffers and switch records are
+compared, including untouched fields. Another 25 native guard cases and 128
+callback-failure cases validate malformed inputs, partial effects and reentry.
+The native shared library runs with undefined-behavior sanitization. Results and
+the production-source hash are in `native-switches-validation.json`.

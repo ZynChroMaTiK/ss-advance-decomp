@@ -1,0 +1,97 @@
+# CF, D0, D1 and D2 controllers
+
+`enemy_control.c` recovers complete original dispatchers 08013040 (CF),
+0801319C (D0), 08013B40 (D1), and 08013350 (D2), including every state handler.
+It uses the existing native activation, navigation, drain, facing and corpse
+routines. `enemy_control.h` also defines the common event contract consumed by
+the separately recovered CE/D3/D4/D5/D6 controllers.
+
+CF is the placed enemy in level zero. Its active state first bobs above the
+unsigned floor halfword using original byte +42 and wrapped arithmetic, then
+navigates, applies contact damage, processes drain/hurt, and attempts a shot.
+The shot requests original1097C type66 with forward and Z offsets 80 units,
+side zero and facing minus half a turn. The creation routine determines speed;
+the fifth original argument is Z offset, not speed. Attack recovery, pain,
+death animation and sound order are preserved. D0 has no ranged attack.
+D1 uses type66 with a 70-unit Z offset; D2 uses type6B.
+
+Shared12638 ignores its original mode argument. A blocked move in phase2 with
+a player blocker emits damage40 for D0/D6 or20 for other types and returns1.
+The branches at126B0 and126BA lead to126C4, which sets that success result.
+Shared12C60 decrements its signed-halfword timer, requires navigation flag1,
+calls actual autoaim A4F4, and reloads the type-specific period only when the
+selected entity has player flag10 or the source has conversion flag400.
+Periods come from0844BFD8 at stride8. Movement coefficients are the existing
+0844BFD4 table and have no difficulty adjustment in1288C.
+
+The original attack gate dereferences address30 when autoaim finds no target.
+The native port explicitly treats a NULL target's flags as zero; no-hit then
+rejects firing unless the source has flag400. This safe native behavior is
+tested separately and is not described as an original-ROM comparison.
+
+`tests/test_enemy_control_rom.py` executes complete original dispatchers with
+navigation1288C controlled to leave fields unchanged, A4F4 returning a real
+selected player, and projectile1097C recorded as an allocation/effect boundary.
+Combat/audio/group/destruction are controlled events. Original activation,
+drain, bobbing, math/facing, animation setter and lifecycle instructions run.
+All projected fields and ordered event snapshots are compared. The test is
+not proof of whole-controller world navigation or projectile flight.
+
+Validation:15,744 whole-dispatch comparisons,20 invalid-state guards,
+10,804 callback reentry checks and6 callback failure paths. A separate native
+ASan/UBSan executable runs32,768 frames over1,024 complete controller lifetimes,
+including the NULL aim extension. See native-enemy-control-validation.json.
+
+The actual decomp.wtf engine stores a recovery note on catalogued1319C.
+13040 is not catalogued, so no speculative split or exact-match claim was made.
+These behavioral ports do not increase the byte-matched function count.
+
+# Production binding
+
+`enemy_control_runtime.c` owns stable control/navigation projections for100
+slots, plus dedicated native A4F4 aim scratch. It borrows combat, projectile,
+query, script-spawn and world ownership. It lazily binds owned state-zero
+CE..D6 slots; CD retains its existing adapter. Adopted map slots are supported
+regardless of reserved-prefix index. Do not release/reuse a bound actor outside
+this adapter. The original active pool controls outer dispatch ordering.
+
+Each step holds combat/player/spawn locks while running actual world movement,
+hazards, targeting, contact damage, projectile creation and CE player knockback.
+Animation events reset real actor metadata. Group notification precedes the
+corpse timer; destruction releases the slot after the scope returns. Mirrors
+flush even after an event error. Earlier effects remain on failure.
+
+The caller refreshes game.player and record XY independently, and supplies the
+actual per-type navigation coefficient in frame.speed_factor. CE loop_source
+is03004674, distinct from CD's03004670.1097C uses navigation.target (original
+source+20) exactly; NULL makes a horizontal shot rather than aiming at a guessed
+player. Audio/music/notice remain explicit presentation services.
+
+`tests/test_enemy_control_runtime.py` passes200,948 ASan/UBSan assertions over
+all16maps and nine enemy types:18,432 controller frames,9,596 actual movements,
+42 actual projectile allocations,86 contact health changes,144 native-combat
+death/group/corpse cycles,144 slot reuses,864 guards,144 callback failures and
+690 callback reentry probes. Actual00908 animation clocks drive state recovery.
+The fixture spawns original enemy definitions through real VM/spawn code at
+real player starts, then attempts legal world relocation; blocked placements
+remain blocked. It does not claim these placements are the original campaign
+layout. Created projectiles are counted and released; their flight is tested
+separately. ASan/UBSan uses-no-pie and disables leak scanning.
+
+## Retained conversion targets
+
+The updated map8 replay exposed a production error at frame8423: a converted
+Gunrilla retained a navigation target whose corpse had expired. Its pointer still
+referred to stable pool storage, but projectile_runtime required that target to
+remain registered and returned an error. Enemy1097C construction now accepts
+known stable actor slots as targets, including cleared slots. Sources still must
+be registered and combat-bound; foreign target pointers remain rejected.
+
+Preserve allocation before reading the target. The new projectile can reuse the
+same slot, so copying its old coordinates or substituting the player changes
+original behavior. Two directed original1097C comparisons cover cleared target
+storage and target/projectile aliasing; the complete oracle passes8194cases.
+The native generic suite passes202356ASan/UBSan assertions, including16actual
+Gunrilla shots through released targets immediately reused for their cannonballs,
+32additional invalid-source/foreign-target guards and738callback reentry probes.
+The replay then completes map8 and carries earned inventory into map9.

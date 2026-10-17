@@ -1,0 +1,51 @@
+# Native hitscan geometry
+
+`weapon_hit.c` recovers the geometry of 0800A444 and its 9DE4 predicate using
+the shared flags-3 collector from `weapon_aim.c`. It does not execute ROM code.
+Use the same `SsaWeaponAim` context as automatic aim: original top/bottom slopes
+and opening values are globals shared between these routines. A444 leaves its
+previous aim target and debug endpoints intact. The shot heading comes from
+the entity facing byte shifted left eight, independently of full player yaw.
+
+Two-sided walls compare the shot slope against openings only where the two
+sectors have different floor/ceiling heights. A wall can also stop the ray
+silently when the stale top slope is <= bottom slope; this is preserved and
+must not be replaced with a new initial aperture. Explicit wall impacts use
+the intercept fraction minus fixed divide of four units by the shot range.
+Entity impacts use fraction minus its fixed product with 0x1999. X/Y are then
+interpolated along the nudged ray, and Z uses shot slope, adjusted fraction
+and range with the original order of fixed multiplications.
+
+The predicate ignores source and entities without flag 2. An entity whose
+vertical interval contains the shot slope stops the ray even with health zero
+or damage zero. Geometry returns that entity and the computed impact point.
+After the query releases the world lock, the caller must check nonzero damage
+and nonzero signed health before emitting impact 9D4C followed by damage 37F4.
+Negative nonzero health/damage values pass that original check. Wall impact
+always requests 9D4C with NULL target. Terminal damage does not affect subsequent
+ray selection because the predicate immediately stops at its first target.
+
+The query returns 1 for successful geometry evaluation (including a miss or
+silent wall stop), -1 for invalid/reentrant use. Output `impact` distinguishes
+an impact point from a miss; target NULL with impact set identifies a wall.
+The shared query workspace's blocking fraction retains original stale behavior.
+World ownership and geometry must remain stable through the query and its
+deferred presentation/damage effects. No movement blocker is overwritten.
+
+`tests/test_weapon_hit_rom.py` passes 8,192 whole A444 comparisons on all 16
+maps, executing original math, block traversal, wall/entity collection and
+9DE4. Only terminal 9D4C/37F4 are intercepted to record their ordered arguments.
+An observation inside the entity predicate also checks impact geometry when
+damage/health suppress both effects. Native combat effects are not executed
+by this differential test; their adapter integration is tested separately.
+
+Cases include stale arbitrary aperture values, live floor/ceiling edits,
+fractional and negative starts, cardinal/random facing, zero ranges, extreme
+signed slopes, ordered ties, zero and negative health/damage. Every intercept,
+consumed fraction, shared opening and persistent aim field is compared.
+Results: 1,775 entity hits, 1,693 wall impacts, 4,724 calls without impact,
+1,091 suppressed entity effect sequences and 3,061 terminal calls. There are
+64 direct guard checks, 80 callback reentry checks and 16 predicate failures
+with restored locks. UndefinedBehaviorSanitizer is enabled; see the hashes in
+`native-weapon-hit-validation.json`. This is behavioral recovery, not an exact
+matching candidate, projectile implementation or complete playable weapon.

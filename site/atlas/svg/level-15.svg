@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1900" viewBox="0 0 2200 1900">
+<style>text{font-family:Arial,sans-serif;paint-order:stroke;stroke:#101822;stroke-width:2px;stroke-linejoin:round} [data-ref]{cursor:pointer} [data-layer="enemies"],[data-layer="scripted-enemies"],[data-layer="triggers"]{display:none}</style>
+<rect data-layer="base" fill="#101822" stroke="none" stroke-width="0" x="0" y="0" width="2200" height="1900"/>
+<rect data-layer="base" fill="#172330" stroke="none" stroke-width="0" x="1750" y="160" width="410" height="1590"/>
+<text data-layer="base" x="60" y="49" fill="#5ed8d0" font-size="18">SERIOUS SAM ADVANCE   /   EXPLORATION ATLAS</text>
+<text data-layer="base" x="60" y="102" fill="#ffffff" font-size="38">15  Rome Multiplayer 1</text>
+<text data-layer="base" x="60" y="138" fill="#a1b5c9" font-size="18">Complete ROM geometry  |  +Y up, +X right  |  Door labels match the panel  |  Coordinates in original map units</text>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M324.84,1680.0 L324.84,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M513.23,1680.0 L513.23,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M701.61,1680.0 L701.61,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M890.0,1680.0 L890.0,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M1078.39,1680.0 L1078.39,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M1266.77,1680.0 L1266.77,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M1455.16,1680.0 L1455.16,220.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,1515.16 L1620.0,1515.16"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,1326.77 L1620.0,1326.77"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,1138.39 L1620.0,1138.39"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,950.0 L1620.0,950.0"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,761.61 L1620.0,761.61"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,573.23 L1620.0,573.23"/>
+<path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M160.0,384.84 L1620.0,384.84"/>
+<path data-layer="base" data-ref="sector-0" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M348.39,761.61 L324.84,761.61 L324.84,902.9 L348.39,902.9 Z M1078.39,1515.16 L1078.39,1491.61 L937.1,1491.61 L937.1,1515.16 Z M348.39,1138.39 L348.39,1161.94 L678.06,1491.61 L701.61,1491.61 Z M842.9,1515.16 L842.9,1491.61 L678.06,1491.61 L701.61,1515.16 Z M348.39,997.1 L324.84,997.1 L324.84,1138.39 L348.39,1161.94 Z M1078.39,1044.19 L1078.39,761.61 L795.81,761.61 L795.81,855.81 L984.19,1044.19 Z M1455.16,1138.39 L1431.61,1138.39 L1078.39,1491.61 L1078.39,1515.16 Z M1455.16,761.61 L1078.39,761.61 L1078.39,997.1 L1455.16,997.1 Z M1078.39,997.1 L1078.39,1044.19 L1431.61,1044.19 L1431.61,997.1 Z M1431.61,1138.39 L1455.16,1138.39 L1455.16,997.1 L1431.61,997.1 Z M1101.94,408.39 L1101.94,761.61 L1455.16,761.61 Z M842.9,384.84 L842.9,761.61 L1101.94,761.61 L1101.94,408.39 L1078.39,384.84 Z M324.84,761.61 L348.39,761.61 L701.61,408.39 L701.61,384.84 Z M795.81,761.61 L842.9,761.61 L842.9,408.39 L795.81,408.39 Z M842.9,408.39 L842.9,384.84 L701.61,384.84 L701.61,408.39 Z"/>
+<path data-layer="base" data-ref="sector-1" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M937.1,997.1 L701.61,761.61 L348.39,761.61 L348.39,997.1 Z M937.1,997.1 L937.1,997.1 L842.9,997.1 L842.9,1491.61 L937.1,1491.61 Z M1078.39,1491.61 L1078.39,1138.39 L937.1,997.1 L937.1,997.1 L937.1,1491.61 Z M842.9,1491.61 L842.9,997.1 L348.39,997.1 L348.39,1138.39 L701.61,1491.61 Z M795.81,761.61 L701.61,761.61 L795.81,855.81 Z M1078.39,1138.39 L1078.39,1044.19 L984.19,1044.19 Z M1431.61,1138.39 L1078.39,1138.39 L1078.39,1491.61 Z M1078.39,1044.19 L1078.39,1138.39 L1431.61,1138.39 L1431.61,1044.19 Z M348.39,761.61 L701.61,761.61 L701.61,408.39 Z M701.61,761.61 L795.81,761.61 L795.81,408.39 L701.61,408.39 Z"/>
+<path data-layer="base" data-ref="sector-2" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M842.9,361.29 L842.9,384.84 L937.1,384.84 L937.1,361.29 Z"/>
+<path data-layer="base" data-ref="sector-3" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M842.9,220.0 L842.9,361.29 L1031.29,361.29 L1031.29,220.0 Z M772.26,337.74 L842.9,337.74 L842.9,243.55 L772.26,243.55 Z M772.26,220.0 L772.26,243.55 L842.9,243.55 L842.9,220.0 Z M842.9,361.29 L842.9,337.74 L772.26,337.74 L772.26,361.29 Z"/>
+<path data-layer="base" data-ref="sector-4" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M748.71,337.74 L772.26,337.74 L772.26,243.55 L748.71,243.55 Z"/>
+<path data-layer="base" data-ref="sector-5" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M725.16,337.74 L748.71,337.74 L748.71,243.55 L725.16,243.55 Z"/>
+<path data-layer="base" data-ref="sector-6" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M701.61,243.55 L701.61,337.74 L725.16,337.74 L725.16,243.55 Z"/>
+<path data-layer="base" data-ref="sector-7" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M701.61,220.0 L701.61,243.55 L772.26,243.55 L772.26,220.0 Z"/>
+<path data-layer="base" data-ref="sector-8" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M772.26,337.74 L701.61,337.74 L701.61,361.29 L772.26,361.29 Z"/>
+<path data-layer="base" data-ref="sector-9" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M160.0,220.0 L160.0,337.74 L701.61,337.74 L701.61,220.0 Z M160.0,761.61 L301.29,761.61 L701.61,361.29 L701.61,337.74 L160.0,337.74 Z"/>
+<path data-layer="base" data-ref="sector-10" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1455.16,902.9 L1455.16,997.1 L1478.71,997.1 L1478.71,902.9 Z"/>
+<path data-layer="base" data-ref="sector-11" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1620.0,808.71 L1502.26,808.71 L1502.26,1067.74 L1620.0,1067.74 Z M1478.71,808.71 L1478.71,1067.74 L1502.26,1067.74 L1502.26,808.71 Z"/>
+<path data-layer="base" data-ref="sector-12" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1620.0,1067.74 L1596.45,1067.74 L1596.45,1138.39 L1620.0,1138.39 Z"/>
+<path data-layer="base" data-ref="sector-13" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1596.45,1067.74 L1502.26,1067.74 L1502.26,1091.29 L1596.45,1091.29 Z"/>
+<path data-layer="base" data-ref="sector-14" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1478.71,1067.74 L1478.71,1138.39 L1502.26,1138.39 L1502.26,1067.74 Z"/>
+<path data-layer="base" data-ref="sector-15" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1502.26,1091.29 L1502.26,1114.84 L1596.45,1114.84 L1596.45,1091.29 Z"/>
+<path data-layer="base" data-ref="sector-16" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1502.26,1114.84 L1502.26,1138.39 L1596.45,1138.39 L1596.45,1114.84 Z"/>
+<path data-layer="base" data-ref="sector-17" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1620.0,1680.0 L1620.0,1138.39 L1478.71,1138.39 L1078.39,1538.71 L1078.39,1680.0 Z"/>
+<path data-layer="base" data-ref="sector-18" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M301.29,761.61 L160.0,761.61 L160.0,997.1 L301.29,997.1 Z M630.97,1680.0 L630.97,1680.0 L701.61,1538.71 L160.0,997.1 L160.0,997.1 L160.0,1209.03 Z M301.29,997.1 L160.0,997.1 L301.29,1138.39 Z"/>
+<path data-layer="base" data-ref="sector-19" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M324.84,902.9 L324.84,997.1 L348.39,997.1 L348.39,902.9 Z"/>
+<path data-layer="base" data-ref="sector-20" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M301.29,902.9 L301.29,997.1 L324.84,997.1 L324.84,902.9 Z"/>
+<path data-layer="base" data-ref="sector-21" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M842.9,1515.16 L937.1,1515.16 L937.1,1491.61 L842.9,1491.61 Z"/>
+<path data-layer="base" data-ref="sector-22" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M937.1,1515.16 L842.9,1515.16 L842.9,1538.71 L937.1,1538.71 Z"/>
+<path data-layer="base" data-ref="sector-23" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1078.39,1680.0 L1078.39,1538.71 L842.9,1538.71 L842.9,1680.0 Z M842.9,1680.0 L842.9,1680.0 L701.61,1538.71 L630.97,1680.0 Z M842.9,1680.0 L842.9,1538.71 L701.61,1538.71 Z"/>
+<path data-layer="base" data-ref="sector-24" fill="#334555" stroke="none" stroke-width="0" fill-rule="evenodd" d="M1620.0,220.0 L1101.94,220.0 L1101.94,361.29 L1478.71,738.06 L1620.0,738.06 Z M1219.68,526.13 L1313.87,620.32 L1337.42,596.77 L1243.23,502.58 Z"/>
+<path data-layer="geometry" data-ref="line-0" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1455.16,1138.39 L1078.39,1515.16"/>
+<path data-layer="geometry" data-ref="line-1" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1078.39,1515.16 L937.1,1515.16"/>
+<path data-layer="geometry" data-ref="line-2" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M701.61,1515.16 L324.84,1138.39"/>
+<path data-layer="geometry" data-ref="line-3" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M324.84,1138.39 L324.84,997.1"/>
+<path data-layer="geometry" data-ref="line-4" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M324.84,761.61 L701.61,384.84"/>
+<path data-layer="geometry" data-ref="line-5" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M701.61,384.84 L842.9,384.84"/>
+<path data-layer="geometry" data-ref="line-6" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1078.39,384.84 L1219.68,526.13"/>
+<path data-layer="geometry" data-ref="line-7" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1455.16,761.61 L1455.16,902.9"/>
+<path data-layer="geometry" data-ref="line-8" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,408.39 L795.81,408.39"/>
+<path data-layer="geometry" data-ref="line-9" fill="none" stroke="#6b8196" stroke-width="1" d="M795.81,408.39 L795.81,855.81"/>
+<path data-layer="geometry" data-ref="line-10" fill="none" stroke="#6b8196" stroke-width="1" d="M1078.39,1491.61 L937.1,1491.61"/>
+<path data-layer="geometry" data-ref="line-11" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,1491.61 L348.39,1138.39"/>
+<path data-layer="geometry" data-ref="line-12" fill="none" stroke="#6b8196" stroke-width="1" d="M1431.61,1044.19 L1431.61,1138.39"/>
+<path data-layer="geometry" data-ref="line-13" fill="none" stroke="#6b8196" stroke-width="1" d="M348.39,1138.39 L348.39,997.1"/>
+<path data-layer="geometry" data-ref="line-14" fill="none" stroke="#6b8196" stroke-width="1" d="M348.39,761.61 L701.61,408.39"/>
+<path data-layer="geometry" data-ref="line-15" fill="none" stroke="#6b8196" stroke-width="1" d="M1431.61,1138.39 L1078.39,1491.61"/>
+<path data-layer="geometry" data-ref="line-16" fill="none" stroke="#6b8196" stroke-width="1" d="M984.19,1044.19 L1431.61,1044.19"/>
+<path data-layer="geometry" data-ref="line-17" fill="none" stroke="#6b8196" stroke-width="1" d="M842.9,384.84 L937.1,384.84"/>
+<path data-layer="geometry" data-ref="line-18" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M937.1,384.84 L1078.39,384.84"/>
+<path data-layer="geometry" data-ref="line-19" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M937.1,361.29 L937.1,384.84"/>
+<path data-layer="geometry" data-ref="line-20" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M842.9,384.84 L842.9,361.29"/>
+<path data-layer="geometry" data-ref="line-21" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M772.26,220.0 L1031.29,220.0"/>
+<path data-layer="geometry" data-ref="line-22" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1031.29,220.0 L1031.29,361.29"/>
+<path data-layer="geometry" data-ref="line-23" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1031.29,361.29 L937.1,361.29"/>
+<path data-layer="geometry" data-ref="line-24" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M842.9,361.29 L772.26,361.29"/>
+<path data-layer="geometry" data-ref="line-25" fill="none" stroke="#6b8196" stroke-width="1" d="M937.1,361.29 L842.9,361.29"/>
+<path data-layer="geometry" data-ref="line-26" fill="none" stroke="#6b8196" stroke-width="1" d="M772.26,243.55 L772.26,220.0"/>
+<path data-layer="geometry" data-ref="line-27" fill="none" stroke="#6b8196" stroke-width="1" d="M772.26,361.29 L772.26,337.74"/>
+<path data-layer="geometry" data-ref="line-28" fill="none" stroke="#6b8196" stroke-width="1" d="M748.71,243.55 L772.26,243.55"/>
+<path data-layer="geometry" data-ref="line-29" fill="none" stroke="#6b8196" stroke-width="1" d="M772.26,243.55 L772.26,337.74"/>
+<path data-layer="geometry" data-ref="line-30" fill="none" stroke="#6b8196" stroke-width="1" d="M772.26,337.74 L748.71,337.74"/>
+<path data-layer="geometry" data-ref="line-31" fill="none" stroke="#6b8196" stroke-width="1" d="M725.16,243.55 L748.71,243.55"/>
+<path data-layer="geometry" data-ref="line-32" fill="none" stroke="#6b8196" stroke-width="1" d="M748.71,243.55 L748.71,337.74"/>
+<path data-layer="geometry" data-ref="line-33" fill="none" stroke="#6b8196" stroke-width="1" d="M748.71,337.74 L725.16,337.74"/>
+<path data-layer="geometry" data-ref="line-34" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,243.55 L725.16,243.55"/>
+<path data-layer="geometry" data-ref="line-35" fill="none" stroke="#6b8196" stroke-width="1" d="M725.16,243.55 L725.16,337.74"/>
+<path data-layer="geometry" data-ref="line-36" fill="none" stroke="#6b8196" stroke-width="1" d="M725.16,337.74 L701.61,337.74"/>
+<path data-layer="geometry" data-ref="line-37" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M701.61,220.0 L772.26,220.0"/>
+<path data-layer="geometry" data-ref="line-38" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M772.26,361.29 L701.61,361.29"/>
+<path data-layer="geometry" data-ref="line-39" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,220.0 L701.61,243.55"/>
+<path data-layer="geometry" data-ref="line-40" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M701.61,361.29 L301.29,761.61"/>
+<path data-layer="geometry" data-ref="line-41" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,243.55 L701.61,337.74"/>
+<path data-layer="geometry" data-ref="line-42" fill="none" stroke="#6b8196" stroke-width="1" d="M701.61,337.74 L701.61,361.29"/>
+<path data-layer="geometry" data-ref="line-43" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1455.16,902.9 L1478.71,902.9"/>
+<path data-layer="geometry" data-ref="line-44" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,997.1 L1455.16,997.1"/>
+<path data-layer="geometry" data-ref="line-45" fill="none" stroke="#6b8196" stroke-width="1" d="M1455.16,902.9 L1455.16,997.1"/>
+<path data-layer="geometry" data-ref="line-46" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1455.16,997.1 L1455.16,1138.39"/>
+<path data-layer="geometry" data-ref="line-47" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,808.71 L1620.0,808.71"/>
+<path data-layer="geometry" data-ref="line-48" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,808.71 L1620.0,1067.74"/>
+<path data-layer="geometry" data-ref="line-49" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,1067.74 L1478.71,997.1"/>
+<path data-layer="geometry" data-ref="line-50" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,902.9 L1478.71,808.71"/>
+<path data-layer="geometry" data-ref="line-51" fill="none" stroke="#6b8196" stroke-width="1" d="M1478.71,997.1 L1478.71,902.9"/>
+<path data-layer="geometry" data-ref="line-52" fill="none" stroke="#6b8196" stroke-width="1" d="M1596.45,1067.74 L1620.0,1067.74"/>
+<path data-layer="geometry" data-ref="line-53" fill="none" stroke="#6b8196" stroke-width="1" d="M1596.45,1067.74 L1596.45,1091.29"/>
+<path data-layer="geometry" data-ref="line-54" fill="none" stroke="#6b8196" stroke-width="1" d="M1596.45,1091.29 L1596.45,1114.84"/>
+<path data-layer="geometry" data-ref="line-55" fill="none" stroke="#6b8196" stroke-width="1" d="M1596.45,1114.84 L1596.45,1138.39"/>
+<path data-layer="geometry" data-ref="line-56" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,1067.74 L1620.0,1138.39"/>
+<path data-layer="geometry" data-ref="line-57" fill="none" stroke="#6b8196" stroke-width="1" d="M1596.45,1138.39 L1620.0,1138.39"/>
+<path data-layer="geometry" data-ref="line-58" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1091.29 L1502.26,1067.74"/>
+<path data-layer="geometry" data-ref="line-59" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1067.74 L1596.45,1067.74"/>
+<path data-layer="geometry" data-ref="line-60" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1091.29 L1596.45,1091.29"/>
+<path data-layer="geometry" data-ref="line-61" fill="none" stroke="#6b8196" stroke-width="1" d="M1478.71,1067.74 L1502.26,1067.74"/>
+<path data-layer="geometry" data-ref="line-62" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1114.84 L1502.26,1091.29"/>
+<path data-layer="geometry" data-ref="line-63" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1138.39 L1502.26,1114.84"/>
+<path data-layer="geometry" data-ref="line-64" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,1138.39 L1478.71,1067.74"/>
+<path data-layer="geometry" data-ref="line-65" fill="none" stroke="#6b8196" stroke-width="1" d="M1478.71,1138.39 L1502.26,1138.39"/>
+<path data-layer="geometry" data-ref="line-66" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1114.84 L1596.45,1114.84"/>
+<path data-layer="geometry" data-ref="line-67" fill="none" stroke="#6b8196" stroke-width="1" d="M1502.26,1138.39 L1596.45,1138.39"/>
+<path data-layer="geometry" data-ref="line-68" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,1138.39 L1620.0,1680.0"/>
+<path data-layer="geometry" data-ref="line-69" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,1680.0 L1078.39,1680.0"/>
+<path data-layer="geometry" data-ref="line-70" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1078.39,1538.71 L1478.71,1138.39"/>
+<path data-layer="geometry" data-ref="line-71" fill="none" stroke="#6b8196" stroke-width="1" d="M160.0,761.61 L301.29,761.61"/>
+<path data-layer="geometry" data-ref="line-72" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M301.29,761.61 L301.29,902.9"/>
+<path data-layer="geometry" data-ref="line-73" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M301.29,1138.39 L701.61,1538.71"/>
+<path data-layer="geometry" data-ref="line-74" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M160.0,1209.03 L160.0,761.61"/>
+<path data-layer="geometry" data-ref="line-75" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M630.97,1680.0 L160.0,1209.03"/>
+<path data-layer="geometry" data-ref="line-76" fill="none" stroke="#6b8196" stroke-width="1" d="M324.84,902.9 L348.39,902.9"/>
+<path data-layer="geometry" data-ref="line-77" fill="none" stroke="#6b8196" stroke-width="1" d="M348.39,997.1 L324.84,997.1"/>
+<path data-layer="geometry" data-ref="line-78" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M324.84,902.9 L324.84,761.61"/>
+<path data-layer="geometry" data-ref="line-79" fill="none" stroke="#6b8196" stroke-width="1" d="M348.39,902.9 L348.39,761.61"/>
+<path data-layer="geometry" data-ref="line-80" fill="none" stroke="#6b8196" stroke-width="1" d="M348.39,997.1 L348.39,902.9"/>
+<path data-layer="geometry" data-ref="line-81" fill="none" stroke="#6b8196" stroke-width="1" d="M324.84,997.1 L324.84,902.9"/>
+<path data-layer="geometry" data-ref="line-82" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M301.29,902.9 L324.84,902.9"/>
+<path data-layer="geometry" data-ref="line-83" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M324.84,997.1 L301.29,997.1"/>
+<path data-layer="geometry" data-ref="line-84" fill="none" stroke="#6b8196" stroke-width="1" d="M301.29,902.9 L301.29,997.1"/>
+<path data-layer="geometry" data-ref="line-85" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M301.29,997.1 L301.29,1138.39"/>
+<path data-layer="geometry" data-ref="line-86" fill="none" stroke="#6b8196" stroke-width="1" d="M937.1,1491.61 L937.1,1515.16"/>
+<path data-layer="geometry" data-ref="line-87" fill="none" stroke="#6b8196" stroke-width="1" d="M842.9,1515.16 L842.9,1491.61"/>
+<path data-layer="geometry" data-ref="line-88" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M842.9,1515.16 L701.61,1515.16"/>
+<path data-layer="geometry" data-ref="line-89" fill="none" stroke="#6b8196" stroke-width="1" d="M842.9,1491.61 L701.61,1491.61"/>
+<path data-layer="geometry" data-ref="line-90" fill="none" stroke="#6b8196" stroke-width="1" d="M937.1,1491.61 L842.9,1491.61"/>
+<path data-layer="geometry" data-ref="line-91" fill="none" stroke="#6b8196" stroke-width="1" d="M937.1,1515.16 L842.9,1515.16"/>
+<path data-layer="geometry" data-ref="line-92" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M937.1,1515.16 L937.1,1538.71"/>
+<path data-layer="geometry" data-ref="line-93" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M842.9,1538.71 L842.9,1515.16"/>
+<path data-layer="geometry" data-ref="line-94" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M701.61,1538.71 L842.9,1538.71"/>
+<path data-layer="geometry" data-ref="line-95" fill="none" stroke="#6b8196" stroke-width="1" d="M1078.39,1538.71 L1078.39,1680.0"/>
+<path data-layer="geometry" data-ref="line-96" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1078.39,1680.0 L630.97,1680.0"/>
+<path data-layer="geometry" data-ref="line-97" fill="none" stroke="#6b8196" stroke-width="1" d="M630.97,1680.0 L701.61,1538.71"/>
+<path data-layer="geometry" data-ref="line-98" fill="none" stroke="#6b8196" stroke-width="1" d="M842.9,1538.71 L937.1,1538.71"/>
+<path data-layer="geometry" data-ref="line-99" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M937.1,1538.71 L1078.39,1538.71"/>
+<path data-layer="geometry" data-ref="line-100" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M160.0,761.61 L160.0,220.0"/>
+<path data-layer="geometry" data-ref="line-101" fill="none" stroke="#6b8196" stroke-width="1" d="M795.81,855.81 L984.19,1044.19"/>
+<path data-layer="geometry" data-ref="line-102" fill="none" stroke="#6b8196" stroke-width="1" d="M1219.68,526.13 L1313.87,620.32"/>
+<path data-layer="geometry" data-ref="line-103" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1313.87,620.32 L1455.16,761.61"/>
+<path data-layer="geometry" data-ref="line-104" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1101.94,361.29 L1101.94,220.0"/>
+<path data-layer="geometry" data-ref="line-105" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1478.71,738.06 L1337.42,596.77"/>
+<path data-layer="geometry" data-ref="line-106" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1219.68,526.13 L1243.23,502.58"/>
+<path data-layer="geometry" data-ref="line-107" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1243.23,502.58 L1101.94,361.29"/>
+<path data-layer="geometry" data-ref="line-108" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1337.42,596.77 L1313.87,620.32"/>
+<path data-layer="geometry" data-ref="line-109" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1101.94,220.0 L1620.0,220.0"/>
+<path data-layer="geometry" data-ref="line-110" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,738.06 L1478.71,738.06"/>
+<path data-layer="geometry" data-ref="line-111" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M1620.0,220.0 L1620.0,738.06"/>
+<path data-layer="geometry" data-ref="line-112" fill="none" stroke="#c5d3e2" stroke-width="2.3" d="M160.0,220.0 L701.61,220.0"/>
+<image data-layer="starts" data-ref="M001" fill="none" stroke="none" stroke-width="0" x="200.90327868852458" y="249.10000000000002" width="12.39344262295082" height="36.0" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAA9CAMAAAB1NtL/AAADAFBMVEUAAAD////GvbWclIx7e3NzY1KlazneexB7e3OcWghCOTFrCACUAADOCAD/AAD/lBD/1gj//wj/tWuMzv9alP8xWtb///8AAAAA3gAApQAAewAAUgAAKVopIQAA/wAhIQD//////87//3v//0Le3v///wDvtdb33jn3vXO9/wD3xgCUrf//nDm91gC1xkLWpTnOrQClpZSEhOetvQDvczFr1gDnewCMpTG1lACMc6WtlAi1czFjrQCcewCEhEJSa72MjAC9YxCtYxCtWgBzY0qEaxhKhAA5Y4xzYwClQghSaxiMQiGEMVpSYwCtMQA5QnN7ORAxYwBjSgBzQgBSUhBKQjFCUgBjOQgYQmMhSgBCMRhaIQBKMQAhMSFKIQApMRAYIUIYMQBKEAApGAghGAAhEAAhGBghEAgIGAAIEAAhAAAQCAAACAgACAAIAAAAAAAIAAAxhAiUjGOUAADWziEhSgjWjCk5QnNjQhiMzveMhIycSgDe1pxKEAjerXulpZxzYyHGWgAAnP8hawD/77XWvQiUewghIRitnAC1rXP/5xB7Y3uce1JKQjFajJT3rQgYOUpSSkJaMRBrY2NalP+9hCn/AP+tjHvW1s7v7+drpa1ahDnWIQjezkLGzr1Ca2MxKRDvrVo5a3ulpaW1YwiMIRD3nAC9va05UkKEOSFjjHO959ZzUiFCayn//8attaVKOUJje97/znuUrVoxWnMxUlq9cwjWpVq1EAD/zghac3tzY0J7nIy1lFoYGAjWnDn//wgQOQCUWhiMe4x7jCG9rTH3zpStKRBrCAClezGcnGO1nHOcnJTWvYxCMRCUvbVzlEr3vWP3MRgYWrXOvTmMtZy1nCGMazFaWkrGxnuMGAjecwDvjAhae0re3r33/+97rb1zcxhjlJz//0ohMTmEc1J7e3NCe4z33hApAAAYMYTvtSG9rQAxOTkxSqWMOQCEYxBjY2NjY1KEWhhjWjljWjFSUlJ7QhBjShhaSikxUlrWCAClAJylAJylAJwAAAC+AAQQAAAAAXRSTlMAQObYZgAAAgJJREFUeNptlEHLozAQhvNbvpO3UPBSAlsqAx4GqpfQkBIZDBthK7v//7YzUVNtO6AmT17fzCQapbZ4Tr+f6j2eYIz9oFH//MAH9Qho4zu12uhPCw+/vvgmC+A/qPXWHqkx7Om9R1NDycNoXWutTX4as8GqqhlXFVPGe1rlqHVlFg/gt/VC6xdFnszUa/C0uFGsS+BSi2XYi5avazP0iDZTbYZ7c21kAP19WVDWmscduYK6wb7nLkyZAr/XMDWMI3Jk6nPzem3wMUQLkgUY7eOqNTjklBTwfnl1XxNuolBQke8WhibnZjAqC5Ka54VVA0ohpumjCoG3b/KYpsgjNgQI3qu/IXp20KiImU3Jkg2yK1E9JTvn2jaE1LWtc8rbKa8POe63cmUanyttcwh3ZTeFuo5tzpe2ncu3IDqSsculpQN1M3VCu6N2TrQ3diSdMM/Zoyu0Y2lScxC603aOqZrd3sFx8sQZJamxUIYuCSURlCJ21NGOiu3aUsXYEa20/ULpjaaNuhclmjeHA6Vv1FHJ8aCds63rymzcI5mOZAPdi1Km6UjdopVGt6dLGYccSIznD7oVd1idnMRC6UCX2awsdKEhhRDk5z2f4HWg8NdrRTONfvz3OnS8H0d+Pm49jhs8A95uj1H9YVoOEzidzuP4CGwwnk+nFfPplH8LxXMCiPg/0o/yOIABzTQAAAAASUVORK5CYII=" style="image-rendering:pixelated"/>
+<path data-layer="starts" data-ref="M001" fill="none" stroke="#4be3df" stroke-width="0.65" d="M207.1,267.1 L205.1,243.10000000000002"/>
+<text data-layer="starts" data-ref="M001" x="197.1" y="248.10000000000002" fill="#4be3df" font-size="14">P3</text>
+<image data-layer="starts" data-ref="M002" fill="none" stroke="none" stroke-width="0" x="1566.7032786885247" y="1614.9" width="12.39344262295082" height="36.0" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAA9CAMAAAB1NtL/AAADAFBMVEUAAAD////GvbWclIx7e3NzY1KlazneexB7e3OcWghCOTFrCACUAADOCAD/AAD/lBD/1gj//wj/tWuMzv9alP8xWtb///8AAAAA3gAApQAAewAAUgAAKVopIQAA/wAhIQD//////87//3v//0Le3v///wDvtdb33jn3vXO9/wD3xgCUrf//nDm91gC1xkLWpTnOrQClpZSEhOetvQDvczFr1gDnewCMpTG1lACMc6WtlAi1czFjrQCcewCEhEJSa72MjAC9YxCtYxCtWgBzY0qEaxhKhAA5Y4xzYwClQghSaxiMQiGEMVpSYwCtMQA5QnN7ORAxYwBjSgBzQgBSUhBKQjFCUgBjOQgYQmMhSgBCMRhaIQBKMQAhMSFKIQApMRAYIUIYMQBKEAApGAghGAAhEAAhGBghEAgIGAAIEAAhAAAQCAAACAgACAAIAAAAAAAIAAAxhAiUjGOUAADWziEhSgjWjCk5QnNjQhiMzveMhIycSgDe1pxKEAjerXulpZxzYyHGWgAAnP8hawD/77XWvQiUewghIRitnAC1rXP/5xB7Y3uce1JKQjFajJT3rQgYOUpSSkJaMRBrY2NalP+9hCn/AP+tjHvW1s7v7+drpa1ahDnWIQjezkLGzr1Ca2MxKRDvrVo5a3ulpaW1YwiMIRD3nAC9va05UkKEOSFjjHO959ZzUiFCayn//8attaVKOUJje97/znuUrVoxWnMxUlq9cwjWpVq1EAD/zghac3tzY0J7nIy1lFoYGAjWnDn//wgQOQCUWhiMe4x7jCG9rTH3zpStKRBrCAClezGcnGO1nHOcnJTWvYxCMRCUvbVzlEr3vWP3MRgYWrXOvTmMtZy1nCGMazFaWkrGxnuMGAjecwDvjAhae0re3r33/+97rb1zcxhjlJz//0ohMTmEc1J7e3NCe4z33hApAAAYMYTvtSG9rQAxOTkxSqWMOQCEYxBjY2NjY1KEWhhjWjljWjFSUlJ7QhBjShhaSikxUlrWCAClAJylAJylAJwAAAC+AAQQAAAAAXRSTlMAQObYZgAAAf9JREFUeNptlM2q4zAMhf0omUso3Rkvg2G6EWRhaO5GjHExiJhxYBpm3n83kpM4SVtBfvxFPTqyayu1xXP6/VSv8QRr8Y0m/fUFbzQ4cJheKWqr3yUC/PygmxEgvFEMiGdqLWuGEJy9QPVhtW601rY8rd3g9dr80HxnyvhAm2uJRl/togH8a73QZqeOi9lmDS7rNuraFbatW3pBhnBp2wtfxuC3c1go9w/GmAuHgV/LhHKuBegYcioAD2EqFNZcYzqIjqPQEDuzBGBCEBdgdUicWwoaLJYU8HoFBaZ4u5goFFTiOwIWByycFIJYCzyxCkVBjCUVIy/fFFyeEn/BGCGGoP7GFFhBO0XMMGckjLIqST3Fnfd9H2Me+t57FXAq80Oex71chabnSvsSwn1dTaF+YJnu1vdz/S9IHsm3262nE/UzDUKHc+6c6SjsSQZxnovGUOnAqVnNUeghd/BM1eyPCp7NEzvK0mOlDH0WSpJQmzhQTwcqsuubqsKeaKX9B0ovNG/U75Ro3hROlD5RT9XjKXcusn6o1XhEUo5kAf1OqdB8pn7JlZfhSJc2Th5IhOc3ujV3mp1iYqF0oks1lImuNOYYo2zejnfGfmRwSM40hvHffuiEMI78fNy/3bjBDtz9/hjVH6b1MOFt1Y3jI7LAyBtvxXw6lW2huCaAJP8H253pqoNFsxQAAAAASUVORK5CYII=" style="image-rendering:pixelated"/>
+<path data-layer="starts" data-ref="M002" fill="none" stroke="#4be3df" stroke-width="0.65" d="M1572.9,1632.9 L1570.9,1608.9"/>
+<text data-layer="starts" data-ref="M002" x="1562.9" y="1613.9" fill="#4be3df" font-size="14">P4</text>
+<text data-layer="respawn" data-ref="M003" x="908.55" y="931.45" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M004" x="1315.86" y="1362.68" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M005" x="469.59" y="551.37" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M006" x="1374.0" y="1099.23" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M007" x="1567.9" y="719.52" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M008" x="740.77" y="457.91" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M009" x="1120.48" y="272.1" fill="#9fa9bc" font-size="14">R</text>
+<image data-layer="starts" data-ref="M010" fill="none" stroke="none" stroke-width="0" x="435.2832786885246" y="1378.68" width="12.39344262295082" height="36.0" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAA9CAMAAAB1NtL/AAADAFBMVEUAAAD////GvbWclIx7e3NzY1KlazneexB7e3OcWghCOTFrCACUAADOCAD/AAD/lBD/1gj//wj/tWuMzv9alP8xWtb///8AAAAA3gAApQAAewAAUgAAKVopIQAA/wAhIQD//////87//3v//0Le3v///wDvtdb33jn3vXO9/wD3xgCUrf//nDm91gC1xkLWpTnOrQClpZSEhOetvQDvczFr1gDnewCMpTG1lACMc6WtlAi1czFjrQCcewCEhEJSa72MjAC9YxCtYxCtWgBzY0qEaxhKhAA5Y4xzYwClQghSaxiMQiGEMVpSYwCtMQA5QnN7ORAxYwBjSgBzQgBSUhBKQjFCUgBjOQgYQmMhSgBCMRhaIQBKMQAhMSFKIQApMRAYIUIYMQBKEAApGAghGAAhEAAhGBghEAgIGAAIEAAhAAAQCAAACAgACAAIAAAAAAAIAAAxhAiUjGOUAADWziEhSgjWjCk5QnNjQhiMzveMhIycSgDe1pxKEAjerXulpZxzYyHGWgAAnP8hawD/77XWvQiUewghIRitnAC1rXP/5xB7Y3uce1JKQjFajJT3rQgYOUpSSkJaMRBrY2NalP+9hCn/AP+tjHvW1s7v7+drpa1ahDnWIQjezkLGzr1Ca2MxKRDvrVo5a3ulpaW1YwiMIRD3nAC9va05UkKEOSFjjHO959ZzUiFCayn//8attaVKOUJje97/znuUrVoxWnMxUlq9cwjWpVq1EAD/zghac3tzY0J7nIy1lFoYGAjWnDn//wgQOQCUWhiMe4x7jCG9rTH3zpStKRBrCAClezGcnGO1nHOcnJTWvYxCMRCUvbVzlEr3vWP3MRgYWrXOvTmMtZy1nCGMazFaWkrGxnuMGAjecwDvjAhae0re3r33/+97rb1zcxhjlJz//0ohMTmEc1J7e3NCe4z33hApAAAYMYTvtSG9rQAxOTkxSqWMOQCEYxBjY2NjY1KEWhhjWjljWjFSUlJ7QhBjShhaSikxUlrWCAClAJylAJylAJwAAAC+AAQQAAAAAXRSTlMAQObYZgAAAftJREFUeNpt1D2P4yAQBmB+y1bpkAsXEdKmGcUFUrwu0GEipFmjw9bGuvv/3c6Aje0kSPnwk8nLAImFWMdj/PsQz+MBSpkXDfLjA17UadAmPKuRSr5GOPh8kxsNgHtR44w5qlKU6ZzTqoPSh5KyllKq9KrUiqdTfZX0TEq80/qURi1PKmcAfVtmrTfVNJmql0HT6lX1ivVV57UYwr671l13vXbd9KW1SSrV1HcZu+8/eUOpVn33fda+p0sYk0Kq7ZJOmkZSl5UDpmCAuwAlXSi5U2pJAJ2XE32X+loURKBnAxOXcm0QBrg1RxsrVu2D8J6Ob3Q6joE+Md6Dd07888FRgtQCyUyMBo3nUwniwd1Z2zTex7ZprBXOjGl/0NJ1w4+k4bFokwa7LafJaluKOV+aZi6/Ba5D/uxyafCgdsaWtT3WzhH3wRb5ws9zymiLtlQaxexZd7WtJRWz3SdYah6po8hrLEpoIytyQVnETi3ulGOXd6IEW8RFmzeKTxpXtZsizmvCQfGdWiw9HmrnFGvbMhtdIU+HfIB2U0waj2pzLb9p95qXcegBOXh+0XVxh91JTWTFg+bZDG90UR+99/znPVew3VDo12u4Zhzc8H+76Tg3DPR6v33pYcUz6NvtPogf0nIzgao6D8PdU8BwrqqF6e6U/haC5gTg4l/DsvdtRi33NwAAAABJRU5ErkJggg==" style="image-rendering:pixelated"/>
+<path data-layer="starts" data-ref="M010" fill="none" stroke="#4be3df" stroke-width="0.65" d="M441.48,1396.68 L439.48,1372.68"/>
+<text data-layer="starts" data-ref="M010" x="431.48" y="1377.68" fill="#4be3df" font-size="14">P2</text>
+<text data-layer="respawn" data-ref="M011" x="196.58" y="666.53" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M012" x="833.49" y="501.69" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M013" x="1315.49" y="983.7" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M014" x="1555.03" y="264.0" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M015" x="1142.56" y="1638.27" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M016" x="1553.19" y="1199.31" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M017" x="1536.63" y="870.37" fill="#9fa9bc" font-size="14">R</text>
+<text data-layer="respawn" data-ref="M018" x="961.16" y="280.19" fill="#9fa9bc" font-size="14">R</text>
+<image data-layer="starts" data-ref="M019" fill="none" stroke="none" stroke-width="0" x="1497.1632786885245" y="292.88" width="12.39344262295082" height="36.0" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAA9CAMAAAB1NtL/AAADAFBMVEUAAAD////GvbWclIx7e3NzY1KlazneexB7e3OcWghCOTFrCACUAADOCAD/AAD/lBD/1gj//wj/tWuMzv9alP8xWtb///8AAAAA3gAApQAAewAAUgAAKVopIQAA/wAhIQD//////87//3v//0Le3v///wDvtdb33jn3vXO9/wD3xgCUrf//nDm91gC1xkLWpTnOrQClpZSEhOetvQDvczFr1gDnewCMpTG1lACMc6WtlAi1czFjrQCcewCEhEJSa72MjAC9YxCtYxCtWgBzY0qEaxhKhAA5Y4xzYwClQghSaxiMQiGEMVpSYwCtMQA5QnN7ORAxYwBjSgBzQgBSUhBKQjFCUgBjOQgYQmMhSgBCMRhaIQBKMQAhMSFKIQApMRAYIUIYMQBKEAApGAghGAAhEAAhGBghEAgIGAAIEAAhAAAQCAAACAgACAAIAAAAAAAIAAAxhAiUjGOUAADWziEhSgjWjCk5QnNjQhiMzveMhIycSgDe1pxKEAjerXulpZxzYyHGWgAAnP8hawD/77XWvQiUewghIRitnAC1rXP/5xB7Y3uce1JKQjFajJT3rQgYOUpSSkJaMRBrY2NalP+9hCn/AP+tjHvW1s7v7+drpa1ahDnWIQjezkLGzr1Ca2MxKRDvrVo5a3ulpaW1YwiMIRD3nAC9va05UkKEOSFjjHO959ZzUiFCayn//8attaVKOUJje97/znuUrVoxWnMxUlq9cwjWpVq1EAD/zghac3tzY0J7nIy1lFoYGAjWnDn//wgQOQCUWhiMe4x7jCG9rTH3zpStKRBrCAClezGcnGO1nHOcnJTWvYxCMRCUvbVzlEr3vWP3MRgYWrXOvTmMtZy1nCGMazFaWkrGxnuMGAjecwDvjAhae0re3r33/+97rb1zcxhjlJz//0ohMTmEc1J7e3NCe4z33hApAAAYMYTvtSG9rQAxOTkxSqWMOQCEYxBjY2NjY1KEWhhjWjljWjFSUlJ7QhBjShhaSikxUlrWCAClAJylAJylAJwAAAC+AAQQAAAAAXRSTlMAQObYZgAAAe5JREFUeNpt1E+r4yAQAHA/yzv1JjkGYXMZ8CDUd5EdLMIQWQNb2ff9bztjEpO0Fdo0v0zH8U9Uam/P5c9TvbYnGBPeNOuvL3jT6MCF/KpBG/2eIsKvD3lLAIhvGmIIVzWGc8YYnfHQ6zBaT1pr067G7Hi7TV7zNyvzSadba5O+mTUH8L/1qtOhjjsz09a4W7er29F6t44lMBJ669F7RPp2LjTVhgiRUfT3OqEcy0q4hhLfwtIUtljR6rg1jVVUGlEOIFWA0TEfeVtJCni9ouIipDCPVRRU5u8AtIViVgGktMgTq3alrFLi5VuiK0vmJyElSDGqfylHzqCdIrZQSqCQZFWyekp1iNamVLy1iCqGpc2PTIO18mman5va1sSxr6YocgV2nKytfS9IHMkznmG6KFbyov4aWwudEyPJTaq15fBdeX2oqJpET7EeWVXFcwbk4okrKjLGroxYREkC+iBOinRSSbv9Uj0xL+Om9oPSi5Zd8VCiume4KH1SpF7jJba2tOh7b3xH0h3JAuKh1LRcFdfYtoXOug7jUoNs9VbwVffBXWanFbEqXXTtLchEd00lpSQv7zjAcaDw7g0Ss8xx/jkOnRjnma+P+7ebdxzB3e+PWf1l7YcJDMM4z4/ECeZxGDbm06m9For7BJDg/1Od+sJa4r9tAAAAAElFTkSuQmCC" style="image-rendering:pixelated"/>
+<path data-layer="starts" data-ref="M019" fill="none" stroke="#4be3df" stroke-width="0.65" d="M1503.36,310.88 L1501.36,286.88"/>
+<text data-layer="starts" data-ref="M019" x="1493.36" y="291.88" fill="#4be3df" font-size="14">P1</text>
+<text data-layer="base" x="1775" y="196" fill="#ffffff" font-size="22">MAP KEY</text>
+<text data-layer="base" x="1775" y="235" fill="#f2c94c" font-size="16">PI / SG / TG</text>
+<text data-layer="base" x="1775" y="252" fill="#a9bdcf" font-size="13">Pistol / Shotgun / Tommygun</text>
+<text data-layer="base" x="1775" y="278" fill="#f2c94c" font-size="16">MG / RL / CA</text>
+<text data-layer="base" x="1775" y="295" fill="#a9bdcf" font-size="13">Minigun / Rocket / Cannon</text>
+<text data-layer="base" x="1775" y="321" fill="#f2c94c" font-size="16">PR / TS / UM</text>
+<text data-layer="base" x="1775" y="338" fill="#a9bdcf" font-size="13">Prion / Timestrike / U.M.T</text>
+<text data-layer="base" x="1775" y="364" fill="#6ce0b1" font-size="16">H25 / H50 / H100</text>
+<text data-layer="base" x="1775" y="381" fill="#a9bdcf" font-size="13">Health; H100 caps at 200</text>
+<text data-layer="base" x="1775" y="407" fill="#68bdff" font-size="16">A25 / A50 / A100</text>
+<text data-layer="base" x="1775" y="424" fill="#a9bdcf" font-size="13">Armor</text>
+<text data-layer="base" x="1775" y="450" fill="#68bdff" font-size="16">S25 / S50 / S100</text>
+<text data-layer="base" x="1775" y="467" fill="#a9bdcf" font-size="13">Shield</text>
+<text data-layer="base" x="1775" y="493" fill="#b5a2ff" font-size="16">PB / SC / RK / CB</text>
+<text data-layer="base" x="1775" y="510" fill="#a9bdcf" font-size="13">Bullets / Shells / Rockets / Balls</text>
+<text data-layer="base" x="1775" y="536" fill="#b5a2ff" font-size="16">TA / MA / YC / BC / RC</text>
+<text data-layer="base" x="1775" y="553" fill="#a9bdcf" font-size="13">Gun ammo / colored cells</text>
+<text data-layer="base" x="1775" y="579" fill="#eeeeee" font-size="16">BP / SP</text>
+<text data-layer="base" x="1775" y="596" fill="#a9bdcf" font-size="13">Backpack / Serious power</text>
+<text data-layer="base" x="1775" y="622" fill="#4be3df" font-size="16">P1-4 / R / X</text>
+<text data-layer="base" x="1775" y="639" fill="#a9bdcf" font-size="13">Start / Pickup respawn / Exit</text>
+<text data-layer="base" x="1775" y="665" fill="#ff7bd5" font-size="16">D / B / S</text>
+<text data-layer="base" x="1775" y="682" fill="#a9bdcf" font-size="13">Door / Switch / Secret</text>
+<text data-layer="base" x="1775" y="735" fill="#dfe7f2" font-size="16">Original ROM sprites; * = scripted only</text>
+<text data-layer="base" x="1775" y="760" fill="#dfe7f2" font-size="16">R = rotating multiplayer pickup site</text>
+<text data-layer="base" x="1775" y="785" fill="#f0a1a6" font-size="16">Red floor: lethal floor / pit</text>
+<text data-layer="base" x="1775" y="828" fill="#ffffff" font-size="22">DOORS &amp; LIFTS</text>
+<text data-layer="base" x="1775" y="1190" fill="#ffffff" font-size="20">SECRETS / COVERAGE</text>
+<text data-layer="base" x="1775" y="1220" fill="#c4d2df" font-size="15">Multiplayer arena. Respawn markers show</text>
+<text data-layer="base" x="1775" y="1241" fill="#c4d2df" font-size="15">all scheduled pickup locations; secret</text>
+<text data-layer="base" x="1775" y="1262" fill="#c4d2df" font-size="15">status is unclassified.</text>
+<text data-layer="base" x="60" y="1795" fill="#dfe7f2" font-size="18">113 lines  /  25 sectors  /  19 map objects  /  0 scripted placements</text>
+<text data-layer="base" x="60" y="1830" fill="#a1b5c9" font-size="18">All rooms are revealed. Use index.html to zoom, filter layers, inspect items and trace door scripts.</text>
+<text data-layer="base" x="60" y="1865" fill="#a1b5c9" font-size="16">Secret labels use cited guides + ROM positions, not an invented secret flag. Full evidence and sources are included.</text>
+<path data-layer="base" fill="none" stroke="#dfe7f2" stroke-width="4" d="M70,1735 L164.19354838709677,1735"/>
+<text data-layer="base" x="70" y="1760" fill="#dfe7f2" font-size="14">256 units</text>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "maps": 16,
+  "sectors": 942,
+  "leaf_polygons": 3294,
+  "floor_triangles": 6539,
+  "initial_faces": 7154,
+  "open_faces": 7391,
+  "textured_initial_faces": 7154,
+  "textured_open_faces": 7390,
+  "nonfinite_values": 0,
+  "degenerate_triangles": 0,
+  "initial_objects": 484,
+  "scripted_placements": 1057,
+  "movers": 130,
+  "secrets": 5,
+  "textures": 222,
+  "status": "PASS",
+  "source_archive_sha256": "cee49d2549be3c9813650909577575e56e35f1e9b2308a20d7adb6ef33a48fe5",
+  "script_sha256": "04813e41e3c02dc6b806887a867e9b0949cf387bb48c27a0c95837a8fe7342f6"
+}

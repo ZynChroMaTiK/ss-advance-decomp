@@ -1,0 +1,84 @@
+# Continuous weapon audio and ballistic PC rockets/Prion shots
+
+The native host now owns the local continuous weapon voice explicitly. Original
+minigun wind-down (sound 0x1A) stops firing loop 0x19 before playing its ending;
+chainsaw 0x13 similarly stops 0x12. The original controller assumed the shared
+GBA hardware voice would replace the prior sound. Independent native effect
+instances require this explicit cleanup. Machine gun loop 0x16 shares the same
+lifetime tracking.
+
+After each simulation frame the host checks firing, weapon handoff, ammunition,
+focus, input enablement, pause, health and gameplay music state. It stops a stale
+local loop without stopping other sources or music. Unbinding audio also stops
+the tracked loop. Source-aware sinks use local identity 1; legacy sinks retain
+the play/stop callback contract. Wind-down cues remain audible. This changes
+presentation ownership, not original firing cadence or the recovered controller.
+
+The PC composition opts into `SsaProjectileRuntime.ballistic_player_rockets`.
+Committing a player type-65 rocket clears original attachment flag 0x4000
+immediately. Its constructed position and full XYZ velocity now remain independent
+of subsequent player view/movement from launch. Owner exclusion flag 0x100 and
+player index remain intact. Enemy rockets and unlimited
+player range retain their existing behavior. The default recovery runtime leaves
+the option zero, preserving the original motion oracle and its attachment quirk.
+
+The PC composition also enables `ballistic_player_prion` for weapon7/type69.
+Commit clears its attachment flag immediately, retaining owner exclusion,
+source, speed, conversion impact and lifetime handling. Creation removes the
+original40-unit sideways offset and uses the actual full player heading even
+when the original level-aim no-target probes finish at heading-512. The192-unit
+forward launch distance is projected along pitch, with Z measured from the live
+eye plus the aiming slope, so the projectile starts on the sight line. This
+works before any vertical mouse input as well as with free vertical aim.
+The recovered controller's target/slope selection is retained; this changes
+the native PC launch adapter, not the standalone recovered routines. Default
+recovery runtime options remain zero. No new speed or conversion rules are added.
+
+A changed rocket combat route exposed an existing reference-renderer boundary:
+a portal upper wall ending exactly at y=120 requested an offscreen row. The native
+column helper can now discard that single trailing row while retaining the full
+original sampling count. Shortening count would apply the original final-pixel
+correction to a visible pixel incorrectly. Ordinary raster bounds remain strict.
+Scene storage layout and framebuffer size are unchanged.
+
+Validation commands:
+
+```powershell
+.\decomp.ps1 test-weapon-fixes
+powershell -ExecutionPolicy Bypass -File scripts/test-native-weapon-fixes.ps1
+.\decomp.ps1 test-world-raster
+.\decomp.ps1 test-wall-renderer
+.\decomp.ps1 test-campaign
+powershell -ExecutionPolicy Bypass -File scripts/test-native-campaign.ps1 -SkipBuild
+```
+
+The focused GCC ASan/UBSan/leak and MSVC checks agree on127,090 assertions:
+46 continuous-weapon cases using the real mixer, six actual rocket launches and
+six actual Prion launches, with36 trajectory frames for each weapon and rapid
+yaw/pitch, walking and jump input in both views. The Prion cases separately check
+zero lateral spawn error, the original192-unit forward offset projected along
+pitch, live eye height/aim slope and exact constant XYZ motion. Level aiming
+is tested before any mouse-pitch event, so original no-target heading probes
+cannot silently skew the shot. Ammunition grants exist only in the test fixture;
+selection, buffered click, launch and flight run through the actual native game.
+Audio cases cover release, selection, empty ammo, focus loss, input disable,
+pause, death and unbind; the chainsaw's original self-restoring ammo is excluded
+from the empty-ammo case. Music and another source playing the same song survive
+local cleanup, except the original death cue intentionally clears effects.
+960 clipped columns compare every visible byte to the original raster operating
+on padded storage, and verify the native output guard remains untouched.
+Reports: `weapon-fixes-validation.json`, `windows-weapon-fixes-validation.json`.
+The rebuilt Windows game also passes180-frame hidden PC/reference smoke
+launches; see `windows-prion-smoke-validation.json`. Full campaign completions
+were not rerun for this launch correction.
+
+Original raster comparisons still pass 67,678 whole ARM calls; wall-renderer
+comparisons pass 14,322 solid/portal cases on all 16 maps. The default projectile
+runtime retains its 37,132 assertion integration proof. These are native bug
+fixes and requested PC behavior; they add no byte-matched functions or campaign
+admissions. Physical listening and mouse interaction have not been manually
+verified for these changes.
+
+The current suite also covers four minigun cases during boss/post-boss music
+(commands19/20), with both sink types. These remain gameplay audio phases,
+so weapon, enemy and mover loops continue until their actual stop conditions.

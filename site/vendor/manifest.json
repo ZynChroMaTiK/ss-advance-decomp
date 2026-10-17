@@ -1,0 +1,23 @@
+{
+  "project": "Three.js",
+  "version": "0.180.0",
+  "license": "MIT",
+  "files": {
+    "three.module.js": {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/build/three.module.js",
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+    },
+    "three.core.js": {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/build/three.core.js",
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+    },
+    "OrbitControls.js": {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/examples/jsm/controls/OrbitControls.js",
+      "sha256": "06864a0fcb647730bfbc690b6c25a121199d716a3e299a40158509cbd247c3bf"
+    },
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r180/LICENSE",
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    }
+  }
+}

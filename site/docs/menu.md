@@ -1,0 +1,244 @@
+# Original startup menus
+
+`play-native.cmd` now begins directly with the title prompt,
+main menu, Single Player, New Game and difficulty selection. All three languages
+and difficulty tiers work. Arrows/WASD navigate, Enter/Space confirms,
+or hover and click a menu entry. Mouse hit testing follows the localized text
+and sliding animation, with the same letterbox transform as rendering. Blank
+space and black borders cannot activate the current selection. Hover only changes
+selection when the pointer moves, so it does not override keyboard navigation.
+The Win32 pointer adapter now immediately plays original menu command12 (sound1)
+when hover or a direct click changes selection, matching keyboard cycling. Same-row
+movement, leaving into blank space and returning, and clicking the already selected
+row do not replay that cue. Confirmation retains its separate existing sound.
+The cue is delivered at the pointer event because the following menu tick clears
+its command queue. This applies to all shared menu hit targets; the portable menu
+state machine and original keyboard behavior are unchanged.
+Title/menu music continues across Press Start and returning to Main.
+Single Player now inserts Select Level between New Game and Password. It uses
+the original localized campaign names, saved previous-level completion unlocks,
+and no multiplayer maps. Options → Clear Data confirms Yes/No before resetting
+progress and language. Full behavior/storage/tests are in [profile.md](profile.md).
+Options has four rows: Music On/Off, Credits, a localized Language row, and Clear Data.
+Enter, click or Right cycles English/German/French in place; Left cycles
+backward, wrapping at either end. All menu labels change immediately. The
+chosen language carries into maps, new games, password starts and R restart.
+Fresh profiles default to English; subsequent launches restore the saved language.
+The dedicated language list is no longer
+part of startup or reachable through Options.
+Esc goes back. The Music On/Off option changes the live music setting and
+persists through maps, level advancement and restart. M remains a separate PC
+mute control. Options → Credits now shows the original credits. Hold Up/W to
+pause or Down/S to scroll faster; Enter/Space/click or Esc returns to Options.
+An explicit `--level 0..7` launch bypasses startup menus for diagnostics.
+Single Player → Password supports direct case-insensitive keyboard typing.
+The first typed character replaces the original `A_______` template. Backspace,
+Delete, Home/End and Left/Right edit the bounded eight-character field. Enter
+or a click submits; letters including WASD/M type rather than navigating/muting.
+The original editor is also retained. Left/Right changes the
+selected character and Up/Down cycles letters, digits and underscore. Holding
+Up/Down repeats after the original delay; Enter/click submits and Esc goes
+back. A valid password supplies difficulty and starting weapon/ammo inventory.
+The frontend supports the eight admitted maps; valid later-map passwords display
+an unavailable-level notice and stay in the editor.
+
+The menus use original artwork, glyphs, metrics, colors and localized strings.
+The green background scrolls in the original steps; the logo slides into place.
+The original transparent BG1 grid tile at080AAEEC now overlays the scrolling
+stone layer from the first title/main-menu visit. The grid stays fixed while the stone scrolls, and sits
+behind text and logo. Original cold startup enabled BG0+OBJ only (1141), while
+subsequent menu entries enabled BG1 too (1341); the user's requested PC behavior
+shows the grid on startup as well. The port previously omitted BG1 entirely.
+The title prompt observes its original90-frame input gate and blinking rule.
+Main-menu entries slide in from alternating sides. New Game uses the original
+screen/audio fade before the pre-level map. No gameplay simulation runs during
+either menus or map. The map music remains confined to the map, and the level
+soundtrack starts when gameplay begins.
+
+Difficulty selects the already recovered combat damage rules: easy halves
+incoming enemy damage and increases outgoing damage; normal applies its original
+two-thirds incoming scaling; hard increases incoming damage and reduces outgoing
+damage. The chosen difficulty and language persist on level advancement and R
+restart. Initial continue values5/3/2 are selected, but the original continue
+screens and finite continue progression are not implemented yet. R still follows
+the documented PC checkpoint policy. Language affects menus and map screens;
+existing simple host gameplay notices remain English.
+
+## Recovery and boundaries
+
+`src/menu.c` reconstructs the1862C outer loop and page callbacks16A34 (main),
+17BBC (language),17CD0 (title),17DB8 (difficulty),17F7C (single-player) and180D4
+(music/credits options), plus179DC (credits) and16BE4 (password). It preserves input ordering, edge navigation, selection
+clamps, sound commands, state markers, title counter reset and the final fade
+boundary. Rendering uses the same shared ROM font/palette canvas as `map_view.c`.
+Title-first startup and inline Language are requested PC changes to the original
+flow. The recovered Language handler remains available only to recovery fixtures.
+The first Title tick starts menu music; Press Start preserves sequence position.
+It retains the old page's final submitted frame when an input changes pages,
+as the original callback does. The background uses tiles0A8368 and the original
+64x64 tilemap construction; the logo's three64x64 sprites use0B5434. No ROM CPU
+instructions execute in the port.
+
+Frontend pages are0,1,4,8,9,11,12; page10 is a recovery-only diagnostic. Multiplayer and scores
+remain unfinished. Their entries give a clear unavailable notice and keep the
+current menu usable. These guarded destinations are PC prototype boundaries,
+not recovered original behavior or completed features. Publisher/boot screens,
+the initial stage narrative/cutscene, full pause/continue menus, save/settings
+persistence and remaining menu pages also remain. The full game is not claimed
+feature-identical by this milestone.
+
+## Validation
+
+`tests/test_menu_rom.py` compares8,694 original-ROM menu frames: page/selection,
+marker/offset, language/difficulty/music, fade state, command order, glyph
+submissions and15,552,000 independently composed OAM/VRAM pixels. All three
+languages and difficulty tiers, early title input, music toggles, navigation
+boundaries, back and repeated confirmation during fade are covered. ARM runs
+only in that isolated test oracle. Shared map/font regression also passes864
+submission cases,4,147,200 background pixels,691,200 composed pixels and8,976
+fade/input frames after extracting the shared composition stage.
+
+The pixel reference now also samples original BG1 tile/map VRAM, enabling that
+layer after Language to reflect the requested startup correction. Thus the
+startup grid is an explicit PC addition to the original cold-boot display state,
+with exact original artwork and priority, rather than a claim of identical
+cold-boot pixels. A first-visit native check proves transparent grid holes retain
+the stone background and nonzero grid samples replace it before any gameplay.
+Malformed grid data is rejected at initialization.
+The current title-first/inline-language tests pass70,367 checks over9,242 frames
+and18 new games under ASan/UBSan/leak detection. They verify first-tick menu
+music, the original title input gate, backward/forward wrapping, full cycles by
+mouse clicks, immediate localization, unchanged music state, and language carry
+through New Game. The ROM fixture explicitly enters the recovered old Language
+page and uses original16748 to submit the added Language label, preserving
+independent original glyph/VRAM pixel comparisons without claiming the changed
+startup/options flow was original behavior.
+
+Credits include2,670 compared frames and three complete scrolls, all89 source
+lines/88 newline advances, entry/re-entry, Up/Down priority, acceleration and
+release, manual confirm/back, and automatic return. String246 currently resolves
+to the same original ROM data for all three languages. The0.5-pixel/tick scroll
+becomes2 pixels while Down is held; Up takes precedence and freezes it. The
+16-pixel line advance preserves the original empty-line behavior. A leading
+asterisk selects the highlighted palette, not another font:16748 always receives
+font0. The logo retracts while the background and music keep running. Manual exit
+suppresses text immediately and changes page on the next tick. Natural completion
+returns that tick. Extra draws do not advance scroll or input.
+
+`ssa_menu_step_input` separates held keys from pressed edges; the existing step
+entry remains available. The Win32 adapter tracks Up/W and Down/S separately,
+including simultaneous alternate keys, key releases, and focus-loss clearing.
+ROM text is bounded; lines that would overflow the original32-byte stack buffer
+are rejected in the native port.
+
+Password coverage adds4,830 ROM frames: all36 table matches and complete fades,
+all three languages, cursor wrap/highlight, invalid submission, character cycles,
+hold repeat and byte-counter overflow. Up/Down counters wrap255 back to32; repeat
+requires counter>30 and a multiple of4. Down takes priority. Right/Left wrap the
+eight-position cursor; Right takes priority. The editor starts at `A_______`.
+The original measures password width with spacing0 but draws with spacing1;
+the selected character is submitted first in palette1, then the complete string
+in palette2, preserving OAM priority. The default library level limit is12;
+the frontend sets9, guarding later-map passwords before fading or changing state.
+
+One original data quirk is table entry12, the seven-character `MEDIUM_`.
+The eight-character cycling editor cannot produce that terminating NUL. The ROM
+comparison supplies this memory state explicitly to validate the original match;
+The new PC typing path accepts it directly, while the original cycling path
+and its independent ROM comparison retain the original behavior.
+
+Typed password submission now ignores trailing underscore placeholders on both
+the entered text and ROM code. The display already pads a short typed field to
+eight slots; validation previously compared the shorter NUL-terminated buffer
+against the ROM's underscore-filled string, incorrectly rejecting ordinary words
+until arrow editing materialized the padding. EASY, EASY_ and EASY____ now select
+the same entry directly. MEDIUM, MEDIUM_ and MEDIUM__ also work despite the ROM's
+seven-byte entry. Internal underscores, wrong characters and incomplete words
+remain invalid. Cursor/editing state is not changed by normalization. The original
+arrow-only comparison still uses exact ROM matching.
+
+The shared menu regression now passes72577 ASan/UBSan/leak checks over9547frames,
+including all36codes with every permitted suffix-padding length, lowercase typing,
+Enter/click submission without any arrow edits, and negative prefix/word cases.
+Windows password automation now types only the bare word in both renderers,
+using real WM_CHAR delivery plus backspace correction, then Enter in reference
+mode or a letterboxed mouse click in PC mode. The Windows password test also
+runs the full MSVC menu checker and compares every summary field with GCC.
+
+`ssa_native_game_init_loadout` connects accepted settings1..36 to the recovered
+1240C startup table. Setting0 preserves the existing ordinary initialization.
+Nonzero settings must correspond to the requested level. Native game instances
+are allocated at stable addresses; the frontend replaces its initial instance
+after the password fade, binds audio, captures entry inventory, then starts the
+map view. Menu music remains during editing; map music belongs only to the map.
+Restart uses that captured inventory and advancement uses earned inventory.
+
+`tests/test_menu.c` passes70,367 checks across9,242 frames and18 new games under
+GCC ASan/UBSan/leak detection and MSVC. It covers all3x3 language/difficulty
+combinations with music on/off, real rendering, output sentinels, invalid API
+arguments, malformed artwork/credits, unsupported destinations, complete credits,
+idempotent drawing and complete fades. PC cases type all36 actual passwords in
+lowercase, edit/full-buffer/invalid-character cases, hover/click localized labels,
+reject old-page click-through and verify letterbox edges in both aspect ratios.
+
+`tests/test_password_start.py` and the MSVC checker agree on1,975 assertions,
+24 password starts (eight maps × three difficulties),24 fresh normal level starts,
+24 existing-progress starts and672 native gameplay/render frames. Another24
+fresh-loadout restarts complement the24 password entry restarts. GCC uses
+ASan/UBSan/leak checking. Fresh entries are checked directly against ROM words;
+existing progress retains its complete weapons/ammo/selection/history and inventory.
+These are startup/integration checks, not campaign completions or admission of
+another map. The recovered loadout suite still passes12,979 ROM comparisons.
+`scripts/test-password-start.ps1` also enters passwords using normal Windows
+messages, starting maps2/5/8 across all three difficulties and languages in both
+renderers, with music enabled/disabled, pre-level map transitions and R restart.
+The PC-renderer cases retain original arrow entry; reference-renderer cases send
+keyboard/WM_CHAR text, including correction before typing the complete password.
+The middle test selector adjusts to preserve language1 as the campaign grows;
+the first/final selectors cover languages0/2.
+Six additional direct-launch cases cover maps1/4/8 and both renderers. The live
+Windows entry snapshot is checked against the ROM's starter weapons, ammo and
+selection after restart. The new level selector uses the same explicit
+`ssa_native_game_init_loadout` API as password entry.
+Each case verifies the entry inventory at both level reveals and real muted
+audio-device operation. Reports: `password-start-validation.json` and
+`windows-password-start-validation.json`.
+
+`scripts/test-native-menu.ps1` exercises all nine language/difficulty combinations
+through the actual Windows launcher. It uses normal window messages for language cycling in Options,
+title, mouse hover/click on Main (including a blank-space click), options, music
+toggling twice, credits with held keys/releases/focus loss,
+new game, difficulty and map confirmation,
+then verifies native difficulty/language and R restart. Both renderers, music
+enabled/disabled and real muted audio devices are included. Each case freezes
+gameplay for288 menu ticks (including72 credits checks) and140 map ticks. Standard startup follows the direct
+new-game route in187 menu ticks. Enabled-music cases compare the complete music
+player and pending/fade state across repeated command8 under the audio mutex;
+title-to-main and Options-to-main preserve sequence positions and voice ownership.
+The original menu still emits command8; the Win32 adapter makes an already active
+menu song request idempotent. Off/on retains its original stop/restart semantics.
+Physical input/listening remain untested.
+
+The Main mouse checks now hold the audio mutex while delivering actual window
+messages and require exactly one new mixer start for each changed highlight.
+Same-row motion, blank-space motion/reentry and clicking the current row require
+zero additional starts; the music player must remain byte-identical. These checks
+run on both Main visits in every language/difficulty case, with music on/off and
+both renderers. Pointer input uses the normal audio backend and original cue.
+
+`ssa_ui_viewport`/`ssa_ui_pointer` and `ssa_ui_text` are reusable helpers for
+future NETRICSA mouse navigation and score-name typing. Those screens themselves
+remain unimplemented; these helpers do not claim their feature parity.
+
+Use `.\decomp.ps1 test-menu-rom`, `.\decomp.ps1 test-menu`, and
+`powershell -ExecutionPolicy Bypass -File scripts/test-native-menu.ps1 -SkipBuild`.
+Reports: `menu-rom-validation.json`, `menu-validation.json`,
+`windows-native-menu-validation.json`. Byte-matching catalogue progress is separate
+from these behavioral ports; no new exact matches are claimed here.
+The actual decomp.wtf claim and two compiler comparisons of179DC reached96.8%
+with `recovered/menu_credits.c`; this is NOT an exact match. Remaining differences
+include load/register scheduling, line-loop literal placement and return block
+orientation. The claim was released with recovery and matching notes.
+The password candidate `recovered/menu_password.c` reached78.5% after two actual
+decomp.wtf compiler comparisons; this is also NOT exact. The claim was released
+with the editor/graphics findings and remaining scheduling/control-flow notes.
