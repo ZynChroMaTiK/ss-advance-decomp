@@ -1,0 +1,14 @@
+.reference{max-width:1040px;margin:auto;padding:35px 24px 90px;overflow-wrap:anywhere}
+.reference h1{font-size:clamp(30px,5vw,48px);line-height:1.2;margin-top:35px}
+.reference h2{font-size:28px;margin-top:42px}.reference h3{font-size:23px;margin-top:30px}
+.reference p,.reference li{font-size:14px;color:#b7c7b0;line-height:1.8}
+.reference li{margin:8px 0}.reference a{color:var(--lime);text-decoration:underline;text-underline-offset:3px}
+.reference pre{padding:18px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}
+.reference code{font-family:Consolas,monospace;font-size:.9em}
+.reference table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;font-size:13px;margin:24px 0}
+.reference th,.reference td{padding:10px 13px;border:1px solid var(--border);text-align:left;vertical-align:top;line-height:1.6}
+.reference th{background:var(--panel);color:var(--lime)}
+.reference .reference-note{padding:15px;border:1px solid var(--border);font-size:12px}
+.reference :target{scroll-margin-top:20px;outline:2px solid var(--lime);outline-offset:6px}
+.reference:focus-visible{outline:2px solid var(--lime);outline-offset:-4px}
+@media(max-width:760px){.site-header{padding:16px;min-height:70px;gap:14px}.site-header a{font-size:12px}.reference{padding-inline:16px}}

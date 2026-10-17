@@ -66,9 +66,15 @@ From a fresh checkout, Node.js 22 can run `node scripts/test_site.mjs` and
 `pip install -r scripts/site-validation-requirements.txt`, the original ROM and
 the HTTP validation result. It packages `build/exports/ssa-project-site.zip`.
 
+Reference HTML uses `scripts/site_documents.py`; install
+`scripts/site-document-requirements.txt` before rebuilding reference pages.
+`python scripts/refresh_atlas_ui.py` updates online/offline atlas UI from the
+committed exports without a ROM. Pages deployment waits for the website checks.
+
 ## Viewer controls and scope
 
-Orbit: drag, scroll to zoom, right-drag to pan. Touch: one finger rotates, two
+Orbit: drag, scroll to zoom, right-drag to pan. Focus the canvas and use arrow
+keys to pan or Shift + arrows to rotate; +/− buttons also zoom. Touch: one finger rotates, two
 fingers zoom/pan. Free flight: drag to look; WASD moves, Q/E changes height,
 Shift speeds up, Escape returns to orbit. The canvas must have keyboard focus.
 Player start moves to the original start location. Select a wall, floor or sprite
@@ -87,7 +93,7 @@ placements can be toggled separately.
 Five documented secret pins are preserved; this is not a claim that all secrets
 have been identified. All 16 maps and every decoded room are included.
 
-The native project currently supports ten campaign levels. Complete original
+The homepage identifies the campaign levels in the published native snapshot. Complete original
 feature and behavior parity remains unfinished. Reference pages are a dated
 snapshot, not a live build status feed.
 

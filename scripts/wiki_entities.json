@@ -18,7 +18,7 @@
       },
       {
         "title": "In the PC port",
-        "text": "Hold fire to keep cutting at close range without consuming ammunition. Its running and stopping sounds follow the actual attack state."
+        "text": "Hold fire to keep cutting without consuming ammunition. The PC port doubles the original reach to 192 map units. Its running and stopping sounds follow the actual attack state."
       }
     ],
     "sources": [
@@ -36,7 +36,8 @@
         "Weapon slot",
         "1"
       ]
-    ]
+    ],
+    "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach."
   },
   {
     "id": "weapon-pistol",

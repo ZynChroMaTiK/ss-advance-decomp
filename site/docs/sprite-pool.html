@@ -1,1 +1,201 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sprite Pool — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="sprite-pool.md" download>Markdown ↓</a></header><article><h2>Native sprite pool and HUD controllers</h2><p><code>sprite_pool.c</code> recovers the original84-object allocation bookkeeping and <code>hud_sprites.c</code> constructs the original HUD and updates its ordinary gameplay sprites. All objects use the existing exact48-byte <code>SsaWeaponObject</code> projection. The pool borrows the dispatcher&#x27;s84 distinct object pointers; the caller owns their stable storage. This permits actual weapon runtime objects to be bound before initialization, rather than copying a separate invented weapon preview.</p><h3>Initialization and ownership</h3><p>The original <code>0800F84C</code> calls <strong><code>1240C</code> weapon initialization before <code>101F4</code> HUD construction</strong>. <code>101F4</code> creates74 objects for one player, or59+2*players for multiplayer. Its source is fixed positioning/type/animation setup, not a table of invented HUD values. All constructor fields and allocation order are native.</p><p><code>ssa_sprite_pool_init</code> binds an existing <code>SsaSpriteDispatch</code> whose84 object pointers are already populated, then performs <code>FA78</code> reset. The recovered operations are:</p><p>| Original | Native operation | Important retained behavior | |---|---|---| | <code>FA78</code>/<code>FAE8</code>/<code>101C4</code> | init/reset | Clears every payload, sets both scales4096, layer1, animation/previous-frameFFFF and visible flag1; resets counter/submission count. | | <code>F9B4</code> | allocate | Pops the next free slot; writes only slot and active-index; appends the physical slot to active order. | | <code>FA08</code> | release | Pushes the released slot, swap-removes its active entry, updates the moved object&#x27;s active-index, then initializes the released payload. | | <code>FB5C</code> | mark | ORs flag04000000 into every active object. | | <code>FBA0</code> | remove types | Inclusive type range; captures initial count and retains the cursor after a removal so the swapped object is processed. |</p><p>Unused active/free/submitted array entries remain stale exactly as in the ROM. Reset preserves dispatch current/state/index. Release does not adjust those fields either: the already recovered <code>F85C</code> dispatcher rereads the current object&#x27;s now-zero type and follows its original cursor behavior.</p><p>Allocation/release can run inside a sprite dispatcher handler. Bindings must not change, objects cannot move or be freed, and the pool cannot be reentered. Reset is prohibited during dispatch. Native checks reject duplicate bindings, broken active/free membership, corrupt object indices, foreign/double releases and out-of-capacity state. <code>ssa_hud_sprites_create</code> preflights its required free capacity; the original instead dereferences a null allocation when exhausted.</p><p><code>E5F0</code>&#x27;s generic heap allocation and OAM buffer setup are outside the pool API. <code>E914</code> is <strong>notice text formatting/state setup</strong>, not sprite creation. Earlier callback naming that calls it sprite creation should not be treated as evidence that it allocates <code>SsaWeaponObject</code> records.</p><h3>HUD state and handlers</h3><p><code>SsaHudSpriteState</code> projects real display-local state: movement flags, current weapon, weapon flags/action/aim marker, body health, armorC4, optional boss health, ammo, score/time, game bytes/flags and the pause rectangle. It also retains the original numeric and rectangle scratch. The caller supplies authoritative gameplay values. Native code does not fabricate changing health, score, ammo, firing, impacts or enemy behavior.</p><p><code>ssa_hud_glyphs_load</code> copies the real128 glyph-width bytes at <code>0844BC0C</code> without changing state or scratch. Ordinary initialized HUD dispatch is covered:</p><p>| Type hex | Routine | Recovered behavior | |---|---|---| | 3 | F100 | Display-local automap visibility and completed-animation release through the native pool. | | 4 | F0B8 | Automap visibility; F0B4 is an empty original helper. | | 5 | E700 | Original three health-digit selector, including unsigned divide/modulo on sign-extended health. | | 6 | E7A4 | Ammo digits, weapon1/2 ammo999 writeback, shared3-entry layout and original Y positioning. | | 7 | F1C0 | Weapon icon animation; IDs1..10 map42..4B, out-of-range selects4B. | | 8 | F27C | Ammo icon animationDF..E8, out-of-range selectsE8; weapon1 moves it toY=C800. | | 9 | ECF8 | Score digits, shared8-entry layout, grouping gaps and flag04000000 clear. | | C | F344 | Shared5-entry time layout, actual <code>%d:%02d</code> formatting after ticks/60. | | D | E9D4 | Complete inactive-notice or automap branch only: clears game flag200 and sprite visible bit. | | E | F4A4 | Pause rectangle and overflow continuation sprite, including shared four-word scratch. | | F | F5A4 | Body-health, armor and boss bars/icons, including boss health/30, wrapped width multiplication and positioning. | | 10 | F6C8 | Game-byte-selected animation6B+value. | | 11 | F724 | Per-player byte animation, shared one-shot skip byte, automap gate. | | 12 | F794 | Aim marker positioning and D9/DA animation selection from weapon flags, preserving original visibility gates. |</p><p>Type2 <code>F150</code> is already part of <code>weapon_runtime.c</code>; it is not replaced by an idle HUD handler. Other sprite controller types remain explicitly unsupported.</p><p>The numeric layout is not recalculated independently for each digit. The last subtype (ammo2, score7, time4) rebuilds the shared scratch, while earlier subtypes consume its previous contents. This includes original first-frame/stale-buffer behavior. Ammo and score use <code>095FC</code>&#x27;s unsigned decimal conversion. Negative signed ammo therefore becomes a ten-digit unsigned value in the original, overflowing its3-entry layout; native code rejects that unsafe case. Native limits preserve the original3/8/5-character capacities rather than overwriting adjacent scratch. Time&#x27;s previous-glyph spacing uses a quarter width, unlike ammo/score&#x27;s half width.</p><p>Caller adapters must copy back genuine mutations: ammo1/2 can become999, inactive notices clear game flag200, and the per-player skip byte clears after its one-shot use. Scratch persists between frames. Original GAME+68 motion index controls multiplayer constructor marking; display-local0300464E selects the live HUD values and must remain distinct.</p><p>The active-notice path of E9D4 is <strong>not implemented</strong>. It returns0 with object and state unchanged, as do unsupported controller types; adapters must treat that as an explicit unsupported path. A handled controller returns1 and invalid bounded input returns-1. A failure can preserve earlier scalar changes, matching the surrounding modules&#x27; prefix-effect contract. This is not a silent successful message renderer.</p><h3>Validation and exact matching</h3><p><code>tests/test_sprite_pool_rom.py</code> executes whole original routines, modeling only the BIOS CpuSet and DMA memory-copy service used to clear objects. The arithmetic, allocation, native FC04 animation setup, unsigned division, formatting library, HUD branches and shared scratch transformations execute in the original ROM.</p><p>The final proof passes18,576 pool calls,480 complete101F4 construction cases across all16 maps/player counts/motion-player indices and existing allocation prefixes,40,960 scalar/bar/rectangle/inactive-notice controller comparisons, 16,384 numeric controller comparisons and1,024 completeF100 transient-release comparisons. Full payload/active/free/submitted backing is compared, including 1,600,704 object records. There are679 native guard assertions. A separate ASan+UBSan executable runs256 native pool/HUD cycles using actual ROM glyph widths and valid health/ammo state (<code>-no-pie</code>, leak scanning disabled).</p><p>Hashes and exact scope are in <code>native-sprite-pool-validation.json</code>.</p><p>The actual decomp.wtf byte matcher verified <strong>FB5C exactly:68 bytes /34 instructions</strong>, on the second manual compile. The matching source is <code>recovered/sprite_mark.c</code>; using an explicit byte-offset temporary preserves the original load scheduling where typed array indexing did not. The engine released the successful claim and stores a recovery note. Export/full-ROM rebuild remains the parent integration step; no near-match is counted as exact.</p><p>HUD construction/controllers do not alone prove final OAM composition, physical input, firing or the complete native game. Those require the separate renderer and gameplay adapters, with their own integration evidence.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native sprite pool and HUD controllers — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="sprite-pool.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-sprite-pool-and-hud-controllers">Native sprite pool and HUD controllers</h1>
+<p><code>sprite_pool.c</code> recovers the original84-object allocation bookkeeping and
+<code>hud_sprites.c</code> constructs the original HUD and updates its ordinary gameplay
+sprites. All objects use the existing exact48-byte <code>SsaWeaponObject</code> projection.
+The pool borrows the dispatcher's84 distinct object pointers; the caller owns
+their stable storage. This permits actual weapon runtime objects to be bound
+before initialization, rather than copying a separate invented weapon preview.</p>
+<h2 id="initialization-and-ownership">Initialization and ownership</h2>
+<p>The original <code>0800F84C</code> calls <strong><code>1240C</code> weapon initialization before <code>101F4</code> HUD
+construction</strong>. <code>101F4</code> creates74 objects for one player, or59+2*players for
+multiplayer. Its source is fixed positioning/type/animation setup, not a table
+of invented HUD values. All constructor fields and allocation order are native.</p>
+<p><code>ssa_sprite_pool_init</code> binds an existing <code>SsaSpriteDispatch</code> whose84 object
+pointers are already populated, then performs <code>FA78</code> reset. The recovered
+operations are:</p>
+<table>
+<thead>
+<tr>
+<th>Original</th>
+<th>Native operation</th>
+<th>Important retained behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FA78</code>/<code>FAE8</code>/<code>101C4</code></td>
+<td>init/reset</td>
+<td>Clears every payload, sets both scales4096, layer1, animation/previous-frameFFFF and visible flag1; resets counter/submission count.</td>
+</tr>
+<tr>
+<td><code>F9B4</code></td>
+<td>allocate</td>
+<td>Pops the next free slot; writes only slot and active-index; appends the physical slot to active order.</td>
+</tr>
+<tr>
+<td><code>FA08</code></td>
+<td>release</td>
+<td>Pushes the released slot, swap-removes its active entry, updates the moved object's active-index, then initializes the released payload.</td>
+</tr>
+<tr>
+<td><code>FB5C</code></td>
+<td>mark</td>
+<td>ORs flag04000000 into every active object.</td>
+</tr>
+<tr>
+<td><code>FBA0</code></td>
+<td>remove types</td>
+<td>Inclusive type range; captures initial count and retains the cursor after a removal so the swapped object is processed.</td>
+</tr>
+</tbody>
+</table>
+<p>Unused active/free/submitted array entries remain stale exactly as in the ROM.
+Reset preserves dispatch current/state/index. Release does not adjust those
+fields either: the already recovered <code>F85C</code> dispatcher rereads the current
+object's now-zero type and follows its original cursor behavior.</p>
+<p>Allocation/release can run inside a sprite dispatcher handler. Bindings must not
+change, objects cannot move or be freed, and the pool cannot be reentered. Reset
+is prohibited during dispatch. Native checks reject duplicate bindings, broken
+active/free membership, corrupt object indices, foreign/double releases and
+out-of-capacity state. <code>ssa_hud_sprites_create</code> preflights its required free
+capacity; the original instead dereferences a null allocation when exhausted.</p>
+<p><code>E5F0</code>'s generic heap allocation and OAM buffer setup are outside the pool API.
+<code>E914</code> is <strong>notice text formatting/state setup</strong>, not sprite creation. Earlier
+callback naming that calls it sprite creation should not be treated as evidence
+that it allocates <code>SsaWeaponObject</code> records.</p>
+<h2 id="hud-state-and-handlers">HUD state and handlers</h2>
+<p><code>SsaHudSpriteState</code> projects real display-local state: movement flags, current
+weapon, weapon flags/action/aim marker, body health, armorC4, optional boss health,
+ammo, score/time, game bytes/flags and the pause rectangle. It also retains the
+original numeric and rectangle scratch. The caller supplies authoritative
+gameplay values. Native code does not fabricate changing health, score, ammo,
+firing, impacts or enemy behavior.</p>
+<p><code>ssa_hud_glyphs_load</code> copies the real128 glyph-width bytes at <code>0844BC0C</code> without
+changing state or scratch. Ordinary initialized HUD dispatch is covered:</p>
+<table>
+<thead>
+<tr>
+<th>Type hex</th>
+<th>Routine</th>
+<th>Recovered behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>F100</td>
+<td>Display-local automap visibility and completed-animation release through the native pool.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F0B8</td>
+<td>Automap visibility; F0B4 is an empty original helper.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>E700</td>
+<td>Original three health-digit selector, including unsigned divide/modulo on sign-extended health.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>E7A4</td>
+<td>Ammo digits, weapon1/2 ammo999 writeback, shared3-entry layout and original Y positioning.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>F1C0</td>
+<td>Weapon icon animation; IDs1..10 map42..4B, out-of-range selects4B.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>F27C</td>
+<td>Ammo icon animationDF..E8, out-of-range selectsE8; weapon1 moves it toY=C800.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ECF8</td>
+<td>Score digits, shared8-entry layout, grouping gaps and flag04000000 clear.</td>
+</tr>
+<tr>
+<td>C</td>
+<td>F344</td>
+<td>Shared5-entry time layout, actual <code>%d:%02d</code> formatting after ticks/60.</td>
+</tr>
+<tr>
+<td>D</td>
+<td>E9D4</td>
+<td>Complete inactive-notice or automap branch only: clears game flag200 and sprite visible bit.</td>
+</tr>
+<tr>
+<td>E</td>
+<td>F4A4</td>
+<td>Pause rectangle and overflow continuation sprite, including shared four-word scratch.</td>
+</tr>
+<tr>
+<td>F</td>
+<td>F5A4</td>
+<td>Body-health, armor and boss bars/icons, including boss health/30, wrapped width multiplication and positioning.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>F6C8</td>
+<td>Game-byte-selected animation6B+value.</td>
+</tr>
+<tr>
+<td>11</td>
+<td>F724</td>
+<td>Per-player byte animation, shared one-shot skip byte, automap gate.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>F794</td>
+<td>Aim marker positioning and D9/DA animation selection from weapon flags, preserving original visibility gates.</td>
+</tr>
+</tbody>
+</table>
+<p>Type2 <code>F150</code> is already part of <code>weapon_runtime.c</code>; it is not replaced by an
+idle HUD handler. Other sprite controller types remain explicitly unsupported.</p>
+<p>The numeric layout is not recalculated independently for each digit. The last
+subtype (ammo2, score7, time4) rebuilds the shared scratch, while earlier subtypes
+consume its previous contents. This includes original first-frame/stale-buffer
+behavior. Ammo and score use <code>095FC</code>'s unsigned decimal conversion. Negative
+signed ammo therefore becomes a ten-digit unsigned value in the original,
+overflowing its3-entry layout; native code rejects that unsafe case. Native
+limits preserve the original3/8/5-character capacities rather than overwriting
+adjacent scratch. Time's previous-glyph spacing uses a quarter width, unlike
+ammo/score's half width.</p>
+<p>Caller adapters must copy back genuine mutations: ammo1/2 can become999,
+inactive notices clear game flag200, and the per-player skip byte clears after
+its one-shot use. Scratch persists between frames. Original GAME+68 motion
+index controls multiplayer constructor marking; display-local0300464E selects
+the live HUD values and must remain distinct.</p>
+<p>The active-notice path of E9D4 is <strong>not implemented</strong>. It returns0 with object
+and state unchanged, as do unsupported controller types; adapters must treat
+that as an explicit unsupported path. A handled controller returns1 and invalid
+bounded input returns-1. A failure can preserve earlier scalar changes, matching
+the surrounding modules' prefix-effect contract. This is not a silent successful
+message renderer.</p>
+<h2 id="validation-and-exact-matching">Validation and exact matching</h2>
+<p><code>tests/test_sprite_pool_rom.py</code> executes whole original routines, modeling only
+the BIOS CpuSet and DMA memory-copy service used to clear objects. The arithmetic,
+allocation, native FC04 animation setup, unsigned division, formatting library,
+HUD branches and shared scratch transformations execute in the original ROM.</p>
+<p>The final proof passes18,576 pool calls,480 complete101F4 construction cases
+across all16 maps/player counts/motion-player indices and existing allocation
+prefixes,40,960 scalar/bar/rectangle/inactive-notice controller comparisons,
+16,384 numeric controller comparisons and1,024 completeF100 transient-release
+comparisons. Full payload/active/free/submitted backing is compared, including
+1,600,704 object records. There are679 native guard assertions. A separate
+ASan+UBSan executable runs256 native pool/HUD cycles using actual ROM glyph
+widths and valid health/ammo state (<code>-no-pie</code>, leak scanning disabled).</p>
+<p>Hashes and exact scope are in <code>native-sprite-pool-validation.json</code>.</p>
+<p>The actual decomp.wtf byte matcher verified <strong>FB5C exactly:68 bytes /34
+instructions</strong>, on the second manual compile. The matching source is
+<code>recovered/sprite_mark.c</code>; using an explicit byte-offset temporary preserves the
+original load scheduling where typed array indexing did not. The engine released
+the successful claim and stores a recovery note. Export/full-ROM rebuild remains
+the parent integration step; no near-match is counted as exact.</p>
+<p>HUD construction/controllers do not alone prove final OAM composition, physical
+input, firing or the complete native game. Those require the separate renderer
+and gameplay adapters, with their own integration evidence.</p>
+</main></body></html>

@@ -2,7 +2,7 @@ name: Publish project website
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/pages.yml']
+    paths: ['site/**', 'scripts/test_site*', '.github/workflows/pages.yml', '.github/workflows/site-checks.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,7 +12,10 @@ concurrency:
   group: github-pages
   cancel-in-progress: true
 jobs:
+  check:
+    uses: ./.github/workflows/site-checks.yml
   deploy:
+    needs: check
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

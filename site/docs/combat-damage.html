@@ -1,1 +1,80 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Combat Damage — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="combat-damage.md" download>Markdown ↓</a></header><article><h2>General damage</h2><p><code>src/combat_damage.c</code> recovers the complete control flow of <code>080037F4</code>. <code>include/ssa/combat_damage.h</code> exposes explicit host projections instead of a packed original entity or player record. This is behavioral recovery, not an exact matching candidate.</p><h3>Ownership and integration</h3><p><code>SsaCombatDamageTarget</code> points at a stable entity, canonical signed 16-bit health, entity timer and player inventory. A flag-<code>0x10</code> target requires the timer and inventory pointers. Inventory supplies the original player-record <code>+C6</code> and <code>+C4</code> armor values; it does not implicitly supply the target health pointer. The native player adapter should pass authoritative <code>inventory.health</code>, then synchronize its entity-health mirror, including after a callback failure. Movement flags at player record <code>+BC</code> are distinct from body flags at entity <code>+30</code>; never synchronize those two fields with each other.</p><p><code>SsaCombatDamage</code> explicitly projects the original globals: current damage source and its entity <code>+20</code> owner/target pointer, optional selected weapon-hit counter, twelve enemy hit/kill counters, player count, local-view index and local player flags, difficulty, god mode, frame counter, hurt-flash countdown, kill credit, selected credited player&#x27;s kill byte, kill limit and winner. The optional shot counter points at the record selected by <code>03003F4C</code>; it is not selected from a weapon field guessed from the source entity. Credit comes separately from <code>03003F40</code>. Original source identity is not inferred from world ownership.</p><p>Callbacks represent <code>5850</code> multiplayer damage delivery, <code>8D5C</code> hurt sound and <code>125E0</code> reward. They receive the already-mutated target at the exact call site. The reward callback can invoke the recovered reward helper. Negative callback results stop later operations and retain earlier effects. A context-wide <code>updating</code> guard rejects callback reentry, including a nested NULL-target call. Neither callback nor caller may free or change projected storage during a call. No world query, unlink, pool release or group notification occurs here.</p><p>The original dereferences a NULL source for a player target with at most one player. Native code rejects that malformed input; it does not manufacture an enemy source. Missing required host pointers also return <code>-1</code>. A NULL target otherwise retains the original no-op behavior.</p><h3>Recovered behavior</h3><p class="bullet">• Multiplayer winner state suppresses damage. Single-player weapon-hit counting</p><p>  happens before the target&#x27;s flag-1 immunity gate, so protected hits still count.</p><p class="bullet">• A multiplayer player target with a non-NULL source only sends damage when the</p><p>  source, or its explicit <code>+20</code> referent, is a player controlled by the local   player. The network amount truncates to 16 bits. This path does not locally   change armor or health. A NULL multiplayer source follows local damage instead.</p><p class="bullet">• Single-player player damage records the enemy source type. Direct sources</p><p>  include <code>CD..D6</code>; indirect sources include <code>CD..D8</code>. God mode zeroes damage.   Difficulty 0 halves damage, 1 computes unsigned <code>damage / 3 * 2</code>, and 2 adds   unsigned <code>damage / 2</code>. Other difficulty bytes leave it unchanged. Non-player   targets instead receive 1.5x on difficulty 0 and <code>damage / 3 * 2</code> on 2.</p><p class="bullet">• Armor runs <code>C6</code> before <code>C4</code>. Each nonzero signed halfword subtracts the signed</p><p>  low halfword of doubled damage, wraps, then halves unsigned damage. Negative   remaining armor refunds its signed division by two and is cleared. Negative   input armor and large unsigned damage therefore have deliberately unusual   results. No saturation is substituted for original wrapping.</p><p class="bullet">• Player timer becomes 30 in single-player. A local player without record flag 8</p><p>  gets hurt flash 9 and sound <code>15 + (frame_counter &amp; 1)</code> only for nonzero remaining   damage and an initially zero flash timer. This precedes health subtraction.</p><p class="bullet">• Health subtraction wraps to signed 16 bits. A result at or below zero becomes</p><p>  zero, increments <code>CD..D8</code> kill statistics and applies nonzero kill credit.   Multiplayer kill bytes wrap; equality with the kill limit sets the winner.   Single-player credit calls the reward boundary. Credited dead player bodies   get timer 3000 and flag 1 after that boundary.</p><p class="bullet">• After local damage, single-player sets body flag 1 even for survivors. Every</p><p>  completed local-damage path clears flag <code>0x800</code>. Early immunity, network and   winner exits do not clear it. The enemy controller remains responsible for   subsequent death transitions and corpse handling.</p><h3>Validation</h3><p>Run <code>.venv-linux/bin/python tests/test_combat_damage_rom.py</code> under WSL, or the workspace <code>test-combat-damage</code> driver once registered. The test compiles native C with strict warnings and UBSan, executes entire original <code>037F4</code> including the original unsigned division helper, and controls only the three explicit effect boundaries. It compares full target, game, player-record and settings byte snapshots plus ordered effect snapshots.</p><p>The final suite passes <strong>13,186 ROM comparisons</strong>, <strong>6,586 callback reentry checks</strong>, <strong>10 invalid-input guards</strong> and <strong>3 callback failure cases</strong>. It covers all scaling branches, 32-bit damage and 16-bit health/armor boundaries, wrapped statistics, direct/indirect source types, multiplayer routing, local protection, god mode, winner gates, NULL targets and credited deaths. There are 232 network, 1,052 sound and 2,009 reward observations. Evidence and source hash are in <code>native-combat-damage-validation.json</code>. Unicorn is only a differential oracle; the native function contains no ROM execution.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>General damage — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="combat-damage.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="general-damage">General damage</h1>
+<p><code>src/combat_damage.c</code> recovers the complete control flow of <code>080037F4</code>.
+<code>include/ssa/combat_damage.h</code> exposes explicit host projections instead of a
+packed original entity or player record. This is behavioral recovery, not an
+exact matching candidate.</p>
+<h2 id="ownership-and-integration">Ownership and integration</h2>
+<p><code>SsaCombatDamageTarget</code> points at a stable entity, canonical signed 16-bit health,
+entity timer and player inventory. A flag-<code>0x10</code> target requires the timer and
+inventory pointers. Inventory supplies the original player-record <code>+C6</code> and
+<code>+C4</code> armor values; it does not implicitly supply the target health pointer.
+The native player adapter should pass authoritative <code>inventory.health</code>, then
+synchronize its entity-health mirror, including after a callback failure.
+Movement flags at player record <code>+BC</code> are distinct from body flags at entity
+<code>+30</code>; never synchronize those two fields with each other.</p>
+<p><code>SsaCombatDamage</code> explicitly projects the original globals: current damage source
+and its entity <code>+20</code> owner/target pointer, optional selected weapon-hit counter,
+twelve enemy hit/kill counters, player count, local-view index and local player
+flags, difficulty, god mode, frame counter, hurt-flash countdown, kill credit,
+selected credited player's kill byte, kill limit and winner. The optional
+shot counter points at the record selected by <code>03003F4C</code>; it is not selected
+from a weapon field guessed from the source entity. Credit comes separately
+from <code>03003F40</code>. Original source identity is not inferred from world ownership.</p>
+<p>Callbacks represent <code>5850</code> multiplayer damage delivery, <code>8D5C</code> hurt sound and
+<code>125E0</code> reward. They receive the already-mutated target at the exact call site.
+The reward callback can invoke the recovered reward helper. Negative callback
+results stop later operations and retain earlier effects. A context-wide
+<code>updating</code> guard rejects callback reentry, including a nested NULL-target call.
+Neither callback nor caller may free or change projected storage during a call.
+No world query, unlink, pool release or group notification occurs here.</p>
+<p>The original dereferences a NULL source for a player target with at most one
+player. Native code rejects that malformed input; it does not manufacture an
+enemy source. Missing required host pointers also return <code>-1</code>. A NULL target
+otherwise retains the original no-op behavior.</p>
+<h2 id="recovered-behavior">Recovered behavior</h2>
+<ul>
+<li>Multiplayer winner state suppresses damage. Single-player weapon-hit counting
+happens before the target's flag-1 immunity gate, so protected hits still count.</li>
+<li>A multiplayer player target with a non-NULL source only sends damage when the
+source, or its explicit <code>+20</code> referent, is a player controlled by the local
+player. The network amount truncates to 16 bits. This path does not locally
+change armor or health. A NULL multiplayer source follows local damage instead.</li>
+<li>Single-player player damage records the enemy source type. Direct sources
+include <code>CD..D6</code>; indirect sources include <code>CD..D8</code>. God mode zeroes damage.
+Difficulty 0 halves damage, 1 computes unsigned <code>damage / 3 * 2</code>, and 2 adds
+unsigned <code>damage / 2</code>. Other difficulty bytes leave it unchanged. Non-player
+targets instead receive 1.5x on difficulty 0 and <code>damage / 3 * 2</code> on 2.</li>
+<li>Armor runs <code>C6</code> before <code>C4</code>. Each nonzero signed halfword subtracts the signed
+low halfword of doubled damage, wraps, then halves unsigned damage. Negative
+remaining armor refunds its signed division by two and is cleared. Negative
+input armor and large unsigned damage therefore have deliberately unusual
+results. No saturation is substituted for original wrapping.</li>
+<li>Player timer becomes 30 in single-player. A local player without record flag 8
+gets hurt flash 9 and sound <code>15 + (frame_counter &amp; 1)</code> only for nonzero remaining
+damage and an initially zero flash timer. This precedes health subtraction.</li>
+<li>Health subtraction wraps to signed 16 bits. A result at or below zero becomes
+zero, increments <code>CD..D8</code> kill statistics and applies nonzero kill credit.
+Multiplayer kill bytes wrap; equality with the kill limit sets the winner.
+Single-player credit calls the reward boundary. Credited dead player bodies
+get timer 3000 and flag 1 after that boundary.</li>
+<li>After local damage, single-player sets body flag 1 even for survivors. Every
+completed local-damage path clears flag <code>0x800</code>. Early immunity, network and
+winner exits do not clear it. The enemy controller remains responsible for
+subsequent death transitions and corpse handling.</li>
+</ul>
+<h2 id="validation">Validation</h2>
+<p>Run <code>.venv-linux/bin/python tests/test_combat_damage_rom.py</code> under WSL, or the
+workspace <code>test-combat-damage</code> driver once registered. The test compiles native
+C with strict warnings and UBSan, executes entire original <code>037F4</code> including
+the original unsigned division helper, and controls only the three explicit
+effect boundaries. It compares full target, game, player-record and settings
+byte snapshots plus ordered effect snapshots.</p>
+<p>The final suite passes <strong>13,186 ROM comparisons</strong>, <strong>6,586 callback reentry
+checks</strong>, <strong>10 invalid-input guards</strong> and <strong>3 callback failure cases</strong>. It covers
+all scaling branches, 32-bit damage and 16-bit health/armor boundaries, wrapped
+statistics, direct/indirect source types, multiplayer routing, local protection,
+god mode, winner gates, NULL targets and credited deaths. There are 232 network,
+1,052 sound and 2,009 reward observations. Evidence and source hash are in
+<code>native-combat-damage-validation.json</code>. Unicorn is only a differential oracle;
+the native function contains no ROM execution.</p>
+</main></body></html>

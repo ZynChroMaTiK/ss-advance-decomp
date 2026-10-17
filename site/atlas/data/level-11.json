@@ -20183,7 +20183,7 @@
       "type": 41,
       "entity_type": 225,
       "animation": 50,
-      "name": "100 health (200 cap)",
+      "name": "100 health (collect below 200)",
       "code": "H100",
       "group": "health",
       "trigger": 0,

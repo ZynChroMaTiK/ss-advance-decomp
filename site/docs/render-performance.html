@@ -1,1 +1,52 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Render Performance — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="render-performance.md" download>Markdown ↓</a></header><article><h2>Rendering performance and frame presentation</h2><p>The original crosshair has replaced the temporary PC glyph. The playable game now routes the original type18 HUD controller and original sprite art without suppressing them during vertical aiming. Its placement, target/no-target animation, and knife/weapon8/death/automap visibility remain the recovered rules. Mouse pitch and direct weapon aiming remain available.</p><p>The former Windows paint path filled the visible client black before drawing the framebuffer and text. It now composes those into a client-size 32-bit memory DIB, flushes GDI writes, and copies only the completed image to the window in one blit. This also covers letterboxing, notices, initial presentation and resizing. No intermediate black clear reaches the visible client. Repainting always uses a completed game framebuffer. DIB resources are replaced on resize and released on shutdown. The frontend presents immediately after a simulation batch, rather than waiting for another queued paint to show the new frame.</p><p>The PC frontend uses <code>ssa_native_game_tick</code> plus <code>prepare_view</code>, retaining the 60Hz simulation and native HUD/OAM updates while avoiding an unused original world/actor/display render on each catch-up tick. <code>ssa_native_game_step</code> retains the reference-rendering contract for other callers. The original renderer option draws the reference once per presented batch.</p><p>The pitched renderer now caches static subsector polygons, while reading sector heights/colors live. A geometry fingerprint invalidates the cache across topology changes. Its flat sky uses separate row/column lookups, retaining vertical framing across pitch and panning horizontally with yaw. x64 uses SSE2 square root without a new libm dependency. Triangle rasterization walks covered scanline spans with incremental reciprocal depth and texture attributes. HUD expansion fills only opaque native pixel runs instead of scanning every world pixel for transparent artwork.</p><p>Validation includes ASan/UBSan/leak checks, 30,100 depth comparisons against an independent ray tracer, cache reuse with live height changes, and 18,280 original HUD pixel comparisons at integer/fractional scale. Normal-input completion through the split simulation path remains 5,258 frames, 28,000 score and 100 health. The PC renderer draws 87 level and 87 pitched views along that entire route.</p><p><code>scripts/test-render-performance.ps1</code> exercises 601 buffered presentations and 1,803 pixel checks across 600 jumping/H/pitch gameplay frames with live resize. These verify completed offscreen frames against source pixels; physical monitor flicker and input delivery are not directly measured. The same script records local Windows throughput using the preserved previous executable when available. At 1280x720, the 180-frame aiming workload improved from 6.730s to 1.233s (5.46x). The horizontal workload improved from 2.824s to 2.447s. These are uncapped hidden test workloads including startup/simulation/rendering, not a promise of that FPS on every computer; normal gameplay stays at60 simulation ticks per second.</p><p>The standalone <code>tests/bench_pc_renderer.c</code> measures fixed-scene render CPU time. The first six cases preserve the before/after pitch and horizontal-turn sequence; the updated benchmark additionally measures continuous vertical sweeps. Frozen baseline and rebuilt executables/reports are local validation artifacts under <code>build/native-tests</code> and <code>analysis/render-performance-before.json</code> / <code>after.json</code>. Windows evidence: <code>analysis/windows-render-performance-validation.json</code>.</p><p>In a separate sequential GCC <code>-O2</code> CPU-time run at1280x720, stationary tilted views improved from 34.9--37.7ms to 3.85--3.99ms; horizontal turning while tilted improved from 64.7--70.1ms to 5.69--7.88ms. Continuous vertical sweeps, which rebuild sky directions, measured 14.0--16.2ms after optimization; no preserved before-sweep measurement is claimed. Each case uses24 draws after a warm-up.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rendering performance and frame presentation — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="render-performance.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="rendering-performance-and-frame-presentation">Rendering performance and frame presentation</h1>
+<p>The original crosshair has replaced the temporary PC glyph. The playable game
+now routes the original type18 HUD controller and original sprite art without
+suppressing them during vertical aiming. Its placement, target/no-target
+animation, and knife/weapon8/death/automap visibility remain the recovered rules.
+Mouse pitch and direct weapon aiming remain available.</p>
+<p>The former Windows paint path filled the visible client black before drawing
+the framebuffer and text. It now composes those into a client-size 32-bit memory
+DIB, flushes GDI writes, and copies only the completed image to the window in one
+blit. This also covers letterboxing, notices, initial presentation and resizing.
+No intermediate black clear reaches the visible client. Repainting always uses
+a completed game framebuffer. DIB resources are replaced on resize and released
+on shutdown. The frontend presents immediately after a simulation batch, rather
+than waiting for another queued paint to show the new frame.</p>
+<p>The PC frontend uses <code>ssa_native_game_tick</code> plus <code>prepare_view</code>, retaining the
+60Hz simulation and native HUD/OAM updates while avoiding an unused original
+world/actor/display render on each catch-up tick. <code>ssa_native_game_step</code> retains
+the reference-rendering contract for other callers. The original renderer option
+draws the reference once per presented batch.</p>
+<p>The pitched renderer now caches static subsector polygons, while reading sector
+heights/colors live. A geometry fingerprint invalidates the cache across topology
+changes. Its flat sky uses separate row/column lookups, retaining vertical
+framing across pitch and panning horizontally with yaw. x64 uses SSE2 square root without a new libm
+dependency. Triangle rasterization walks covered scanline spans with incremental
+reciprocal depth and texture attributes. HUD expansion fills only opaque native
+pixel runs instead of scanning every world pixel for transparent artwork.</p>
+<p>Validation includes ASan/UBSan/leak checks, 30,100 depth comparisons against an
+independent ray tracer, cache reuse with live height changes, and 18,280 original
+HUD pixel comparisons at integer/fractional scale. Normal-input completion through
+the split simulation path remains 5,258 frames, 28,000 score and 100 health. The
+PC renderer draws 87 level and 87 pitched views along that entire route.</p>
+<p><code>scripts/test-render-performance.ps1</code> exercises 601 buffered presentations and
+1,803 pixel checks across 600 jumping/H/pitch gameplay frames with live resize.
+These verify completed offscreen frames against source pixels; physical monitor
+flicker and input delivery are not directly measured. The same script records
+local Windows throughput using the preserved previous executable when available.
+At 1280x720, the 180-frame aiming workload improved from 6.730s to 1.233s (5.46x).
+The horizontal workload improved from 2.824s to 2.447s. These are uncapped hidden
+test workloads including startup/simulation/rendering, not a promise of that FPS
+on every computer; normal gameplay stays at60 simulation ticks per second.</p>
+<p>The standalone <code>tests/bench_pc_renderer.c</code> measures fixed-scene render CPU time.
+The first six cases preserve the before/after pitch and horizontal-turn sequence;
+the updated benchmark additionally measures continuous vertical sweeps. Frozen
+baseline and rebuilt executables/reports are local validation artifacts under
+<code>build/native-tests</code> and <code>analysis/render-performance-before.json</code> / <code>after.json</code>.
+Windows evidence: <code>analysis/windows-render-performance-validation.json</code>.</p>
+<p>In a separate sequential GCC <code>-O2</code> CPU-time run at1280x720, stationary tilted
+views improved from 34.9--37.7ms to 3.85--3.99ms; horizontal turning while tilted
+improved from 64.7--70.1ms to 5.69--7.88ms. Continuous vertical sweeps, which
+rebuild sky directions, measured 14.0--16.2ms after optimization; no preserved
+before-sweep measurement is claimed. Each case uses24 draws after a warm-up.</p>
+</main></body></html>

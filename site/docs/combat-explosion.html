@@ -1,1 +1,53 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Combat Explosion — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="combat-explosion.md" download>Markdown ↓</a></header><article><h2>Explosion damage requests</h2><p><code>src/combat_explosion.c</code> recovers the complete <code>080035A8</code> traversal. The native entry is <code>ssa_combat_explode</code> in <code>include/ssa/combat_explosion.h</code>. It produces synchronous damage requests through an explicit <code>037F4</code> callback; this module does not itself change health, play sounds or allocate an explosion visual.</p><p>The caller supplies the source and the original active-pool order as stable entity pointers. Spatial list order is not a substitute. The source is skipped. Types CD through D8 qualify independently of the include-players argument; other types require flag 10 and that argument. Flag 20 excludes either kind.</p><p>With squared radius zero, the routine calls the map reject-bit query using source and target sectors, then excludes target types above D6. It does not perform a wall ray or distance test. Otherwise it performs no visibility test. Wrapped XY differences are arithmetic-shifted by 16, squared and summed modulo 32 bits. The unsigned squared distance must be strictly below the radius.</p><p>Nonzero-radius attenuation preserves the original instruction sequence: <code>fraction = ((distance &lt;&lt; 12) / radius) &lt;&lt; 4</code>, with unsigned 32-bit wrapping. The fraction and <code>damage &lt;&lt; 16</code> are signed inputs to the original fixed multiply. Its wrapped result is logically shifted by 16 and subtracted from damage. This can produce surprising values for large inputs; it is not replaced with floating-point falloff or clamped damage.</p><p>When mode is 1 and the source type is 67, encountering a qualified player-flag target divides the routine&#x27;s running damage by four <strong>before</strong> checking range. This persists for all later targets, including when that player is outside the radius. Several players can quarter it repeatedly. The zero-radius branch does not apply this rule.</p><p>The original loop reloads active count each iteration. The original damage routine and its reward helper do not allocate or release entities, so this native API requires active count/order and body storage to remain stable during callbacks. It still reads source and target fields live: earlier damage may change flags observed later. Reentry using the same workspace is rejected. Callbacks return negative on failure; prior effects remain, and the updating guard is always released. Invalid map sectors/reject data fail instead of reading outside the map. Nonzero radius needs no map.</p><h3>Verification</h3><p>Run <code>.venv-linux/bin/python tests/test_combat_explosion_rom.py</code> under WSL. The test executes whole original <code>035A8</code>, original B18C reject lookup, original unsigned division and original IWRAM signed fixed multiply. Only damage <code>037F4</code> is hooked to record exact ordered target/damage requests. Native code builds with strict compiler warnings and UBSan.</p><p>The final run passes <strong>72,325 ROM comparisons</strong>:</p><p class="bullet">• 65,686 type/flag eligibility cases, including all 65,536 type values;</p><p class="bullet">• 4,096 randomized active arrays, including self and empty lists;</p><p class="bullet">• 431 distance, attenuation, strict-boundary and persistent-quartering cases;</p><p class="bullet">• 2,048 cases using all 16 actual map reject tables;</p><p class="bullet">• 64 cases with callback-driven changes to later body flags and source type.</p><p>It compares 61,671 damage requests, checks 61,681 rejected reentries, nine invalid-input guards and three callback failure points. Final source hashes and per-map counts are in <code>native-combat-explosion-validation.json</code>. This verifies request generation; actual damage and runtime integration require their own tests. No ROM instructions execute in the native implementation.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Explosion damage requests — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="combat-explosion.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="explosion-damage-requests">Explosion damage requests</h1>
+<p><code>src/combat_explosion.c</code> recovers the complete <code>080035A8</code> traversal. The native
+entry is <code>ssa_combat_explode</code> in <code>include/ssa/combat_explosion.h</code>. It produces
+synchronous damage requests through an explicit <code>037F4</code> callback; this module
+does not itself change health, play sounds or allocate an explosion visual.</p>
+<p>The caller supplies the source and the original active-pool order as stable
+entity pointers. Spatial list order is not a substitute. The source is skipped.
+Types CD through D8 qualify independently of the include-players argument;
+other types require flag 10 and that argument. Flag 20 excludes either kind.</p>
+<p>With squared radius zero, the routine calls the map reject-bit query using
+source and target sectors, then excludes target types above D6. It does not
+perform a wall ray or distance test. Otherwise it performs no visibility test.
+Wrapped XY differences are arithmetic-shifted by 16, squared and summed modulo
+32 bits. The unsigned squared distance must be strictly below the radius.</p>
+<p>Nonzero-radius attenuation preserves the original instruction sequence:
+<code>fraction = ((distance &lt;&lt; 12) / radius) &lt;&lt; 4</code>, with unsigned 32-bit wrapping.
+The fraction and <code>damage &lt;&lt; 16</code> are signed inputs to the original fixed
+multiply. Its wrapped result is logically shifted by 16 and subtracted from
+damage. This can produce surprising values for large inputs; it is not replaced
+with floating-point falloff or clamped damage.</p>
+<p>When mode is 1 and the source type is 67, encountering a qualified player-flag
+target divides the routine's running damage by four <strong>before</strong> checking range.
+This persists for all later targets, including when that player is outside the
+radius. Several players can quarter it repeatedly. The zero-radius branch
+does not apply this rule.</p>
+<p>The original loop reloads active count each iteration. The original damage
+routine and its reward helper do not allocate or release entities, so this
+native API requires active count/order and body storage to remain stable
+during callbacks. It still reads source and target fields live: earlier damage
+may change flags observed later. Reentry using the same workspace is rejected.
+Callbacks return negative on failure; prior effects remain, and the updating
+guard is always released. Invalid map sectors/reject data fail instead of
+reading outside the map. Nonzero radius needs no map.</p>
+<h2 id="verification">Verification</h2>
+<p>Run <code>.venv-linux/bin/python tests/test_combat_explosion_rom.py</code> under WSL.
+The test executes whole original <code>035A8</code>, original B18C reject lookup, original
+unsigned division and original IWRAM signed fixed multiply. Only damage <code>037F4</code>
+is hooked to record exact ordered target/damage requests. Native code builds
+with strict compiler warnings and UBSan.</p>
+<p>The final run passes <strong>72,325 ROM comparisons</strong>:</p>
+<ul>
+<li>65,686 type/flag eligibility cases, including all 65,536 type values;</li>
+<li>4,096 randomized active arrays, including self and empty lists;</li>
+<li>431 distance, attenuation, strict-boundary and persistent-quartering cases;</li>
+<li>2,048 cases using all 16 actual map reject tables;</li>
+<li>64 cases with callback-driven changes to later body flags and source type.</li>
+</ul>
+<p>It compares 61,671 damage requests, checks 61,681 rejected reentries, nine
+invalid-input guards and three callback failure points. Final source hashes and
+per-map counts are in <code>native-combat-explosion-validation.json</code>. This verifies
+request generation; actual damage and runtime integration require their own
+tests. No ROM instructions execute in the native implementation.</p>
+</main></body></html>

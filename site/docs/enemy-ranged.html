@@ -1,1 +1,68 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enemy Ranged — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="enemy-ranged.md" download>Markdown ↓</a></header><article><h2>CE and D3–D6 enemy controllers</h2><p><code>enemy_ranged.c</code> implements complete dispatchers <code>135C4</code> (CE), <code>13FA4</code> (D3), <code>141E8</code> (D4), <code>13DB0</code> (D5) and <code>13780</code> (D6). The module name groups this recovery; CE attacks by contact and D5 burrows. It uses the shared <code>enemy_control.h</code> state and event contract. State-zero initialization, navigation, damage reactions, drain, corpse expiry and native math use the existing recovered modules.</p><p>CE navigates, applies contact damage, computes contact knockback, then processes hurt/death. Contact helper <code>12638</code> returns one after a successful damage request; its jump-table branches reach the assignment at <code>126C4</code>. Knockback uses the player body&#x27;s position, while the hurt-facing calculation uses the player record&#x27;s separate XY. The impulse is navigation speed times the original cosine table, and is emitted only for the original front-facing half-angle threshold. The consumer must set the player&#x27;s impulse heading and impulse. CE&#x27;s sound loop uses <code>03004674</code>, separate from CD&#x27;s loop source: start at signed nonzero distance at most 399, stop above 400, or when navigation/state changes. The postlude still observes cleared state after a destruction request.</p><p>D3 fires projectile 66 immediately after the native attack gate, with forward offset <code>500000</code>, side zero, speed <code>640000</code> and facing-derived heading. D6 does the same with projectile 67 at speed <code>500000</code>. D4 enters its attack animation first; marker <code>FA</code> clears the marker and emits projectile 66 at speed <code>5A0000</code>. Only marker <code>FE</code> resumes walking. These are actual <code>1097C</code> requests; the shared event&#x27;s mode is one. Creating, moving and impacting those projectiles belongs to the projectile runtime, not this controller module.</p><p>D4&#x27;s special branch above 128 units over the player selects the player as target, turns through <code>14518</code>/<code>04614</code>, updates the attack-alignment bit using absolute pre-turn delta at most 1999, and runs the hazard helper. Otherwise it navigates normally. Preserve signed wrapped subtraction for the altitude test.</p><p>D5 sets speed to one fixed-point unit before navigation, and jumps with vertical velocity <code>50000</code> when phase two, signed distance at most 255, and the current whole-unit Z equals floor. Its direct player-body distance uses reversed operands relative to ordinary enemy-distance calls. Beyond unsigned distance 767 it starts burrowing and clears flag two. Bury, hidden, emerge and hurt states perform the original zero-speed walk/gravity call. Hidden distance at most 511 starts emerge; completed emerge restores flag two. Damage reaction still runs after initiating burrow in the active frame.</p><p>All callbacks preserve stable storage. Animation events observe <code>animation_done</code> already zero. Destruction is deferred until the controller returns, with <code>destroy_requested</code> checked even on errors. Failure preserves earlier state and events. Null/mismatched views, unsupported type, reentry, active world queries and ticks above 255 fail explicitly. No default presentation/combat callbacks pretend to succeed.</p><h3>Validation</h3><p><code>tests/test_enemy_ranged_rom.py</code> compares complete original dispatchers, including shared activation, contact, drain, table math, hurt/death/corpse, attack gate and sound logic. Original navigation <code>1288C</code> and world calls <code>04498</code>/<code>0354C</code> are controlled without mutation on both sides. <code>A4F4</code> supplies a controlled selected entity; combat, group notification, destruction and projectile creation are ordered effect boundaries. Animation setter <code>5394</code> executes in the original oracle, and its metadata is compared with the host callback projection.</p><p>11,994 complete comparisons pass: 2,608 CE, 2,349 each D3/D4/D6 and 2,339 D5. This includes 134 knockbacks, 89 projectile requests, 8,109 callback reentry checks and 11 callback-failure paths. Directed cases cover every state and animation marker, timer signed-wrap boundaries, aim acceptance, contact headings, burrow distances and sound thresholds.</p><p>The strict-C11 ASan/UBSan fixture <code>test_enemy_ranged.c</code> adds 20,480 native controller steps, 180,884 assertions, 81,920 input/reentry guards, 9,253 events and 19 injected callback failures. Navigation and world effects are controlled in this sanitizer fixture too; real-world composition remains the generic enemy runtime&#x27;s responsibility. Source and test hashes are recorded in <code>native-enemy-ranged-validation.json</code>. These are native behavior proofs, not new byte-matched functions or a claim of complete gameplay integration.</p><p>A bounded decomp.wtf attempt for CE hurt-resume <code>13438</code> used the actual byte matcher and original toolchain. Two manual candidates reached 89.7% and 76.5%; neither is exact. The better unsigned-field candidate remains in <code>recovered/enemy_ce_resume.c</code>. Its pointer register allocation and halfword/literal load ordering differ from the original. Attempt results are recorded in <code>enemy-ce-resume-match-attempts.json</code>; this adds no exact-match progress.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CE and D3–D6 enemy controllers — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="enemy-ranged.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="ce-and-d3d6-enemy-controllers">CE and D3–D6 enemy controllers</h1>
+<p><code>enemy_ranged.c</code> implements complete dispatchers <code>135C4</code> (CE), <code>13FA4</code> (D3),
+<code>141E8</code> (D4), <code>13DB0</code> (D5) and <code>13780</code> (D6). The module name groups this recovery;
+CE attacks by contact and D5 burrows. It uses the shared <code>enemy_control.h</code> state
+and event contract. State-zero initialization, navigation, damage reactions,
+drain, corpse expiry and native math use the existing recovered modules.</p>
+<p>CE navigates, applies contact damage, computes contact knockback, then processes
+hurt/death. Contact helper <code>12638</code> returns one after a successful damage request;
+its jump-table branches reach the assignment at <code>126C4</code>. Knockback uses the
+player body's position, while the hurt-facing calculation uses the player
+record's separate XY. The impulse is navigation speed times the original cosine
+table, and is emitted only for the original front-facing half-angle threshold.
+The consumer must set the player's impulse heading and impulse. CE's sound loop
+uses <code>03004674</code>, separate from CD's loop source: start at signed nonzero distance
+at most 399, stop above 400, or when navigation/state changes. The postlude still
+observes cleared state after a destruction request.</p>
+<p>D3 fires projectile 66 immediately after the native attack gate, with forward
+offset <code>500000</code>, side zero, speed <code>640000</code> and facing-derived heading. D6 does
+the same with projectile 67 at speed <code>500000</code>. D4 enters its attack animation
+first; marker <code>FA</code> clears the marker and emits projectile 66 at speed <code>5A0000</code>.
+Only marker <code>FE</code> resumes walking. These are actual <code>1097C</code> requests; the shared
+event's mode is one. Creating, moving and impacting those projectiles belongs
+to the projectile runtime, not this controller module.</p>
+<p>D4's special branch above 128 units over the player selects the player as target,
+turns through <code>14518</code>/<code>04614</code>, updates the attack-alignment bit using absolute
+pre-turn delta at most 1999, and runs the hazard helper. Otherwise it navigates
+normally. Preserve signed wrapped subtraction for the altitude test.</p>
+<p>D5 sets speed to one fixed-point unit before navigation, and jumps with vertical
+velocity <code>50000</code> when phase two, signed distance at most 255, and the current
+whole-unit Z equals floor. Its direct player-body distance uses reversed operands
+relative to ordinary enemy-distance calls. Beyond unsigned distance 767 it starts
+burrowing and clears flag two. Bury, hidden, emerge and hurt states perform the
+original zero-speed walk/gravity call. Hidden distance at most 511 starts emerge;
+completed emerge restores flag two. Damage reaction still runs after initiating
+burrow in the active frame.</p>
+<p>All callbacks preserve stable storage. Animation events observe <code>animation_done</code>
+already zero. Destruction is deferred until the controller returns, with
+<code>destroy_requested</code> checked even on errors. Failure preserves earlier state and
+events. Null/mismatched views, unsupported type, reentry, active world queries
+and ticks above 255 fail explicitly. No default presentation/combat callbacks
+pretend to succeed.</p>
+<h2 id="validation">Validation</h2>
+<p><code>tests/test_enemy_ranged_rom.py</code> compares complete original dispatchers, including
+shared activation, contact, drain, table math, hurt/death/corpse, attack gate and
+sound logic. Original navigation <code>1288C</code> and world calls <code>04498</code>/<code>0354C</code> are
+controlled without mutation on both sides. <code>A4F4</code> supplies a controlled selected
+entity; combat, group notification, destruction and projectile creation are
+ordered effect boundaries. Animation setter <code>5394</code> executes in the original
+oracle, and its metadata is compared with the host callback projection.</p>
+<p>11,994 complete comparisons pass: 2,608 CE, 2,349 each D3/D4/D6 and 2,339 D5.
+This includes 134 knockbacks, 89 projectile requests, 8,109 callback reentry
+checks and 11 callback-failure paths. Directed cases cover every state and
+animation marker, timer signed-wrap boundaries, aim acceptance, contact headings,
+burrow distances and sound thresholds.</p>
+<p>The strict-C11 ASan/UBSan fixture <code>test_enemy_ranged.c</code> adds 20,480 native
+controller steps, 180,884 assertions, 81,920 input/reentry guards, 9,253 events and
+19 injected callback failures. Navigation and world effects are controlled in
+this sanitizer fixture too; real-world composition remains the generic enemy
+runtime's responsibility. Source and test hashes are recorded in
+<code>native-enemy-ranged-validation.json</code>. These are native behavior proofs, not
+new byte-matched functions or a claim of complete gameplay integration.</p>
+<p>A bounded decomp.wtf attempt for CE hurt-resume <code>13438</code> used the actual byte
+matcher and original toolchain. Two manual candidates reached 89.7% and 76.5%;
+neither is exact. The better unsigned-field candidate remains in
+<code>recovered/enemy_ce_resume.c</code>. Its pointer register allocation and halfword/literal
+load ordering differ from the original. Attempt results are recorded in
+<code>enemy-ce-resume-match-attempts.json</code>; this adds no exact-match progress.</p>
+</main></body></html>

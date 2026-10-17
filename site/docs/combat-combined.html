@@ -1,1 +1,33 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Combat Combined — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="combat-combined.md" download>Markdown ↓</a></header><article><h2>Combined explosion, damage and reward verification</h2><p><code>tests/test_combat_combined_rom.py</code> compares a native C composition of <code>ssa_combat_explode</code>, <code>ssa_combat_damage</code> and <code>ssa_combat_reward</code> against the complete original call chain <code>080035A8 -&gt; 080037F4 -&gt; 080125E0</code>. Original reject lookup, unsigned division and fixed multiply also execute. Only the network send <code>08005850</code> and sound request <code>08008D5C</code> are replaced with observation callbacks. Hooks at damage/reward entries count calls without replacing those instructions.</p><p>The test builds a small composition shim in <code>build/native-tests</code>, with strict warnings and UBSan. Each explosion uses a randomized ordered active pool of up to 100 entities. Player records are shared by player index, as in the original. The test compares full original pool/game/player/settings byte projections and hurt-flash globals, retaining random bytes in fields the recovered routines should not touch. It also compares those complete snapshots at every ordered network and sound callback. Score uses the actual native reward function.</p><p>Coverage includes player/enemy health and flags, armor layers, protection timers, difficulty scaling, god mode, local-player gates, initial winner gates, shot counters, per-enemy hit/kill counters, credited player kills and score. Credits, difficulty, source selection and radius modes vary independently. The explosion&#x27;s position source and the damage routine&#x27;s global current source are distinct in 3,072 cases. Some origins are active pool entities, exercising identity exclusion. Source-owner projections, null multiplayer sources and unsigned wrap inputs are included.</p><p>The final run passes <strong>4,096 whole-chain comparisons</strong>, 256 on each of all 16 actual map reject tables. It executes <strong>53,417 damage calls</strong> and <strong>9,508 reward calls</strong>, matching <strong>887 network events</strong> and <strong>830 sound events</strong>. There are 1,024 zero-radius sector-mode cases. Source hashes, the composition-shim hash and per-map counts are in <code>native-combat-combined-validation.json</code>.</p><p>Run <code>.venv-linux/bin/python tests/test_combat_combined_rom.py</code> under WSL. Unicorn is only the test oracle. This test does not add a native network backend, sound playback, entity lifecycle dispatch or a playable runtime; those are separate integration concerns.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Combined explosion, damage and reward verification — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="combat-combined.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="combined-explosion-damage-and-reward-verification">Combined explosion, damage and reward verification</h1>
+<p><code>tests/test_combat_combined_rom.py</code> compares a native C composition of
+<code>ssa_combat_explode</code>, <code>ssa_combat_damage</code> and <code>ssa_combat_reward</code> against the
+complete original call chain <code>080035A8 -&gt; 080037F4 -&gt; 080125E0</code>. Original reject
+lookup, unsigned division and fixed multiply also execute. Only the network
+send <code>08005850</code> and sound request <code>08008D5C</code> are replaced with observation
+callbacks. Hooks at damage/reward entries count calls without replacing those
+instructions.</p>
+<p>The test builds a small composition shim in <code>build/native-tests</code>, with strict
+warnings and UBSan. Each explosion uses a randomized ordered active pool of up
+to 100 entities. Player records are shared by player index, as in the original.
+The test compares full original pool/game/player/settings byte projections and
+hurt-flash globals, retaining random bytes in fields the recovered routines
+should not touch. It also compares those complete snapshots at every ordered
+network and sound callback. Score uses the actual native reward function.</p>
+<p>Coverage includes player/enemy health and flags, armor layers, protection
+timers, difficulty scaling, god mode, local-player gates, initial winner gates,
+shot counters, per-enemy hit/kill counters, credited player kills and score.
+Credits, difficulty, source selection and radius modes vary independently.
+The explosion's position source and the damage routine's global current source
+are distinct in 3,072 cases. Some origins are active pool entities, exercising
+identity exclusion. Source-owner projections, null multiplayer sources and
+unsigned wrap inputs are included.</p>
+<p>The final run passes <strong>4,096 whole-chain comparisons</strong>, 256 on each of all 16
+actual map reject tables. It executes <strong>53,417 damage calls</strong> and <strong>9,508 reward
+calls</strong>, matching <strong>887 network events</strong> and <strong>830 sound events</strong>. There are
+1,024 zero-radius sector-mode cases. Source hashes, the composition-shim hash
+and per-map counts are in <code>native-combat-combined-validation.json</code>.</p>
+<p>Run <code>.venv-linux/bin/python tests/test_combat_combined_rom.py</code> under WSL. Unicorn
+is only the test oracle. This test does not add a native network backend,
+sound playback, entity lifecycle dispatch or a playable runtime; those are
+separate integration concerns.</p>
+</main></body></html>

@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-17",
+  "site": "https://zynchromatik.github.io/ss-advance-decomp/",
+  "audited_published_baseline": "697e5a52f2817566f4bf7e240b8f90429ac620ec",
+  "scope": {
+    "primary_routes": ["PC Port", "Features & Roadmap", "Levels / 2D Atlas", "Levels / 3D World", "NETRICSA", "Build & Source"],
+    "maps": 16,
+    "wiki_entries": 54,
+    "reference_pages": 112,
+    "offline_archive": "site/downloads/ssa-topmaps.zip",
+    "publication_boundary": "The published snapshot supports ten campaign levels. Unrelated eleven-level native changes remain in the working tree and are not part of this audit publication."
+  },
+  "method": [
+    "Compared live homepage, router, wiki script and wiki data bytes with the published Git commit.",
+    "Reviewed HTML, CSS, routing, atlas and Three.js viewer source, content generators, source evidence and deployment workflows.",
+    "Executed routing and UI logic with DOM/network substitutes, actual Three.js scene objects, all exported map geometry and local HTTP serving under the Pages project prefix.",
+    "Compared all 22 weapon/enemy lore summaries with extracted original English NETRICSA records 84–93 and 116–127.",
+    "Checked Markdown reference structure, local links and fragments, original font hashes, offline ZIP CRC and content hashes."
+  ],
+  "fixed_findings": [
+    {
+      "id": "UX-01", "priority": "P1", "area": "Navigation and resilience",
+      "problem": "Catalog fetch failure prevented application initialization, disabling unrelated navigation and NETRICSA.",
+      "resolution": "Initialize routing immediately. Load the catalog independently, preserve non-map sections on failure, and keep the standalone 2D atlas available.",
+      "files": ["site/app.js", "scripts/test_site_routes.mjs"]
+    },
+    {
+      "id": "UX-02", "priority": "P1", "area": "3D viewer",
+      "problem": "A failed level switch could display the previous level under the new selection. Returning to a cached map did not cancel an in-flight load.",
+      "resolution": "Hide the previous scene and clear its intel while loading; cancel stale requests even when returning to the cached level. Async loads no longer move keyboard focus.",
+      "files": ["site/viewer3d.js", "scripts/test_site_viewer_loading.mjs"]
+    },
+    {
+      "id": "A11Y-01", "priority": "P2", "area": "Keyboard navigation",
+      "problem": "The skip link changed the router hash to main and returned visitors to the homepage. Route changes left focus in hidden content; wiki selection could destroy the focused result.",
+      "resolution": "Skip directly to the focusable main landmark without changing route. Focus the new page heading and selected wiki article; give missing wiki entries an accurate title.",
+      "files": ["site/app.js", "site/wiki.js", "site/index.html", "scripts/test_site_routes.mjs", "scripts/test_site_wiki.mjs"]
+    },
+    {
+      "id": "A11Y-02", "priority": "P2", "area": "Map controls",
+      "problem": "2D pan and room/wall inspection depended on pointer input. 3D orbit keyboard listeners were not enabled and explicit zoom buttons were missing.",
+      "resolution": "Add atlas arrow-key panning, Home fit, +/− zoom and searchable room, wall and switch records. Enable 3D arrow-key controls and zoom buttons. Explain keyboard-only free flight.",
+      "files": ["scripts/topmap_viewer.js", "scripts/topmap_viewer.html", "site/viewer3d.js", "site/index.html", "scripts/test_site_atlas.mjs"]
+    },
+    {
+      "id": "UI-01", "priority": "P2", "area": "Responsive layout and readability",
+      "problem": "Action rows could overflow narrow screens, navigation had a cramped tablet breakpoint, several labels used 9–10px text, and touch targets were small.",
+      "resolution": "Wrap actions, allow shrinking and wrapping in grids, move tablet navigation to its own scrollable row, enlarge supporting text and coarse-pointer targets, and expose focus outlines.",
+      "validation_limit": "CSS and markup checked; actual viewport, zoom and touch rendering still need browser QA.",
+      "files": ["site/accessibility.css", "scripts/topmap_viewer.css"]
+    },
+    {
+      "id": "CONTENT-01", "priority": "P2", "area": "Health pickups",
+      "problem": "Wiki, atlas and offline archive incorrectly described a 200-health cap.",
+      "resolution": "State that the +100 pickup is collectible below 200, then adds 100 without a cap: 199 becomes 299. Correct online/offline labels and their generators.",
+      "evidence": ["src/pickup.c", "src/inventory.c", "analysis/inventory.md"],
+      "files": ["scripts/build_wiki.py", "scripts/export_topmaps.py", "scripts/topmap_viewer.html", "scripts/package_topmaps.py", "site/data/wiki.json", "site/atlas", "site/downloads/ssa-topmaps.zip"]
+    },
+    {
+      "id": "CONTENT-02", "priority": "P2", "area": "Prototype scope and controls",
+      "problem": "Level availability was hardcoded independently of the homepage. The pending eleven-level update already disagreed with it. README also said Enter both advances and replays after the ninth exit.",
+      "resolution": "Use an explicit homepage support-count attribute for the router and test it against wiki availability. Replace the numbered replay statement with the actual supported-intermediate/last-level rule. Remove a redundant hardcoded prototype badge.",
+      "files": ["site/index.html", "site/app.js", "README.md", "site/docs/README.md", "scripts/test_site_audit.py"]
+    },
+    {
+      "id": "CONTENT-03", "priority": "P3", "area": "Wiki clarity",
+      "problem": "Chainsaw Recorded levels: 0 looked like unavailability, although the count represented pickup records. The PC description omitted its changed reach.",
+      "resolution": "Label weapon counts Maps with pickup records, explain starting equipment, and disclose doubled 192-unit PC chainsaw reach. Identify the wiki as original art with recovered behavior.",
+      "files": ["scripts/wiki_entities.json", "scripts/build_wiki.py", "site/data/wiki.json", "site/index.html"]
+    },
+    {
+      "id": "DOCS-01", "priority": "P2", "area": "Reference readability and navigation",
+      "problem": "Markdown tables and lists were flattened, H1s and heading IDs were lost, fragments were dropped, and the preserved recovery sources link incorrectly pointed to the project README.",
+      "resolution": "Render semantic Markdown with heading anchors, tables and lists. Resolve local reference links and repository-relative source URLs correctly. Regenerate all 112 reference pages from their existing snapshots and label historical recovery context.",
+      "files": ["scripts/site_documents.py", "scripts/build_project_site.py", "site/reference.css", "site/docs", "scripts/test_site_documents.py"]
+    },
+    {
+      "id": "UX-03", "priority": "P3", "area": "Discoverability",
+      "problem": "Embedding hid the atlas PNG-download link. The Maps action did not explain the ZIP. Build prerequisites omitted Git, and quick controls omitted Esc, Q and R.",
+      "resolution": "Expose PNG beside SVG/data downloads; label the offline archive and approximate size; add missing build prerequisite and controls; supply a no-JavaScript guide/download fallback.",
+      "files": ["site/index.html", "scripts/topmap_viewer.html", "scripts/topmap_viewer.js"]
+    },
+    {
+      "id": "OPS-01", "priority": "P2", "area": "Deployment quality gate",
+      "problem": "Pages publication ran independently of website checks and could publish a failing change.",
+      "resolution": "Make website checks reusable and require them before Pages deployment. Include loading, keyboard, content, reference-link and archive regressions.",
+      "files": [".github/workflows/pages.yml", ".github/workflows/site-checks.yml"]
+    }
+  ],
+  "remaining_findings": [
+    {
+      "id": "QA-01", "priority": "P2", "area": "Browser and assistive-technology verification",
+      "status": "Unverified: no browser is connected to this session.",
+      "next_action": "Check current Chrome, Firefox and Safari at 320/390/768/1440px, 200% zoom, keyboard-only, a screen reader, touch and WebGL context loss. In particular check sbix font support, focus announcements, nested scroll regions and the taller map toolbar.",
+      "note": "Source and logic checks are not screenshots, real touch tests, browser performance scores or an accessibility conformance certification."
+    },
+    {
+      "id": "PERF-01", "priority": "P2", "area": "Online atlas delivery",
+      "status": "Open",
+      "evidence": {"atlas_html_bytes": 6626664, "estimated_gzip_bytes": 776120, "combined_font_woff_bytes": 717168},
+      "next_action": "Load only the selected map and shared assets in the online atlas; retain the self-contained document for offline downloads. Measure actual network transfer, parsing and memory before setting performance targets. Evaluate fewer font strikes after cross-browser checks."
+    },
+    {
+      "id": "A11Y-03", "priority": "P2", "area": "3D inspection and touch flight",
+      "status": "Partial",
+      "next_action": "Add a keyboard-selectable 3D object list or search and touch flight controls if free flight is intended for phones. The 2D atlas now offers keyboard access to room, wall, switch and item records; 3D object picking still uses a pointer."
+    },
+    {
+      "id": "DOCS-02", "priority": "P3", "area": "Historical implementation notes",
+      "status": "Mitigated with a snapshot notice; editorial cleanup remains.",
+      "next_action": "Separate current supported behavior from old subsystem milestones inside long recovery documents. Some historical paragraphs still describe former level-zero-only or incomplete integration states."
+    },
+    {
+      "id": "UI-02", "priority": "P3", "area": "Atlas integration",
+      "status": "Open design refinement",
+      "next_action": "Consider removing the embedded desktop atlas level rail because the parent already has the shared selector; preserve the rail for the standalone offline atlas. Validate the mobile iframe height and inspector layout before changing them."
+    },
+    {
+      "id": "CONTENT-04", "priority": "P3", "area": "Source discoverability",
+      "status": "Open",
+      "next_action": "Expose direct secret-guide links and original NETRICSA record IDs in the wiki evidence panel. Current secret evidence is accessible through coverage JSON, and lore references rely on project notes. External guide availability was not comprehensively retested in this audit."
+    }
+  ],
+  "positive_findings": [
+    "Original artwork and bitmap heading fonts retained; body copy uses a readable UI typeface.",
+    "Lazy initialization keeps the 3D module out of the initial route and pauses rendering while inactive.",
+    "All 16 maps and 54 wiki entries remain available; all 22 weapon/enemy lore summaries matched the extracted original text.",
+    "Secret coverage correctly states five documented locations, not exhaustive discovery.",
+    "The website distinguishes static exploration from the native executable and states that complete original parity remains unfinished.",
+    "Front-side-only geometry, hidden sky boundaries, original sprite assets and font hashes remain intact."
+  ],
+  "validation": {
+    "targeted_suites": ["test_site.mjs", "test_site_routes.mjs", "test_site_viewer_loading.mjs", "test_site_atlas.mjs", "test_site_wiki.mjs", "test_site_audit.py", "test_site_documents.py", "test_site_http.py"],
+    "result": "PASS",
+    "html_pages": 114,
+    "local_links_and_fragments": 870,
+    "rendered_reference_tables": 48,
+    "http_resources": 348,
+    "geometry": {"levels": 16, "meshes": 1748, "triangles": 40376, "camera_fits": 48, "wall_culling_rays": 64},
+    "archive": "CRC and per-file hashes pass; 16 JSON, 16 SVG and 16 PNG files agree with the online atlas.",
+    "visual_qa": "Unavailable"
+  }
+}

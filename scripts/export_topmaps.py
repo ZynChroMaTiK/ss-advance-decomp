@@ -77,7 +77,7 @@ ITEMS={32:('Pistol','PI','weapons'),33:('Shotgun','SG','weapons'),34:('Tommygun'
  36:('Unused weapon item','?','items'),37:('Minigun','MG','weapons'),38:('Cannon','CA','weapons'),39:('U.M.T','UM','weapons'),
  40:('Timestrike','TS','weapons'),41:('Prion gun','PR','weapons'),42:('25 shield','S25','armor'),43:('50 shield','S50','armor'),44:('100 shield','S100','armor'),
  45:('25 armor','A25','armor'),46:('50 armor','A50','armor'),47:('100 armor','A100','armor'),48:('25 health','H25','health'),
- 49:('50 health','H50','health'),50:('100 health (200 cap)','H100','health'),51:('Backpack','BP','items'),52:('Pistol bullets','PB','ammo'),
+ 49:('50 health','H50','health'),50:('100 health (collect below 200)','H100','health'),51:('Backpack','BP','items'),52:('Pistol bullets','PB','ammo'),
  53:('Shotgun cartridges','SC','ammo'),54:('U.M.T yellow cell','YC','ammo'),55:('Serious power','SP','items'),56:('Rockets','RK','ammo'),
  57:('Cannon balls','CB','ammo'),58:('Tommygun ammo','TA','ammo'),59:('Minigun ammo','MA','ammo'),60:('Timestrike blue cell','BC','ammo'),61:('Prion red cell','RC','ammo'),63:('Ankh / trigger pickup','X','exits')}
 ENEMIES={205:'Kamikaze',206:'Werebull',207:'Methug soldier',208:'Methug commander',209:'Cyclops',210:'Bladder beast',

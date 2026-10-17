@@ -1,1 +1,148 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>World — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="world.md" download>Markdown ↓</a></header><article><h2>Native entity collision and horizontal movement</h2><p><code>src/world.c</code>, <code>src/horizontal.c</code> and <code>src/slide.c</code> now connect static maps, dynamic entity collision, spatial links, the original horizontal timestep and wall sliding. The APIs operate on native host structures and execute no ROM instructions. The test oracle alone runs isolated original instructions.</p><h3>Entity collision</h3><p><code>ssa_entity_contact</code> recovers the entire predicate at <code>08003D7C</code>. It skips the same entity, certain player/player and flag combinations, and the original projectile-owner exemption. Other entities use square X/Y radius overlap; exactly touching the summed radius is clear. Differences, absolute values and radius sums retain the original 32-bit wrapping and unsigned comparisons.</p><p>Two important original behaviors are preserved:</p><p class="bullet">• An encountered type-<code>0xE1</code> entity invokes <code>0801B99C</code> before distance tests.</p><p>  The native predicate instead returns a special-contact result. The world   exposes those entities in encounter order and optionally calls a synchronous   executor. The native pickup dispatcher can be connected through this callback;   see <code>tests/test_pickup_world.c</code> for the host adapter and <code>ssa_pickup_touch</code>.</p><p class="bullet">• The flag-<code>0x200</code> height test loads the moving entity&#x27;s <strong>X</strong>, not Z, as its</p><p>  vertical coordinate. This is what the actual instructions do. It remains   unchanged in the native compatibility path. Ordinary player collision does   not acquire a new vertical-overlap exemption just because jumping is enabled.</p><p><code>ssa_world_query</code> obtains the destination BSP sector and initializes floor and ceiling, then traverses entity cells before visiting walls. Entity cells use the swept radius box extended by 32 units, with X outer/Y inner ordering and head-to-tail traversal. A blocking entity stops the query before wall contacts. Its pointer is exposed as <code>blocking_entity</code>; static wall blockages leave that pointer null. The hard-coded 32-unit broadphase extension is original behavior, not a new promise to find arbitrary giant-radius entities in neighboring cells.</p><h3>Spatial ownership and move commits</h3><p><code>SsaWorld</code> owns cell heads, sector heads, query scratch storage and a bounded special-contact array. The caller owns each <code>SsaEntity</code> and the loaded map. Initialize structs to zero, retain stable entity storage and stable map layout, and call <code>ssa_world_free</code> before freeing the map. Freeing a world detaches its entities without freeing their storage.</p><p>Insert resolves BSP leaf/sector, initializes floor/ceiling, clears step adjustment and pushes the entity onto its cell and sector lists. Out-of-grid entities still have BSP/sector membership. Remove repairs neighboring links and heads. The native API clears removed links and rejects duplicate insertion/removal; the original leaves some detached fields stale. Sector pool allocation handles are replaced with host pointers; the original allocator&#x27;s internal bookkeeping is not ported by this layer.</p><p>Use <code>ssa_world_try_move</code> or <code>ssa_world_horizontal_step</code> to change registered X/Y. Writing those fields directly would invalidate spatial membership. A successful move uses the recovered clearance rules, commits coordinates and heights, then relinks at the destination. Failure preserves position, with the original flag-4 downward velocity adjustment where applicable. Queries return 1 for clear/success, 0 for blocked and -1 for invalid integration/geometry. Treat -1 as an error, not truthy success. Structural world mutation invalidates pending contact references; queries overwrite result lists. Do not reenter a traversal. During a query, insertion, movement, nested queries and reinitialization are rejected, and <code>ssa_world_free</code> is a no-op. Removal is permitted only for the special currently being executed. These guards do not make direct edits to the public structure safe; callback owners must still honor the contract.</p><p>The optional <code>observe_special</code> callback reports every encounter, including contacts from internal horizontal/slide retries. It must not mutate the world or entities. Use it to collect a complete frame&#x27;s events; <code>special_contacts</code> alone retains only the latest query. Whole-frame observer order is compared with the original handler call order in the integration tests.</p><p>The optional <code>execute_special</code> callback runs immediately after observation, including during horizontal/slide retries. It receives the moving entity and a mutable special, returns zero on success or negative on error, and can change external inventory or remove <strong>only that special</strong> with <code>ssa_world_remove</code>. It must retain the removed object&#x27;s storage until the query ends and cannot insert, move, free, reenter or mutate other entities. <code>special_contacts</code> may therefore include detached entities. Errors release query guards and propagate as -1 without rolling back earlier inventory changes or removals.</p><p>Original cell traversal <code>08009870</code> loads the current entity&#x27;s next link <strong>after</strong> the gameplay callback. Pickup removal eventually zeroes its storage, so removing a special ends traversal of that cell, even if other entities remain there. Traversal continues with the next cell. The native path explicitly preserves this behavior; it must not cache the next link before dispatch. The cycle guard uses fixed capacity, not the shrinking registered count. A refused pickup keeps its links and traversal continues normally.</p><p>The world does not itself allocate inventory or bind pickups to entity metadata. The small integration adapter in <code>tests/test_pickup_world.c</code> connects these pieces explicitly. Script execution, sounds, HUD messages and network transport remain callback boundaries, and damage/sector actions/doors need recovery.</p><h3>Horizontal timestep and wall sliding</h3><p><code>ssa_horizontal_step</code> implements <code>08004BDC</code> with move/classification/slide callbacks; <code>ssa_world_horizontal_step</code> supplies the native world and recovered slide implementation. Give it <code>SsaSlide</code> initialized for the same map and math tables loaded from the user&#x27;s ROM.</p><p>Both velocity components clamp to +/-30 units per tick. Zero ticks still clamp velocity. Remote multiplayer player bodies are skipped. The initial clamped velocity remains the position increment across the entire tick batch, even if later contacts change stored velocity. Blocking entities cause Y-only then X-only attempts. Wall collisions invoke the original three-corner sliding path when flag 8 permits sliding. Without that flag, failed motion clears velocity. See <code>analysis/sliding.md</code> for trace/projection details and original quirks.</p><p>The native callback contract propagates -1 for invalid moves, classification or sliding. Errors stop further movement and may follow earlier committed substeps; there is no transaction rollback.</p><p>An integration frame runs horizontal movement, vertical/jump simulation, <code>ssa_camera_step</code>, then <code>ssa_view_pose</code>. Give the H-toggle camera its own query workspace so camera obstruction checks cannot overwrite pending gameplay contacts. These components form movement integration, not a complete game loop. Entity spawning/AI, combat, rendering, texture/sprite bindings, audio and the OS keyboard/mouse backend are still absent.</p><h3>Validation</h3><p><code>test-world</code> compares against original routines on all sixteen real maps:</p><p class="bullet">• 14,000 entity predicate cases, including wrapped/extreme arithmetic and flag</p><p>  combinations. Only the <code>0801B99C</code> special handler is replaced by a recorder.</p><p class="bullet">• 4,800 whole movement queries and 4,800 whole clearance/move routines. Original</p><p>  grid insertion/removal and BSP execute; only sector-pool insertion/removal   (<code>0800D1B4</code>/<code>0800D214</code>) and the special handler are recorded.</p><p class="bullet">• 2,048 complete horizontal updates with real entity grids, original wall</p><p>  traces/sliding and native equivalents. Original fixed math executes; the BIOS   integer-division wrapper is serviced by the oracle.</p><p class="bullet">• 848 cell/sector list snapshots, including head/middle/tail removal, destination</p><p>  relinking and out-of-grid entries. Original grid pointers/order match;   native sector membership and doubly linked invariants are checked separately.</p><p class="bullet">• 2,048 native frames combining horizontal motion, jumping, original eye updates</p><p>  and H toggles. Camera queries preserve gameplay query results.</p><p class="bullet">• 400 native ownership/removal guard checks.</p><p class="bullet">• 1,024 whole original queries with a controlled special handler that unlinks</p><p>  and zeroes selected entities. Across all sixteen maps, head/middle/tail   removals and retained pickups exercise traversal in multiple cells. Original   <code>03E5C</code>, <code>09870</code> and <code>03D7C</code> execute. This establishes callback mutation order,   not the original pool allocator, DMA clearing or pickup effects.</p><p class="bullet">• 144 native synchronous callback guards cover reentry, forbidden mutation,</p><p>  error propagation and guard cleanup after partial effects.</p><p class="bullet">• 64 native pickup/world queries on all maps connect the recovered dispatcher</p><p>  and inventory. Full-health refusal continues to a weapon pickup; accepting   a pickup removes it and ends its cell; later queries consume retained health   pickups once. Observer, dispatch, sound/message and removal order are checked.</p><p>An additional 2,048 complete <code>080064B8</code> updates now execute controls, multiplayer push, body synchronization, real horizontal/sliding physics and vertical physics on all sixteen maps. Full player bytes, body fields, contacts and spatial links match. See <code>player-motion.md</code> for its generic-boundary suite and native options.</p><p>That is 28,720 ROM comparisons plus spatial/integration/guard checks. <code>test-horizontal</code> separately verifies 16,760 timestep comparisons with controlled collision callbacks, complete entity bytes and ordered calls, plus 12 API guards. <code>test-slide</code> adds 29,400 ROM comparisons and 64 guards. Combined new ROM comparisons: <strong>74,880</strong>. Native tests compile with warnings-as-errors and UBSan. Evidence is in <code>analysis/native-world-validation.json</code>, <code>analysis/native-horizontal-validation.json</code> and <code>analysis/native-sliding-validation.json</code>.</p><p>The validated callback at <code>08003D7C</code> was added to decomp.wtf through its supported function discovery tool: 224 bytes, ending exactly at <code>08003E5C</code>. Its matching candidate is 92.0% similar (score 880), not exact, after twenty bounded trials. The catalogue now has 526 functions; 63 exact functions cover 1,616 of 87,648 catalogued code bytes (1.84%), including the two player/body copy routines. The catalogue is still incomplete.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native entity collision and horizontal movement — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="world.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-entity-collision-and-horizontal-movement">Native entity collision and horizontal movement</h1>
+<p><code>src/world.c</code>, <code>src/horizontal.c</code> and <code>src/slide.c</code> now connect static maps,
+dynamic entity collision, spatial links, the original horizontal timestep and
+wall sliding. The APIs operate on native host structures and execute no ROM
+instructions. The test oracle alone runs isolated original instructions.</p>
+<h2 id="entity-collision">Entity collision</h2>
+<p><code>ssa_entity_contact</code> recovers the entire predicate at <code>08003D7C</code>. It skips the
+same entity, certain player/player and flag combinations, and the original
+projectile-owner exemption. Other entities use square X/Y radius overlap;
+exactly touching the summed radius is clear. Differences, absolute values and
+radius sums retain the original 32-bit wrapping and unsigned comparisons.</p>
+<p>Two important original behaviors are preserved:</p>
+<ul>
+<li>An encountered type-<code>0xE1</code> entity invokes <code>0801B99C</code> before distance tests.
+The native predicate instead returns a special-contact result. The world
+exposes those entities in encounter order and optionally calls a synchronous
+executor. The native pickup dispatcher can be connected through this callback;
+see <code>tests/test_pickup_world.c</code> for the host adapter and <code>ssa_pickup_touch</code>.</li>
+<li>The flag-<code>0x200</code> height test loads the moving entity's <strong>X</strong>, not Z, as its
+vertical coordinate. This is what the actual instructions do. It remains
+unchanged in the native compatibility path. Ordinary player collision does
+not acquire a new vertical-overlap exemption just because jumping is enabled.</li>
+</ul>
+<p><code>ssa_world_query</code> obtains the destination BSP sector and initializes floor and
+ceiling, then traverses entity cells before visiting walls. Entity cells use
+the swept radius box extended by 32 units, with X outer/Y inner ordering and
+head-to-tail traversal. A blocking entity stops the query before wall contacts.
+Its pointer is exposed as <code>blocking_entity</code>; static wall blockages leave that
+pointer null. The hard-coded 32-unit broadphase extension is original behavior,
+not a new promise to find arbitrary giant-radius entities in neighboring cells.</p>
+<h2 id="spatial-ownership-and-move-commits">Spatial ownership and move commits</h2>
+<p><code>SsaWorld</code> owns cell heads, sector heads, query scratch storage and a bounded
+special-contact array. The caller owns each <code>SsaEntity</code> and the loaded map.
+Initialize structs to zero, retain stable entity storage and stable map layout,
+and call <code>ssa_world_free</code> before freeing the map. Freeing a world detaches its
+entities without freeing their storage.</p>
+<p>Insert resolves BSP leaf/sector, initializes floor/ceiling, clears step adjustment
+and pushes the entity onto its cell and sector lists. Out-of-grid entities still
+have BSP/sector membership. Remove repairs neighboring links and heads. The
+native API clears removed links and rejects duplicate insertion/removal;
+the original leaves some detached fields stale. Sector pool allocation handles
+are replaced with host pointers; the original allocator's internal bookkeeping
+is not ported by this layer.</p>
+<p>Use <code>ssa_world_try_move</code> or <code>ssa_world_horizontal_step</code> to change registered X/Y.
+Writing those fields directly would invalidate spatial membership. A successful
+move uses the recovered clearance rules, commits coordinates and heights, then
+relinks at the destination. Failure preserves position, with the original
+flag-4 downward velocity adjustment where applicable. Queries return 1 for
+clear/success, 0 for blocked and -1 for invalid integration/geometry. Treat -1
+as an error, not truthy success. Structural world mutation invalidates pending
+contact references; queries overwrite result lists. Do not reenter a traversal.
+During a query, insertion, movement, nested queries and reinitialization are
+rejected, and <code>ssa_world_free</code> is a no-op. Removal is permitted only for the
+special currently being executed. These guards do not make direct edits to
+the public structure safe; callback owners must still honor the contract.</p>
+<p>The optional <code>observe_special</code> callback reports every encounter, including
+contacts from internal horizontal/slide retries. It must not mutate the world
+or entities. Use it to collect a complete frame's events; <code>special_contacts</code>
+alone retains only the latest query. Whole-frame observer order is compared
+with the original handler call order in the integration tests.</p>
+<p>The optional <code>execute_special</code> callback runs immediately after observation,
+including during horizontal/slide retries. It receives the moving entity and a
+mutable special, returns zero on success or negative on error, and can change
+external inventory or remove <strong>only that special</strong> with <code>ssa_world_remove</code>.
+It must retain the removed object's storage until the query ends and cannot
+insert, move, free, reenter or mutate other entities. <code>special_contacts</code> may
+therefore include detached entities. Errors release query guards and propagate
+as -1 without rolling back earlier inventory changes or removals.</p>
+<p>Original cell traversal <code>08009870</code> loads the current entity's next link <strong>after</strong>
+the gameplay callback. Pickup removal eventually zeroes its storage, so removing
+a special ends traversal of that cell, even if other entities remain there.
+Traversal continues with the next cell. The native path explicitly preserves
+this behavior; it must not cache the next link before dispatch. The cycle guard
+uses fixed capacity, not the shrinking registered count. A refused pickup keeps
+its links and traversal continues normally.</p>
+<p>The world does not itself allocate inventory or bind pickups to entity metadata.
+The small integration adapter in <code>tests/test_pickup_world.c</code> connects these
+pieces explicitly. Script execution, sounds, HUD messages and network transport
+remain callback boundaries, and damage/sector actions/doors need recovery.</p>
+<h2 id="horizontal-timestep-and-wall-sliding">Horizontal timestep and wall sliding</h2>
+<p><code>ssa_horizontal_step</code> implements <code>08004BDC</code> with move/classification/slide
+callbacks; <code>ssa_world_horizontal_step</code> supplies the native world and recovered
+slide implementation. Give it <code>SsaSlide</code> initialized for the same map and math
+tables loaded from the user's ROM.</p>
+<p>Both velocity components clamp to +/-30 units per tick. Zero ticks still clamp
+velocity. Remote multiplayer player bodies are skipped. The initial clamped
+velocity remains the position increment across the entire tick batch, even if
+later contacts change stored velocity. Blocking entities cause Y-only then
+X-only attempts. Wall collisions invoke the original three-corner sliding path
+when flag 8 permits sliding. Without that flag, failed motion clears velocity.
+See <code>analysis/sliding.md</code> for trace/projection details and original quirks.</p>
+<p>The native callback contract propagates -1 for invalid moves, classification
+or sliding. Errors stop further movement and may follow earlier committed
+substeps; there is no transaction rollback.</p>
+<p>An integration frame runs horizontal movement, vertical/jump simulation,
+<code>ssa_camera_step</code>, then <code>ssa_view_pose</code>. Give the H-toggle camera its own query
+workspace so camera obstruction checks cannot overwrite pending gameplay
+contacts. These components form movement integration, not a complete game loop.
+Entity spawning/AI, combat, rendering, texture/sprite bindings, audio and the OS
+keyboard/mouse backend are still absent.</p>
+<h2 id="validation">Validation</h2>
+<p><code>test-world</code> compares against original routines on all sixteen real maps:</p>
+<ul>
+<li>14,000 entity predicate cases, including wrapped/extreme arithmetic and flag
+combinations. Only the <code>0801B99C</code> special handler is replaced by a recorder.</li>
+<li>4,800 whole movement queries and 4,800 whole clearance/move routines. Original
+grid insertion/removal and BSP execute; only sector-pool insertion/removal
+(<code>0800D1B4</code>/<code>0800D214</code>) and the special handler are recorded.</li>
+<li>2,048 complete horizontal updates with real entity grids, original wall
+traces/sliding and native equivalents. Original fixed math executes; the BIOS
+integer-division wrapper is serviced by the oracle.</li>
+<li>848 cell/sector list snapshots, including head/middle/tail removal, destination
+relinking and out-of-grid entries. Original grid pointers/order match;
+native sector membership and doubly linked invariants are checked separately.</li>
+<li>2,048 native frames combining horizontal motion, jumping, original eye updates
+and H toggles. Camera queries preserve gameplay query results.</li>
+<li>400 native ownership/removal guard checks.</li>
+<li>1,024 whole original queries with a controlled special handler that unlinks
+and zeroes selected entities. Across all sixteen maps, head/middle/tail
+removals and retained pickups exercise traversal in multiple cells. Original
+<code>03E5C</code>, <code>09870</code> and <code>03D7C</code> execute. This establishes callback mutation order,
+not the original pool allocator, DMA clearing or pickup effects.</li>
+<li>144 native synchronous callback guards cover reentry, forbidden mutation,
+error propagation and guard cleanup after partial effects.</li>
+<li>64 native pickup/world queries on all maps connect the recovered dispatcher
+and inventory. Full-health refusal continues to a weapon pickup; accepting
+a pickup removes it and ends its cell; later queries consume retained health
+pickups once. Observer, dispatch, sound/message and removal order are checked.</li>
+</ul>
+<p>An additional 2,048 complete <code>080064B8</code> updates now execute controls, multiplayer
+push, body synchronization, real horizontal/sliding physics and vertical physics
+on all sixteen maps. Full player bytes, body fields, contacts and spatial links
+match. See <code>player-motion.md</code> for its generic-boundary suite and native options.</p>
+<p>That is 28,720 ROM comparisons plus spatial/integration/guard checks.
+<code>test-horizontal</code> separately verifies 16,760 timestep comparisons with controlled
+collision callbacks, complete entity bytes and ordered calls, plus 12 API guards.
+<code>test-slide</code> adds 29,400 ROM comparisons and 64 guards. Combined new ROM
+comparisons: <strong>74,880</strong>. Native tests compile with warnings-as-errors and UBSan.
+Evidence is in <code>analysis/native-world-validation.json</code>,
+<code>analysis/native-horizontal-validation.json</code> and
+<code>analysis/native-sliding-validation.json</code>.</p>
+<p>The validated callback at <code>08003D7C</code> was added to decomp.wtf through its supported
+function discovery tool: 224 bytes, ending exactly at <code>08003E5C</code>. Its matching
+candidate is 92.0% similar (score 880), not exact, after twenty bounded trials.
+The catalogue now has 526 functions; 63 exact functions cover 1,616 of 87,648
+catalogued code bytes (1.84%), including the two player/body copy routines.
+The catalogue is still incomplete.</p>
+</main></body></html>

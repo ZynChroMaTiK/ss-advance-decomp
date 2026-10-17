@@ -1,1 +1,77 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pickup Respawn — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="pickup-respawn.md" download>Markdown ↓</a></header><article><h2>Multiplayer pickup respawn</h2><p><code>src/pickup_respawn.c</code> recovers complete <code>0801B854</code> and the occupancy helper <code>08005330</code>. <code>src/pickup_respawn_runtime.c</code> binds them to the native shared entity pool and world. The original frame routine <code>0800244C</code> calls this stage at <code>08002494</code>, after entities, moving sectors and the level VM, before <code>08000908</code> and the sprite/weapon controllers. This is behavioral recovery, not an exact compiler match.</p><h3>Original behavior</h3><p>The stage returns without changing counters when the player count is exactly one, or the level is outside 12–15. GAME (<code>03004010</code>) holds the elapsed halfword at +7E, schedule halfword index at +80 and marker index at +82. Elapsed time adds the tick byte at +7 with 16-bit wrap. An attempt occurs only when elapsed is <strong>strictly greater</strong> than the current schedule threshold.</p><p>The four schedules are 34 halfwords each, at <code>0844D204</code>, <code>0844D248</code>, <code>0844D28C</code> and <code>0844D2D0</code>. They currently contain identical data: sixteen threshold/item pairs followed by a zero sentinel. Thresholds are 300; item animation IDs are 32,32,33,53,53,49,48,34,58,58,37,59,59,53,53,58. The native loader copies this data from the user&#x27;s ROM. It does not execute ROM code.</p><p>The marker array is the original D9 array at <code>03004040</code>, with count at <code>03004014</code>. Actual maps 12–15 have 22,17,15,17 markers, respectively. Both schedule and marker indices advance before the occupancy query. The schedule wraps on its zero sentinel; the marker index wraps at its count. Elapsed time resets after an attempt, including occupied markers and allocation exhaustion.</p><p><code>05330</code> walks the active slot prefix in order. Any active entity whose whole X and Y equal the marker blocks spawning. Fractional coordinates, entity type, flags, height and Z do not matter. This is not a radius or collision query.</p><p>Successful allocation sets X/Y from the marker, type E1, state zero, facing to the low marker-heading byte, trigger zero, timer 60 and flag 80. It calls animation setter <code>05394</code> with the schedule ID and period 6, inserts via <code>A5D0</code>, then sets Z from the signed inserted floor. Particle 5 is requested last. Dimensions and health remain the allocator&#x27;s zero defaults. The ordinary E1 timer later clears flag 80 and resets its timer to 30; it does not invent pickup dimensions.</p><p>Allocation failure still requests particle 5. The original reads Z at address 8 through the null entity pointer. Native callers supply an explicit <code>fallback_z</code>; this value is not claimed to be a defined original coordinate.</p><h3>Native ownership and integration</h3><p>Initialize <code>SsaPickupRespawnRuntime</code> from zero with stable combat runtime, spawn plan and loaded schedules. It borrows these objects and uses the combat runtime&#x27;s explicit reserved slot mapping and script-spawn pool. Run one step after the level mover/VM step per world frame. The runtime takes player count from combat and level number from the bound level runtime.</p><p>Occupancy rebuilds the original active order from the pool. Allocation uses the real 100-slot pool; insertion uses native world lists and floor lookup. Spawned E1 actors are owned by <code>SsaScriptSpawn</code>, including their animation metadata and timer projection. Release them through <code>ssa_script_spawn_release</code> when actual pickup/destruction processing requests removal. Freeing this adapter does not remove its actors. Free the adapter before its dependencies.</p><p>Particle presentation is the only external operation. Its callback observes the already-inserted entity and final floor Z, with runtime, combat, spawn and all player-runtime locks held. Mutation, ownership changes and callback reentry are prohibited. Earlier effects remain on failure: a failing particle callback leaves the inserted pickup, advanced indices and elapsed value. Explicitly release any unlinked allocation retained after an insertion error before another step. World/pool storage and marker storage must remain stable.</p><h3>Evidence</h3><p><code>tests/test_pickup_respawn_rom.py</code> passes <strong>73,734 original-routine comparisons</strong>: 69,638 complete <code>1B854</code> cases plus 4,096 isolated <code>05330</code> cases. It covers all 65,536 elapsed values, gating, index wrap, occupied markers, allocation failure, full game/entity snapshots and ordered callbacks. <code>05330</code> and <code>05394</code> execute unmodified inside the whole-routine oracle; allocation, insertion and particles are controlled boundaries. Address 8 is mapped only in the test oracle to make the explicit fallback input observable. There are 186,977 callback reentry checks, 16 input guards and five callback failure paths. See <code>pickup-respawn-validation.json</code> for the ROM and source hashes.</p><p><code>tests/test_pickup_respawn_runtime.py</code> passes <strong>6,314 ASan/UBSan assertions</strong>, 268 frames on all four multiplayer maps with two actual player bindings. It visits all 71 original D9 markers and every schedule entry, creates 175 ordinary pickups plus four retained presentation-failure pickups, observes 180 particles, tests 144 timer steps, 69 slot reuses, four occupied attempts and full 100-slot pool exhaustion. It checks 736 guards and four presentation failures. The binary uses <code>-no-pie</code> and <code>ASAN_OPTIONS=detect_leaks=0</code>; hashes are in <code>native-pickup-respawn-validation.json</code>.</p><p>The fixture releases pickups explicitly to test ownership and reuse. It does not implement multiplayer packet delivery or particle rendering. This stage does not by itself provide a playable native executable.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Multiplayer pickup respawn — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="pickup-respawn.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="multiplayer-pickup-respawn">Multiplayer pickup respawn</h1>
+<p><code>src/pickup_respawn.c</code> recovers complete <code>0801B854</code> and the occupancy helper
+<code>08005330</code>. <code>src/pickup_respawn_runtime.c</code> binds them to the native shared entity
+pool and world. The original frame routine <code>0800244C</code> calls this stage at
+<code>08002494</code>, after entities, moving sectors and the level VM, before <code>08000908</code>
+and the sprite/weapon controllers. This is behavioral recovery, not an exact
+compiler match.</p>
+<h2 id="original-behavior">Original behavior</h2>
+<p>The stage returns without changing counters when the player count is exactly
+one, or the level is outside 12–15. GAME (<code>03004010</code>) holds the elapsed halfword
+at +7E, schedule halfword index at +80 and marker index at +82. Elapsed time
+adds the tick byte at +7 with 16-bit wrap. An attempt occurs only when elapsed
+is <strong>strictly greater</strong> than the current schedule threshold.</p>
+<p>The four schedules are 34 halfwords each, at <code>0844D204</code>, <code>0844D248</code>,
+<code>0844D28C</code> and <code>0844D2D0</code>. They currently contain identical data: sixteen
+threshold/item pairs followed by a zero sentinel. Thresholds are 300; item
+animation IDs are 32,32,33,53,53,49,48,34,58,58,37,59,59,53,53,58. The native
+loader copies this data from the user's ROM. It does not execute ROM code.</p>
+<p>The marker array is the original D9 array at <code>03004040</code>, with count at
+<code>03004014</code>. Actual maps 12–15 have 22,17,15,17 markers, respectively. Both
+schedule and marker indices advance before the occupancy query. The schedule
+wraps on its zero sentinel; the marker index wraps at its count. Elapsed time
+resets after an attempt, including occupied markers and allocation exhaustion.</p>
+<p><code>05330</code> walks the active slot prefix in order. Any active entity whose whole
+X and Y equal the marker blocks spawning. Fractional coordinates, entity type,
+flags, height and Z do not matter. This is not a radius or collision query.</p>
+<p>Successful allocation sets X/Y from the marker, type E1, state zero, facing
+to the low marker-heading byte, trigger zero, timer 60 and flag 80. It calls
+animation setter <code>05394</code> with the schedule ID and period 6, inserts via <code>A5D0</code>,
+then sets Z from the signed inserted floor. Particle 5 is requested last.
+Dimensions and health remain the allocator's zero defaults. The ordinary E1
+timer later clears flag 80 and resets its timer to 30; it does not invent
+pickup dimensions.</p>
+<p>Allocation failure still requests particle 5. The original reads Z at address
+8 through the null entity pointer. Native callers supply an explicit
+<code>fallback_z</code>; this value is not claimed to be a defined original coordinate.</p>
+<h2 id="native-ownership-and-integration">Native ownership and integration</h2>
+<p>Initialize <code>SsaPickupRespawnRuntime</code> from zero with stable combat runtime,
+spawn plan and loaded schedules. It borrows these objects and uses the combat
+runtime's explicit reserved slot mapping and script-spawn pool. Run one step
+after the level mover/VM step per world frame. The runtime takes player count
+from combat and level number from the bound level runtime.</p>
+<p>Occupancy rebuilds the original active order from the pool. Allocation uses
+the real 100-slot pool; insertion uses native world lists and floor lookup.
+Spawned E1 actors are owned by <code>SsaScriptSpawn</code>, including their animation
+metadata and timer projection. Release them through <code>ssa_script_spawn_release</code>
+when actual pickup/destruction processing requests removal. Freeing this adapter
+does not remove its actors. Free the adapter before its dependencies.</p>
+<p>Particle presentation is the only external operation. Its callback observes the
+already-inserted entity and final floor Z, with runtime, combat, spawn and all
+player-runtime locks held. Mutation, ownership changes and callback reentry are
+prohibited. Earlier effects remain on failure: a failing particle callback leaves
+the inserted pickup, advanced indices and elapsed value. Explicitly release any
+unlinked allocation retained after an insertion error before another step.
+World/pool storage and marker storage must remain stable.</p>
+<h2 id="evidence">Evidence</h2>
+<p><code>tests/test_pickup_respawn_rom.py</code> passes <strong>73,734 original-routine comparisons</strong>:
+69,638 complete <code>1B854</code> cases plus 4,096 isolated <code>05330</code> cases. It covers all
+65,536 elapsed values, gating, index wrap, occupied markers, allocation failure,
+full game/entity snapshots and ordered callbacks. <code>05330</code> and <code>05394</code> execute
+unmodified inside the whole-routine oracle; allocation, insertion and particles
+are controlled boundaries. Address 8 is mapped only in the test oracle to make
+the explicit fallback input observable. There are 186,977 callback reentry
+checks, 16 input guards and five callback failure paths. See
+<code>pickup-respawn-validation.json</code> for the ROM and source hashes.</p>
+<p><code>tests/test_pickup_respawn_runtime.py</code> passes <strong>6,314 ASan/UBSan assertions</strong>,
+268 frames on all four multiplayer maps with two actual player bindings. It
+visits all 71 original D9 markers and every schedule entry, creates 175 ordinary
+pickups plus four retained presentation-failure pickups, observes 180 particles,
+tests 144 timer steps, 69 slot reuses, four occupied attempts and full 100-slot
+pool exhaustion. It checks 736 guards and four presentation failures. The
+binary uses <code>-no-pie</code> and <code>ASAN_OPTIONS=detect_leaks=0</code>; hashes are in
+<code>native-pickup-respawn-validation.json</code>.</p>
+<p>The fixture releases pickups explicitly to test ownership and reuse. It does
+not implement multiplayer packet delivery or particle rendering. This stage
+does not by itself provide a playable native executable.</p>
+</main></body></html>

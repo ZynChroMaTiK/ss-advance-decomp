@@ -1,8 +1,6 @@
 name: Check project website
 on:
-  push:
-    branches: [main]
-    paths: ['site/**', 'scripts/test_site*', '.github/workflows/site-checks.yml']
+  workflow_call:
   pull_request:
     paths: ['site/**', 'scripts/test_site*', '.github/workflows/site-checks.yml']
   workflow_dispatch:
@@ -17,7 +15,17 @@ jobs:
         run: node scripts/test_site.mjs
       - name: Verify unified routing and iframe bridge
         run: node scripts/test_site_routes.mjs
+      - name: Verify explorer loading and recovery
+        run: node scripts/test_site_viewer_loading.mjs
+      - name: Verify atlas keyboard controls and lookup
+        run: node scripts/test_site_atlas.mjs
       - name: Verify NETRICSA entries, search, links and artwork
         run: node scripts/test_site_wiki.mjs
       - name: Verify resources below the Pages project prefix
         run: python3 scripts/test_site_http.py
+      - name: Verify reference links, content and offline maps
+        run: python3 scripts/test_site_audit.py
+      - name: Install reference renderer
+        run: python3 -m pip install -r scripts/site-document-requirements.txt
+      - name: Verify reference rendering
+        run: python3 scripts/test_site_documents.py

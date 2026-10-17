@@ -1,1 +1,174 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Entity Dispatch — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="entity-dispatch.md" download>Markdown ↓</a></header><article><h2>Entity scheduling</h2><p><code>src/entity_dispatch.c</code> recovers the whole outer entity scheduler <code>08004E04</code> and its preparation call <code>080083E4</code>. It dispatches through explicit handler callbacks, allowing existing native player, enemy and projectile controllers to run without duplicating them in the scheduler. A recognized handler must be supplied; unsupported controller implementations must fail explicitly.</p><p>At entry the original scheduler increments the word at <code>0300461C</code>, clears the walk counter at <code>03004358</code>, and calls <code>083E4</code>, which simply clears the word at <code>030000B0</code>. The native projection exposes these as <code>frame_counter</code>, <code>walk_count</code> and <code>path_count</code>. Increment wraps at 32 bits. Preparation does not update freeze timers, thaw actors, advance animations or process input.</p><p>The complete 128-entry jump table at <code>08004E68</code> covers types 64 through E3. There are 28 handled types and 25 unique handler addresses:</p><p>| Hexadecimal type | Original handler | | --- | --- | | 64 | 08010D7C | | 65 | 08010E5C | | 66 | 08010EF0 | | 67 | 080111C0 | | 68 | 08011350 | | 69 | 080113C4 | | 6A | 08011090 | | 6B | 08011120 | | 96 | 08014C58 | | C9, CA, CB, CC | 08005CCC | | CD | 08013978 | | CE | 080135C4 | | CF | 08013040 | | D0 | 0801319C | | D1 | 08013B40 | | D2 | 08013350 | | D3 | 08013FA4 | | D4 | 080141E8 | | D5 | 08013DB0 | | D6 | 08013780 | | D7 | 08014AB8 | | D8 | 08014648 | | E1 | 0801B848 | | E2 | 080113E4 | | E3 | 08011424 |</p><p>All other 16-bit types take the original no-handler branch. This includes type zero; a zero payload may still be present in the supplied active list. <code>ssa_entity_dispatch_handler()</code> returns the actual even routine address or zero, so a runtime can explicitly bind the appropriate recovered controller.</p><p>The scheduler reads physical active indices starting at <code>03004470</code> and re-reads the live active count at <code>03004354</code> after every iteration. It does not snapshot the active prefix. Releasing an actor swaps the last slot into its position; the cursor nevertheless advances, so that moved actor can be skipped this frame. Appending an actor can cause it to execute later in this same frame. Allocation followed by releasing the current actor may instead move the newly allocated child behind the cursor. These effects are preserved.</p><p>Before dispatch, <code>current</code> becomes the selected body, corresponding to <code>0300443C</code>. After the handler, the original checks the type of the body then stored in that global, rather than retaining a private pointer to the initial body. The callback may therefore redirect <code>current</code> to another stable slot. All 100 payload addresses remain stable even when their pool slots are free.</p><p>The auxiliary list begins at <strong>03004370</strong>. If the post-handler current body&#x27;s type is nonzero, the original reads the <strong>next physical active-list halfword</strong>, adds one, truncates it to 16 bits, and appends that value. It does not append the slot just processed. This can read a stale entry beyond the live prefix. When processing physical entry 99, it reads the adjacent halfword at <code>03004538</code>, outside the 100-entry array. The native <code>active_tail</code> explicitly supplies that word; it must not be inferred from active count. A value FFFF wraps to zero, even in the middle of the output. <code>auxiliary_count</code> tracks writes separately from that value. On completion the scheduler writes a terminating zero and leaves later auxiliary bytes stale, then resets <code>current</code> to slot zero.</p><p><code>SsaEntityDispatch</code> references an existing pool and an array containing all 100 stable entity addresses. No initialization allocation is required. Bind these fields on a zeroed context. Handlers may perform normal pool allocation and release, update entity payloads and the three global counters, and redirect <code>current</code>. The binding pointers, payload addresses and scheduler-owned auxiliary fields must not be changed during a call. Nested scheduler calls are rejected. An invalid entry argument leaves state unchanged. Native callback failures retain earlier effects, terminate the partial auxiliary list, restore <code>current</code> to slot zero and release the update guard; the ROM has no corresponding callback-error convention.</p><p><code>tests/test_entity_dispatch_rom.py</code> executes whole <code>04E04</code> and <code>083E4</code> from the user&#x27;s ROM. It independently decodes the table and each branch&#x27;s Thumb BL. Controlled handlers route allocation and release through the <strong>actual original</strong> <code>05170</code> and <code>051C8</code>, using an execution trampoline; only the BIOS memory-clear service is replaced. The native handlers use the recovered pool APIs. Every callback snapshot and final projection compares all 100 entity types and slot positions, both index arrays, active count, complete auxiliary storage, current entity and all three counters. Tests cover every 16-bit type, all capacities, every release position, random dynamic handlers, redirection, counter overflow, allocation/release within one handler, and callback failure. Counts and the source hash are recorded in <code>native-entity-dispatch-validation.json</code>. The suite uses UBSan and tests nested call rejection at every handler boundary. Controller behavior and a complete game frame remain separate integration concerns.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Entity scheduling — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="entity-dispatch.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="entity-scheduling">Entity scheduling</h1>
+<p><code>src/entity_dispatch.c</code> recovers the whole outer entity scheduler <code>08004E04</code>
+and its preparation call <code>080083E4</code>. It dispatches through explicit handler
+callbacks, allowing existing native player, enemy and projectile controllers
+to run without duplicating them in the scheduler. A recognized handler must
+be supplied; unsupported controller implementations must fail explicitly.</p>
+<p>At entry the original scheduler increments the word at <code>0300461C</code>, clears the
+walk counter at <code>03004358</code>, and calls <code>083E4</code>, which simply clears the word at
+<code>030000B0</code>. The native projection exposes these as <code>frame_counter</code>,
+<code>walk_count</code> and <code>path_count</code>. Increment wraps at 32 bits. Preparation does
+not update freeze timers, thaw actors, advance animations or process input.</p>
+<p>The complete 128-entry jump table at <code>08004E68</code> covers types 64 through E3.
+There are 28 handled types and 25 unique handler addresses:</p>
+<table>
+<thead>
+<tr>
+<th>Hexadecimal type</th>
+<th>Original handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>64</td>
+<td>08010D7C</td>
+</tr>
+<tr>
+<td>65</td>
+<td>08010E5C</td>
+</tr>
+<tr>
+<td>66</td>
+<td>08010EF0</td>
+</tr>
+<tr>
+<td>67</td>
+<td>080111C0</td>
+</tr>
+<tr>
+<td>68</td>
+<td>08011350</td>
+</tr>
+<tr>
+<td>69</td>
+<td>080113C4</td>
+</tr>
+<tr>
+<td>6A</td>
+<td>08011090</td>
+</tr>
+<tr>
+<td>6B</td>
+<td>08011120</td>
+</tr>
+<tr>
+<td>96</td>
+<td>08014C58</td>
+</tr>
+<tr>
+<td>C9, CA, CB, CC</td>
+<td>08005CCC</td>
+</tr>
+<tr>
+<td>CD</td>
+<td>08013978</td>
+</tr>
+<tr>
+<td>CE</td>
+<td>080135C4</td>
+</tr>
+<tr>
+<td>CF</td>
+<td>08013040</td>
+</tr>
+<tr>
+<td>D0</td>
+<td>0801319C</td>
+</tr>
+<tr>
+<td>D1</td>
+<td>08013B40</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>08013350</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>08013FA4</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>080141E8</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>08013DB0</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>08013780</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>08014AB8</td>
+</tr>
+<tr>
+<td>D8</td>
+<td>08014648</td>
+</tr>
+<tr>
+<td>E1</td>
+<td>0801B848</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>080113E4</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>08011424</td>
+</tr>
+</tbody>
+</table>
+<p>All other 16-bit types take the original no-handler branch. This includes
+type zero; a zero payload may still be present in the supplied active list.
+<code>ssa_entity_dispatch_handler()</code> returns the actual even routine address or
+zero, so a runtime can explicitly bind the appropriate recovered controller.</p>
+<p>The scheduler reads physical active indices starting at <code>03004470</code> and
+re-reads the live active count at <code>03004354</code> after every iteration. It does
+not snapshot the active prefix. Releasing an actor swaps the last slot into
+its position; the cursor nevertheless advances, so that moved actor can be
+skipped this frame. Appending an actor can cause it to execute later in this
+same frame. Allocation followed by releasing the current actor may instead
+move the newly allocated child behind the cursor. These effects are preserved.</p>
+<p>Before dispatch, <code>current</code> becomes the selected body, corresponding to
+<code>0300443C</code>. After the handler, the original checks the type of the body then
+stored in that global, rather than retaining a private pointer to the initial
+body. The callback may therefore redirect <code>current</code> to another stable slot.
+All 100 payload addresses remain stable even when their pool slots are free.</p>
+<p>The auxiliary list begins at <strong>03004370</strong>. If the post-handler current body's
+type is nonzero, the original reads the <strong>next physical active-list halfword</strong>,
+adds one, truncates it to 16 bits, and appends that value. It does not append the
+slot just processed. This can read a stale entry beyond the live prefix. When
+processing physical entry 99, it reads the adjacent halfword at <code>03004538</code>,
+outside the 100-entry array. The native <code>active_tail</code> explicitly supplies that
+word; it must not be inferred from active count. A value FFFF wraps to zero,
+even in the middle of the output. <code>auxiliary_count</code> tracks writes separately
+from that value. On completion the scheduler writes a terminating zero and
+leaves later auxiliary bytes stale, then resets <code>current</code> to slot zero.</p>
+<p><code>SsaEntityDispatch</code> references an existing pool and an array containing all
+100 stable entity addresses. No initialization allocation is required. Bind
+these fields on a zeroed context. Handlers may perform normal pool allocation
+and release, update entity payloads and the three global counters, and redirect
+<code>current</code>. The binding pointers, payload addresses and scheduler-owned
+auxiliary fields must not be changed during a call. Nested scheduler calls
+are rejected. An invalid entry argument leaves state unchanged. Native
+callback failures retain earlier effects, terminate the partial auxiliary
+list, restore <code>current</code> to slot zero and release the update guard; the ROM has
+no corresponding callback-error convention.</p>
+<p><code>tests/test_entity_dispatch_rom.py</code> executes whole <code>04E04</code> and <code>083E4</code> from
+the user's ROM. It independently decodes the table and each branch's Thumb
+BL. Controlled handlers route allocation and release through the <strong>actual
+original</strong> <code>05170</code> and <code>051C8</code>, using an execution trampoline; only the BIOS
+memory-clear service is replaced. The native handlers use the recovered pool
+APIs. Every callback snapshot and final projection compares all 100 entity
+types and slot positions, both index arrays, active count, complete auxiliary
+storage, current entity and all three counters. Tests cover every 16-bit type,
+all capacities, every release position, random dynamic handlers, redirection,
+counter overflow, allocation/release within one handler, and callback failure.
+Counts and the source hash are recorded in
+<code>native-entity-dispatch-validation.json</code>. The suite uses UBSan and tests nested
+call rejection at every handler boundary. Controller behavior and a complete
+game frame remain separate integration concerns.</p>
+</main></body></html>

@@ -1,0 +1,35 @@
+/* Shared interaction and small-screen corrections from the UI audit. */
+.actions{flex-wrap:wrap}
+.hero-copy,.hero-art,.feature,.wiki-result>span,.tool-actions{min-width:0}
+.wiki-result strong,.tool-heading h1,.feature h3{overflow-wrap:anywhere}
+.site-header nav{min-width:0}
+.site-header nav a{flex-shrink:0}
+summary:focus-visible,canvas:focus-visible,[tabindex="-1"]:focus-visible{outline:2px solid var(--lime);outline-offset:4px}
+.viewport canvas:focus-visible{outline-offset:-4px}
+.fine,.subtle,.tool-heading .fine,.inspector .fine,.feature-num,.tag{font-size:12px}
+footer{font-size:11px}
+.view-options label{min-height:32px}
+.no-script{padding:24px;text-align:center;border-top:1px solid var(--border)}
+.no-script a{text-decoration:underline;color:var(--lime)}
+button:disabled,select:disabled{opacity:.5;cursor:default}
+@media(max-width:900px){
+ .site-header{height:auto;flex-wrap:wrap;padding:10px 5% 0;gap:0}
+ .brand img{width:120px;height:40px}
+ .repo-link{margin-left:auto;order:1}
+ .site-header nav{order:2;width:100%;height:48px;overflow-x:auto;justify-content:flex-start;gap:20px}
+ .wiki-article{max-height:none;overflow:visible}
+ .tool-actions label{min-width:0}
+ .level-select{min-width:0;width:100%}
+}
+@media(max-width:400px){
+ .actions>.button{width:100%}
+ .wiki-library nav{grid-template-columns:1fr}
+ .wiki-heading h1 span{display:block;margin:10px 0 0}
+ .metrics>div{align-items:flex-start;flex-direction:column;gap:6px}
+}
+@media(pointer:coarse){
+ button,.button,.wiki-related a,.wiki-result,.text-link{min-height:44px}
+ button,.view-toolbar button{min-width:44px}
+ .view-options label{min-height:44px}
+ .text-link{display:inline-flex;align-items:center}
+}

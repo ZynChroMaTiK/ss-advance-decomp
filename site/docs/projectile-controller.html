@@ -1,1 +1,91 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Projectile Controller — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="projectile-controller.md" download>Markdown ↓</a></header><article><h2>Projectile controllers</h2><p><code>projectile_controller.c</code> recovers the complete original dispatch and active controllers for entity types 65, 66, 67, 69 and 6B. These are hexadecimal entity types, not weapon numbers. The mapping was read from the jump table at <code>08004E68</code> inside <code>08004E04</code>, and tests also decode each branch&#x27;s actual BL:</p><p>| Entity type | Table branch | Controller | Initial animation | Impact | | --- | --- | --- | --- | --- | | 65 | 08005078 | 08010E5C | 0F, period 5 | Radius 20000 hex, damage 100, particle 4 | | 66 | 08005080 | 08010EF0 | 44, period 5 | Radius 20000 hex, damage 5, particle 4 | | 67 | 08005098 | 080111C0 | 5A, period 5 | Radius 20000 hex, damage 100, particle 4 | | 69 | 080050A8 | 080113C4 | 5F, period 5 | Release only | | 6B | 08005090 | 08011120 | 87, period 5 | Radius 20000 hex, damage 5, particle 15 |</p><p>All five initialize only in state zero, setting animation before state one. Type 67 then sets health to 160. Initialization immediately runs the active controller in the same call. States other than zero and one do nothing. Types 65 and 67 explode immediately when speed is zero, without calling motion. The other types call motion even at zero speed. A nonzero motion result keeps the projectile alive; zero requests impact/destruction.</p><p>For exploding projectiles, the original owner byte at +54 and weapon byte at +55 become global credit and hit-stat weapon index before explosion. Both globals clear to zero after explosion, before particles and destruction. Original callbacks are synchronous. The adapter exposes these values in <code>SsaProjectileControllerGame</code> so the composed runtime can bind them to combat. The explosion includes players. Its radius argument is squared distance, as specified by the native explosion module, not a linear world distance.</p><p><code>SsaProjectileController</code> has a separate update guard from <code>SsaProjectile</code> so the motion callback can enter the native whole <code>10A20</code> function. Motion may change the projectile; other events are observe-only except their external effect data. Animation id, period and completion byte are set before the animation event; the runtime resets the separate sprite frame counters. Destruction is deferred: its successful event marks <code>destroy_requested</code>, and the runtime then unlinks/releases after the controller returns. Storage and all addresses must remain stable throughout a call. A failed event retains earlier changes; explosion credit is still cleared on failure as native error cleanup. No later events execute. A failed destruction request leaves the projectile intact. A previously requested destruction cannot be stepped again.</p><p>Types 68 (<code>11350</code>) and 6A (<code>11090</code>) require child projectile construction and are deliberately rejected by this adapter; their omission is explicit. The outer entity dispatcher is not implemented by this file.</p><p><code>tests/test_projectile_controller_rom.py</code> executes whole original routines against controlled motion and effects, comparing every projected entity field, preserved raw bytes, both credit globals and ordered callback snapshots. Motion mutates position and speed on both sides to verify subsequent event arguments. The suite covers every state byte, signed speed extremes, every owner byte, weapon byte boundaries, both motion outcomes and randomized active frames. It passes <strong>25,600 ROM comparisons</strong>, <strong>28,969 callback reentry checks</strong>, <strong>23 callback failure paths</strong>, and <strong>12 native guards</strong>, with UBSan enabled. Counts and source hash are in <code>native-projectile-controller-validation.json</code>. These boundary tests do not substitute for native world/combat integration.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Projectile controllers — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="projectile-controller.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="projectile-controllers">Projectile controllers</h1>
+<p><code>projectile_controller.c</code> recovers the complete original dispatch and active
+controllers for entity types 65, 66, 67, 69 and 6B. These are hexadecimal entity
+types, not weapon numbers. The mapping was read from the jump table at
+<code>08004E68</code> inside <code>08004E04</code>, and tests also decode each branch's actual BL:</p>
+<table>
+<thead>
+<tr>
+<th>Entity type</th>
+<th>Table branch</th>
+<th>Controller</th>
+<th>Initial animation</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>65</td>
+<td>08005078</td>
+<td>08010E5C</td>
+<td>0F, period 5</td>
+<td>Radius 20000 hex, damage 100, particle 4</td>
+</tr>
+<tr>
+<td>66</td>
+<td>08005080</td>
+<td>08010EF0</td>
+<td>44, period 5</td>
+<td>Radius 20000 hex, damage 5, particle 4</td>
+</tr>
+<tr>
+<td>67</td>
+<td>08005098</td>
+<td>080111C0</td>
+<td>5A, period 5</td>
+<td>Radius 20000 hex, damage 100, particle 4</td>
+</tr>
+<tr>
+<td>69</td>
+<td>080050A8</td>
+<td>080113C4</td>
+<td>5F, period 5</td>
+<td>Release only</td>
+</tr>
+<tr>
+<td>6B</td>
+<td>08005090</td>
+<td>08011120</td>
+<td>87, period 5</td>
+<td>Radius 20000 hex, damage 5, particle 15</td>
+</tr>
+</tbody>
+</table>
+<p>All five initialize only in state zero, setting animation before state one.
+Type 67 then sets health to 160. Initialization immediately runs the active
+controller in the same call. States other than zero and one do nothing. Types
+65 and 67 explode immediately when speed is zero, without calling motion.
+The other types call motion even at zero speed. A nonzero motion result keeps
+the projectile alive; zero requests impact/destruction.</p>
+<p>For exploding projectiles, the original owner byte at +54 and weapon byte at
++55 become global credit and hit-stat weapon index before explosion. Both
+globals clear to zero after explosion, before particles and destruction.
+Original callbacks are synchronous. The adapter exposes these values in
+<code>SsaProjectileControllerGame</code> so the composed runtime can bind them to combat.
+The explosion includes players. Its radius argument is squared distance, as
+specified by the native explosion module, not a linear world distance.</p>
+<p><code>SsaProjectileController</code> has a separate update guard from <code>SsaProjectile</code> so
+the motion callback can enter the native whole <code>10A20</code> function. Motion may
+change the projectile; other events are observe-only except their external
+effect data. Animation id, period and completion byte are set before the
+animation event; the runtime resets the separate sprite frame counters.
+Destruction is deferred: its successful event marks <code>destroy_requested</code>, and
+the runtime then unlinks/releases after the controller returns. Storage and
+all addresses must remain stable throughout a call. A failed event retains
+earlier changes; explosion credit is still cleared on failure as native error
+cleanup. No later events execute. A failed destruction request leaves the
+projectile intact. A previously requested destruction cannot be stepped again.</p>
+<p>Types 68 (<code>11350</code>) and 6A (<code>11090</code>) require child projectile construction and
+are deliberately rejected by this adapter; their omission is explicit.
+The outer entity dispatcher is not implemented by this file.</p>
+<p><code>tests/test_projectile_controller_rom.py</code> executes whole original routines
+against controlled motion and effects, comparing every projected entity field,
+preserved raw bytes, both credit globals and ordered callback snapshots. Motion
+mutates position and speed on both sides to verify subsequent event arguments.
+The suite covers every state byte, signed speed extremes, every owner byte,
+weapon byte boundaries, both motion outcomes and randomized active frames.
+It passes <strong>25,600 ROM comparisons</strong>, <strong>28,969 callback reentry checks</strong>,
+<strong>23 callback failure paths</strong>, and <strong>12 native guards</strong>, with UBSan enabled.
+Counts and source hash are in <code>native-projectile-controller-validation.json</code>.
+These boundary tests do not substitute for native world/combat integration.</p>
+</main></body></html>

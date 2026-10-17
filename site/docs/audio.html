@@ -1,1 +1,522 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Audio — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="audio.md" download>Markdown ↓</a></header><article><h2>Native audio integration</h2><p><code>play-native.cmd</code> now plays original ROM sound effects and the level soundtrack. Overall music amplitude is now50% (-6.02dB) of the previous mix. This applies equally to every music sequence and PCM/PSG instrument, including menus, map, gameplay, boss and end cues. Menu clicks and player/enemy/world effects retain their existing levels. The recovered note volumes, sample-to-wave balance, timing, fades and channel ownership are unchanged; the reduction is applied at the music output before effect headroom mixing. M toggles mute. <code>--mute</code> starts silently; <code>--no-music</code> keeps effects while disabling the background song. Start/restart shows the original pre-level map with its start cue (command3). Fire confirms the map; its screen fade completes before gameplay begins with the level soundtrack (command2). Restart clears active sounds while preserving these settings. A missing or failed output device is logged and the game continues silently. The death/restart notice and level-clear screen now select their original music cues once. End-screen transitions clear old effects so frozen controllers cannot leave a weapon/enemy loop playing. The death voice is emitted afterward and can still play. <code>--no-music</code> suppresses the music cues and keeps effects. Original language/title/new-game menus now precede the first map. Audio starts silent on language selection; confirming it requests the original menu command8. Navigation/confirm/back/boundary effects and the menu Music On/Off setting are bound. New Game requests its original fade before transitioning to the map cue.</p><p>Footsteps now play while walking or strafing on the ground in either camera mode. The original alternating sounds13/14 follow the camera bob cadence. The native composition suppresses them without movement input, after less than 1/16 unit of horizontal displacement, or while airborne/dead. The recovered camera/physics routines remain unchanged. This avoids walking sounds while jumping, standing still or pushing against a wall.</p><p>Enemy, activation and impact sounds now pan and attenuate with distance from Sam. Turning or moving updates their direction. H keeps the listener at Sam&#x27;s eye, rather than moving it behind him with the chase camera. Sam&#x27;s weapons, footsteps and music stay centered. Pickups and doors now use world positions. Each door owns its movement loop; its stop cue cannot leave that loop running or stop another moving door. Multiple CD and CE enemies emit independent loops.</p><h3>Recovered data and native playback</h3><p>The ROM&#x27;s08C3EAC routine indexes the136-entry song table at083E99D0. Five entries are empty;105 effects/jingles and26 music sequences are populated. Headers point to instrument banks, tracks and PCM/wave data. Music selection at08008FBC reads the14-entry campaign table at0844A9DC: level0 selects song0x73. The two remaining diagnostic maps have no entry in this table and request no music.</p><p><code>src/audio.c</code> reads this data without executing ARM instructions. It handles wait and note durations, running status, ties/EOT, pattern calls/returns, repeats, jumps, tempo, instruments, key/rhythm splits, volume, pan, pitch controls and LFO parameters. Rhythm-note identity is retained separately from remapped instrument pitch so tied percussion can be released correctly. Per the latest PC audio request, player0 is reserved for music (song IDs6E..85). Each music sequence track owns one voice, replacing only its own preceding note/tail at note-on. Effects and menu cues use32 independent sequence instances and64 separate oscillators. Repeated copies of the same sound can coexist, with separate positions, clocks, envelopes and PCM/pulse/wave/noise phases. The original ROM route is only a free-slot hint; it does not reserve exclusive hardware voices. Footsteps13/14 therefore cannot replace the soundtrack, and still work with <code>--no-music</code>. Output is signed stereo PCM with linear sample resampling and pulse,32-step wave and LFSR noise synthesis.</p><p>Effect instances remain occupied through release/echo, even after the sequence ends. Local centered effects have priority over positioned enemy/world effects at both instance and oscillator capacity, including their release/echo tails. Allocation first uses free slots, then recycles world effects before local ones. Within a class, old instances and released/old notes yield first. Incoming world sounds are dropped if all eligible storage belongs to local sounds. Music is never a candidate. The native APIs classify NULL-position play as local; world play_at/source positions remain lower priority even after their emitter retires. Stop(song) stops every instance of that ID, without affecting other IDs/music. Move(song,point) updates the newest positional instance without restarting it. These legacy ID-only calls remain available for old sinks and diagnostics. The Windows composition now uses the source API: each numeric emitter identity owns its effects independently. PLAY permits overlapping one-shots; LOOP ensures one instance per(source,song), moving it without a restart; MOVE updates every positional sound attached to that source; STOP affects only its matching sound (or all of that source with the song-count sentinel). RETIRE ends its loops and detaches one-shots at their final position, retaining death tails. No live gameplay pointer crosses the audio worker boundary.</p><p>PSG voices now follow instrument-defined attack, decay, sustain and release instead of holding full volume and applying a generic fade. Rates count64Hz steps; sustain uses4-bit levels, and zero rates skip phases. A fractional sample clock keeps this timing independent of render-buffer boundaries. Envelope peaks now follow the driver&#x27;s integer volume goal instead of always reaching15. The public <a href="https://github.com/pret/pokeemerald/blob/master/src/m4a.c">MP2K CgbSound implementation</a> was used as an additional reference for the instrument envelope format.</p><p>The CD08/CD09 extension commands now set pseudo-echo volume and length. Each new voice copies these settings, so a later track change cannot change an already playing note&#x27;s tail. This holds the oscillator at a low level after release; it does not replay a delayed recording. PCM envelopes now use the driver&#x27;s8-bit attack/decay/sustain/release arithmetic, including the exact release threshold and sustain-zero transition into the tail. Tail length counts sound frames independently of tempo and PSG&#x27;s64Hz envelope clock. PSG tails use ceil(volume_goal*echo_volume/256), including quieter notes. Stop/restart clears tails immediately; mute advances them silently.</p><h3>Channel ownership and sample/PSG balance</h3><p>The original SoundMode call at080C3E48 uses0092D300. Executing its field setup at080C43E6 confirms three PCM channels and PCM master13. The original 080C3BBE..080C3C32 allocator shares those three channels and four exclusive PSG channels across players, using release status, priority and track addresses. That recovered allocator remains an explicitly test-only reference. The latest user request supersedes its use in the PC mixer: music is monophonic per sequence track, while effects have independent voices and can overlap even when using the same PSG type. This is a deliberate native-port extension. The BA command still records priority, but cannot suppress an independent PC effect or steal a music voice.</p><p>Track volume/pan at080C47CC, note velocity/rhythm pan at080C3AC4 and PCM envelope gain at080C3356 now retain their integer truncations. Driver byte2 is right, byte3 left. Removed the arbitrary music0.28/effects0.7 gain split. PSG volume goals come from080C4978; the wave channel uses the original five-step DAC table at083E8F68. Full and reduced-volume fixtures verify all five instrument types, including the relative sample/wave amplitudes and stereo orientation.</p><p>User-requested PC balance adjustment: all sampled voices now receive a 2x (+6.02 dB) output-bus gain. This applies equally to sampled music/percussion, effects and footsteps. It follows the recovered note/envelope arithmetic, preserving instrument dynamics, stereo, fades, distance and tails. Music PSG gain and wave DAC levels are unchanged. This is an intentional PC mix adjustment after listening feedback, not an additional claimed ROM behavior. The ARM packed PCM mixer at080C3394 confirms the existing multiplication scale; there was no newly discovered missing driver factor to justify the boost. The tests keep the ROM volume proof separate from the host output gain.</p><p>132 representative slot/player combinations verify that PCM receives the same boost, with a reference signal at6912/6976 stereo units instead of3456/3488. Three simultaneous reference voices sum to20736/20928 without clipping. The catalogue now explicitly rejects clipping for every tested song, and both the GCC and MSVC audio-enabled completion checks reject clipped output too. The catalogue renders35,640,000 frames across131 populated songs, with a peak of27,377/32,767 and zero clipped samples with independent voices. The48kHz first-level completion also produces zero clipping across3,722,400 mixed frames.</p><p>Gameplay effects now receive an additional1.5x (+3.52dB) bus gain: world and enemy sounds, player weapons/voices, pickups, doors, impacts and footsteps. This applies to both sampled and PSG effects. Song IDs7..6D identify this group; menu cues1..6 and music6E..85 keep their previous gain.2,310 reference cases cover every player, all five instrument types and category boundaries. The positional tests retain their exact stereo/distance ratios at the new gain.</p><p>A direct50% boost caused562 clipped samples in the first-level combat route; 25% still caused31. The final50% boost includes effects-only peak protection: keep music/menu contributions unchanged, then apply separate linked-stereo local and world gains that fit the mixed output within+/-32760. Local effects receive headroom first. The world limiter cannot alter the local limiter state or suppress its volume while recovering from an enemy burst. Attack is immediate; gain recovers with a100ms time constant and settles to unity within1e-6. This preserves stereo balance and avoids boosting distortion when several effects overlap. The limiter state resets on level/device reset and advances while muted. Tests verify exact linked-stereo peaks, unchanged music through recovery, recovery timing, reset, mute and arbitrary buffer splits. The complete route now has1,011,272 frames with some effects attenuation/recovery on Windows, zero hard-clipped samples and zero decoder errors. Note data and per-note arithmetic remain intact; channel allocation follows the requested PC concurrency policy above.</p><p>The normal first-level route reaches16 active effect instances,11 effect voices and5 music voices. No effect instance or voice is recycled during that route. The current Windows route finishes in4,977 ticks with2,623 notes and3,981,600 mixed frames. The shared sanitizer/MSVC catalogue and concurrency suite passes651,003 checks, including all131 populated songs, six concurrency/tail scenarios and six source/world integration scenarios. Windows WinMM buffering, worker progress, mute, music-on/off, menu/map cues and restart also pass with output muted; physical listening remains unverified.</p><p>The ROM initializes SOUNDCNT_L=77 and SOUNDCNT_H=A90E. Host oscillator levels use their100% PSG/FIFO ratio. As an independent scaling reference, mGBA&#x27;s <a href="https://github.com/mgba-emu/mgba/blob/master/src/gba/audio.c">GBA mixer</a> and <a href="https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c">PSG mixer</a> show the separate hardware gains. No emulator code is linked into the port.</p><h4>Wave bass pitch and quieter wave levels</h4><p>The first-level bass uses music-bank wave instrument1 (also shared by7), with its32-step waveform at083E9980. The former host renderer incorrectly used the pulse oscillator&#x27;s frequency for wave instruments. Original C4880 produces the same period register for both kinds, but the wave&#x27;s32-step hardware cycle runs at half the pulse frequency. Instruments with bit8 set also round that period according to SOUNDBIAS40 (C4D18..C4D4C). Native pulse and wave pitch now use the actual ROM period tables at083E8E90/083E8F14, including low-note clamping, fractional pitch and register rounding.</p><p>The earlier wave gain conversion selected the correct DAC setting but then scaled a centered sample smoothly. The DAC instead truncates the raw nibble: 25% maps15 to3,50% to7,75% to11, and100% to15. This made25% output25% too loud and50% output about7% too loud. The corrected path applies that integer conversion before centering, with no instrument-specific normalization. Hardware period and nibble semantics are cross-checked against the original <a href="https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c">mGBA PSG implementation</a>.</p><p>At first-level volume105, bass note40 now uses41.21761Hz instead of about82Hz. Velocity44 selects goal4/25% DAC and1536 peak-to-peak host units (formerly1920); velocity108 selects goal10/75% DAC and5632 units (formerly5760). This correction applies to every wave instrument, including the other waveform shapes.</p><p><code>tests/test_audio_wave.py</code> checks all six music-bank wave instruments (1,5,7,18,24,32), three distinct waveforms,960 original CgbSound note-on cases, 3,840 original pitch-register cases across both pulse channels and wave, and every combination of16 envelope levels and16 sample nibbles. Note-on cases cover full/quiet velocities, four track volumes and low/high keys. The original ROM supplies wave DAC registers, envelope goals and source samples; hardware nibble arithmetic is checked independently. <code>audio-wave-validation.json</code> records the bass measurements and hashes. The shared GCC/MSVC C fixture also checks25/50/75/100% wave output and the corrected wave half-cycle boundary.</p><p><code>tests/test_audio_channels.py</code> compares the archived original allocator against 12,000 ROM channel-ownership cases, explicitly marked as a reference unused by the PC mixer. Its6,000 volume cases still exercise the production per-note arithmetic. It also executes the original SoundMode channel/master setup. ARM execution is test-only. <code>audio-channels-validation.json</code> records that scope. <code>tests/audio_concurrency.inc</code> exercises actual PC note setup and rendering for all five oscillator types: independent tracks, duplicate positioned effects, music-only plus effects-only stem summation, music state/phase preservation, same-track music note replacement, effect-note polyphony, pool saturation, stop isolation and release-tail ownership. Catalogue checks reject overlapping voices on any music track. Footsteps are also compared against music-only oscillator state across three seconds of real level music.</p><p>Original PCM envelope logic at080C32EE..080C3354 and extension dispatch at 080C51F8,080C52D8,080C52E4 were checked directly in the supplied ROM. <code>tests/test_audio_echo.py</code> compares18,307 PCM envelope steps/lifetime cases and 512 extension-command cases against those instructions, using ARM only as a test oracle. The <a href="https://github.com/pret/pokeemerald/blob/master/src/m4a_1.s">MP2K mixer</a> and CgbSound reference above also document the format. This does not implement the separate global GBA reverb mixer.</p><p>The sample header and command layouts were checked against the supplied driver; the public <a href="https://github.com/pret/pokeemerald/blob/master/include/gba/m4a_internal.h">MP2K structure definitions</a> and <a href="https://github.com/pret/pokeemerald/blob/master/sound/MPlayDef.s">command definitions</a> were additional format references. This implementation is new host code, not a byte-identical recovery of the original hardware mixer. No third-party runtime library, emulator, downloaded soundtrack or extracted audio package is required.</p><p><code>SsaNativeGame.audio_ops</code> is an optional presentation sink. Existing weapon, enemy, pickup, mover, particle and player callbacks now dispatch play/stop events to it. Device success and song preemption do not change gameplay return values. An unbound sink retains the prior headless behavior for original subsystem tests. The remaining original menu dispatcher remains future work; recovered pages and unsupported destinations are described in <a href="menu.html">menu.md</a>.</p><h3>Recovered music selection and PC transitions</h3><p><code>ssa_audio_music_select</code> reconstructs the music-request portion of08008EB0. Settings at<code>[0300572C]+2C</code> enable requests only when the byte equals1. This is the music setting, not player count. Command21 requests stop even after this setting is disabled. The selector preserves the original level-dependent choices:</p><p>| Command | Requested song | | --- | --- | | 1,3 | 84 for levels0–5,12,13;85 otherwise | | 2 | Campaign table0844A9DC;73 on level0 | | 7,8,10,19 | 70,6F,81,83 respectively | | 9 | 78 for levels0–5,12,13;7F otherwise | | 11 | 71 on level0;6E on level6;82 otherwise | | 20 | 78 on level5;7F otherwise | | 21 | FFFF: stop music |</p><p>Song numbers in this table are hexadecimal. The music request at0800257C confirms command9 on the original level-complete path;0800625E issues command10 for game over. <code>analysis/inspect_music_modes.py</code> records read-only ROM call-site evidence. Other commands&#x27; UI/SFX/pause behavior is outside this selector. Diagnostic maps14/15 safely request no command2 music, rather than indexing past the14-entry campaign table.</p><p>The native composition has a separate music-mode latch, independent of gameplay sound-return serials. The first death notice requests10; the real exit requests9. Repeated frozen-screen ticks do not restart the cue. Late sink binding restores the current terminal cue. A newly initialized composition has mode2 as its default; the Windows backend starts map command3 on open/restart and command2 only after map confirmation/fade. Boss music events now reach the same optional callback, though the full boss/campaign path is still unfinished.</p><p>The PC shell offers manual restart for each death, so it uses the game-over cue at the death notice. This does not reproduce the original continue screens or their timing. Commands9/10 also clear old SFX on the PC, including in effects-only mode; they do not alter health, entity ownership or controller state. Complete original pause/resume and the remaining menu/SFX command dispatcher are still unfinished.</p><h3>Music queue, fades and intro return</h3><p>The music backend now reconstructs the queue/fade policy at08008C04,08008D30 and08008E74. New requests replace the pending song and commit at a sound-update frame. An explicitly requested fade holds them until its volume reaches zero. Requests do not start a fade on their own. Initial playback on an empty player starts immediately in the PC backend. The public <code>ssa_audio_fade</code> entry point starts the recovered global fade; repeated calls leave an existing fade running. The fade applies to music and effects, including the extra PC footstep player.</p><p>The original base volume is65500 (FFDC). Each decrement removes4093 (base&gt;&gt;4), so17 decrements reach zero:16 leave a residual12. The interval byte is capped at15 and stored in both nibbles of the countdown. A pending song starts on the following sound frame and restores the base volume. Gain follows the driver&#x27;s rounded volume control, without resetting the sequencer while fading. Stop can cancel a matching pending request; restart clears the queue/fade and restores gain. Muting advances both the fade and queued changes silently. The remaining game-transition call sites for requesting fades are not all connected yet; the device check explicitly exercises the backend fade path.</p><p>Original09120 returns modes1 and20 to mode2 when the music player finishes, only when music is enabled. This does not describe the pre-level map screen: original01ACBC explicitly requests command3, which selects the same84/85 songs but does not automatically return. The map waits for fire and original fades; gameplay initialization at020A0 requests command2. The Windows frontend now follows that separation. It flushes queued map buffers and resets fade/voices at the handoff, so the map cue cannot leak into gameplay. See <a href="map-view.html">map-view.md</a>. Modes9/10 remain terminal and do not restart the level song after their cue finishes. Diagnostic maps14/15 have no campaign music entry and cannot index beyond its table.</p><p><code>tests/test_audio_policy.py</code> compares8,360 frame steps,166 requests,1,552 fade starts and2,688 automatic-return cases with isolated original routines. It includes complete fades at every interval, all interval-byte values, pause-bit conditions and random states. This is12,766 ROM comparisons, with ARM execution confined to the test oracle. Sampled-tone fixtures separately check actual gain, silence at fade completion, pending replacements, buffer-size invariance, stop/reset and mute. Four real ROM cues cover both intro families and both post-boss choices through their return to campaign music.</p><p>Reverb reconnaissance found the init mode0092D300 at080C3E48, whose low byte does not enable reverb, after sound-info zeroing. The only other direct mode-set call is song start080C46AE, gated by a header flag; every supplied header has reverb0. The port preserves the resulting dry output. It has not added a global reverb effect. <code>analysis/inspect_audio_policy.py</code> records the direct call-site scan and init/header settings. The <a href="https://github.com/pret/pokeemerald/blob/master/src/m4a.c">MP2K mode setter</a> provides additional format context.</p><h3>PC spatial playback</h3><p>The sound-start boundary at08008D5C takes a sound ID, without source coordinates. The new spatial model is a PC feature, not a matching recovery of that routine. Enemy/CD controllers and activation callbacks supply their entity positions; impact/explosion particles supply the particle&#x27;s position. Pickups use the same unpositioned local playback path as player sounds. Enemy sounds attach to a numeric lifetime identity and follow the body&#x27;s center. Each live enemy is updated after the simulation tick. Retiring an actor stops its loops and freezes its remaining one-shots; slot reuse obtains a new identity. Particle/impact one-shots copy the emission point.</p><p><code>src/native_audio.inc</code> observes the existing mover records without altering the ROM-verified mover algorithms. The centroid of each sector&#x27;s boundary endpoints supplies XY, and the current floor/ceiling midpoint supplies Z. Flag8 identifies active movement. Commands ensure a single0x67 loop for that mover;0x68 stops only its loop and plays the finish cue at that mover&#x27;s position. Post-tick reconciliation also retires loops when movement stops or a terminal screen freezes the world. Repeated open/close/reverse commands cannot accumulate loops. Other doors and enemies using the same sound retain their own instances.</p><p>Player line interactions have a second sound path: <code>player_line -&gt; player_sound_id -&gt; SsaLevelPlayerOps.sound</code>. The native <code>player_sound</code> callback must forward IDs67/68 to <code>mover_sound</code>. Treating these as local player effects created a second tied67 sequence on source1 for every opened door. Mover stop callbacks could stop only their own copy, leaving all player-owned copies playing until the level-end clear. The previous paired-mover test exercised the mover callback alone and missed this path.</p><p>The player-door regression now activates a real map line through that adapter, runs three opening/closing cycles, renders the finite finish cue to completion and requires exact zero PCM afterward, including repeated use of an open door. It failed on the prior code. The full normal-input route additionally rejects every67 instance without a valid mover source and every67 instance whose mover has stopped: the old code accumulated14,866 frames of stray copies; the fixed route has zero stray/stopped loops across394 active mover frames. This check runs before the level-end sound clear, so terminal cleanup cannot hide the leak.</p><p>The original CD/CE controllers&#x27; canonical loop owners remain untouched for gameplay/differential parity. With the source-capable sink, its single-owner presentation callbacks are superseded by per-emitter checks of the original phase, distance and dying-state conditions. Every qualifying CD plays0x3A and every qualifying CE plays0x4E, moving and stopping independently. Original hysteresis is preserved: CD starts at1023 and continues through1024; CE starts at399 and continues through400. Local weapon stop events target the player source, so they cannot stop an enemy&#x27;s copy of the same sound. Legacy sinks retain the old canonical CD/CE callback paths. Unbind/teardown retires owned loops. Other continuous enemy sequences3D/51/5F also receive loop ownership if emitted; retirement stops them instead of preserving them as finite one-shot tails.</p><p><code>SsaAudioListener</code> copies Sam&#x27;s eye position and yaw&#x27;s right vector; it uses the original player camera, independent of chase framing and vertical aim. Stereo balance combines with each sequence track&#x27;s own pan. At the listener&#x27;s right, the left channel retains25% of the right channel&#x27;s level; front/back/vertical sources remain balanced. Every positioned sound now uses gain <code>256/(256+distance)</code>, with three-dimensional distance and no hard cutoff. The old full-volume radius of256 units is removed: gain is1 at the source,1/2 at256 units and1/5 at1024. Door movement and finish cues and enemy effects share this curve. Pickup cues use local playback like player sounds, with no distance gain or positional pan; original sequence track pan is retained. Integer square roots use bounded24.8 deltas for the fullint32 coordinate range. Moving sources/listeners smooth channel gains with a10ms time constant, per sample, independent of buffer boundaries. Music and local sounds bypass this model. There is no HRTF, Doppler, wall occlusion or room reverberation.</p><p>The world-distance fixture drives the actual native mover67/68 presentation callbacks. Rendered peaks decrease at0/32/64/128/256/512/1024/ 2048/4096 units, including within the old plateau. It checks half/fifth output, vertical distance and stereo direction. Pickup35 callbacks instead render identical PCM to local playback across item/listener positions and listener yaw, with both source-aware and legacy sinks. Existing unpositioned reference fixtures retain the same output gains. The normal-input completion still rejects both stray and stopped-mover door loops.</p><p>Independent emitters and concurrent effects intentionally supersede the original shared-player preemption and08D5C per-frame SFX gate.</p><h3>Windows output and ownership</h3><p><code>platform/win32/audio_win32.c</code> sends48kHz stereo16-bit output to the default Windows device using three800-frame buffers, a nominal50ms queue. A worker waits on the device&#x27;s manual-reset CALLBACK_EVENT and a separate stop event, refilling completed buffers immediately and independently of UI activity. Reset the completion event before scanning all headers so completions during the scan cannot be lost. Preserve its handle through waveOutReset/waveOutClose; stop and join the worker before teardown. This follows the documented <a href="https://learn.microsoft.com/en-us/windows/win32/multimedia/using-an-callback-to-process-driver-messages">WinMM event callback</a> protocol. A critical section serializes mixing, game events, mute and restart. Reset returns pending device buffers before reuse; shutdown signals and joins the worker before unpreparing/freeing storage. The ROM stays alive throughout. The <a href="https://learn.microsoft.com/en-us/windows/win32/multimedia/audio-data-blocks">Windows buffer lifetime rules</a> are followed. Audio does not change system volume.</p><p>Normal play enables audio automatically. Existing hidden rendering/startup tests stay silent unless <code>--audio-test</code> explicitly enables the device path.</p><h3>Validation and limits</h3><p>Run <code>.\decomp.ps1 test-audio</code>, <code>.\decomp.ps1 test-audio-playability</code>, and <code>powershell -ExecutionPolicy Bypass -File scripts/test-native-audio.ps1</code>. The Windows wall-clock regression is <code>powershell -ExecutionPolicy Bypass -File scripts/test-audio-timing.ps1</code>. It plays muted music on the actual device, with no window or input messages, comparing three seconds of playback to elapsed QPC time. Cases cover the idle worker, frequent main-thread refill assistance and idle music plus16 effects. The old4ms timer-polling worker measured0.83353 speed idle versus1.00009 with frequent assistance; idle with effects measured0.97849. Buffer-event wakes measured1.00007/1.00015/1.00003 for the same cases. No music tempo/sample-rate change was needed: delayed buffer delivery inserted gaps. The previous160ms worker test only required some progress, so it did not detect this slowdown. <code>scripts/test-audio-playability.ps1</code> compares Windows audio-enabled completion against the sanitizer run.</p><p>The catalogue test renders35,640,000 stereo frames at24kHz: every populated song produces nonzero audio, with three seconds per effect and45 seconds per music entry. Level-one music is additionally run through its first sequence loop. Independent fixtures check signed samples, pitch/resampling, panning, tie release, block-size invariance, mute, independent source selection, priority-gate bypass, loop/stop handling and bounded malformed-data rejection. GCC runs with ASan, UBSan and leak detection; MSVC executes the same C checks. The current suite passes651,003 assertions, including independent PSG envelope timing/zero-rate fixtures, fractional64Hz timing at44.1kHz, and repeated footstep starts/stops compared against an uninterrupted music player. Actual PC-input checks cover all four movement keys, both views, jumping, idle and disabled input:23 alternating footstep events, 156 airborne frames and872 blocked/idle frames. Constant-PCM fixtures additionally verify left/right/front/back/vertical sound levels, inverse distance, full coordinate bounds, rotation, smooth transitions, moving sounds without note restarts, centered-play reset, music isolation and spatial buffer-size invariance. Composition tests exercise real impact-particle creation, controller/activation callbacks, local firing and H/pitch/yaw input. It also checks a real combat-damage death, once-only cues across hundreds of ticks, game-composition teardown/restart, late binding, music-stop isolation, terminal loop cleanup, mute and effects-only transitions. New sampled/PSG fixtures check audible tails and exact expiry, per-note copies of echo settings, nonzero PSG release, buffer-size invariance, stop/reset and mute. <code>tests/test_music_selection.py</code>, invoked by<code>test-audio</code>, compares1,400 original 08EB0 request cases across14 campaign levels,25 commands and4 setting-byte values. ARM execution is confined to that Unicorn test oracle. Two diagnostic map guards and6 invalid-argument guards are checked separately; results and source hashes are in<code>music-selection-validation.json</code>.</p><p>The normal-input completion with an attached audio sink and a48kHz mix on every tick still finishes in4,653 frames with28,000 score,7 pickups,19 spawned enemies, 23 health and13 pistol/22 shotgun shots. All3,722,400 mixed frames are produced without decoder errors. This includes254 footstep events and2,434 admitted notes, with the level song from the first gameplay tick, then exactly one final-tick command9 transition to song78. No samples clip in this route. The route contains198 spatial starts,4,788 listener snapshots and20,775 source position updates. GCC and MSVC agree on these counts and completion results; the sanitizer run produces7,442,834 nonzero stereo samples. The Windows device test verifies buffer submission and completion, both footstep routes with/without music, hardware sample-position advancement, restart, the M handler, spatial play/move after restart, level-clear music before restart and map playback while simulation is frozen and level music at restored gain after each confirmation, game-over/level music callbacks, queued music waiting for a real global fade, and continued buffer delivery during a deliberate160ms rendering stall. Device tests keep output muted; no physical listening comparison has been performed.</p><p>One repeat device-check invocation failed its aggregate assertions before the test retained individual case output. Isolated launches and five consecutive full Windows audio checks then passed. The script now captures the launcher exit code before JSON decoding and saves each device case under <code>build/native-audio/</code>. The initial failure&#x27;s cause remains unconfirmed. Later startup testing reproduced a separate failure when a running game held the launcher&#x27;s shared stderr log open. The launcher now reserves a separate session-log directory atomically; audio/startup tests use private logs, and two simultaneous default launches pass. <code>last-launch.log</code> is a best-effort copy on exit, rather than a file every running game must share.</p><p>This remains a native audio renderer with limits: PSG envelope timing, modulation and oscillator phase have not been validated over complete songs against the hardware. Hardware sweep, global GBA reverb and exact low-rate DAC behavior are not reproduced; the supplied ROM&#x27;s normal mode has zero reverb. Linear PCM interpolation and centered host oscillators are retained. Long later-campaign patterns beyond the tested excerpts still need validation. The tested per-note volume arithmetic follows the ROM. Independent effect instances, music track monophony, the2x sample-bus boost and1.5x gameplay-effects gain/peak protection are requested PC changes. In addition, the full waveform is not bit-identical. The complete campaign remains unfinished.</p><p>Current evidence: <code>music-selection-validation.json</code>, <code>audio-policy-validation.json</code>, <code>audio-echo-validation.json</code>, <code>audio-channels-validation.json</code>, <code>audio-wave-validation.json</code>, <code>audio-validation.json</code>, <code>audio-playability-validation.json</code>, <code>windows-native-audio-validation.json</code>, <code>windows-audio-playability-validation.json</code> and the current Windows build/game reports. The ROM and the matching decomp export are unchanged. The decomp.wtf catalogue remains74/526 matched functions,2,152/87,648 bytes (2.46% of the incomplete catalogue); this audio milestone adds native port code, not claimed matching C.</p><p>Boss gameplay now keeps local weapon, mover and enemy loops active during music commands19/20, as well as normal level music2. The native sixth-map completion mixes10,632,800stereo frames and verifies battle/post-boss requests without decoder errors. See enemy-boss.md and campaign-validation.json. Waveform fidelity limits above still apply.</p><h3>Player sound priority under saturation</h3><p>Seven new stress cases in tests/audio_priority.inc cover both full effect pools, 128-event enemy floods, protected local pickup/weapon/hurt instances and notes, released player tails, new local sounds displacing world sounds, world-only rejection, recovery when slots free, and peak protection. Music state/voices compare unchanged. After a loud world crowd stops, the output matches the music/local-only reference immediately, without a local recovery fade.</p><p>The allocation policy remains bounded at32 effect instances and64 oscillators. Overflow is handled by priority rather than unbounded allocation. effect_drops and voice_drops record lower-priority rejections without treating them as decode errors. This does not change the original note data, mono music tracks, local centering, world stereo/distance, per-note volume or requested gain boosts.</p><p>GCC ASan/UBSan/leak and MSVC pass653,659 mixer assertions with131 audible catalogue songs,35,640,000 mixed catalogue frames and zero clipping/decoder errors. The existing ROM-envelope/channel/volume/policy/wave oracle checks pass. Both real Windows device startup/restart cases pass with music enabled/disabled and muted output. The Windows first-level audio route passes with4,977 ticks, no decoder errors or clipping. Weapon-loop/rocket regressions still pass126,730 assertions. See current audio-validation.json, windows-native-audio-validation.json, windows-audio-playability-validation.json and weapon-fixes validation reports.</p><p>The completed eighth campaign map now also binds the real mixer for its entire 14,324-frame normal-input route in the second original resource family. It mixes 11,459,200 stereo frames at48kHz, with player/enemy/world effects and level/end music, producing nonzero audio and zero decoder errors. Both recessed switches and the real VM exit execute normally. This complements the sixth map&#x27;s boss audio coverage; it is automated mixer evidence, not a physical listening test. See campaign-validation.json and windows-native-campaign-validation.json.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native audio integration — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="audio.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-audio-integration">Native audio integration</h1>
+<p><code>play-native.cmd</code> now plays original ROM sound effects and the level soundtrack.
+Overall music amplitude is now50% (-6.02dB) of the previous mix. This applies
+equally to every music sequence and PCM/PSG instrument, including menus, map,
+gameplay, boss and end cues. Menu clicks and player/enemy/world effects retain
+their existing levels. The recovered note volumes, sample-to-wave balance,
+timing, fades and channel ownership are unchanged; the reduction is applied at
+the music output before effect headroom mixing.
+M toggles mute. <code>--mute</code> starts silently; <code>--no-music</code> keeps effects while disabling
+the background song. Start/restart shows the original pre-level map with its
+start cue (command3). Fire confirms the map; its screen fade completes before
+gameplay begins with the level soundtrack (command2). Restart clears active sounds while
+preserving these settings. A missing or failed output device is logged and the
+game continues silently.
+The death/restart notice and level-clear screen now select their original
+music cues once. End-screen transitions clear old effects so frozen controllers
+cannot leave a weapon/enemy loop playing. The death voice is emitted afterward
+and can still play. <code>--no-music</code> suppresses the music cues and keeps effects.
+Original language/title/new-game menus now precede the first map. Audio starts
+silent on language selection; confirming it requests the original menu command8.
+Navigation/confirm/back/boundary effects and the menu Music On/Off setting are
+bound. New Game requests its original fade before transitioning to the map cue.</p>
+<p>Footsteps now play while walking or strafing on the ground in either camera
+mode. The original alternating sounds13/14 follow the camera bob cadence.
+The native composition suppresses them without movement input, after less than
+1/16 unit of horizontal displacement, or while airborne/dead. The recovered
+camera/physics routines remain unchanged. This avoids walking sounds while
+jumping, standing still or pushing against a wall.</p>
+<p>Enemy, activation and impact sounds now pan and attenuate with distance from
+Sam. Turning or moving updates their direction. H keeps the listener at Sam's
+eye, rather than moving it behind him with the chase camera. Sam's weapons,
+footsteps and music stay centered. Pickups and doors now use world positions.
+Each door owns its movement loop; its stop cue cannot leave that loop running
+or stop another moving door. Multiple CD and CE enemies emit independent loops.</p>
+<h2 id="recovered-data-and-native-playback">Recovered data and native playback</h2>
+<p>The ROM's08C3EAC routine indexes the136-entry song table at083E99D0. Five entries
+are empty;105 effects/jingles and26 music sequences are populated. Headers point
+to instrument banks, tracks and PCM/wave data. Music selection at08008FBC reads
+the14-entry campaign table at0844A9DC: level0 selects song0x73. The two remaining
+diagnostic maps have no entry in this table and request no music.</p>
+<p><code>src/audio.c</code> reads this data without executing ARM instructions. It handles wait
+and note durations, running status, ties/EOT, pattern calls/returns, repeats,
+jumps, tempo, instruments, key/rhythm splits, volume, pan, pitch controls and LFO
+parameters. Rhythm-note identity is retained separately from remapped instrument
+pitch so tied percussion can be released correctly. Per the latest PC audio
+request, player0 is reserved for music (song IDs6E..85). Each music sequence
+track owns one voice, replacing only its own preceding note/tail at note-on.
+Effects and menu cues use32 independent sequence instances and64 separate
+oscillators. Repeated copies of the same sound can coexist, with separate
+positions, clocks, envelopes and PCM/pulse/wave/noise phases. The original ROM
+route is only a free-slot hint; it does not reserve exclusive hardware voices.
+Footsteps13/14 therefore cannot replace the soundtrack, and still work with
+<code>--no-music</code>. Output is signed stereo PCM with linear sample resampling and
+pulse,32-step wave and LFSR noise synthesis.</p>
+<p>Effect instances remain occupied through release/echo, even after the sequence
+ends. Local centered effects have priority over positioned enemy/world effects
+at both instance and oscillator capacity, including their release/echo tails.
+Allocation first uses free slots, then recycles world effects before local ones.
+Within a class, old instances and released/old notes yield first. Incoming world
+sounds are dropped if all eligible storage belongs to local sounds. Music is
+never a candidate. The native APIs classify NULL-position play as local; world
+play_at/source positions remain lower priority even after their emitter retires.
+Stop(song) stops every instance of that ID, without affecting other IDs/music.
+Move(song,point) updates the newest positional instance without restarting it.
+These legacy ID-only calls remain available for old sinks and diagnostics.
+The Windows composition now uses the source API: each numeric emitter identity
+owns its effects independently. PLAY permits overlapping one-shots; LOOP
+ensures one instance per(source,song), moving it without a restart; MOVE updates
+every positional sound attached to that source; STOP affects only its matching
+sound (or all of that source with the song-count sentinel). RETIRE ends its
+loops and detaches one-shots at their final position, retaining death tails.
+No live gameplay pointer crosses the audio worker boundary.</p>
+<p>PSG voices now follow instrument-defined attack, decay, sustain and release
+instead of holding full volume and applying a generic fade. Rates count64Hz
+steps; sustain uses4-bit levels, and zero rates skip phases. A fractional sample
+clock keeps this timing independent of render-buffer boundaries. Envelope peaks
+now follow the driver's integer volume goal instead of always reaching15.
+The public
+<a href="https://github.com/pret/pokeemerald/blob/master/src/m4a.c">MP2K CgbSound implementation</a>
+was used as an additional reference for the instrument envelope format.</p>
+<p>The CD08/CD09 extension commands now set pseudo-echo volume and length. Each
+new voice copies these settings, so a later track change cannot change an
+already playing note's tail. This holds the oscillator at a low level after
+release; it does not replay a delayed recording. PCM envelopes now use the
+driver's8-bit attack/decay/sustain/release arithmetic, including the exact
+release threshold and sustain-zero transition into the tail. Tail length
+counts sound frames independently of tempo and PSG's64Hz envelope clock.
+PSG tails use ceil(volume_goal*echo_volume/256), including quieter notes.
+Stop/restart clears tails immediately; mute advances them silently.</p>
+<h2 id="channel-ownership-and-samplepsg-balance">Channel ownership and sample/PSG balance</h2>
+<p>The original SoundMode call at080C3E48 uses0092D300. Executing its field setup
+at080C43E6 confirms three PCM channels and PCM master13. The original
+080C3BBE..080C3C32 allocator shares those three channels and four exclusive PSG
+channels across players, using release status, priority and track addresses.
+That recovered allocator remains an explicitly test-only reference. The latest
+user request supersedes its use in the PC mixer: music is monophonic per
+sequence track, while effects have independent voices and can overlap even
+when using the same PSG type. This is a deliberate native-port extension.
+The BA command still records priority, but cannot suppress an independent PC
+effect or steal a music voice.</p>
+<p>Track volume/pan at080C47CC, note velocity/rhythm pan at080C3AC4 and PCM envelope
+gain at080C3356 now retain their integer truncations. Driver byte2 is right,
+byte3 left. Removed the arbitrary music0.28/effects0.7 gain split. PSG volume
+goals come from080C4978; the wave channel uses the original five-step DAC table
+at083E8F68. Full and reduced-volume fixtures verify all five instrument types,
+including the relative sample/wave amplitudes and stereo orientation.</p>
+<p>User-requested PC balance adjustment: all sampled voices now receive a 2x
+(+6.02 dB) output-bus gain. This applies equally to sampled music/percussion,
+effects and footsteps. It follows the recovered note/envelope
+arithmetic, preserving instrument dynamics, stereo, fades, distance and tails.
+Music PSG gain and wave DAC levels are unchanged. This is an intentional PC mix
+adjustment after listening feedback, not an additional claimed ROM behavior.
+The ARM packed PCM mixer at080C3394 confirms the existing multiplication scale;
+there was no newly discovered missing driver factor to justify the boost.
+The tests keep the ROM volume proof separate from the host output gain.</p>
+<p>132 representative slot/player combinations verify that PCM receives the same
+boost, with a reference signal at6912/6976 stereo units instead of3456/3488.
+Three simultaneous reference voices sum to20736/20928 without clipping.
+The catalogue now explicitly rejects clipping for every tested song, and both
+the GCC and MSVC audio-enabled completion checks reject clipped output too.
+The catalogue renders35,640,000 frames across131 populated songs, with a peak
+of27,377/32,767 and zero clipped samples with independent voices. The48kHz first-level
+completion also produces zero clipping across3,722,400 mixed frames.</p>
+<p>Gameplay effects now receive an additional1.5x (+3.52dB) bus gain: world and
+enemy sounds, player weapons/voices, pickups, doors, impacts and footsteps.
+This applies to both sampled and PSG effects. Song IDs7..6D identify this
+group; menu cues1..6 and music6E..85 keep their previous gain.2,310 reference
+cases cover every player, all five instrument types and category boundaries.
+The positional tests retain their exact stereo/distance ratios at the new gain.</p>
+<p>A direct50% boost caused562 clipped samples in the first-level combat route;
+25% still caused31. The final50% boost includes effects-only peak protection:
+keep music/menu contributions unchanged, then apply separate linked-stereo
+local and world gains that fit the mixed output within+/-32760. Local effects
+receive headroom first. The world limiter cannot alter the local limiter state
+or suppress its volume while recovering from an enemy burst. Attack is immediate; gain
+recovers with a100ms time constant and settles to unity within1e-6. This
+preserves stereo balance and avoids boosting distortion when several effects
+overlap. The limiter state resets on level/device reset and advances while muted.
+Tests verify exact linked-stereo peaks, unchanged music through recovery,
+recovery timing, reset, mute and arbitrary buffer splits. The complete route
+now has1,011,272 frames with some effects attenuation/recovery on Windows, zero hard-clipped
+samples and zero decoder errors. Note data and per-note arithmetic remain
+intact; channel allocation follows the requested PC concurrency policy above.</p>
+<p>The normal first-level route reaches16 active effect instances,11 effect
+voices and5 music voices. No effect instance or voice is recycled during that
+route. The current Windows route finishes in4,977 ticks with2,623 notes and3,981,600 mixed frames.
+The shared sanitizer/MSVC catalogue and concurrency suite passes651,003 checks,
+including all131 populated songs, six concurrency/tail scenarios and six
+source/world integration scenarios. Windows
+WinMM buffering, worker progress, mute, music-on/off, menu/map cues and restart
+also pass with output muted; physical listening remains unverified.</p>
+<p>The ROM initializes SOUNDCNT_L=77 and SOUNDCNT_H=A90E. Host oscillator levels
+use their100% PSG/FIFO ratio. As an independent scaling reference, mGBA's
+<a href="https://github.com/mgba-emu/mgba/blob/master/src/gba/audio.c">GBA mixer</a> and
+<a href="https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c">PSG mixer</a> show
+the separate hardware gains. No emulator code is linked into the port.</p>
+<h3 id="wave-bass-pitch-and-quieter-wave-levels">Wave bass pitch and quieter wave levels</h3>
+<p>The first-level bass uses music-bank wave instrument1 (also shared by7),
+with its32-step waveform at083E9980. The former host renderer incorrectly
+used the pulse oscillator's frequency for wave instruments. Original C4880
+produces the same period register for both kinds, but the wave's32-step
+hardware cycle runs at half the pulse frequency. Instruments with bit8 set
+also round that period according to SOUNDBIAS40 (C4D18..C4D4C). Native pulse
+and wave pitch now use the actual ROM period tables at083E8E90/083E8F14,
+including low-note clamping, fractional pitch and register rounding.</p>
+<p>The earlier wave gain conversion selected the correct DAC setting but then
+scaled a centered sample smoothly. The DAC instead truncates the raw nibble:
+25% maps15 to3,50% to7,75% to11, and100% to15. This made25% output25% too loud
+and50% output about7% too loud. The corrected path applies that integer
+conversion before centering, with no instrument-specific normalization.
+Hardware period and nibble semantics are cross-checked against the original
+<a href="https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c">mGBA PSG implementation</a>.</p>
+<p>At first-level volume105, bass note40 now uses41.21761Hz instead of about82Hz.
+Velocity44 selects goal4/25% DAC and1536 peak-to-peak host units (formerly1920);
+velocity108 selects goal10/75% DAC and5632 units (formerly5760). This correction
+applies to every wave instrument, including the other waveform shapes.</p>
+<p><code>tests/test_audio_wave.py</code> checks all six music-bank wave instruments
+(1,5,7,18,24,32), three distinct waveforms,960 original CgbSound note-on cases,
+3,840 original pitch-register cases across both pulse channels and wave,
+and every combination of16 envelope levels and16 sample nibbles. Note-on cases
+cover full/quiet velocities, four track volumes and low/high keys. The original
+ROM supplies wave DAC registers, envelope goals and source samples; hardware
+nibble arithmetic is checked independently. <code>audio-wave-validation.json</code>
+records the bass measurements and hashes. The shared GCC/MSVC C fixture also
+checks25/50/75/100% wave output and the corrected wave half-cycle boundary.</p>
+<p><code>tests/test_audio_channels.py</code> compares the archived original allocator against
+12,000 ROM channel-ownership cases, explicitly marked as a reference unused by
+the PC mixer. Its6,000 volume cases still exercise the production per-note
+arithmetic. It also executes the original SoundMode channel/master setup.
+ARM execution is test-only. <code>audio-channels-validation.json</code> records that scope.
+<code>tests/audio_concurrency.inc</code> exercises actual PC note setup and rendering for
+all five oscillator types: independent tracks, duplicate positioned effects,
+music-only plus effects-only stem summation, music state/phase preservation,
+same-track music note replacement, effect-note polyphony, pool saturation,
+stop isolation and release-tail ownership. Catalogue checks reject overlapping
+voices on any music track. Footsteps are also compared against music-only
+oscillator state across three seconds of real level music.</p>
+<p>Original PCM envelope logic at080C32EE..080C3354 and extension dispatch at
+080C51F8,080C52D8,080C52E4 were checked directly in the supplied ROM.
+<code>tests/test_audio_echo.py</code> compares18,307 PCM envelope steps/lifetime cases and
+512 extension-command cases against those instructions, using ARM only as a
+test oracle. The <a href="https://github.com/pret/pokeemerald/blob/master/src/m4a_1.s">MP2K mixer</a>
+and CgbSound reference above also document the format. This does not implement
+the separate global GBA reverb mixer.</p>
+<p>The sample header and command layouts were checked against the supplied driver;
+the public <a href="https://github.com/pret/pokeemerald/blob/master/include/gba/m4a_internal.h">MP2K structure definitions</a>
+and <a href="https://github.com/pret/pokeemerald/blob/master/sound/MPlayDef.s">command definitions</a>
+were additional format references. This implementation is new host code, not a
+byte-identical recovery of the original hardware mixer. No third-party runtime
+library, emulator, downloaded soundtrack or extracted audio package is required.</p>
+<p><code>SsaNativeGame.audio_ops</code> is an optional presentation sink. Existing weapon,
+enemy, pickup, mover, particle and player callbacks now dispatch play/stop events
+to it. Device success and song preemption do not change gameplay return values.
+An unbound sink retains the prior headless behavior for original subsystem tests.
+The remaining original menu dispatcher remains future work; recovered pages
+and unsupported destinations are described in <a href="menu.html">menu.md</a>.</p>
+<h2 id="recovered-music-selection-and-pc-transitions">Recovered music selection and PC transitions</h2>
+<p><code>ssa_audio_music_select</code> reconstructs the music-request portion of08008EB0.
+Settings at<code>[0300572C]+2C</code> enable requests only when the byte equals1. This is
+the music setting, not player count. Command21 requests stop even after this
+setting is disabled. The selector preserves the original level-dependent choices:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Requested song</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1,3</td>
+<td>84 for levels0–5,12,13;85 otherwise</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Campaign table0844A9DC;73 on level0</td>
+</tr>
+<tr>
+<td>7,8,10,19</td>
+<td>70,6F,81,83 respectively</td>
+</tr>
+<tr>
+<td>9</td>
+<td>78 for levels0–5,12,13;7F otherwise</td>
+</tr>
+<tr>
+<td>11</td>
+<td>71 on level0;6E on level6;82 otherwise</td>
+</tr>
+<tr>
+<td>20</td>
+<td>78 on level5;7F otherwise</td>
+</tr>
+<tr>
+<td>21</td>
+<td>FFFF: stop music</td>
+</tr>
+</tbody>
+</table>
+<p>Song numbers in this table are hexadecimal. The music request at0800257C
+confirms command9 on the original level-complete path;0800625E issues command10
+for game over. <code>analysis/inspect_music_modes.py</code> records read-only ROM call-site
+evidence. Other commands' UI/SFX/pause behavior is outside this selector.
+Diagnostic maps14/15 safely request no command2 music, rather than indexing past
+the14-entry campaign table.</p>
+<p>The native composition has a separate music-mode latch, independent of gameplay
+sound-return serials. The first death notice requests10; the real exit requests9.
+Repeated frozen-screen ticks do not restart the cue. Late sink binding restores
+the current terminal cue. A newly initialized composition has mode2 as its
+default; the Windows backend starts map command3 on open/restart and command2
+only after map confirmation/fade. Boss music
+events now reach the same optional callback, though the full boss/campaign path
+is still unfinished.</p>
+<p>The PC shell offers manual restart for each death, so it uses the game-over cue
+at the death notice. This does not reproduce the original continue screens or
+their timing. Commands9/10 also clear old SFX on the PC, including in effects-only
+mode; they do not alter health, entity ownership or controller state. Complete
+original pause/resume and the remaining menu/SFX command dispatcher are still
+unfinished.</p>
+<h2 id="music-queue-fades-and-intro-return">Music queue, fades and intro return</h2>
+<p>The music backend now reconstructs the queue/fade policy at08008C04,08008D30
+and08008E74. New requests replace the pending song and commit at a sound-update
+frame. An explicitly requested fade holds them until its volume reaches zero.
+Requests do not start a fade on their own. Initial playback on an empty player
+starts immediately in the PC backend. The public <code>ssa_audio_fade</code> entry point
+starts the recovered global fade; repeated calls leave an existing fade running.
+The fade applies to music and effects, including the extra PC footstep player.</p>
+<p>The original base volume is65500 (FFDC). Each decrement removes4093
+(base&gt;&gt;4), so17 decrements reach zero:16 leave a residual12. The interval byte
+is capped at15 and stored in both nibbles of the countdown. A pending song starts
+on the following sound frame and restores the base volume. Gain follows the
+driver's rounded volume control, without resetting the sequencer while fading.
+Stop can cancel a matching pending request; restart clears the queue/fade and
+restores gain. Muting advances both the fade and queued changes silently.
+The remaining game-transition call sites for requesting fades are not all
+connected yet; the device check explicitly exercises the backend fade path.</p>
+<p>Original09120 returns modes1 and20 to mode2 when the music player finishes,
+only when music is enabled. This does not describe the pre-level map screen:
+original01ACBC explicitly requests command3, which selects the same84/85 songs
+but does not automatically return. The map waits for fire and original fades;
+gameplay initialization at020A0 requests command2. The Windows frontend now
+follows that separation. It flushes queued map buffers and resets fade/voices
+at the handoff, so the map cue cannot leak into gameplay. See <a href="map-view.html">map-view.md</a>.
+Modes9/10 remain terminal
+and do not restart the level song after their cue finishes. Diagnostic maps14/15
+have no campaign music entry and cannot index beyond its table.</p>
+<p><code>tests/test_audio_policy.py</code> compares8,360 frame steps,166 requests,1,552 fade
+starts and2,688 automatic-return cases with isolated original routines. It
+includes complete fades at every interval, all interval-byte values, pause-bit
+conditions and random states. This is12,766 ROM comparisons, with ARM execution
+confined to the test oracle. Sampled-tone fixtures separately check actual gain,
+silence at fade completion, pending replacements, buffer-size invariance,
+stop/reset and mute. Four real ROM cues cover both intro families and both
+post-boss choices through their return to campaign music.</p>
+<p>Reverb reconnaissance found the init mode0092D300 at080C3E48, whose low byte
+does not enable reverb, after sound-info zeroing. The only other direct mode-set
+call is song start080C46AE, gated by a header flag; every supplied header has
+reverb0. The port preserves the resulting dry output. It has not added a global
+reverb effect. <code>analysis/inspect_audio_policy.py</code> records the direct call-site
+scan and init/header settings. The <a href="https://github.com/pret/pokeemerald/blob/master/src/m4a.c">MP2K mode setter</a>
+provides additional format context.</p>
+<h2 id="pc-spatial-playback">PC spatial playback</h2>
+<p>The sound-start boundary at08008D5C takes a sound ID, without source coordinates.
+The new spatial model is a PC feature, not a matching recovery of that routine.
+Enemy/CD controllers and activation callbacks supply their entity positions;
+impact/explosion particles supply the particle's position. Pickups use the same
+unpositioned local playback path as player sounds. Enemy sounds attach to a numeric lifetime identity and
+follow the body's center. Each live enemy is updated after the simulation tick.
+Retiring an actor stops its loops and freezes its remaining one-shots; slot
+reuse obtains a new identity. Particle/impact one-shots copy the emission point.</p>
+<p><code>src/native_audio.inc</code> observes the existing mover records without altering
+the ROM-verified mover algorithms. The centroid of each sector's boundary
+endpoints supplies XY, and the current floor/ceiling midpoint supplies Z.
+Flag8 identifies active movement. Commands ensure a single0x67 loop for that
+mover;0x68 stops only its loop and plays the finish cue at that mover's position.
+Post-tick reconciliation also retires loops when movement stops or a terminal
+screen freezes the world. Repeated open/close/reverse commands cannot accumulate
+loops. Other doors and enemies using the same sound retain their own instances.</p>
+<p>Player line interactions have a second sound path:
+<code>player_line -&gt; player_sound_id -&gt; SsaLevelPlayerOps.sound</code>. The native
+<code>player_sound</code> callback must forward IDs67/68 to <code>mover_sound</code>. Treating these
+as local player effects created a second tied67 sequence on source1 for every
+opened door. Mover stop callbacks could stop only their own copy, leaving all
+player-owned copies playing until the level-end clear. The previous paired-mover
+test exercised the mover callback alone and missed this path.</p>
+<p>The player-door regression now activates a real map line through that adapter,
+runs three opening/closing cycles, renders the finite finish cue to completion
+and requires exact zero PCM afterward, including repeated use of an open door.
+It failed on the prior code. The full normal-input route additionally rejects
+every67 instance without a valid mover source and every67 instance whose mover
+has stopped: the old code accumulated14,866 frames of stray copies; the fixed
+route has zero stray/stopped loops across394 active mover frames. This check
+runs before the level-end sound clear, so terminal cleanup cannot hide the leak.</p>
+<p>The original CD/CE controllers' canonical loop owners remain untouched for
+gameplay/differential parity. With the source-capable sink, its single-owner
+presentation callbacks are superseded by per-emitter checks of the original
+phase, distance and dying-state conditions. Every qualifying CD plays0x3A and
+every qualifying CE plays0x4E, moving and stopping independently. Original
+hysteresis is preserved: CD starts at1023 and continues through1024; CE starts
+at399 and continues through400. Local weapon stop events target the player source,
+so they cannot stop an enemy's copy of the same sound. Legacy sinks retain the
+old canonical CD/CE callback paths. Unbind/teardown retires owned loops. Other
+continuous enemy sequences3D/51/5F also receive loop ownership if emitted;
+retirement stops them instead of preserving them as finite one-shot tails.</p>
+<p><code>SsaAudioListener</code> copies Sam's eye position and yaw's right vector; it uses the
+original player camera, independent of chase framing and vertical aim. Stereo
+balance combines with each sequence track's own pan. At the listener's right,
+the left channel retains25% of the right channel's level; front/back/vertical
+sources remain balanced. Every positioned sound now uses gain
+<code>256/(256+distance)</code>, with three-dimensional distance and no hard cutoff. The
+old full-volume radius of256 units is removed: gain is1 at the source,1/2 at256
+units and1/5 at1024. Door movement and finish cues and enemy effects share this
+curve. Pickup cues use local playback like player sounds, with no distance gain
+or positional pan; original sequence track pan is retained. Integer
+square roots use bounded24.8 deltas for the fullint32 coordinate range. Moving
+sources/listeners smooth channel gains with a10ms time constant, per sample,
+independent of buffer boundaries. Music and local sounds bypass this model.
+There is no HRTF, Doppler, wall occlusion or room reverberation.</p>
+<p>The world-distance fixture drives the actual native mover67/68 presentation
+callbacks. Rendered peaks decrease at0/32/64/128/256/512/1024/
+2048/4096 units, including within the old plateau. It checks half/fifth output,
+vertical distance and stereo direction. Pickup35 callbacks instead render
+identical PCM to local playback across item/listener positions and listener yaw,
+with both source-aware and legacy sinks. Existing unpositioned reference
+fixtures retain the same output gains. The normal-input
+completion still rejects both stray and stopped-mover door loops.</p>
+<p>Independent emitters and concurrent effects intentionally supersede the
+original shared-player preemption and08D5C per-frame SFX gate.</p>
+<h2 id="windows-output-and-ownership">Windows output and ownership</h2>
+<p><code>platform/win32/audio_win32.c</code> sends48kHz stereo16-bit output to the default
+Windows device using three800-frame buffers, a nominal50ms queue. A worker
+waits on the device's manual-reset CALLBACK_EVENT and a separate stop event,
+refilling completed buffers immediately and independently of UI activity.
+Reset the completion event before scanning all headers so completions during
+the scan cannot be lost. Preserve its handle through waveOutReset/waveOutClose;
+stop and join the worker before teardown. This follows the documented
+<a href="https://learn.microsoft.com/en-us/windows/win32/multimedia/using-an-callback-to-process-driver-messages">WinMM event callback</a>
+protocol. A critical section serializes
+mixing, game events, mute and restart. Reset returns pending device buffers before
+reuse; shutdown signals and joins the worker before unpreparing/freeing storage.
+The ROM stays alive throughout. The <a href="https://learn.microsoft.com/en-us/windows/win32/multimedia/audio-data-blocks">Windows buffer lifetime rules</a>
+are followed. Audio does not change system volume.</p>
+<p>Normal play enables audio automatically. Existing hidden rendering/startup tests
+stay silent unless <code>--audio-test</code> explicitly enables the device path.</p>
+<h2 id="validation-and-limits">Validation and limits</h2>
+<p>Run <code>.\decomp.ps1 test-audio</code>, <code>.\decomp.ps1 test-audio-playability</code>, and
+<code>powershell -ExecutionPolicy Bypass -File scripts/test-native-audio.ps1</code>.
+The Windows wall-clock regression is
+<code>powershell -ExecutionPolicy Bypass -File scripts/test-audio-timing.ps1</code>.
+It plays muted music on the actual device, with no window or input messages,
+comparing three seconds of playback to elapsed QPC time. Cases cover the idle
+worker, frequent main-thread refill assistance and idle music plus16 effects.
+The old4ms timer-polling worker measured0.83353 speed idle versus1.00009 with
+frequent assistance; idle with effects measured0.97849. Buffer-event wakes
+measured1.00007/1.00015/1.00003 for the same cases. No music tempo/sample-rate
+change was needed: delayed buffer delivery inserted gaps. The previous160ms
+worker test only required some progress, so it did not detect this slowdown.
+<code>scripts/test-audio-playability.ps1</code> compares Windows audio-enabled completion
+against the sanitizer run.</p>
+<p>The catalogue test renders35,640,000 stereo frames at24kHz: every populated song
+produces nonzero audio, with three seconds per effect and45 seconds per music
+entry. Level-one music is additionally run through its first sequence loop.
+Independent fixtures check signed samples, pitch/resampling, panning, tie release,
+block-size invariance, mute, independent source selection, priority-gate bypass,
+loop/stop handling and bounded malformed-data rejection. GCC runs with ASan,
+UBSan and leak detection; MSVC executes the same C checks.
+The current suite passes651,003 assertions, including independent PSG envelope
+timing/zero-rate fixtures, fractional64Hz timing at44.1kHz, and repeated footstep starts/stops compared against an
+uninterrupted music player. Actual PC-input checks cover all four movement keys,
+both views, jumping, idle and disabled input:23 alternating footstep events,
+156 airborne frames and872 blocked/idle frames.
+Constant-PCM fixtures additionally verify left/right/front/back/vertical sound
+levels, inverse distance, full coordinate bounds, rotation, smooth transitions,
+moving sounds without note restarts, centered-play reset, music isolation and
+spatial buffer-size invariance. Composition tests exercise real impact-particle
+creation, controller/activation callbacks, local firing and H/pitch/yaw input.
+It also checks a real combat-damage death, once-only cues across hundreds of
+ticks, game-composition teardown/restart, late binding, music-stop isolation,
+terminal loop cleanup, mute and effects-only transitions.
+New sampled/PSG fixtures check audible tails and exact expiry, per-note copies
+of echo settings, nonzero PSG release, buffer-size invariance, stop/reset and mute.
+<code>tests/test_music_selection.py</code>, invoked by<code>test-audio</code>, compares1,400 original
+08EB0 request cases across14 campaign levels,25 commands and4 setting-byte
+values. ARM execution is confined to that Unicorn test oracle. Two diagnostic
+map guards and6 invalid-argument guards are checked separately; results and
+source hashes are in<code>music-selection-validation.json</code>.</p>
+<p>The normal-input completion with an attached audio sink and a48kHz mix on every
+tick still finishes in4,653 frames with28,000 score,7 pickups,19 spawned enemies,
+23 health and13 pistol/22 shotgun shots. All3,722,400 mixed frames are produced
+without decoder errors. This includes254 footstep events and2,434 admitted notes, with
+the level song from the first gameplay tick, then exactly one final-tick command9
+transition to song78. No samples clip in this route.
+The route contains198 spatial starts,4,788 listener snapshots and20,775 source
+position updates. GCC and MSVC agree on these counts and completion results;
+the sanitizer run produces7,442,834 nonzero stereo samples.
+The Windows device test verifies buffer submission and completion, both footstep
+routes with/without music, hardware sample-position advancement, restart, the M
+handler, spatial play/move after restart, level-clear music before restart and
+map playback while simulation is frozen and level music at restored gain after
+each confirmation, game-over/level music callbacks,
+queued music waiting for a real global fade, and continued buffer delivery during a
+deliberate160ms rendering stall. Device tests
+keep output muted; no physical listening comparison has been performed.</p>
+<p>One repeat device-check invocation failed its aggregate assertions before the
+test retained individual case output. Isolated launches and five consecutive
+full Windows audio checks then passed. The script now captures the launcher exit
+code before JSON decoding and saves each device case under <code>build/native-audio/</code>.
+The initial failure's cause remains unconfirmed.
+Later startup testing reproduced a separate failure when a running game held
+the launcher's shared stderr log open. The launcher now reserves a separate
+session-log directory atomically; audio/startup tests use private logs, and two
+simultaneous default launches pass. <code>last-launch.log</code> is a best-effort copy on
+exit, rather than a file every running game must share.</p>
+<p>This remains a native audio renderer with limits: PSG envelope timing,
+modulation and oscillator phase have not been validated over complete songs
+against the hardware. Hardware sweep, global GBA reverb and exact low-rate DAC
+behavior are not reproduced; the supplied ROM's normal mode has zero reverb.
+Linear PCM interpolation and centered host oscillators are retained. Long
+later-campaign patterns beyond the tested excerpts still need validation.
+The tested per-note volume arithmetic follows the ROM. Independent effect
+instances, music track monophony, the2x sample-bus boost and1.5x gameplay-effects
+gain/peak protection are requested PC changes. In addition,
+the full waveform is not bit-identical. The complete campaign remains unfinished.</p>
+<p>Current evidence: <code>music-selection-validation.json</code>, <code>audio-policy-validation.json</code>, <code>audio-echo-validation.json</code>, <code>audio-channels-validation.json</code>, <code>audio-wave-validation.json</code>, <code>audio-validation.json</code>, <code>audio-playability-validation.json</code>,
+<code>windows-native-audio-validation.json</code>, <code>windows-audio-playability-validation.json</code>
+and the current Windows build/game reports.
+The ROM and the matching decomp export are unchanged. The decomp.wtf catalogue
+remains74/526 matched functions,2,152/87,648 bytes (2.46% of the incomplete
+catalogue); this audio milestone adds native port code, not claimed matching C.</p>
+<p>Boss gameplay now keeps local weapon, mover and enemy loops active during music
+commands19/20, as well as normal level music2. The native sixth-map completion
+mixes10,632,800stereo frames and verifies battle/post-boss requests without decoder
+errors. See enemy-boss.md and campaign-validation.json. Waveform fidelity limits
+above still apply.</p>
+<h2 id="player-sound-priority-under-saturation">Player sound priority under saturation</h2>
+<p>Seven new stress cases in tests/audio_priority.inc cover both full effect pools,
+128-event enemy floods, protected local pickup/weapon/hurt instances and notes,
+released player tails, new local sounds displacing world sounds, world-only
+rejection, recovery when slots free, and peak protection. Music state/voices
+compare unchanged. After a loud world crowd stops, the output matches the
+music/local-only reference immediately, without a local recovery fade.</p>
+<p>The allocation policy remains bounded at32 effect instances and64 oscillators.
+Overflow is handled by priority rather than unbounded allocation. effect_drops
+and voice_drops record lower-priority rejections without treating them as decode
+errors. This does not change the original note data, mono music tracks, local
+centering, world stereo/distance, per-note volume or requested gain boosts.</p>
+<p>GCC ASan/UBSan/leak and MSVC pass653,659 mixer assertions with131 audible catalogue
+songs,35,640,000 mixed catalogue frames and zero clipping/decoder errors. The
+existing ROM-envelope/channel/volume/policy/wave oracle checks pass. Both real
+Windows device startup/restart cases pass with music enabled/disabled and muted
+output. The Windows first-level audio route passes with4,977 ticks, no decoder
+errors or clipping. Weapon-loop/rocket regressions still pass126,730 assertions.
+See current audio-validation.json, windows-native-audio-validation.json,
+windows-audio-playability-validation.json and weapon-fixes validation reports.</p>
+<p>The completed eighth campaign map now also binds the real mixer for its entire
+14,324-frame normal-input route in the second original resource family. It mixes
+11,459,200 stereo frames at48kHz, with player/enemy/world effects and level/end
+music, producing nonzero audio and zero decoder errors. Both recessed switches
+and the real VM exit execute normally. This complements the sixth map's boss
+audio coverage; it is automated mixer evidence, not a physical listening test.
+See campaign-validation.json and windows-native-campaign-validation.json.</p>
+</main></body></html>

@@ -1,1 +1,153 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sprite Dispatch — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="sprite-dispatch.md" download>Markdown ↓</a></header><article><h2>Sprite controller dispatch and submission queue</h2><p><code>src/sprite_dispatch.c</code> recovers the entire <code>0800F85C</code> scheduler, its <code>101C4</code> reset, and its <code>101D0</code> queue append. The object projection reuses <code>SsaWeaponObject</code>, the original48byte sprite layout already used by weapon controllers and animation. Objects remain borrowed; this module is not an allocator, renderer, or implementation of every sprite controller.</p><h3>Exact ordering</h3><p>F85C captures the sprite active-list pointer <code>030055C0</code> before calling101C4. 101C4 only clears byte <code>03005674</code>, the submission count. Existing queue bytes remain stale beyond the new prefix. F85C then increments counter <code>030055B0</code> with unsigned32wrap, writes state <code>030055A4=1</code>, and starts logical index0.</p><p>Each iteration reads the slot from the physical active-list cursor, selects <code>base0300559C + slot*48</code>, writes that pointer to current <code>030055A0</code>, and writes the logical index to <code>030055A8</code>. Type at object+04 selects the following table.</p><p>| Type | Handler | | --- | --- | | 2 | F150, weapon visibility/controller wrapper | | 3 | F100 | | 4 | F0B8 | | 5 | E700 | | 6 | E7A4 | | 7 | F1C0 | | 8 | F27C | | 9 | ECF8 | | A | EE60 | | B | EFB4 | | C | F344 | | D | E9D4 | | E | F4A4 | | F | F5A4 | | 10 | F6C8 | | 11 | F724 | | 12 | F794 |</p><p>Type1 and all types outside2..12hex have no handler. This does not exempt a nonzero type from submission. The dispatcher itself has no pause test; individual handlers, including F150, implement their own gating.</p><p>After the handler, F85C writes state1 and rereads the <strong>current global pointer</strong>. If that object&#x27;s type is nonzero, it writes state2 and calls101D0 with the object. 101D0 reads the old submission count byte, increments the count byte, then stores the <strong>low byte of object.active_index (+0A)</strong> at <code>03005620[old_count]</code>. The queued value is neither the object slot nor the current logical loop index. F85C advances its physical list cursor only after this submission. It increments the logical index unconditionally.</p><p>The live active count <code>030055C4</code> is reread at every loop condition. A deletion can leave the physical cursor on a swapped-in entry while the logical index advances. Consequently fewer entries may be processed after a removal. An append can run in the current frame. A type0 entry that remains in the list is reread at the same physical cursor for subsequent logical iterations. Clearing an object during the optional post-submit observer cannot undo the already selected cursor advance. Successful return writes state3 and restores current to base slot0; current_index remains its last value. With an empty list, current_index is unchanged.</p><h3>Native ownership and errors</h3><p><code>SsaSpriteDispatch</code> embeds84physical active indices and84borrowed object pointers. Every pointer, including empty slots, must be nonnull and remain stable during the step. The embedded index array deliberately cannot be rebound during callbacks, preserving the original captured cursor semantics without exposing arbitrary host pointer traversal. The caller owns allocation, active order and each object&#x27;s active_index metadata.</p><p>The mandatory handler callback receives the verified original entry address and initial slot. It may implement a recovered controller or return an error for an unavailable one. The optional submit callback observes the real native queue append <strong>after</strong> its stores. It does not replace101D0 and need not exist for headless queue construction. E460 animation runs afterward in the outer frame; submission itself does not advance animation or draw sprites.</p><p>Callbacks may modify payloads, active entries/count and projected globals, including redirecting current to another bound object. They cannot rebind the objects array, modify ops/updating, free borrowed storage, or reenter. The logical index is a local loop variable: callback changes to current_index do not change iteration control, though a last callback&#x27;s value can persist. Likewise callbacks see state2 from a preceding submission until the next handler returns and the postlude writes state1.</p><p>Return0 means complete; -1 means invalid integration or callback failure. Entry guards leave state unchanged. After entry succeeds, failures retain earlier effects and restore state3/currentobjects[0]/updating0. The native queue has84bytes. A submission when count&gt;=84 returns an error instead of overwriting adjacent globals as the original would; valid84iteration frames cannot exceed capacity unless a callback changes the count. The original byte wrap at255 is therefore outside the safe native queue contract.</p><h3>Validation</h3><p><code>tests/test_sprite_dispatch_rom.py</code> executes the whole original F85C and both original101C4/101D0 routines. Only controller calls are controlled. Optional observation occurs at101E6 after the actual append stores and before return. The comparison includes every object byte, all84active entries, every queue byte, counter, state, logical index, current pointer and count at each callback and return. It covers all65536type values, every capacity and removal position, append/release/redirection, zero-type cursor repetition, post-submit clearing, random mutations, failure prefixes and callback reentry. Random object metadata also verifies low-byte truncation of active_index. Guard and optional-observer checks are native safeguards, not additional ROM behavior.</p><p>See <code>native-sprite-dispatch-validation.json</code> for current counts and source/ROM hashes. Compilation uses strict C11 warnings and UBSan. This is native behavior recovery; no exact GBA matching claim is made for F85C or its helpers.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sprite controller dispatch and submission queue — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="sprite-dispatch.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="sprite-controller-dispatch-and-submission-queue">Sprite controller dispatch and submission queue</h1>
+<p><code>src/sprite_dispatch.c</code> recovers the entire <code>0800F85C</code> scheduler, its <code>101C4</code>
+reset, and its <code>101D0</code> queue append. The object projection reuses
+<code>SsaWeaponObject</code>, the original48byte sprite layout already used by weapon
+controllers and animation. Objects remain borrowed; this module is not an
+allocator, renderer, or implementation of every sprite controller.</p>
+<h2 id="exact-ordering">Exact ordering</h2>
+<p>F85C captures the sprite active-list pointer <code>030055C0</code> before calling101C4.
+101C4 only clears byte <code>03005674</code>, the submission count. Existing queue bytes
+remain stale beyond the new prefix. F85C then increments counter <code>030055B0</code>
+with unsigned32wrap, writes state <code>030055A4=1</code>, and starts logical index0.</p>
+<p>Each iteration reads the slot from the physical active-list cursor, selects
+<code>base0300559C + slot*48</code>, writes that pointer to current <code>030055A0</code>, and writes
+the logical index to <code>030055A8</code>. Type at object+04 selects the following table.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>F150, weapon visibility/controller wrapper</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F100</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F0B8</td>
+</tr>
+<tr>
+<td>5</td>
+<td>E700</td>
+</tr>
+<tr>
+<td>6</td>
+<td>E7A4</td>
+</tr>
+<tr>
+<td>7</td>
+<td>F1C0</td>
+</tr>
+<tr>
+<td>8</td>
+<td>F27C</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ECF8</td>
+</tr>
+<tr>
+<td>A</td>
+<td>EE60</td>
+</tr>
+<tr>
+<td>B</td>
+<td>EFB4</td>
+</tr>
+<tr>
+<td>C</td>
+<td>F344</td>
+</tr>
+<tr>
+<td>D</td>
+<td>E9D4</td>
+</tr>
+<tr>
+<td>E</td>
+<td>F4A4</td>
+</tr>
+<tr>
+<td>F</td>
+<td>F5A4</td>
+</tr>
+<tr>
+<td>10</td>
+<td>F6C8</td>
+</tr>
+<tr>
+<td>11</td>
+<td>F724</td>
+</tr>
+<tr>
+<td>12</td>
+<td>F794</td>
+</tr>
+</tbody>
+</table>
+<p>Type1 and all types outside2..12hex have no handler. This does not exempt a
+nonzero type from submission. The dispatcher itself has no pause test;
+individual handlers, including F150, implement their own gating.</p>
+<p>After the handler, F85C writes state1 and rereads the <strong>current global pointer</strong>.
+If that object's type is nonzero, it writes state2 and calls101D0 with the
+object. 101D0 reads the old submission count byte, increments the count byte,
+then stores the <strong>low byte of object.active_index (+0A)</strong> at
+<code>03005620[old_count]</code>. The queued value is neither the object slot nor the
+current logical loop index. F85C advances its physical list cursor only after
+this submission. It increments the logical index unconditionally.</p>
+<p>The live active count <code>030055C4</code> is reread at every loop condition. A deletion
+can leave the physical cursor on a swapped-in entry while the logical index
+advances. Consequently fewer entries may be processed after a removal. An
+append can run in the current frame. A type0 entry that remains in the list
+is reread at the same physical cursor for subsequent logical iterations.
+Clearing an object during the optional post-submit observer cannot undo the
+already selected cursor advance. Successful return writes state3 and restores
+current to base slot0; current_index remains its last value. With an empty
+list, current_index is unchanged.</p>
+<h2 id="native-ownership-and-errors">Native ownership and errors</h2>
+<p><code>SsaSpriteDispatch</code> embeds84physical active indices and84borrowed object
+pointers. Every pointer, including empty slots, must be nonnull and remain
+stable during the step. The embedded index array deliberately cannot be
+rebound during callbacks, preserving the original captured cursor semantics
+without exposing arbitrary host pointer traversal. The caller owns allocation,
+active order and each object's active_index metadata.</p>
+<p>The mandatory handler callback receives the verified original entry address
+and initial slot. It may implement a recovered controller or return an error
+for an unavailable one. The optional submit callback observes the real native
+queue append <strong>after</strong> its stores. It does not replace101D0 and need not exist
+for headless queue construction. E460 animation runs afterward in the outer
+frame; submission itself does not advance animation or draw sprites.</p>
+<p>Callbacks may modify payloads, active entries/count and projected globals,
+including redirecting current to another bound object. They cannot rebind the
+objects array, modify ops/updating, free borrowed storage, or reenter. The
+logical index is a local loop variable: callback changes to current_index do
+not change iteration control, though a last callback's value can persist.
+Likewise callbacks see state2 from a preceding submission until the next
+handler returns and the postlude writes state1.</p>
+<p>Return0 means complete; -1 means invalid integration or callback failure.
+Entry guards leave state unchanged. After entry succeeds, failures retain
+earlier effects and restore state3/currentobjects[0]/updating0. The native
+queue has84bytes. A submission when count&gt;=84 returns an error instead of
+overwriting adjacent globals as the original would; valid84iteration frames
+cannot exceed capacity unless a callback changes the count. The original
+byte wrap at255 is therefore outside the safe native queue contract.</p>
+<h2 id="validation">Validation</h2>
+<p><code>tests/test_sprite_dispatch_rom.py</code> executes the whole original F85C and both
+original101C4/101D0 routines. Only controller calls are controlled. Optional
+observation occurs at101E6 after the actual append stores and before return.
+The comparison includes every object byte, all84active entries, every queue
+byte, counter, state, logical index, current pointer and count at each callback
+and return. It covers all65536type values, every capacity and removal position,
+append/release/redirection, zero-type cursor repetition, post-submit clearing,
+random mutations, failure prefixes and callback reentry. Random object metadata
+also verifies low-byte truncation of active_index. Guard and optional-observer
+checks are native safeguards, not additional ROM behavior.</p>
+<p>See <code>native-sprite-dispatch-validation.json</code> for current counts and source/ROM
+hashes. Compilation uses strict C11 warnings and UBSan. This is native behavior
+recovery; no exact GBA matching claim is made for F85C or its helpers.</p>
+</main></body></html>

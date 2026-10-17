@@ -1,1 +1,44 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon Start — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="weapon-start.md" download>Markdown ↓</a></header><article><h2>Native initial weapon startup</h2><p><code>ssa_weapon_runtimes_start</code> composes original <code>1240C</code> loadout behavior with existing native player gameplay, combat and weapon runtimes. It accepts the combat runtime&#x27;s indexed gameplay/runtime arrays and the original loadout and god-mode settings. Previously, <code>ssa_weapon_runtime_init</code> required callers to provide a current/requested weapon and populated inventory themselves.</p><p>The new entry point starts from unarmed gameplay with current/requested zero. It allocates each active player&#x27;s sprite in that weapon runtime&#x27;s embedded object storage, using native object defaults. It then runs the recovered loadout initializer, imports its weapon view, binds aim/interaction workspaces, and preserves the exact initialized object. Embedded allocation replaces the original sprite pool boundary; this is not a claim that the global sprite pool or its outer dispatcher is recovered. Inactive players remain untouched.</p><p>All arrays/storage remain caller-owned. The adapter rejects busy, duplicate, incorrectly indexed and already bound inputs. Original loadout changes and earlier runtime bindings persist if a later workspace allocation fails. In that case, the caller must free successfully bound earlier runtimes before retrying the whole group. No sprite presentation callback runs during startup.</p><p>The integration test begins with empty weapon ownership and fresh gameplay. It starts all original settings 0–36 plus the god-mode override on all 16 maps: <strong>608 starts</strong>. It checks original ownership, selected animation, view, pending requests, ammo preservation for setting zero, and the unusual single cooldown clear at each player&#x27;s index. It also proves that jump state and H-view mode survive startup.</p><p>Without changing the initial selected weapon to a test loadout, the suite fires <strong>192 shots</strong> from weapons 1, 2, 3, 6, 7 and 10. Hitscan attacks use actual map aim/hit queries and damage native scripted enemies. Projectile attacks allocate from the shared native pool and run <strong>2,272</strong> real collision/flight frames. Weapon 9&#x27;s initialization is checked, but its unbound presentation effect path is not treated as working firing. The test observes presentation requests and uses controlled scripted enemies; no rendering/audio is supplied.</p><p><code>tests/test_weapon_start.py</code> passes <strong>84,077 assertions</strong>, <strong>5,057 weapon frames</strong>, <strong>2,048 movement/jump/H frames</strong> (880 airborne, 512 third-person), <strong>622 guard checks</strong> and <strong>6,120 cooldown field checks</strong>. Three genuine two-player configurations cover both active players, an untouched inactive second player, and an injected second-player <code>calloc</code> failure after the first runtime binds. That failure leaves the first binding usable and cleans the second runtime&#x27;s partial scratch. Test-only linker wrapping injects the allocation failure; production code has no fault-injection hooks.</p><p>The build uses ASan and UBSan, <code>-no-pie</code>, and <code>detect_leaks=0</code>. The report and source hashes are in <code>native-weapon-start-validation.json</code>. This integration is entirely native; original <code>1240C</code> differential proof is separate in <code>weapon-loadout.md</code> and <code>weapon-loadout-validation.json</code>.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native initial weapon startup — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="weapon-start.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-initial-weapon-startup">Native initial weapon startup</h1>
+<p><code>ssa_weapon_runtimes_start</code> composes original <code>1240C</code> loadout behavior with
+existing native player gameplay, combat and weapon runtimes. It accepts the
+combat runtime's indexed gameplay/runtime arrays and the original loadout and
+god-mode settings. Previously, <code>ssa_weapon_runtime_init</code> required callers to
+provide a current/requested weapon and populated inventory themselves.</p>
+<p>The new entry point starts from unarmed gameplay with current/requested zero.
+It allocates each active player's sprite in that weapon runtime's embedded
+object storage, using native object defaults. It then runs the recovered
+loadout initializer, imports its weapon view, binds aim/interaction workspaces,
+and preserves the exact initialized object. Embedded allocation replaces the
+original sprite pool boundary; this is not a claim that the global sprite pool
+or its outer dispatcher is recovered. Inactive players remain untouched.</p>
+<p>All arrays/storage remain caller-owned. The adapter rejects busy, duplicate,
+incorrectly indexed and already bound inputs. Original loadout changes and
+earlier runtime bindings persist if a later workspace allocation fails. In
+that case, the caller must free successfully bound earlier runtimes before
+retrying the whole group. No sprite presentation callback runs during startup.</p>
+<p>The integration test begins with empty weapon ownership and fresh gameplay.
+It starts all original settings 0–36 plus the god-mode override on all 16
+maps: <strong>608 starts</strong>. It checks original ownership, selected animation, view,
+pending requests, ammo preservation for setting zero, and the unusual single
+cooldown clear at each player's index. It also proves that jump state and
+H-view mode survive startup.</p>
+<p>Without changing the initial selected weapon to a test loadout, the suite
+fires <strong>192 shots</strong> from weapons 1, 2, 3, 6, 7 and 10. Hitscan attacks use actual
+map aim/hit queries and damage native scripted enemies. Projectile attacks
+allocate from the shared native pool and run <strong>2,272</strong> real collision/flight
+frames. Weapon 9's initialization is checked, but its unbound presentation
+effect path is not treated as working firing. The test observes presentation
+requests and uses controlled scripted enemies; no rendering/audio is supplied.</p>
+<p><code>tests/test_weapon_start.py</code> passes <strong>84,077 assertions</strong>, <strong>5,057 weapon
+frames</strong>, <strong>2,048 movement/jump/H frames</strong> (880 airborne, 512 third-person),
+<strong>622 guard checks</strong> and <strong>6,120 cooldown field checks</strong>. Three genuine
+two-player configurations cover both active players, an untouched inactive
+second player, and an injected second-player <code>calloc</code> failure after the first
+runtime binds. That failure leaves the first binding usable and cleans the
+second runtime's partial scratch. Test-only linker wrapping injects the
+allocation failure; production code has no fault-injection hooks.</p>
+<p>The build uses ASan and UBSan, <code>-no-pie</code>, and <code>detect_leaks=0</code>. The report and
+source hashes are in <code>native-weapon-start-validation.json</code>. This integration
+is entirely native; original <code>1240C</code> differential proof is separate in
+<code>weapon-loadout.md</code> and <code>weapon-loadout-validation.json</code>.</p>
+</main></body></html>

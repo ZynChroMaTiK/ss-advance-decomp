@@ -1,1 +1,210 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Game Runtime — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="game-runtime.md" download>Markdown ↓</a></header><article><h2>Native combined frame integration evidence</h2><p><code>tests/test_game_runtime.c</code> exercises the native <code>game_runtime.c</code> composition of the recovered frame, entity, level, pickup, actor-animation, sprite-dispatch, and weapon adapters. It uses real decoded maps and ROM data tables. This is a headless integration test: input polling/distribution, control/mode handling, rendering, audio, and presentation effects are explicit harness boundaries. Their callbacks record requests and validate state; they are not implementations of a platform backend, renderer, or playable executable. No ROM instructions execute in this integration test.</p><p>Run <code>test-game-runtime</code> through the workspace driver, or directly run <code>tests/test_game_runtime.py</code> under the Linux environment. The Python runner builds the native sources with GCC, <code>-Wall -Wextra -Werror -pedantic</code>, ASan and UBSan, <code>-fno-sanitize-recover=all</code>, and <code>-no-pie</code>. Leak scanning is disabled for the established WSL sanitizer environment. Its report and source hashes are <code>analysis/native-game-runtime-validation.json</code>.</p><p>Initialize the combined adapter after player/weapon startup, combat/projectiles, native entity queries, actor animation and pickup-respawn adapters. All borrowed storage must remain stable. Supply all 84 distinct sprite-slot pointers, including empty slots; each bound weapon object appears once. The native dispatch follows the supplied original active order and fails for unsupported controllers.</p><p>The adapter binds newly owned state-zero CD actors before their first entity phase. It preserves externally supplied controllers, borrows canonical lifecycle and CD global state for the duration of its binding, and restores previous shared bindings on free. Input/control callbacks edit <code>life_game</code> for shared input, message, continue and exit state. Free the combined adapter before any dependency; freeing it unbinds its controllers without destroying their actors.</p><h3>Final measured coverage</h3><p>The integration passes <strong>997,410 assertions</strong>:</p><p>| Scenario | Count | | --- | ---: | | Real maps | 16 | | Single-player and additional frame calls | 8,220 | | Genuine two-player frame calls | 132 | | Main player movement/jump/H frames | 2,048 | | Frames with actual player XY movement | 584 | | Airborne main-player frames | 1,760 | | Third-person main-player frames | 1,536 | | Main scripted CD spawn/death/completion/release chains | 16 | | Group-wait VM completions after those deaths | 16 | | Native startup weapon-10 shots | 16 | | First projectile update proven to be next frame | 16 | | Projectile entity updates | 7,696 | | Additional multiplayer startup shots | 4 | | Paused frames | 2 | | Display-local flag-8 render gate | 1 | | Actual native sector-height change | 1 | | Failure prefixes | 21 | | Dependency/ownership guard checks | 51 | | Callback reentry checks | 362,922 |</p><p>These are assertion/frame counts, not additional ROM differential comparisons or exact matching progress. The underlying routines have their separate ROM proofs documented in <code>frame.md</code>, <code>entity-dispatch.md</code>, <code>actor-animation.md</code>, <code>sprite-dispatch.md</code>, and the subsystem analyses.</p><h3>Frame order and state transitions</h3><p>Each complete unpaused frame verifies the reached order:</p><p>1. Poll, distribute input, control. 2. Native entity controllers. 3. Native sector movers, then script VM. 4. Native multiplayer pickup-respawn stage. 5. Native actor animation (<code>00908</code>). 6. Native sprite controllers (<code>F85C</code>), including bound weapons. 7. Native sprite animation (<code>E460</code>). 8. Sprite visibility/cache preparation and hardware OAM construction, when    display-local flag 8 permits them. The old render names are compatibility    aliases; this does not recover the world renderer.</p><p>The fixture uses actual <code>ssa_weapon_runtimes_start</code> loadouts. God-mode loadout selection supplies weapon 10; it is fired through the normal controller and sprite-animation stages. A projectile created during that sprite stage has timer zero and has not appeared in the earlier entity traversal. The next frame visits it through the native projectile handler. Actor animation is not double-ticked in the sprite stage. The native sprite submitted queue is checked after each append; the observer sees the low byte of <code>object.active_index</code> already recorded by <code>101D0</code>.</p><p>On each of the 16 maps, the VM creates a CD after that frame&#x27;s entity phase. The actor retains timer 60 through that frame, binds automatically at the next entity phase, and then decrements to 59. State-zero initialization, later AI, native world queries, damage/death, group notification, animation playback, corpse expiry, pool release, and waiting VM continuation all execute through their native adapters. Native combat kills any surviving fixture CD after the initial movement window. No test assignment sets its animation completion byte. The next controller consumes the completion produced by <code>00908</code>.</p><p>The main fixture runs 512 frames per map. The first 128 include movement, jump edges, relative yaw, and H press/release events; later frames allow native projectile and corpse lifetimes to finish. Entity and GAME counters are seeded differently so accidental use of the world traversal counter as the shared GAME counter is detectable. Weapon, combat, and hazard projections observe the same GAME counter and timestep.</p><p>The pause check verifies that entity state, actor animation, and elapsed simulation time stay unchanged while the frame counter and sprite stage still advance. Paused type-2 weapon animation remains unchanged; an independent type-1 sprite&#x27;s elapsed byte advances. The separate display-local flag-8 test skips both render callbacks while preserving the sprite stages. A native mover changes sector height before the same frame&#x27;s script issues its closing command.</p><h3>Shared state across players and enemies</h3><p>The multiplayer case uses two distinct registered bodies, player runtimes, gameplay adapters, startup weapons, actor-animation projections, and persistent kill counters. Both weapons share the actual combat/projectile pool and execute in sprite order. Both players run native entity updates, movement, and animation; ordinary map interaction also triggers a real CD spawn. The additional cases verify four shared-state requirements:</p><p class="bullet">• A local player&#x27;s death at flags <code>18</code>, death timer 300, and exit flag 1 sets</p><p>  global input mode 3. The later alive player&#x27;s weapon is suppressed in the   same frame, with no shot or firing-state change.</p><p class="bullet">• A local native respawn clears flag 8 before the remote player&#x27;s hazard</p><p>  phase. The remote hazard projection sees the newly cleared display-local   flags rather than the earlier frame-entry value.</p><p class="bullet">• Native VM opcode 9 sets the same input mode consumed later by F150, also</p><p>  suppressing an alive player&#x27;s held fire in that frame.</p><p class="bullet">• An externally bound CD&#x27;s existing sound-loop source is inherited by the</p><p>  combined adapter. Its native stop event clears the canonical source and   mirrors that value to the external game view before presentation. A newly   scripted automatic CD then uses that same shared game. External controller   game pointers and borrowed walk-count ownership remain valid through teardown.</p><p>Lifecycle presentation callbacks also compare their player projection with the canonical shared input/message state. A deliberately failing local death SOUND callback sees message timer 600 already applied. The error retains that value, clears update guards, and prevents later stages/rendering.</p><h3>Failure scope and limitations</h3><p>The 21 failures cover all 12 before-stage prefixes, all five remaining external stage boundaries, an unsupported sprite controller, a script-particle failure, an invalid actor-animation ID, and the lifecycle sound failure above. Earlier native effects remain. In particular, a failed script-particle callback leaves its allocated actor present; retrying the unchanged VM entry can allocate another actor. Both actors subsequently bind to the shared CD game. Invalid actor animation stops before sprite processing, while retaining the preceding entity timer decrement. A failed frame never writes the successful final presentation latch.</p><p>The dependency checks include 18 busy runtime/workspace locks, duplicate sprite body bindings, a missing bound weapon object, and a missing required external stage callback. Nested combined-frame updates/free calls are attempted from every observed stage and effect. Unsupported sprite type 3 fails explicitly; the harness does not supply a successful placeholder controller.</p><p>Pickup-respawn is invoked at its actual place in every unpaused frame here, but these particular fixtures do not exercise a level-12..15 multiplayer pickup allocation. That behavior has separate native integration coverage in <code>pickup-respawn.md</code>. The two-player fixture does not implement network transport. Sprite records are stable caller-owned test objects; this does not recover the original sprite allocator or every non-weapon sprite controller. Remaining enemy types, graphics/texture decoding, rendering, sound playback, platform input, and a runnable PC game remain separate work.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native combined frame integration evidence — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="game-runtime.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-combined-frame-integration-evidence">Native combined frame integration evidence</h1>
+<p><code>tests/test_game_runtime.c</code> exercises the native <code>game_runtime.c</code> composition of
+the recovered frame, entity, level, pickup, actor-animation, sprite-dispatch,
+and weapon adapters. It uses real decoded maps and ROM data tables. This is a
+headless integration test: input polling/distribution, control/mode handling,
+rendering, audio, and presentation effects are explicit harness boundaries.
+Their callbacks record requests and validate state; they are not implementations
+of a platform backend, renderer, or playable executable. No ROM instructions
+execute in this integration test.</p>
+<p>Run <code>test-game-runtime</code> through the workspace driver, or directly run
+<code>tests/test_game_runtime.py</code> under the Linux environment. The Python runner
+builds the native sources with GCC, <code>-Wall -Wextra -Werror -pedantic</code>, ASan and
+UBSan, <code>-fno-sanitize-recover=all</code>, and <code>-no-pie</code>. Leak scanning is disabled for
+the established WSL sanitizer environment. Its report and source hashes are
+<code>analysis/native-game-runtime-validation.json</code>.</p>
+<p>Initialize the combined adapter after player/weapon startup, combat/projectiles,
+native entity queries, actor animation and pickup-respawn adapters. All borrowed
+storage must remain stable. Supply all 84 distinct sprite-slot pointers, including
+empty slots; each bound weapon object appears once. The native dispatch follows
+the supplied original active order and fails for unsupported controllers.</p>
+<p>The adapter binds newly owned state-zero CD actors before their first entity
+phase. It preserves externally supplied controllers, borrows canonical lifecycle
+and CD global state for the duration of its binding, and restores previous shared
+bindings on free. Input/control callbacks edit <code>life_game</code> for shared input,
+message, continue and exit state. Free the combined adapter before any dependency;
+freeing it unbinds its controllers without destroying their actors.</p>
+<h2 id="final-measured-coverage">Final measured coverage</h2>
+<p>The integration passes <strong>997,410 assertions</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th style="text-align:right">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Real maps</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>Single-player and additional frame calls</td>
+<td style="text-align:right">8,220</td>
+</tr>
+<tr>
+<td>Genuine two-player frame calls</td>
+<td style="text-align:right">132</td>
+</tr>
+<tr>
+<td>Main player movement/jump/H frames</td>
+<td style="text-align:right">2,048</td>
+</tr>
+<tr>
+<td>Frames with actual player XY movement</td>
+<td style="text-align:right">584</td>
+</tr>
+<tr>
+<td>Airborne main-player frames</td>
+<td style="text-align:right">1,760</td>
+</tr>
+<tr>
+<td>Third-person main-player frames</td>
+<td style="text-align:right">1,536</td>
+</tr>
+<tr>
+<td>Main scripted CD spawn/death/completion/release chains</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>Group-wait VM completions after those deaths</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>Native startup weapon-10 shots</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>First projectile update proven to be next frame</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>Projectile entity updates</td>
+<td style="text-align:right">7,696</td>
+</tr>
+<tr>
+<td>Additional multiplayer startup shots</td>
+<td style="text-align:right">4</td>
+</tr>
+<tr>
+<td>Paused frames</td>
+<td style="text-align:right">2</td>
+</tr>
+<tr>
+<td>Display-local flag-8 render gate</td>
+<td style="text-align:right">1</td>
+</tr>
+<tr>
+<td>Actual native sector-height change</td>
+<td style="text-align:right">1</td>
+</tr>
+<tr>
+<td>Failure prefixes</td>
+<td style="text-align:right">21</td>
+</tr>
+<tr>
+<td>Dependency/ownership guard checks</td>
+<td style="text-align:right">51</td>
+</tr>
+<tr>
+<td>Callback reentry checks</td>
+<td style="text-align:right">362,922</td>
+</tr>
+</tbody>
+</table>
+<p>These are assertion/frame counts, not additional ROM differential comparisons
+or exact matching progress. The underlying routines have their separate ROM
+proofs documented in <code>frame.md</code>, <code>entity-dispatch.md</code>, <code>actor-animation.md</code>,
+<code>sprite-dispatch.md</code>, and the subsystem analyses.</p>
+<h2 id="frame-order-and-state-transitions">Frame order and state transitions</h2>
+<p>Each complete unpaused frame verifies the reached order:</p>
+<ol>
+<li>Poll, distribute input, control.</li>
+<li>Native entity controllers.</li>
+<li>Native sector movers, then script VM.</li>
+<li>Native multiplayer pickup-respawn stage.</li>
+<li>Native actor animation (<code>00908</code>).</li>
+<li>Native sprite controllers (<code>F85C</code>), including bound weapons.</li>
+<li>Native sprite animation (<code>E460</code>).</li>
+<li>Sprite visibility/cache preparation and hardware OAM construction, when
+display-local flag 8 permits them. The old render names are compatibility
+aliases; this does not recover the world renderer.</li>
+</ol>
+<p>The fixture uses actual <code>ssa_weapon_runtimes_start</code> loadouts. God-mode loadout
+selection supplies weapon 10; it is fired through the normal controller and
+sprite-animation stages. A projectile created during that sprite stage has
+timer zero and has not appeared in the earlier entity traversal. The next
+frame visits it through the native projectile handler. Actor animation is not
+double-ticked in the sprite stage. The native sprite submitted queue is checked
+after each append; the observer sees the low byte of <code>object.active_index</code>
+already recorded by <code>101D0</code>.</p>
+<p>On each of the 16 maps, the VM creates a CD after that frame's entity phase.
+The actor retains timer 60 through that frame, binds automatically at the next
+entity phase, and then decrements to 59. State-zero initialization, later AI,
+native world queries, damage/death, group notification, animation playback,
+corpse expiry, pool release, and waiting VM continuation all execute through
+their native adapters. Native combat kills any surviving fixture CD after the
+initial movement window. No test assignment sets its animation completion
+byte. The next controller consumes the completion produced by <code>00908</code>.</p>
+<p>The main fixture runs 512 frames per map. The first 128 include movement, jump
+edges, relative yaw, and H press/release events; later frames allow native
+projectile and corpse lifetimes to finish. Entity and GAME counters are seeded
+differently so accidental use of the world traversal counter as the shared
+GAME counter is detectable. Weapon, combat, and hazard projections observe the
+same GAME counter and timestep.</p>
+<p>The pause check verifies that entity state, actor animation, and elapsed
+simulation time stay unchanged while the frame counter and sprite stage still
+advance. Paused type-2 weapon animation remains unchanged; an independent
+type-1 sprite's elapsed byte advances. The separate display-local flag-8 test
+skips both render callbacks while preserving the sprite stages. A native mover
+changes sector height before the same frame's script issues its closing command.</p>
+<h2 id="shared-state-across-players-and-enemies">Shared state across players and enemies</h2>
+<p>The multiplayer case uses two distinct registered bodies, player runtimes,
+gameplay adapters, startup weapons, actor-animation projections, and persistent
+kill counters. Both weapons share the actual combat/projectile pool and execute
+in sprite order. Both players run native entity updates, movement, and animation;
+ordinary map interaction also triggers a real CD spawn. The additional cases
+verify four shared-state requirements:</p>
+<ul>
+<li>A local player's death at flags <code>18</code>, death timer 300, and exit flag 1 sets
+global input mode 3. The later alive player's weapon is suppressed in the
+same frame, with no shot or firing-state change.</li>
+<li>A local native respawn clears flag 8 before the remote player's hazard
+phase. The remote hazard projection sees the newly cleared display-local
+flags rather than the earlier frame-entry value.</li>
+<li>Native VM opcode 9 sets the same input mode consumed later by F150, also
+suppressing an alive player's held fire in that frame.</li>
+<li>An externally bound CD's existing sound-loop source is inherited by the
+combined adapter. Its native stop event clears the canonical source and
+mirrors that value to the external game view before presentation. A newly
+scripted automatic CD then uses that same shared game. External controller
+game pointers and borrowed walk-count ownership remain valid through teardown.</li>
+</ul>
+<p>Lifecycle presentation callbacks also compare their player projection with the
+canonical shared input/message state. A deliberately failing local death SOUND
+callback sees message timer 600 already applied. The error retains that value,
+clears update guards, and prevents later stages/rendering.</p>
+<h2 id="failure-scope-and-limitations">Failure scope and limitations</h2>
+<p>The 21 failures cover all 12 before-stage prefixes, all five remaining external
+stage boundaries, an unsupported sprite controller, a script-particle failure,
+an invalid actor-animation ID, and the lifecycle sound failure above. Earlier
+native effects remain. In particular, a failed script-particle callback leaves
+its allocated actor present; retrying the unchanged VM entry can allocate
+another actor. Both actors subsequently bind to the shared CD game. Invalid
+actor animation stops before sprite processing, while retaining the preceding
+entity timer decrement. A failed frame never writes the successful final
+presentation latch.</p>
+<p>The dependency checks include 18 busy runtime/workspace locks, duplicate sprite
+body bindings, a missing bound weapon object, and a missing required external
+stage callback. Nested combined-frame updates/free calls are attempted from
+every observed stage and effect. Unsupported sprite type 3 fails explicitly;
+the harness does not supply a successful placeholder controller.</p>
+<p>Pickup-respawn is invoked at its actual place in every unpaused frame here,
+but these particular fixtures do not exercise a level-12..15 multiplayer
+pickup allocation. That behavior has separate native integration coverage in
+<code>pickup-respawn.md</code>. The two-player fixture does not implement network
+transport. Sprite records are stable caller-owned test objects; this does not
+recover the original sprite allocator or every non-weapon sprite controller.
+Remaining enemy types, graphics/texture decoding, rendering, sound playback,
+platform input, and a runnable PC game remain separate work.</p>
+</main></body></html>

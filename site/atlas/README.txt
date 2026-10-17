@@ -60,7 +60,7 @@ marks scripted-only appearances. R marks a rotating multiplayer spawn site.
 Leader lines connect displaced labels to exact positions.
 Repeated identical placements at one position share a glyph; all individual
 records remain in the JSON and viewer details. Items are not all present at once.
-H100 adds 100 health with a 200 cap. Red floors are lethal surfaces or pits.
+H100 adds 100 health when below 200, without capping the result. Red floors are lethal surfaces or pits.
 Height differences and stairs remain visible as sector boundaries; floor and
 ceiling heights are available by clicking a room. Doors show initial lock state.
 Scripts can open, close, unlock or lock them later. The viewer exposes these

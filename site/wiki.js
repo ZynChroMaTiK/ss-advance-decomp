@@ -32,11 +32,11 @@ export function createWikiView(entries, doc = document) {
   }
   $('wiki-search').addEventListener('input', renderList);
   $('wiki-clear').onclick = () => { category = 'all'; $('wiki-search').value = ''; renderList(); $('wiki-search').focus(); };
-  function open(id = 'field-guide') {
+  function open(id = 'field-guide', {focus = false} = {}) {
     const article = $('wiki-article'); article.replaceChildren();
     const entry = entries.find(e => e.id === id);
     if (!entry) {
-      current = ''; article.append(node('p', 'ENTRY NOT FOUND', 'eyebrow'), node('h2', 'That record is unavailable.'), link('Return to the field guide →', '#wiki/field-guide', 'text-link')); renderList(); return;
+      current = ''; article.append(node('p', 'ENTRY NOT FOUND', 'eyebrow'), node('h2', 'That record is unavailable.'), link('Return to the field guide →', '#wiki/field-guide', 'text-link')); doc.title = 'Entry not found — NETRICSA — Serious Sam Advance'; renderList(); if (focus) article.focus(); return;
     }
     current = entry.id;
     if (!searchEntries(entries, $('wiki-search').value, category).includes(entry)) { category = 'all'; $('wiki-search').value = ''; }
@@ -59,6 +59,7 @@ export function createWikiView(entries, doc = document) {
     doc.title = `${entry.title} — NETRICSA — Serious Sam Advance`;
     renderList();
     article.scrollTop = 0;
+    if (focus) { article.focus({preventScroll:true}); article.scrollIntoView({block:'nearest'}); }
   }
   return {open};
 }

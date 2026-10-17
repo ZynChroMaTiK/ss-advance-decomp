@@ -1,6 +1,108 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Profile — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="profile.md" download>Markdown ↓</a></header><article><h2>Level selection and saved data</h2><p>Single Player now lists New Game, Select Level, Password in that order. Select Level uses the original small font and localized level names from ROM text entries48..59, with two fixed chapter pages of six levels (1..6 and7..12). Up/Down selects levels and crosses the chapter boundary between6and7. Left/Right and clickable arrows switch chapters while preserving the row; at the first/last chapter they keep the selection. The pages are named Egypt and Rome (localized in German/French), and level names have no number prefixes. Mouse hover/click selects a visible row. Six rows use16-pixel spacing starting atY40; the final row is atY120 and status stays atY144. Each row uses a separate original-font overlay batch so long localized names plus the header/status do not exceed the128-glyph batch limit. Original map-view output and structure layout remain unchanged. Padlocks identify locked maps; the selected row also explains Locked or Not Yet Available. No multiplayer maps appear. All12 campaign names are listed; the current port admits only the first9, so the final3 remain unavailable even when their preceding level has been beaten.</p><p>Level1 is always unlocked. Level N requires the completion bit for N-1, on any difficulty. A password/direct start does not grant completion. Actually beating such a level does unlock its successor; unrelated preceding levels stay locked. New Game does not erase existing progress. Selecting a level then choosing a difficulty uses original loadout setting difficulty*12+level+1, including level0. Ordinary New Game retains setting0, and normal level advancement still carries earned equipment. The save does not store in-level state or inventory.</p><p>The Windows frontend saves language immediately when Options changes it and records completion on the first successful native tick with a real VM exit, finished state and a living player. It saves before an Enter advancement or application close can discard that completed game. Restart cannot award a completion. Original simulation and script rules are unchanged.</p><p><code>play-native.cmd</code> runs from the workspace, so its persistent file is <code>save.dat</code> beside the launcher. Direct executable launches use their working directory; <code>--save-file PATH</code> overrides it. Automated startup/smoke diagnostics use defaults without reading/writing the user&#x27;s save unless an explicit test path is given. All save validation uses isolated files under build/profile/.</p><p>The16-byte portable format is independent of C structure layout:</p><p>| Bytes | Value | | --- | --- | | 0..7 | ASCII <code>SSA-SAVE</code> | | 8 | Version1 | | 9 | Language0..2 | | 10..11 | Little-endian12-bit completion mask | | 12..15 | Little-endian CRC32 of bytes0..11 |</p><p>Wrong lengths, magic, version, checksum, language and reserved completion bits are rejected without modifying the decoder&#x27;s output. A missing file is a fresh profile. Invalid/unreadable saves produce an error and default settings; loading alone does not overwrite them. A subsequent settings/completion/reset action can write a valid replacement. Save failures are logged and do not crash gameplay.</p><p><code>profile_win32.c</code> locks writers through a transient <code>.lock</code> file, reloads the latest valid profile, applies only the current event, writes a unique temporary file, flushes its data and replaces the destination using MoveFileExW with REPLACE_EXISTING/WRITE_THROUGH. A failed replacement preserves the existing save. Temporary/lock handles are cleaned up. Separate sessions preserve each other&#x27;s completion/language changes; a stale session cannot restore progress removed by Clear Data merely by saving its older local copy.</p><p>Options now has Music, Credits, Language, Clear Data. Clear Data opens a warning that saved progress and language will be deleted, with Yes/No and No selected initially. No or Esc returns unchanged. Confirming Yes writes a default profile, resets language to English immediately and locks all levels after level1. Music is not part of the saved data and is unaffected. This is a requested native PC save feature, not a claim to have recovered an original GBA save routine.</p><p>Validation commands:</p><pre><code>.\decomp.ps1 test-profile
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Level selection and saved data — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="profile.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="level-selection-and-saved-data">Level selection and saved data</h1>
+<p>Single Player now lists New Game, Select Level, Password in that order.
+Select Level uses the original small font and localized level names from ROM
+text entries48..59, with two fixed chapter pages of six levels (1..6 and7..12).
+Up/Down selects levels and crosses the chapter boundary between6and7.
+Left/Right and clickable arrows switch chapters while preserving the row;
+at the first/last chapter they keep the selection. The pages are named Egypt
+and Rome (localized in German/French), and level names have no number prefixes.
+Mouse hover/click selects a visible row.
+Six rows use16-pixel spacing starting atY40; the final row is atY120 and status
+stays atY144. Each row uses a separate original-font overlay batch so long
+localized names plus the header/status do not exceed the128-glyph batch limit.
+Original map-view output and structure layout remain unchanged.
+Padlocks identify locked maps; the selected row also explains Locked or Not Yet
+Available. No multiplayer maps appear. All12 campaign names are listed; the
+current port admits only the first9, so the final3 remain unavailable even when
+their preceding level has been beaten.</p>
+<p>Level1 is always unlocked. Level N requires the completion bit for N-1, on any
+difficulty. A password/direct start does not grant completion. Actually beating
+such a level does unlock its successor; unrelated preceding levels stay locked.
+New Game does not erase existing progress. Selecting a level then choosing a
+difficulty uses original loadout setting difficulty*12+level+1, including level0.
+Ordinary New Game retains setting0, and normal level advancement still carries
+earned equipment. The save does not store in-level state or inventory.</p>
+<p>The Windows frontend saves language immediately when Options changes it and
+records completion on the first successful native tick with a real VM exit,
+finished state and a living player. It saves before an Enter advancement or
+application close can discard that completed game. Restart cannot award a
+completion. Original simulation and script rules are unchanged.</p>
+<p><code>play-native.cmd</code> runs from the workspace, so its persistent file is <code>save.dat</code>
+beside the launcher. Direct executable launches use their working directory;
+<code>--save-file PATH</code> overrides it. Automated startup/smoke diagnostics use defaults
+without reading/writing the user's save unless an explicit test path is given.
+All save validation uses isolated files under build/profile/.</p>
+<p>The16-byte portable format is independent of C structure layout:</p>
+<table>
+<thead>
+<tr>
+<th>Bytes</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0..7</td>
+<td>ASCII <code>SSA-SAVE</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Version1</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Language0..2</td>
+</tr>
+<tr>
+<td>10..11</td>
+<td>Little-endian12-bit completion mask</td>
+</tr>
+<tr>
+<td>12..15</td>
+<td>Little-endian CRC32 of bytes0..11</td>
+</tr>
+</tbody>
+</table>
+<p>Wrong lengths, magic, version, checksum, language and reserved completion bits
+are rejected without modifying the decoder's output. A missing file is a fresh
+profile. Invalid/unreadable saves produce an error and default settings; loading
+alone does not overwrite them. A subsequent settings/completion/reset action can
+write a valid replacement. Save failures are logged and do not crash gameplay.</p>
+<p><code>profile_win32.c</code> locks writers through a transient <code>.lock</code> file, reloads the
+latest valid profile, applies only the current event, writes a unique temporary
+file, flushes its data and replaces the destination using MoveFileExW with
+REPLACE_EXISTING/WRITE_THROUGH. A failed replacement preserves the existing
+save. Temporary/lock handles are cleaned up. Separate sessions preserve each
+other's completion/language changes; a stale session cannot restore progress
+removed by Clear Data merely by saving its older local copy.</p>
+<p>Options now has Music, Credits, Language, Clear Data. Clear Data opens a warning
+that saved progress and language will be deleted, with Yes/No and No selected
+initially. No or Esc returns unchanged. Confirming Yes writes a default profile,
+resets language to English immediately and locks all levels after level1. Music
+is not part of the saved data and is unaffected. This is a requested native PC
+save feature, not a claim to have recovered an original GBA save routine.</p>
+<p>Validation commands:</p>
+<pre><code class="language-powershell">.\decomp.ps1 test-profile
 .\decomp.ps1 test-menu
 .\decomp.ps1 test-menu-rom
 powershell -ExecutionPolicy Bypass -File scripts/test-profile.ps1 -SkipBuild
 powershell -ExecutionPolicy Bypass -File scripts/test-native-menu.ps1 -SkipBuild
-</code></pre><p><code>profile-validation.json</code> covers590142 sanitizer/leak checks,1239 menu frames, 90 selected-level starts over3 languages/difficulties, all12 campaign names, all4096 completion masks,128 single-bit file corruptions, fixed six-level chapter pages, page-arrow and level6/7 transitions, complete localized row pixels, locked/unavailable choices, mouse input and reset cancellation/confirmation. <code>menu-validation.json</code> passes72577checks/9547frames/18New Games, including the later typed-password padding fix. The ROM fixture still compares8694 original menu frames and15552000 pixels. It explicitly skips the inserted PC selection in its two-row original Single Player navigation and draws the added labels with the actual original font routine; it does not claim original ROM callbacks for the new level-select or reset screens.</p><p><code>windows-profile-validation.json</code> adds37 file/host checks, corrupt/read-only file handling, interleaved writers and reset, plus a genuine5110-frame normal-input level1 completion saved by the exact frontend tick hook. Separate game processes then load that file, retain German and select the newly unlocked level2 with its original starting loadout and entry restart in both renderers. Physical input and arbitrary interruption/power-loss fault injection remain untested.</p></article></body></html>
+</code></pre>
+<p><code>profile-validation.json</code> covers590142 sanitizer/leak checks,1239 menu frames,
+90 selected-level starts over3 languages/difficulties, all12 campaign names,
+all4096 completion masks,128 single-bit file corruptions, fixed six-level chapter
+pages, page-arrow and level6/7 transitions, complete localized row pixels, locked/unavailable
+choices, mouse input and reset cancellation/confirmation. <code>menu-validation.json</code>
+passes72577checks/9547frames/18New Games, including the later typed-password
+padding fix. The ROM fixture still compares8694
+original menu frames and15552000 pixels. It explicitly skips the inserted PC
+selection in its two-row original Single Player navigation and draws the added
+labels with the actual original font routine; it does not claim original ROM
+callbacks for the new level-select or reset screens.</p>
+<p><code>windows-profile-validation.json</code> adds37 file/host checks, corrupt/read-only file
+handling, interleaved writers and reset, plus a genuine5110-frame normal-input
+level1 completion saved by the exact frontend tick hook. Separate game processes
+then load that file, retain German and select the newly unlocked level2 with its
+original starting loadout and entry restart in both renderers. Physical input
+and arbitrary interruption/power-loss fault injection remain untested.</p>
+</main></body></html>

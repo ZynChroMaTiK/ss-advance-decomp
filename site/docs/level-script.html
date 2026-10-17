@@ -1,1 +1,115 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Level Script — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="level-script.md" download>Markdown ↓</a></header><article><h2>Level script dispatcher</h2><p><code>src/level_script.c</code> recovers the complete dispatch routine at <code>0801C6DC</code> (return at <code>0801C922</code>), queue insertion <code>0801C670</code>, sector entry <code>0801C624</code>, script-state initialization <code>0801C5A8</code> and entity-group release <code>0801C6B0</code>. This is a native interpreter of original <strong>data records</strong>, not an ARM emulator. No instruction bytes are executed. These functions are behavioral ports, not additional byte-exact matches.</p><p>The immutable ROM data view reads the table at <code>0845280C</code>. The twelve campaign maps have 5, 12, 10, 11, 10, 13, 10, 15, 9, 3, 7 and 11 script entries, totaling 116. Maps 12..15 point to the table itself and have no valid script entries. Native queue insertion rejects IDs outside the corresponding table. Every data read checks the borrowed ROM extent; the caller must keep that buffer alive.</p><p>Each instruction occupies five 32-bit words: opcode, list pointer, argument, an unused word, and spawn interval. The dispatcher has five active slots and five words of scratch per slot. It handles <strong>one instruction per slot per frame</strong>, even when an operation completes immediately.</p><p>| Opcode | Recovered action | | --- | --- | | 1 | Spawn the next item from an eight-byte XY/type/heading list after its interval; XY=(0,0) ends the list. | | 2 | Wait until the specified byte-sized live-group counter is zero. | | 3 | Advance without an effect. | | 4 | Open mover, via <code>0801C02C</code>. | | 5 | Close mover, via <code>0801C050</code>. | | 6 | Unlock mover, via <code>0801C0B4</code>. | | 7 | Lock mover, via <code>0801C098</code>. | | 8 | Delay argument × 60 ticks, with wrapping 32-bit arithmetic. The first frame initializes without subtracting ticks. | | 9 | Set global game state to 3 and XOR exit-toggle bit 0. Does not advance, so repeats each frame until the outer game loop handles it. | | 10 | Remove this slot, copying the last slot and all five scratch words over it. The swapped-in slot is skipped until the next frame. | | Other | Keep the instruction pointer unchanged. |</p><p>Spawning copies the original type table at <code>0844A3D4</code>, the list XY and heading, the instruction&#x27;s trigger tag, timer 60 and flag <code>0x80</code>. It calls animation then world insertion, reads the resulting floor, sets Z and emits particle type 5. These callees remain explicit callbacks; the interpreter does not implement enemy AI, the entity pool, animation playback or particles. The known entity fields use a host structure, not a GBA memory overlay. Adapters must retain stable allocated storage and transfer the known fields to their world entity.</p><p>If allocation fails, the original still emits the particle and consumes the spawn record. Its Z comes from uninitialized/incoming <code>r10</code>, or the most recent successful spawn earlier in that frame. The native API explicitly accepts <code>fallback_z</code> for the otherwise undefined first value. Tests set original <code>r10</code> to the same value; this does not establish a canonical original failure Z.</p><p>Unless tag bit <code>0x100</code> is set, successful spawns increment counter <code>(tag &amp; 255) - 1</code>, wrapping at 255. <strong>Real scripts use group zero</strong>, which writes the byte before the original counter allocation. <code>alive_before</code> represents this stray byte safely and is preserved across reset, as the original byte is. Entity release skips tags with low byte zero or bit <code>0x100</code>; otherwise it uses the complete tag minus one. The native release API rejects an out-of-range index instead of touching unrelated host storage.</p><p>Sector entry sets the visited byte on the first visit, including sectors without an event. Flag <code>0x100</code> in sector word <code>+0x10</code> queues its low-byte ID. Subsequent visits do nothing. Native invalid/full-queue entry fails before changing the visited byte; the original has no capacity or ID guard. Reset clears the queue, both 256-byte arrays and only the first three words of each scratch record. It preserves scratch words 3/4 and the game-state/exit fields.</p><p><code>ssa_level_script_step</code> returns 0 on a completed frame and -1 on invalid input or callback failure. Other APIs return 1/0. Callbacks return nonnegative success or negative failure, except allocator NULL means ordinary pool exhaustion. Effects before failure are retained. No callbacks may mutate/reset/reenter the VM; the <code>updating</code> flag guards API reentry. No callbacks are optional at step entry, so a partially implemented host cannot silently omit a gameplay effect.</p><p><code>tests/test_level_script_rom.py</code> compares complete queue/scratch/counter/visited state, game-exit values, ordered callback inputs and every byte of allocated entity records. Original allocation, animation, insertion, particle and mover callees are hooked; the dispatcher and its transitions execute unmodified ROM instructions. Synthetic data records exercise all opcode paths, unknown opcodes, signed/wrapped timers, mixed queues, allocator exhaustion and stale Z. All 116 real scripts execute to termination or level exit, with external enemy deaths represented by clearing live counters between frames. This validates script sequencing and ROM parsing; it does not simulate enemy combat.</p><p>The generated <code>native-level-script-validation.json</code> records the current test counts and source hash. The suite builds with undefined-behavior sanitization. The original supplied ROM is read only and remains unchanged; modified records exist only in test buffers for boundary coverage.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Level script dispatcher — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="level-script.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="level-script-dispatcher">Level script dispatcher</h1>
+<p><code>src/level_script.c</code> recovers the complete dispatch routine at <code>0801C6DC</code>
+(return at <code>0801C922</code>), queue insertion <code>0801C670</code>, sector entry <code>0801C624</code>,
+script-state initialization <code>0801C5A8</code> and entity-group release <code>0801C6B0</code>.
+This is a native interpreter of original <strong>data records</strong>, not an ARM emulator.
+No instruction bytes are executed. These functions are behavioral ports, not
+additional byte-exact matches.</p>
+<p>The immutable ROM data view reads the table at <code>0845280C</code>. The twelve campaign
+maps have 5, 12, 10, 11, 10, 13, 10, 15, 9, 3, 7 and 11 script entries, totaling
+116. Maps 12..15 point to the table itself and have no valid script entries.
+Native queue insertion rejects IDs outside the corresponding table. Every data
+read checks the borrowed ROM extent; the caller must keep that buffer alive.</p>
+<p>Each instruction occupies five 32-bit words: opcode, list pointer, argument,
+an unused word, and spawn interval. The dispatcher has five active slots and
+five words of scratch per slot. It handles <strong>one instruction per slot per
+frame</strong>, even when an operation completes immediately.</p>
+<table>
+<thead>
+<tr>
+<th>Opcode</th>
+<th>Recovered action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Spawn the next item from an eight-byte XY/type/heading list after its interval; XY=(0,0) ends the list.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Wait until the specified byte-sized live-group counter is zero.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Advance without an effect.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Open mover, via <code>0801C02C</code>.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Close mover, via <code>0801C050</code>.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Unlock mover, via <code>0801C0B4</code>.</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Lock mover, via <code>0801C098</code>.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Delay argument × 60 ticks, with wrapping 32-bit arithmetic. The first frame initializes without subtracting ticks.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Set global game state to 3 and XOR exit-toggle bit 0. Does not advance, so repeats each frame until the outer game loop handles it.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Remove this slot, copying the last slot and all five scratch words over it. The swapped-in slot is skipped until the next frame.</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>Keep the instruction pointer unchanged.</td>
+</tr>
+</tbody>
+</table>
+<p>Spawning copies the original type table at <code>0844A3D4</code>, the list XY and heading,
+the instruction's trigger tag, timer 60 and flag <code>0x80</code>. It calls animation then
+world insertion, reads the resulting floor, sets Z and emits particle type 5.
+These callees remain explicit callbacks; the interpreter does not implement
+enemy AI, the entity pool, animation playback or particles. The known entity
+fields use a host structure, not a GBA memory overlay. Adapters must retain
+stable allocated storage and transfer the known fields to their world entity.</p>
+<p>If allocation fails, the original still emits the particle and consumes the
+spawn record. Its Z comes from uninitialized/incoming <code>r10</code>, or the most recent
+successful spawn earlier in that frame. The native API explicitly accepts
+<code>fallback_z</code> for the otherwise undefined first value. Tests set original <code>r10</code>
+to the same value; this does not establish a canonical original failure Z.</p>
+<p>Unless tag bit <code>0x100</code> is set, successful spawns increment counter
+<code>(tag &amp; 255) - 1</code>, wrapping at 255. <strong>Real scripts use group zero</strong>, which writes
+the byte before the original counter allocation. <code>alive_before</code> represents
+this stray byte safely and is preserved across reset, as the original byte is.
+Entity release skips tags with low byte zero or bit <code>0x100</code>; otherwise it uses
+the complete tag minus one. The native release API rejects an out-of-range
+index instead of touching unrelated host storage.</p>
+<p>Sector entry sets the visited byte on the first visit, including sectors without
+an event. Flag <code>0x100</code> in sector word <code>+0x10</code> queues its low-byte ID. Subsequent
+visits do nothing. Native invalid/full-queue entry fails before changing the
+visited byte; the original has no capacity or ID guard. Reset clears the queue,
+both 256-byte arrays and only the first three words of each scratch record.
+It preserves scratch words 3/4 and the game-state/exit fields.</p>
+<p><code>ssa_level_script_step</code> returns 0 on a completed frame and -1 on invalid input
+or callback failure. Other APIs return 1/0. Callbacks return nonnegative success
+or negative failure, except allocator NULL means ordinary pool exhaustion.
+Effects before failure are retained. No callbacks may mutate/reset/reenter the
+VM; the <code>updating</code> flag guards API reentry. No callbacks are optional at step
+entry, so a partially implemented host cannot silently omit a gameplay effect.</p>
+<p><code>tests/test_level_script_rom.py</code> compares complete queue/scratch/counter/visited
+state, game-exit values, ordered callback inputs and every byte of allocated
+entity records. Original allocation, animation, insertion, particle and mover
+callees are hooked; the dispatcher and its transitions execute unmodified ROM
+instructions. Synthetic data records exercise all opcode paths, unknown
+opcodes, signed/wrapped timers, mixed queues, allocator exhaustion and stale Z.
+All 116 real scripts execute to termination or level exit, with external enemy
+deaths represented by clearing live counters between frames. This validates
+script sequencing and ROM parsing; it does not simulate enemy combat.</p>
+<p>The generated <code>native-level-script-validation.json</code> records the current test
+counts and source hash. The suite builds with undefined-behavior sanitization.
+The original supplied ROM is read only and remains unchanged; modified records
+exist only in test buffers for boundary coverage.</p>
+</main></body></html>

@@ -1,1 +1,58 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Entity Runtime — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="entity-runtime.md" download>Markdown ↓</a></header><article><h2>Native entity phase</h2><p><code>entity_runtime.c</code> composes the recovered <code>04E04</code> scheduler with existing native player gameplay, CD enemies, projectiles and owned E1 pickup timers. This is an entity phase, not the complete game loop. Run it once before mover/VM updates, then run weapon controllers in their original later sprite stage. Weapons fired there create projectiles whose first entity update is on the next frame.</p><p>Initialize after combat, projectile runtime, native enemy queries and player gameplay. All references must describe the same stable world and entity pool. The adapter fills all100 slot pointers, including inactive actor payloads, and uses the existing pool&#x27;s dynamic active prefix. Its explicit <code>active_tail</code> argument represents the original physical halfword after the100th active index; it is used by the scheduler&#x27;s auxiliary output when the pool is full. See <code>entity-dispatch.md</code> for the independently verified original ordering quirks.</p><p>Players run <code>ssa_level_runtime_player_step</code>, so movement, jump, camera, hazards, death/respawn and line/sector interactions remain native. Each indexed player receives its own input and presentation callbacks. Ticks must agree across players and the enemy frame. <code>target_player</code> explicitly selects the original enemy player target; it does not silently stand in for display-local or motion indices. Other game counters remain explicit caller inputs.</p><p>Bind already initialized CD runtimes using <code>ssa_entity_runtime_bind_cd</code>. Their walk-counter pointer temporarily refers to the scheduler&#x27;s shared counter and is restored when unbound, destroyed or freed. CD updates use native sight, nearest-enemy selection, wall paths, world movement and combat. The native query path count resets at frame entry. Type69 conversion therefore uses the same canonical drain fields and alternate targeting described in <code>projectile-conversion.md</code>; there is no frozen-entity gate.</p><p>Bound projectile slots run the native controller/motion/combat adapter, including attached E2 effects. Owned E1 actors run their original timer wrapper. Other handlers present in the original table fail explicitly until implemented and bound. Types with no original table handler keep the original no-op. This does not add health projections for initial reserved non-player actors, recover all enemy AI, or implement actor animation playback.</p><p>The original dispatcher reads active count after every handler. A release swaps the final index into the released position, but the iterator still advances: the moved actor may be skipped until the next frame. New allocations can be visited this frame. The bridge deliberately retains this behavior. It also retains original auxiliary-list construction and current-source restoration to slot0. Presentation failure retains earlier gameplay effects; dispatcher cleanup terminates the partial list and releases the bridge&#x27;s update guard.</p><p>The optional before-handler callback observes scheduling only. It must not mutate/reenter the world, pool, bindings or controllers, or run another frame stage. Existing native controllers take their own player/combat/spawn locks. The entity bridge does not hold those locks across the entire phase, because the controllers must enter their normal guarded APIs. Free the bridge before freeing its players, enemies, queries, projectiles, combat or world. It owns no entities and restores every remaining bound walk-counter pointer on teardown.</p><p><code>test-entity-runtime</code> exercises the adapter using actual maps and existing native controllers under ASan and UBSan. Final counts and source hashes are in <code>analysis/native-entity-runtime-validation.json</code>. The independently controlled ROM scheduler test is a separate proof, not a replacement for integration.</p><p>The integration passes 85,982 assertions across all 16 maps: 2,062 entity phases, 2,048 movement/jump/H frames, 1,011 projectile updates, 2,050 CD updates (747 moves) and 2,053 pickup timer updates. Actual projectile/corpse releases prove two swapped-slot skips and next-frame execution. Tests also cover automatic CD binding detachment, unsupported CE rejection, the original D9 no-op, two callback failures and 28,766 reentry/guard checks. Scripted fixtures and controlled presentation/corpse animation boundaries do not constitute a playable level.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native entity phase — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="entity-runtime.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-entity-phase">Native entity phase</h1>
+<p><code>entity_runtime.c</code> composes the recovered <code>04E04</code> scheduler with existing native
+player gameplay, CD enemies, projectiles and owned E1 pickup timers. This is an
+entity phase, not the complete game loop. Run it once before mover/VM updates,
+then run weapon controllers in their original later sprite stage. Weapons fired
+there create projectiles whose first entity update is on the next frame.</p>
+<p>Initialize after combat, projectile runtime, native enemy queries and player
+gameplay. All references must describe the same stable world and entity pool.
+The adapter fills all100 slot pointers, including inactive actor payloads, and
+uses the existing pool's dynamic active prefix. Its explicit <code>active_tail</code>
+argument represents the original physical halfword after the100th active index;
+it is used by the scheduler's auxiliary output when the pool is full. See
+<code>entity-dispatch.md</code> for the independently verified original ordering quirks.</p>
+<p>Players run <code>ssa_level_runtime_player_step</code>, so movement, jump, camera, hazards,
+death/respawn and line/sector interactions remain native. Each indexed player
+receives its own input and presentation callbacks. Ticks must agree across
+players and the enemy frame. <code>target_player</code> explicitly selects the original
+enemy player target; it does not silently stand in for display-local or motion
+indices. Other game counters remain explicit caller inputs.</p>
+<p>Bind already initialized CD runtimes using <code>ssa_entity_runtime_bind_cd</code>. Their
+walk-counter pointer temporarily refers to the scheduler's shared counter and
+is restored when unbound, destroyed or freed. CD updates use native sight,
+nearest-enemy selection, wall paths, world movement and combat. The native
+query path count resets at frame entry. Type69 conversion therefore uses the
+same canonical drain fields and alternate targeting described in
+<code>projectile-conversion.md</code>; there is no frozen-entity gate.</p>
+<p>Bound projectile slots run the native controller/motion/combat adapter,
+including attached E2 effects. Owned E1 actors run their original timer wrapper.
+Other handlers present in the original table fail explicitly until implemented
+and bound. Types with no original table handler keep the original no-op. This
+does not add health projections for initial reserved non-player actors, recover
+all enemy AI, or implement actor animation playback.</p>
+<p>The original dispatcher reads active count after every handler. A release swaps
+the final index into the released position, but the iterator still advances:
+the moved actor may be skipped until the next frame. New allocations can be
+visited this frame. The bridge deliberately retains this behavior. It also
+retains original auxiliary-list construction and current-source restoration to
+slot0. Presentation failure retains earlier gameplay effects; dispatcher cleanup
+terminates the partial list and releases the bridge's update guard.</p>
+<p>The optional before-handler callback observes scheduling only. It must not
+mutate/reenter the world, pool, bindings or controllers, or run another frame
+stage. Existing native controllers take their own player/combat/spawn locks.
+The entity bridge does not hold those locks across the entire phase, because
+the controllers must enter their normal guarded APIs. Free the bridge before
+freeing its players, enemies, queries, projectiles, combat or world. It owns no
+entities and restores every remaining bound walk-counter pointer on teardown.</p>
+<p><code>test-entity-runtime</code> exercises the adapter using actual maps and existing
+native controllers under ASan and UBSan. Final counts and source hashes are in
+<code>analysis/native-entity-runtime-validation.json</code>. The independently controlled
+ROM scheduler test is a separate proof, not a replacement for integration.</p>
+<p>The integration passes 85,982 assertions across all 16 maps: 2,062 entity phases,
+2,048 movement/jump/H frames, 1,011 projectile updates, 2,050 CD updates (747
+moves) and 2,053 pickup timer updates. Actual projectile/corpse releases prove
+two swapped-slot skips and next-frame execution. Tests also cover automatic CD
+binding detachment, unsupported CE rejection, the original D9 no-op, two callback
+failures and 28,766 reentry/guard checks. Scripted fixtures and controlled
+presentation/corpse animation boundaries do not constitute a playable level.</p>
+</main></body></html>

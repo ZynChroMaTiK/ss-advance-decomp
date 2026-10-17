@@ -1,1 +1,186 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Map Assets — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="map-assets.md" download>Markdown ↓</a></header><article><h2>Native level asset loading</h2><p><code>src/map_assets.c</code> now reads all 16 level resources from the supplied AENP ROM, decompresses them in native C and prepares the line fields used for collision. The native loader contains no emulator and leaves the ROM unchanged. Its output is owned memory with relative offsets; it does not put 32-bit GBA addresses into host pointers. Initialize <code>SsaMapAssets</code> to zero, load once, then call <code>ssa_map_assets_free</code> before reusing it. The caller must identify its ROM; the loader&#x27;s address table is specific to this ROM version.</p><p>This is map data loading, not a complete level initializer or playable game. Texture lookup/binding is supplied separately by <code>map_texture_bindings.c</code>. BSP parent bookkeeping, entity creation and renderer allocation remain separate work. Header pointers and sector list pointers stay relative to the decoded data. Texture descriptors retain their original bytes; host resource bindings are described in <code>analysis/map-texture-bindings.md</code>.</p><h3>Evidence and format</h3><p>The level initializer at <code>0x08001FEC</code> passes the selected index to <code>0x0800ACC8</code>. That routine indexes the resource address table at <code>0x0844AEF4</code>, reads the upper 24 bits of the first word as its allocation size, then calls the LZ77 BIOS wrapper at <code>0x080C5324</code>. Map indices 0–15 are compressed; indices 16–21 are uncompressed texture packages handled separately by <code>0x0800AFF4</code>.</p><p>The map stream uses GBA type-0x10 LZ77: a four-byte type/decoded-length header, then flag bytes interpreted from bit 7 downward. Clear bits encode one literal; set bits encode a two-byte big-endian pair with length <code>(pair &gt;&gt; 12) + 3</code> and back distance <code>(pair &amp; 4095) + 1</code>. Back references can overlap their destination. The native decoder rejects truncated input, references before the beginning, output overflow and back references crossing the declared output length.</p><p>Decoded headers are 0x48 bytes, little endian, with magic <code>WOD0</code> at +0. The halfword at +4 is decoded size divided by four. Header arrays are:</p><p>| Count offset | Relative offset field | Record bytes | Meaning | | --- | --- | --- | --- | | +06 | +1C | 12 | Things/spawn records | | +08 | +20 | 16 | Texture descriptors | | +0A | +24 | 20 | Sectors | | +0C | +28 | 32 | BSP nodes | | +0E | +2C | 8 | BSP leaves/subsectors | | +10 | +30 | 16 | Segments | | +12 | +34 | 12 | Sides | | +14 | +38 | 40 | Lines | | +16 | +3C | 4 | Vertices: signed X,Y halfwords | | +18 | +40 | 2 | Reject bitset storage, count in halfwords | | +1A | +44 | 2 | Blockmap storage, count in halfwords |</p><p>The original loader relocates nonempty record arrays into GBA RAM pointers. Sector records have a list count at +8 and relative list pointer at +C; <code>0x0800ACA8</code> relocates that pointer. The native loader bounds-checks these lists without claiming that their full semantics have been recovered. <code>0x0800ACA0</code> and <code>0x0800ACA4</code>, called after loading nodes and leaves, are empty routines.</p><p>Node children at +18/+1A select another node or a leaf, with bit 15 indicating a leaf. Every actual node child references an earlier node, so the native loader checks that ordering to reject cycles. Leaves contain segment count at +0, first segment at +2, sector index at +4 and runtime bookkeeping at +6.</p><p>The blockmap starts with signed origin X,Y and unsigned width,height halfwords. Then <code>width * height</code> halfword entries give list offsets in halfword units from the start of the blockmap. <code>0x0800975C</code> skips a leading dummy word in each list, then visits line indices until <code>0xFFFF</code>. Cells cover 128 world units. The loader checks every list against the declared blockmap section and line count. Grid iteration/deduplication and runtime entity grids are not part of this loader.</p><h3>Line preparation</h3><p>The code at <code>0x0800AD4C</code> through <code>0x0800ADF4</code> computes these line fields:</p><p>| Offset | Field | | --- | --- | | +00, +02 | Start/end vertex indices | | +04, +06 | Signed 16-bit delta X,Y | | +0C, +0E | Adjacent sector indices; second requires two-sided flag | | +10, +12 | Maximum/minimum Y | | +14, +16 | Minimum/maximum X | | +18 | Slope classification | | +1A | Flags, including bit 2 for two-sided lines |</p><p>Slope classification is 1 for zero delta X, 0 for zero delta Y, otherwise 2 when signed integer <code>deltaY / deltaX &gt; 0</code>, and 3 otherwise. The division detail matters: a positive shallow slope with truncated quotient zero is classified 3. Native code preserves this behavior and 16-bit delta wrapping. Bounds and array overlap checks run before any preparation writes.</p><h3>Validation</h3><p>Run <code>.venv-linux/bin/python tests/test_map_assets.py</code> inside Ubuntu/WSL. <code>analysis/native-map-assets-validation.json</code> records per-level ROM offsets, compressed/decompressed sizes, counts and raw decoded SHA-256 hashes.</p><p class="bullet">• All 16 streams agree byte for byte between the native decoder and an</p><p>  independent Python decoder; decoded maps range from 22,916 to 147,960 bytes.</p><p class="bullet">• All 7,632 line records agree with the original Thumb preparation code. The</p><p>  only hook in that comparison supplies signed integer division; the original   line instructions execute unchanged in the test oracle.</p><p class="bullet">• 164 malformed/truncated input cases cover headers, output size, back</p><p>  references, section bounds/aliasing, BSP indices/cycles, leaf sectors, line   vertices/sectors and blockmap bounds. Native compilation enables strict   warnings and undefined-behavior checks.</p><p>These checks verify decoded data and collision setup. They do not verify texture rendering, spawn behavior, the complete original level initializer or full-game integration. Names and campaign ordering have not yet been mapped to resources; the public loader accepts the original numeric resource index.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native level asset loading — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="map-assets.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-level-asset-loading">Native level asset loading</h1>
+<p><code>src/map_assets.c</code> now reads all 16 level resources from the supplied AENP ROM,
+decompresses them in native C and prepares the line fields used for collision.
+The native loader contains no emulator and leaves the ROM unchanged. Its output
+is owned memory with relative offsets; it does not put 32-bit GBA addresses into
+host pointers. Initialize <code>SsaMapAssets</code> to zero, load once, then call
+<code>ssa_map_assets_free</code> before reusing it. The caller must identify its ROM;
+the loader's address table is specific to this ROM version.</p>
+<p>This is map data loading, not a complete level initializer or playable game.
+Texture lookup/binding is supplied separately by <code>map_texture_bindings.c</code>.
+BSP parent bookkeeping, entity creation and renderer allocation remain separate
+work. Header pointers and sector list pointers stay
+relative to the decoded data. Texture descriptors retain their original bytes;
+host resource bindings are described in <code>analysis/map-texture-bindings.md</code>.</p>
+<h2 id="evidence-and-format">Evidence and format</h2>
+<p>The level initializer at <code>0x08001FEC</code> passes the selected index to <code>0x0800ACC8</code>.
+That routine indexes the resource address table at <code>0x0844AEF4</code>, reads the upper
+24 bits of the first word as its allocation size, then calls the LZ77 BIOS
+wrapper at <code>0x080C5324</code>. Map indices 0–15 are compressed; indices 16–21 are
+uncompressed texture packages handled separately by <code>0x0800AFF4</code>.</p>
+<p>The map stream uses GBA type-0x10 LZ77: a four-byte type/decoded-length header,
+then flag bytes interpreted from bit 7 downward. Clear bits encode one literal;
+set bits encode a two-byte big-endian pair with length <code>(pair &gt;&gt; 12) + 3</code> and
+back distance <code>(pair &amp; 4095) + 1</code>. Back references can overlap their destination.
+The native decoder rejects truncated input, references before the beginning,
+output overflow and back references crossing the declared output length.</p>
+<p>Decoded headers are 0x48 bytes, little endian, with magic <code>WOD0</code> at +0.
+The halfword at +4 is decoded size divided by four. Header arrays are:</p>
+<table>
+<thead>
+<tr>
+<th>Count offset</th>
+<th>Relative offset field</th>
+<th>Record bytes</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+06</td>
+<td>+1C</td>
+<td>12</td>
+<td>Things/spawn records</td>
+</tr>
+<tr>
+<td>+08</td>
+<td>+20</td>
+<td>16</td>
+<td>Texture descriptors</td>
+</tr>
+<tr>
+<td>+0A</td>
+<td>+24</td>
+<td>20</td>
+<td>Sectors</td>
+</tr>
+<tr>
+<td>+0C</td>
+<td>+28</td>
+<td>32</td>
+<td>BSP nodes</td>
+</tr>
+<tr>
+<td>+0E</td>
+<td>+2C</td>
+<td>8</td>
+<td>BSP leaves/subsectors</td>
+</tr>
+<tr>
+<td>+10</td>
+<td>+30</td>
+<td>16</td>
+<td>Segments</td>
+</tr>
+<tr>
+<td>+12</td>
+<td>+34</td>
+<td>12</td>
+<td>Sides</td>
+</tr>
+<tr>
+<td>+14</td>
+<td>+38</td>
+<td>40</td>
+<td>Lines</td>
+</tr>
+<tr>
+<td>+16</td>
+<td>+3C</td>
+<td>4</td>
+<td>Vertices: signed X,Y halfwords</td>
+</tr>
+<tr>
+<td>+18</td>
+<td>+40</td>
+<td>2</td>
+<td>Reject bitset storage, count in halfwords</td>
+</tr>
+<tr>
+<td>+1A</td>
+<td>+44</td>
+<td>2</td>
+<td>Blockmap storage, count in halfwords</td>
+</tr>
+</tbody>
+</table>
+<p>The original loader relocates nonempty record arrays into GBA RAM pointers.
+Sector records have a list count at +8 and relative list pointer at +C;
+<code>0x0800ACA8</code> relocates that pointer. The native loader bounds-checks these lists
+without claiming that their full semantics have been recovered. <code>0x0800ACA0</code>
+and <code>0x0800ACA4</code>, called after loading nodes and leaves, are empty routines.</p>
+<p>Node children at +18/+1A select another node or a leaf, with bit 15 indicating a
+leaf. Every actual node child references an earlier node, so the native loader
+checks that ordering to reject cycles. Leaves contain segment count at +0,
+first segment at +2, sector index at +4 and runtime bookkeeping at +6.</p>
+<p>The blockmap starts with signed origin X,Y and unsigned width,height halfwords.
+Then <code>width * height</code> halfword entries give list offsets in halfword units from
+the start of the blockmap. <code>0x0800975C</code> skips a leading dummy word in each list,
+then visits line indices until <code>0xFFFF</code>. Cells cover 128 world units. The loader
+checks every list against the declared blockmap section and line count. Grid
+iteration/deduplication and runtime entity grids are not part of this loader.</p>
+<h2 id="line-preparation">Line preparation</h2>
+<p>The code at <code>0x0800AD4C</code> through <code>0x0800ADF4</code> computes these line fields:</p>
+<table>
+<thead>
+<tr>
+<th>Offset</th>
+<th>Field</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+00, +02</td>
+<td>Start/end vertex indices</td>
+</tr>
+<tr>
+<td>+04, +06</td>
+<td>Signed 16-bit delta X,Y</td>
+</tr>
+<tr>
+<td>+0C, +0E</td>
+<td>Adjacent sector indices; second requires two-sided flag</td>
+</tr>
+<tr>
+<td>+10, +12</td>
+<td>Maximum/minimum Y</td>
+</tr>
+<tr>
+<td>+14, +16</td>
+<td>Minimum/maximum X</td>
+</tr>
+<tr>
+<td>+18</td>
+<td>Slope classification</td>
+</tr>
+<tr>
+<td>+1A</td>
+<td>Flags, including bit 2 for two-sided lines</td>
+</tr>
+</tbody>
+</table>
+<p>Slope classification is 1 for zero delta X, 0 for zero delta Y, otherwise 2
+when signed integer <code>deltaY / deltaX &gt; 0</code>, and 3 otherwise. The division detail
+matters: a positive shallow slope with truncated quotient zero is classified 3.
+Native code preserves this behavior and 16-bit delta wrapping. Bounds and array
+overlap checks run before any preparation writes.</p>
+<h2 id="validation">Validation</h2>
+<p>Run <code>.venv-linux/bin/python tests/test_map_assets.py</code> inside Ubuntu/WSL.
+<code>analysis/native-map-assets-validation.json</code> records per-level ROM offsets,
+compressed/decompressed sizes, counts and raw decoded SHA-256 hashes.</p>
+<ul>
+<li>All 16 streams agree byte for byte between the native decoder and an
+independent Python decoder; decoded maps range from 22,916 to 147,960 bytes.</li>
+<li>All 7,632 line records agree with the original Thumb preparation code. The
+only hook in that comparison supplies signed integer division; the original
+line instructions execute unchanged in the test oracle.</li>
+<li>164 malformed/truncated input cases cover headers, output size, back
+references, section bounds/aliasing, BSP indices/cycles, leaf sectors, line
+vertices/sectors and blockmap bounds. Native compilation enables strict
+warnings and undefined-behavior checks.</li>
+</ul>
+<p>These checks verify decoded data and collision setup. They do not verify texture
+rendering, spawn behavior, the complete original level initializer or full-game
+integration. Names and campaign ordering have not yet been mapped to resources;
+the public loader accepts the original numeric resource index.</p>
+</main></body></html>

@@ -1,1 +1,55 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player Motion — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="player-motion.md" download>Markdown ↓</a></header><article><h2>Complete native player motion</h2><p><code>src/player_motion.c</code> now implements the entire <code>080064B8</code> control flow using the earlier native controls/vector math, horizontal collision/sliding and vertical physics. <code>ssa_player_motion_step</code> has one explicit horizontal boundary; <code>ssa_player_motion_world_step</code> supplies the native world implementation.</p><p>The original copies six position/velocity words from player to body before physics, copies them back afterward, and round-trips heading through an 8-bit body facing. NULL options preserve this quantization. The two copy routines are <code>08005E04</code> and <code>08005E28</code>; both now compile byte-identically (36 bytes each). Matching evidence is recorded separately in <code>player-sync-match-attempts.json</code>.</p><h3>Multiplayer push and arithmetic</h3><p>When player count exceeds one and the entity&#x27;s index matches the game index at +68, the routine clears its impulse and scans the player array in order. Each other player&#x27;s wrapped coordinate difference is shifted to whole units. The original direction routine estimates distance from the dominant axis and the sine/cosine table. An estimate below 80 replaces impulse direction and strength; the <strong>last eligible player wins</strong>, not the nearest or a vector sum. Original control decay then applies before vector generation.</p><p>The magnitude numerator wraps through a signed 32-bit left shift. An axis of 32768 whole units can produce a negative distance and enter the push branch. The native compatibility path preserves this behavior. It also preserves the earlier impulse/strafe temporary quirk and heading integration order.</p><p><code>SsaMotionFrame.local_player</code> represents game byte +68 used by motion, not the separate local-view byte at <code>0300464E</code>. These may differ. <code>slot</code> identifies the current player&#x27;s record in the supplied peer array. Counts are bounded to the original four player records. The array and entity storage must remain stable.</p><h3>Host ownership and extensions</h3><p><code>SsaPlayerMotion</code> composes the existing movement state with position, Z velocity and body facing. <code>movement.flags</code> is authoritative and synchronized with the vertical player&#x27;s mirror before/after physics. A world call requires matching player/body X/Y and registered world ownership; otherwise copying coordinates would invalidate spatial links. Callback errors can follow controls/body updates and do not roll them back. The caller must handle errors before using partially synchronized state again.</p><p>Non-NULL options make two requested native changes explicit: jump substeps and retention of all 16 heading bits for mouse yaw. These are not claimed as ROM matches. <code>player_runtime.c</code> composes them with initialized players, frame scheduling, camera height and H-toggle view; see <code>player-runtime.md</code>.</p><h3>Validation</h3><p><code>test-player-motion</code> passes 8,672 complete original-routine comparisons: 624 boundary/ordered-peer cases, 6,000 randomized cases, and 2,048 consecutive frames. Only horizontal <code>08004BDC</code> is controlled; original math, copy routines and vertical physics execute. Full player/body bytes, callback entry state, and untouched peers are compared. Fourteen native guards cover pointers, peer lists, counts and callback failures.</p><p><code>test-world</code> adds 2,048 complete <code>080064B8</code> frames on all 16 real maps, with actual original/native controls, grid collision, wall sliding and vertical physics. Original sector-pool operations and the special-contact handler remain recorders; BIOS integer division is serviced by the test oracle. Full player state, body fields, spatial links and ordered contact calls match. These cases are included in <code>native-world-validation.json</code>, separately from the 8,672 generic-boundary cases in <code>native-player-motion-validation.json</code>.</p><p>Strict GCC C11 warnings and UndefinedBehaviorSanitizer are enabled. These are simulation tests, not evidence of rendering, OS input or a complete game loop.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Complete native player motion — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="player-motion.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="complete-native-player-motion">Complete native player motion</h1>
+<p><code>src/player_motion.c</code> now implements the entire <code>080064B8</code> control flow using
+the earlier native controls/vector math, horizontal collision/sliding and
+vertical physics. <code>ssa_player_motion_step</code> has one explicit horizontal boundary;
+<code>ssa_player_motion_world_step</code> supplies the native world implementation.</p>
+<p>The original copies six position/velocity words from player to body before
+physics, copies them back afterward, and round-trips heading through an 8-bit
+body facing. NULL options preserve this quantization. The two copy routines
+are <code>08005E04</code> and <code>08005E28</code>; both now compile byte-identically (36 bytes each).
+Matching evidence is recorded separately in <code>player-sync-match-attempts.json</code>.</p>
+<h2 id="multiplayer-push-and-arithmetic">Multiplayer push and arithmetic</h2>
+<p>When player count exceeds one and the entity's index matches the game index
+at +68, the routine clears its impulse and scans the player array in order.
+Each other player's wrapped coordinate difference is shifted to whole units.
+The original direction routine estimates distance from the dominant axis and
+the sine/cosine table. An estimate below 80 replaces impulse direction and
+strength; the <strong>last eligible player wins</strong>, not the nearest or a vector sum.
+Original control decay then applies before vector generation.</p>
+<p>The magnitude numerator wraps through a signed 32-bit left shift. An axis of
+32768 whole units can produce a negative distance and enter the push branch.
+The native compatibility path preserves this behavior. It also preserves the
+earlier impulse/strafe temporary quirk and heading integration order.</p>
+<p><code>SsaMotionFrame.local_player</code> represents game byte +68 used by motion, not the
+separate local-view byte at <code>0300464E</code>. These may differ. <code>slot</code> identifies the
+current player's record in the supplied peer array. Counts are bounded to the
+original four player records. The array and entity storage must remain stable.</p>
+<h2 id="host-ownership-and-extensions">Host ownership and extensions</h2>
+<p><code>SsaPlayerMotion</code> composes the existing movement state with position, Z velocity
+and body facing. <code>movement.flags</code> is authoritative and synchronized with the
+vertical player's mirror before/after physics. A world call requires matching
+player/body X/Y and registered world ownership; otherwise copying coordinates
+would invalidate spatial links. Callback errors can follow controls/body
+updates and do not roll them back. The caller must handle errors before using
+partially synchronized state again.</p>
+<p>Non-NULL options make two requested native changes explicit: jump substeps and
+retention of all 16 heading bits for mouse yaw. These are not claimed as ROM
+matches. <code>player_runtime.c</code> composes them with initialized players, frame
+scheduling, camera height and H-toggle view; see <code>player-runtime.md</code>.</p>
+<h2 id="validation">Validation</h2>
+<p><code>test-player-motion</code> passes 8,672 complete original-routine comparisons:
+624 boundary/ordered-peer cases, 6,000 randomized cases, and 2,048 consecutive
+frames. Only horizontal <code>08004BDC</code> is controlled; original math, copy routines
+and vertical physics execute. Full player/body bytes, callback entry state,
+and untouched peers are compared. Fourteen native guards cover pointers,
+peer lists, counts and callback failures.</p>
+<p><code>test-world</code> adds 2,048 complete <code>080064B8</code> frames on all 16 real maps, with
+actual original/native controls, grid collision, wall sliding and vertical
+physics. Original sector-pool operations and the special-contact handler remain
+recorders; BIOS integer division is serviced by the test oracle. Full player
+state, body fields, spatial links and ordered contact calls match. These cases
+are included in <code>native-world-validation.json</code>, separately from the 8,672
+generic-boundary cases in <code>native-player-motion-validation.json</code>.</p>
+<p>Strict GCC C11 warnings and UndefinedBehaviorSanitizer are enabled. These are
+simulation tests, not evidence of rendering, OS input or a complete game loop.</p>
+</main></body></html>

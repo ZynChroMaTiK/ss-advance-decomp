@@ -1,1 +1,117 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player Runtime — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="player-runtime.md" download>Markdown ↓</a></header><article><h2>Native player runtime composition</h2><p><code>src/player_runtime.c</code> connects the recovered player initializer, complete player-frame wrapper, movement, dynamic world collision, wall sliding, vertical physics, camera height, new jumping, and H-toggle chase camera. It executes native C against the decoded maps and data tables. There is no ROM execution in this adapter and no emulator dependency.</p><p>This is a player runtime component, not a playable executable or a complete game loop. Death, hazards, sector scripts, animation playback and audio remain required external callbacks. There is no renderer, OS input backend, enemy activation, combat, network scheduling, menu loop, or real-time clock integration here.</p><h3>Ownership and setup</h3><p>Load a map, spawn plan and math tables, initialize a world and slide workspace, then call <code>ssa_players_spawn</code>. Bind a zero-initialized <code>SsaPlayerRuntime</code> to one active spawned player using <code>ssa_player_runtime_init</code>. Its player/world/slide/ table/map references must remain valid and stable until it is freed. The runtime allocates and owns a dedicated <code>SsaMapCollision</code> for camera obstruction queries; it never borrows gameplay query scratch. Free runtimes before the map. Runtime free does not unregister or free the player, world, or slide workspace.</p><p>Initialization imports <code>player.entity_health</code> into <code>player.inventory.health</code>. This joins two previously separate host views of the original entity health field; original player initialization deliberately leaves its inventory record zero while setting entity health to 100. Once bound, <strong>inventory.health is authoritative</strong> for pickup and gameplay hooks. The adapter mirrors it back to entity_health after every stage and external callback, including callback failure. Hooks must therefore change inventory.health, not the entity mirror.</p><p>Similarly, <code>motion.movement.flags</code> is authoritative for the shared original player flags. It is synchronized to <code>vertical.flags</code>; actual motion updates both. Camera height mutates eye offset/velocity, but does not change these flags. The adapter refreshes the frame wrapper&#x27;s cached position and eye Z from motion and camera state. External hooks change the player/motion/camera fields, not those frame caches. The wrapper&#x27;s entity timer and animation-state byte are owned by <code>runtime.frame</code> and may be changed there by the callbacks.</p><p>World coordinates remain governed by the world API. If a hook teleports or moves a registered player, it must use the appropriate world operation and update motion X/Y to the committed body coordinates. Direct coordinate replacement would invalidate spatial links. Frame callbacks cannot replace/free pointers or reenter the runtime.</p><h3>Input and frame ordering</h3><p><code>SsaPlayerRuntimeInput</code> supplies already translated logical keys, a relative yaw delta in 65536 units per full turn, held jump action, controls-enabled state, original tick count, camera counter, and player metadata. A future platform backend must convert keyboard/mouse events and elapsed time into these values. This API does not claim to bind OS keys or capture the mouse.</p><p>The runtime retains all 16 heading bits after motion so small mouse yaw deltas survive the original entity&#x27;s 8-bit facing copy. It enables jump-aware vertical substeps with the existing edge/landing/head-contact rules. Disabled controls suppress logical keys and mouse yaw, consume simulated jump edges, and allow existing movement velocities to decay under the original movement rules.</p><p>Call <code>ssa_player_runtime_key</code> for H key events. Fresh presses toggle mode; repeats, held presses and disabled input follow the established <code>ssa_view_key</code> contract. <code>ssa_player_runtime_focus_lost</code> clears the H-held latch. Jump remains a held action supplied each simulated frame. These calls do not create an OS event loop.</p><p>The native frame calls required death processing, actual motion/world/sliding/ jump, actual camera height, required hazards, required sector handling, and any animation request in original order. Camera footsteps are forwarded through the required sound callback. The wrapper copies the local view before hazards and sector scripting. After a successful frame, the runtime computes its final first/third-person pose using the separate camera workspace.</p><p>Two original player indices are deliberately independent:</p><p>| Input | Original source | Uses | | --- | --- | --- | | <code>input.motion.local_player</code> | game state <code>+68</code> | Protection timer, multiplayer push and remote horizontal-movement gate | | <code>input.local_player</code> | global <code>0300464E</code> | Local camera/audio and local-view copying |</p><p>The corresponding wrapper fields are <code>game.protected_player</code> and <code>game.local_player</code>. Each index must fit <code>motion.player_count</code>. Multiplayer supplies a stable entity-pointer array and slot for the current player. Changing the gameplay metadata inside a hook is supported within these bounds; the next movement stage rechecks the count/index constraints.</p><h3>Errors and verification</h3><p>Every external callback is required and returns nonnegative success or negative failure. Missing callbacks or invalid entry metadata fail before the runtime changes player state. Reentry is rejected. Callback or geometry failures retain earlier effects, synchronize health/flags/cache mirrors, clear the busy marker, and return <code>-1</code>. The final view pose is not refreshed after a failed frame; callers must check the return before rendering it. These are explicit native integration rules, not behavior matched to an original error API.</p><p><code>tests/test_player_runtime.py</code> builds the native composition with strict compiler warnings, AddressSanitizer and UndefinedBehaviorSanitizer. Leak scanning follows the existing WSL workaround (<code>ASAN_OPTIONS=detect_leaks=0</code>); this is not a claim of LeakSanitizer coverage. Three PIE sanitizer executions timed out locally despite the same binary completing cleanly on direct rerun. The test runner now builds its sanitizer executable with <code>-no-pie</code> and limits execution to 20 seconds; the rebuilt expanded suite, a separate direct run, and the final PowerShell driver invocation completed successfully.</p><p>The tests use all 16 actual maps and actual original player spawn placement. They exercise thousands of consecutive frames with native movement, jump arcs, held-jump landing, mouse-yaw precision, disabled controls, H press/repeat/focus handling, camera obstruction, local-view copying and coherent spatial ownership. Each map also has a real E1 health pickup removed synchronously from a native world query during movement; its updated inventory health survives the camera and external callbacks. This fixture uses a known pickup at the player position; it does not activate every map object or enemy.</p><p>Another 256 frames deliberately disagree about the protected/movement index and display index, checking the remote movement gate, protection expiry, camera locality and local-view preservation. Callback failures at death, hazards, sector, animation and audio boundaries verify partial-effect and stale-pose semantics. See <code>native-player-runtime-validation.json</code> for the exact current assertion and frame counts. These are native composition tests, not additional ROM comparisons; the constituent original routines have their own differential reports.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native player runtime composition — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="player-runtime.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-player-runtime-composition">Native player runtime composition</h1>
+<p><code>src/player_runtime.c</code> connects the recovered player initializer, complete
+player-frame wrapper, movement, dynamic world collision, wall sliding, vertical
+physics, camera height, new jumping, and H-toggle chase camera. It executes native
+C against the decoded maps and data tables. There is no ROM execution in this
+adapter and no emulator dependency.</p>
+<p>This is a player runtime component, not a playable executable or a complete game
+loop. Death, hazards, sector scripts, animation playback and audio remain required
+external callbacks. There is no renderer, OS input backend, enemy activation,
+combat, network scheduling, menu loop, or real-time clock integration here.</p>
+<h2 id="ownership-and-setup">Ownership and setup</h2>
+<p>Load a map, spawn plan and math tables, initialize a world and slide workspace,
+then call <code>ssa_players_spawn</code>. Bind a zero-initialized <code>SsaPlayerRuntime</code> to one
+active spawned player using <code>ssa_player_runtime_init</code>. Its player/world/slide/
+table/map references must remain valid and stable until it is freed. The runtime
+allocates and owns a dedicated <code>SsaMapCollision</code> for camera obstruction queries;
+it never borrows gameplay query scratch. Free runtimes before the map. Runtime
+free does not unregister or free the player, world, or slide workspace.</p>
+<p>Initialization imports <code>player.entity_health</code> into <code>player.inventory.health</code>.
+This joins two previously separate host views of the original entity health
+field; original player initialization deliberately leaves its inventory record
+zero while setting entity health to 100. Once bound, <strong>inventory.health is
+authoritative</strong> for pickup and gameplay hooks. The adapter mirrors it back to
+entity_health after every stage and external callback, including callback
+failure. Hooks must therefore change inventory.health, not the entity mirror.</p>
+<p>Similarly, <code>motion.movement.flags</code> is authoritative for the shared original
+player flags. It is synchronized to <code>vertical.flags</code>; actual motion updates
+both. Camera height mutates eye offset/velocity, but does not change these flags.
+The adapter refreshes the frame wrapper's cached position and eye Z from motion
+and camera state. External hooks change the player/motion/camera fields, not those
+frame caches. The wrapper's entity timer and animation-state byte are owned by
+<code>runtime.frame</code> and may be changed there by the callbacks.</p>
+<p>World coordinates remain governed by the world API. If a hook teleports or moves
+a registered player, it must use the appropriate world operation and update
+motion X/Y to the committed body coordinates. Direct coordinate replacement
+would invalidate spatial links. Frame callbacks cannot replace/free pointers or
+reenter the runtime.</p>
+<h2 id="input-and-frame-ordering">Input and frame ordering</h2>
+<p><code>SsaPlayerRuntimeInput</code> supplies already translated logical keys, a relative yaw
+delta in 65536 units per full turn, held jump action, controls-enabled state,
+original tick count, camera counter, and player metadata. A future platform
+backend must convert keyboard/mouse events and elapsed time into these values.
+This API does not claim to bind OS keys or capture the mouse.</p>
+<p>The runtime retains all 16 heading bits after motion so small mouse yaw deltas
+survive the original entity's 8-bit facing copy. It enables jump-aware vertical
+substeps with the existing edge/landing/head-contact rules. Disabled controls
+suppress logical keys and mouse yaw, consume simulated jump edges, and allow
+existing movement velocities to decay under the original movement rules.</p>
+<p>Call <code>ssa_player_runtime_key</code> for H key events. Fresh presses toggle mode; repeats,
+held presses and disabled input follow the established <code>ssa_view_key</code> contract.
+<code>ssa_player_runtime_focus_lost</code> clears the H-held latch. Jump remains a held action
+supplied each simulated frame. These calls do not create an OS event loop.</p>
+<p>The native frame calls required death processing, actual motion/world/sliding/
+jump, actual camera height, required hazards, required sector handling, and any
+animation request in original order. Camera footsteps are forwarded through the
+required sound callback. The wrapper copies the local view before hazards and
+sector scripting. After a successful frame, the runtime computes its final
+first/third-person pose using the separate camera workspace.</p>
+<p>Two original player indices are deliberately independent:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Original source</th>
+<th>Uses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>input.motion.local_player</code></td>
+<td>game state <code>+68</code></td>
+<td>Protection timer, multiplayer push and remote horizontal-movement gate</td>
+</tr>
+<tr>
+<td><code>input.local_player</code></td>
+<td>global <code>0300464E</code></td>
+<td>Local camera/audio and local-view copying</td>
+</tr>
+</tbody>
+</table>
+<p>The corresponding wrapper fields are <code>game.protected_player</code> and
+<code>game.local_player</code>. Each index must fit <code>motion.player_count</code>. Multiplayer
+supplies a stable entity-pointer array and slot for the current player. Changing
+the gameplay metadata inside a hook is supported within these bounds; the next
+movement stage rechecks the count/index constraints.</p>
+<h2 id="errors-and-verification">Errors and verification</h2>
+<p>Every external callback is required and returns nonnegative success or negative
+failure. Missing callbacks or invalid entry metadata fail before the runtime
+changes player state. Reentry is rejected. Callback or geometry failures retain
+earlier effects, synchronize health/flags/cache mirrors, clear the busy marker,
+and return <code>-1</code>. The final view pose is not refreshed after a failed frame;
+callers must check the return before rendering it. These are explicit native
+integration rules, not behavior matched to an original error API.</p>
+<p><code>tests/test_player_runtime.py</code> builds the native composition with strict compiler
+warnings, AddressSanitizer and UndefinedBehaviorSanitizer. Leak scanning follows
+the existing WSL workaround (<code>ASAN_OPTIONS=detect_leaks=0</code>); this is not a claim of
+LeakSanitizer coverage. Three PIE sanitizer executions timed out locally despite
+the same binary completing cleanly on direct rerun. The test runner now builds
+its sanitizer executable with <code>-no-pie</code> and limits execution to 20 seconds;
+the rebuilt expanded suite, a separate direct run, and the final PowerShell
+driver invocation completed successfully.</p>
+<p>The tests use all 16 actual maps and actual original player spawn placement.
+They exercise thousands of consecutive frames with native movement, jump arcs,
+held-jump landing, mouse-yaw precision, disabled controls, H press/repeat/focus
+handling, camera obstruction, local-view copying and coherent spatial ownership.
+Each map also has a real E1 health pickup removed synchronously from a native
+world query during movement; its updated inventory health survives the camera
+and external callbacks. This fixture uses a known pickup at the player position;
+it does not activate every map object or enemy.</p>
+<p>Another 256 frames deliberately disagree about the protected/movement index and
+display index, checking the remote movement gate, protection expiry, camera
+locality and local-view preservation. Callback failures at death, hazards, sector,
+animation and audio boundaries verify partial-effect and stale-pose semantics.
+See <code>native-player-runtime-validation.json</code> for the exact current assertion and
+frame counts. These are native composition tests, not additional ROM comparisons;
+the constituent original routines have their own differential reports.</p>
+</main></body></html>

@@ -1,1 +1,67 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon Loadout — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="weapon-loadout.md" download>Markdown ↓</a></header><article><h2>Initial weapon loadout</h2><p><code>weapon_loadout.c</code> recovers complete <code>0801240C</code>, called by sprite initialization wrapper <code>0800F84C</code> before its <code>080101F4</code> call. It initializes each indexed player whose original player flags at <code>+BC</code> contain bit 4. Those flags are supplied as <code>SsaWeaponControl.keys</code>, independently of held/pressed weapon buttons.</p><p>For every active player, it allocates a sprite through the explicit <code>F9B4</code> boundary, replaces the weapon object pointer, clears weapon flags, sets owned weapons to bit 0 and ammo for weapon 1 to 999, and empties the pending-weapon count. The sprite receives X=<code>0x7800</code>, Y=<code>0xA000</code>, type 2, layer 14 and owner equal to player index plus one. Other sprite fields retain their allocated values until the subsequent animation setter modifies them. An allocator can use the existing <code>ssa_weapon_object_init</code> defaults.</p><p>Original settings byte <code>+27</code> selects a loadout. Zero does not read the table and leaves ammo for weapons 2–10 unchanged, although their ownership bits are reset. For nonzero settings, nine signed halfwords at <code>0844BCF0 + setting * 20</code> provide ammo for weapons 2–10. Each nonzero entry grants its weapon bit and stores the signed minimum of the entry and that weapon&#x27;s signed capacity. Zero entries clear ammo and do not grant the weapon. Negative entries/capacities retain the original signed behavior. The tenth halfword in each record is unused here.</p><p>The data loader copies the <strong>36</strong> nonzero-setting records through <code>0844BFD3</code>. They form three repetitions of the twelve observed records. The next data begins at <code>0844BFD4</code>; setting 37 or above is rejected natively instead of reading unrelated data. This API preserves the original setting value and does not assign a new menu or campaign meaning to it.</p><p>Any nonzero settings byte <code>+26</code> then overrides ammo for weapons 2–10 to 999 and grants all ten weapons. Requested weapon starts at 1; original previous-weapon cycling selects the highest owned weapon with nonzero ammo. The selected ID becomes current, and native <code>FC04</code> sets animation=current−1 with period 3.</p><p>One original detail is preserved exactly: <strong>only cooldown[player index] is cleared</strong>. The apparent ten-iteration loop has a single halfword store after the loop and an address indexed by player index. The other nine cooldowns retain their input values. Inactive players retain all fields and allocate no sprite. Health, pending weapon contents, movement, jump and camera state are outside this routine and are not reset.</p><p>The host API accepts 0–4 indexed player projections. Inventory, control, cooldown arrays and object storage remain caller-owned and stable. Its shared loadout state prevents callback reentry. Invalid projections are rejected before mutation. Allocation failure or a NULL object returns -1 instead of the original NULL dereference; previously initialized players remain changed. Callbacks may allocate the requested object but must not mutate projections, replace/free their pointers or reenter. Runtime integration must also enforce its existing player/world update ownership rules.</p><p><code>tests/test_weapon_loadout_rom.py</code> passes <strong>12,979</strong> complete original routine comparisons. It covers all 37 settings including zero, counts 0–4, every active mask, god-mode bytes 0/1/255 and 4,096 signed table/capacity fuzz cases. Only <code>F9B4</code> allocation is controlled: original <code>12050</code>, <code>11FFC</code> and <code>FC04</code> execute. Ordered allocation snapshots and all four 256-byte player records and 48-byte sprite records match, including inactive players and untouched fields. The suite also checks <strong>17</strong> guards, <strong>13,018</strong> callback reentry rejections and <strong>2</strong> allocation failure paths. Strict compilation and undefined-behavior sanitizer pass. Counts and source hashes are in <code>weapon-loadout-validation.json</code>.</p><p>This is native behavior recovery, not a byte-identical C match for <code>1240C</code>.</p><p><code>ssa_weapon_runtimes_start</code> now binds this initialization to real native player, combat and weapon runtimes. See <code>weapon-start.md</code> for 608 starts, subsequent hitscan/projectile firing, two-player failure cleanup and jump/H verification.</p><p>The PC frontend now distinguishes fresh level entry from existing progress. Passwords and explicit <code>--level N</code> launches select the matching ROM row (<code>difficulty*12 + N + 1</code>), including its capped ammo and initial selected gun. Ordinary New Game retains original setting0. The host helper <code>ssa_native_game_init_campaign</code> uses a later map&#x27;s starter row only when no progress is supplied. A supplied <code>SsaNativeCarry</code> takes precedence completely: weapons, depleted ammo, pending acquisitions, selected/previous weapon, health, armor, score and H mode carry through. R restores the captured entry unchanged. No per-level starter grant is added on normal advancement. This follows the user&#x27;s explicit fresh-start/carry distinction; it does not claim recovery of the entire original outer campaign dispatcher.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Initial weapon loadout — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="weapon-loadout.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="initial-weapon-loadout">Initial weapon loadout</h1>
+<p><code>weapon_loadout.c</code> recovers complete <code>0801240C</code>, called by sprite initialization
+wrapper <code>0800F84C</code> before its <code>080101F4</code> call. It initializes each indexed player
+whose original player flags at <code>+BC</code> contain bit 4. Those flags are supplied as
+<code>SsaWeaponControl.keys</code>, independently of held/pressed weapon buttons.</p>
+<p>For every active player, it allocates a sprite through the explicit <code>F9B4</code>
+boundary, replaces the weapon object pointer, clears weapon flags, sets owned
+weapons to bit 0 and ammo for weapon 1 to 999, and empties the pending-weapon
+count. The sprite receives X=<code>0x7800</code>, Y=<code>0xA000</code>, type 2, layer 14 and owner
+equal to player index plus one. Other sprite fields retain their allocated
+values until the subsequent animation setter modifies them. An allocator can
+use the existing <code>ssa_weapon_object_init</code> defaults.</p>
+<p>Original settings byte <code>+27</code> selects a loadout. Zero does not read the table and
+leaves ammo for weapons 2–10 unchanged, although their ownership bits are reset.
+For nonzero settings, nine signed halfwords at <code>0844BCF0 + setting * 20</code> provide
+ammo for weapons 2–10. Each nonzero entry grants its weapon bit and stores the
+signed minimum of the entry and that weapon's signed capacity. Zero entries
+clear ammo and do not grant the weapon. Negative entries/capacities retain the
+original signed behavior. The tenth halfword in each record is unused here.</p>
+<p>The data loader copies the <strong>36</strong> nonzero-setting records through <code>0844BFD3</code>.
+They form three repetitions of the twelve observed records. The next data
+begins at <code>0844BFD4</code>; setting 37 or above is rejected natively instead of reading
+unrelated data. This API preserves the original setting value and does not
+assign a new menu or campaign meaning to it.</p>
+<p>Any nonzero settings byte <code>+26</code> then overrides ammo for weapons 2–10 to 999 and
+grants all ten weapons. Requested weapon starts at 1; original previous-weapon
+cycling selects the highest owned weapon with nonzero ammo. The selected ID
+becomes current, and native <code>FC04</code> sets animation=current−1 with period 3.</p>
+<p>One original detail is preserved exactly: <strong>only cooldown[player index] is
+cleared</strong>. The apparent ten-iteration loop has a single halfword store after
+the loop and an address indexed by player index. The other nine cooldowns
+retain their input values. Inactive players retain all fields and allocate no
+sprite. Health, pending weapon contents, movement, jump and camera state are
+outside this routine and are not reset.</p>
+<p>The host API accepts 0–4 indexed player projections. Inventory, control,
+cooldown arrays and object storage remain caller-owned and stable. Its shared
+loadout state prevents callback reentry. Invalid projections are rejected
+before mutation. Allocation failure or a NULL object returns -1 instead of
+the original NULL dereference; previously initialized players remain changed.
+Callbacks may allocate the requested object but must not mutate projections,
+replace/free their pointers or reenter. Runtime integration must also enforce
+its existing player/world update ownership rules.</p>
+<p><code>tests/test_weapon_loadout_rom.py</code> passes <strong>12,979</strong> complete original routine
+comparisons. It covers all 37 settings including zero, counts 0–4, every active
+mask, god-mode bytes 0/1/255 and 4,096 signed table/capacity fuzz cases. Only
+<code>F9B4</code> allocation is controlled: original <code>12050</code>, <code>11FFC</code> and <code>FC04</code> execute.
+Ordered allocation snapshots and all four 256-byte player records and 48-byte
+sprite records match, including inactive players and untouched fields. The
+suite also checks <strong>17</strong> guards, <strong>13,018</strong> callback reentry rejections and <strong>2</strong>
+allocation failure paths. Strict compilation and undefined-behavior sanitizer
+pass. Counts and source hashes are in <code>weapon-loadout-validation.json</code>.</p>
+<p>This is native behavior recovery, not a byte-identical C match for <code>1240C</code>.</p>
+<p><code>ssa_weapon_runtimes_start</code> now binds this initialization to real native player,
+combat and weapon runtimes. See <code>weapon-start.md</code> for 608 starts, subsequent
+hitscan/projectile firing, two-player failure cleanup and jump/H verification.</p>
+<p>The PC frontend now distinguishes fresh level entry from existing progress.
+Passwords and explicit <code>--level N</code> launches select the matching ROM row
+(<code>difficulty*12 + N + 1</code>), including its capped ammo and initial selected gun.
+Ordinary New Game retains original setting0. The host helper
+<code>ssa_native_game_init_campaign</code> uses a later map's starter row only when no
+progress is supplied. A supplied <code>SsaNativeCarry</code> takes precedence completely:
+weapons, depleted ammo, pending acquisitions, selected/previous weapon, health,
+armor, score and H mode carry through. R restores the captured entry unchanged.
+No per-level starter grant is added on normal advancement. This follows the
+user's explicit fresh-start/carry distinction; it does not claim recovery of
+the entire original outer campaign dispatcher.</p>
+</main></body></html>

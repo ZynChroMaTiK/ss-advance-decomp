@@ -1,1 +1,146 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Actor Animation — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="actor-animation.md" download>Markdown ↓</a></header><article><h2>Native actor animation</h2><p><code>actor_animation.c</code> recovers entity animation setter <code>08005394</code> and the complete active-entity animation traversal <code>08000908</code>. <code>actor_animation_runtime.c</code> binds the latter to the shared entity pool and stable script actors. This is native animation sequence playback, including its completion/event bytes. It does not decode or draw sprites, textures, or animation images.</p><p>The original frame order distinguishes two animation systems:</p><p>1. Entity controllers, sector movers, scripts, and multiplayer pickup respawn. 2. <code>08000908</code>: actor animation, over the entity pool. 3. <code>0800F85C</code>: sprite controllers, including weapon control. 4. <code>0800E460</code>: sprite animation, already recovered in <code>weapon_animation.c</code>. 5. Rendering.</p><p>Do not tick actor animations again in E460. Both animation traversals proceed forward through their respective active-index arrays. The actor array is a 100-slot pool with 16-bit indices at <code>03004470</code> and a 16-bit live count at <code>03004354</code>; its body storage pointer is <code>03004644</code> with 116-byte records. E460 instead uses a separate 84-slot pool of 48-byte sprite records, 32-bit active indices through <code>030055C0</code>, count at <code>030055C4</code>, and body pointer <code>0300559C</code>. The complete non-weapon sprite controller/pool adapter is not added by this change.</p><h3>Exact actor semantics</h3><p>| Entity offset | Native projection | Meaning | | --- | --- | --- | | +58 halfword | animation | Sequence ID | | +5A halfword | frame | Current sequence frame word | | +5C byte | index | Sequence word index | | +5D byte | elapsed | Elapsed byte counter | | +5E byte | period | Frame period | | +5F byte | done | Completion/event byte |</p><p>The setter accepts IDs through <code>8D</code>, or <code>FFFF</code>; other IDs leave everything unchanged. It stores the low byte of the period and clears index, elapsed, and done, preserving the current displayed frame word.</p><p>00908 skips the entire entity when body flag <code>0800</code> is set. Otherwise it loads the sequence pointer from <code>08449D30 + animation * 12</code>, writes the current frame, and advances only when the period is nonzero. It adds the game&#x27;s byte timestep to elapsed with byte wrap <strong>before</strong> comparing against the period. Each consumed period reads the next sequence word:</p><p class="bullet">• <code>FFFF</code>: index becomes zero, done becomes <code>FF</code>, and frame comes from the start.</p><p class="bullet">• <code>FFFE</code>: done becomes <code>FE</code>, period becomes <code>FF</code>, and the previous index/frame</p><p>  remain. The loop exits immediately.</p><p class="bullet">• <code>FFFA</code> through <code>FFFD</code>: done receives the low marker byte; index advances past</p><p>  the marker to the next frame.</p><p class="bullet">• Other values: index advances normally, with byte wrap.</p><p>Done is not cleared by ordinary advancement. Unlike E460, actor loop/hold markers do not normalize it to 1, frame words have no high-bit merge, markers are skipped, and no sprite flag substitutes a fixed timestep of one. Game pause flags are not consulted by 00908.</p><p><code>ssa_actor_animations_load</code> copies 772 halfwords from <code>08449728..08449D30</code> and 142 sequence offsets. It does not retain the ROM pointer or execute ROM code. The other two words of each 12-byte table record are not needed by 00908 and are not a recovered rendering format. IDs 0..3 start at terminal words, so the loader retains the contiguous original sequence data rather than inventing nonempty-sequence rules. The original setter permits ID <code>FFFF</code>, but an unskipped 00908 would dereference outside the table; native code rejects it without mutation. Invalid indices, truncated data, bad pointers, and ticks above 255 are similarly guarded.</p><h3>Runtime ownership</h3><p>Zero-initialize <code>SsaActorAnimationRuntime</code>, then initialize with the stable spawn adapter, loaded animation data, reserved body array in original slot order, and one stable <code>SsaActorAnimation *</code> for each reserved body. These pointers are copied, not owned. The caller forwards every reserved body&#x27;s animation-set event to its projection, including player motion and lifecycle events. Free the animation adapter before spawn/world teardown.</p><p>Owned script actors are projected automatically each frame, including new and reused slots. Existing metadata fields remain canonical; the appended <code>animation_display_frame</code> stores +5A. The adapter writes all six fields back after native advancement. CD and projectile adapters already load the done byte from the actor on their next update. No completion callback or test-driven done assignment is needed.</p><p>The runtime checks world/pool ownership, positions, duplicate bodies, and busy spawn/world/level workspaces. No callbacks execute during advancement. External owners must not mutate bound entities/state or call this stage during another controller/player update. The outer frame adapter is responsible for scheduling and its higher-level reentry guard. A failed animation advance leaves all animation projections unchanged; animation playback does not change pool order, entity movement, health, timers, groups, or ownership.</p><h3>Evidence</h3><p><code>tests/test_actor_animation_rom.py</code> executes whole original 05394 and 00908 routines in test-only Unicorn with no instruction hooks. It compares complete 116-byte entities, including unchanged bytes, and active-index storage. <code>actor-animation-validation.json</code> records <strong>218,240</strong> comparisons:</p><p class="bullet">• 131,072 setter comparisons covering all IDs and all periods.</p><p class="bullet">• 36,352 actual-sequence/timestep combinations.</p><p class="bullet">• 45,440 consecutive animation frames.</p><p class="bullet">• 2,048 flag-0800 skips, including arbitrary invalid IDs.</p><p class="bullet">• 3,072 explicit marker-data cases.</p><p class="bullet">• 256 complete shuffled/sparse pool frames, containing 11,531 active updates.</p><p>There are also 13 native guards, including all-or-nothing pool failure. The native library runs with UBSan.</p><p><code>tests/test_actor_animation_runtime.py</code> compiles the real native adapters with ASan and UBSan (<code>-no-pie</code>, leak scanning disabled). The real-map integration passes <strong>75,088 assertions</strong> on all 16 maps: 11,584 animation stages, 32 natural CD death-animation completions, 32 corpse releases, 16 reused slots, 2,048 player jump/H frames, 16 actual player animation setter events, and 560 guards. The CD death sequence reaches its original <code>FE</code> completion marker at tick 66; the next controller observes it and clears the hit flag. Corpse destruction still follows its separate 360-tick timer, not an invented completion gate. Death uses native combat and the controller uses native enemy queries. Presentation callbacks observe events; no fixture writes animation completion. Results and source hashes are in <code>native-actor-animation-validation.json</code>.</p><p><code>recovered/actor_animation_set.c</code> matched 05394 exactly through the actual decomp.wtf <code>compile_and_diff</code> engine on the first manual attempt: <strong>60 bytes, 30 instructions</strong>. Its claim was released automatically. 00908 is behaviorally validated native C, not an exact matching claim. The latest export includes this 60-byte C setter. An independent rebuild with 68 matched C functions reproduces the complete original ROM byte for byte; see <code>rebuild-validation.json</code>.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native actor animation — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="actor-animation.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-actor-animation">Native actor animation</h1>
+<p><code>actor_animation.c</code> recovers entity animation setter <code>08005394</code> and the complete
+active-entity animation traversal <code>08000908</code>. <code>actor_animation_runtime.c</code> binds
+the latter to the shared entity pool and stable script actors. This is native
+animation sequence playback, including its completion/event bytes. It does not
+decode or draw sprites, textures, or animation images.</p>
+<p>The original frame order distinguishes two animation systems:</p>
+<ol>
+<li>Entity controllers, sector movers, scripts, and multiplayer pickup respawn.</li>
+<li><code>08000908</code>: actor animation, over the entity pool.</li>
+<li><code>0800F85C</code>: sprite controllers, including weapon control.</li>
+<li><code>0800E460</code>: sprite animation, already recovered in <code>weapon_animation.c</code>.</li>
+<li>Rendering.</li>
+</ol>
+<p>Do not tick actor animations again in E460. Both animation traversals proceed
+forward through their respective active-index arrays. The actor array is a
+100-slot pool with 16-bit indices at <code>03004470</code> and a 16-bit live count at
+<code>03004354</code>; its body storage pointer is <code>03004644</code> with 116-byte records.
+E460 instead uses a separate 84-slot pool of 48-byte sprite records, 32-bit
+active indices through <code>030055C0</code>, count at <code>030055C4</code>, and body pointer
+<code>0300559C</code>. The complete non-weapon sprite controller/pool adapter is not added
+by this change.</p>
+<h2 id="exact-actor-semantics">Exact actor semantics</h2>
+<table>
+<thead>
+<tr>
+<th>Entity offset</th>
+<th>Native projection</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+58 halfword</td>
+<td>animation</td>
+<td>Sequence ID</td>
+</tr>
+<tr>
+<td>+5A halfword</td>
+<td>frame</td>
+<td>Current sequence frame word</td>
+</tr>
+<tr>
+<td>+5C byte</td>
+<td>index</td>
+<td>Sequence word index</td>
+</tr>
+<tr>
+<td>+5D byte</td>
+<td>elapsed</td>
+<td>Elapsed byte counter</td>
+</tr>
+<tr>
+<td>+5E byte</td>
+<td>period</td>
+<td>Frame period</td>
+</tr>
+<tr>
+<td>+5F byte</td>
+<td>done</td>
+<td>Completion/event byte</td>
+</tr>
+</tbody>
+</table>
+<p>The setter accepts IDs through <code>8D</code>, or <code>FFFF</code>; other IDs leave everything
+unchanged. It stores the low byte of the period and clears index, elapsed, and
+done, preserving the current displayed frame word.</p>
+<p>00908 skips the entire entity when body flag <code>0800</code> is set. Otherwise it loads
+the sequence pointer from <code>08449D30 + animation * 12</code>, writes the current frame,
+and advances only when the period is nonzero. It adds the game's byte timestep
+to elapsed with byte wrap <strong>before</strong> comparing against the period. Each consumed
+period reads the next sequence word:</p>
+<ul>
+<li><code>FFFF</code>: index becomes zero, done becomes <code>FF</code>, and frame comes from the start.</li>
+<li><code>FFFE</code>: done becomes <code>FE</code>, period becomes <code>FF</code>, and the previous index/frame
+remain. The loop exits immediately.</li>
+<li><code>FFFA</code> through <code>FFFD</code>: done receives the low marker byte; index advances past
+the marker to the next frame.</li>
+<li>Other values: index advances normally, with byte wrap.</li>
+</ul>
+<p>Done is not cleared by ordinary advancement. Unlike E460, actor loop/hold
+markers do not normalize it to 1, frame words have no high-bit merge, markers
+are skipped, and no sprite flag substitutes a fixed timestep of one. Game
+pause flags are not consulted by 00908.</p>
+<p><code>ssa_actor_animations_load</code> copies 772 halfwords from <code>08449728..08449D30</code> and
+142 sequence offsets. It does not retain the ROM pointer or execute ROM code.
+The other two words of each 12-byte table record are not needed by 00908 and
+are not a recovered rendering format. IDs 0..3 start at terminal words, so the
+loader retains the contiguous original sequence data rather than inventing
+nonempty-sequence rules. The original setter permits ID <code>FFFF</code>, but an unskipped
+00908 would dereference outside the table; native code rejects it without
+mutation. Invalid indices, truncated data, bad pointers, and ticks above 255
+are similarly guarded.</p>
+<h2 id="runtime-ownership">Runtime ownership</h2>
+<p>Zero-initialize <code>SsaActorAnimationRuntime</code>, then initialize with the stable
+spawn adapter, loaded animation data, reserved body array in original slot
+order, and one stable <code>SsaActorAnimation *</code> for each reserved body. These
+pointers are copied, not owned. The caller forwards every reserved body's
+animation-set event to its projection, including player motion and lifecycle
+events. Free the animation adapter before spawn/world teardown.</p>
+<p>Owned script actors are projected automatically each frame, including new and
+reused slots. Existing metadata fields remain canonical; the appended
+<code>animation_display_frame</code> stores +5A. The adapter writes all six fields back
+after native advancement. CD and projectile adapters already load the done
+byte from the actor on their next update. No completion callback or test-driven
+done assignment is needed.</p>
+<p>The runtime checks world/pool ownership, positions, duplicate bodies, and busy
+spawn/world/level workspaces. No callbacks execute during advancement. External
+owners must not mutate bound entities/state or call this stage during another
+controller/player update. The outer frame adapter is responsible for scheduling
+and its higher-level reentry guard. A failed animation advance leaves all
+animation projections unchanged; animation playback does not change pool order,
+entity movement, health, timers, groups, or ownership.</p>
+<h2 id="evidence">Evidence</h2>
+<p><code>tests/test_actor_animation_rom.py</code> executes whole original 05394 and 00908
+routines in test-only Unicorn with no instruction hooks. It compares complete
+116-byte entities, including unchanged bytes, and active-index storage.
+<code>actor-animation-validation.json</code> records <strong>218,240</strong> comparisons:</p>
+<ul>
+<li>131,072 setter comparisons covering all IDs and all periods.</li>
+<li>36,352 actual-sequence/timestep combinations.</li>
+<li>45,440 consecutive animation frames.</li>
+<li>2,048 flag-0800 skips, including arbitrary invalid IDs.</li>
+<li>3,072 explicit marker-data cases.</li>
+<li>256 complete shuffled/sparse pool frames, containing 11,531 active updates.</li>
+</ul>
+<p>There are also 13 native guards, including all-or-nothing pool failure.
+The native library runs with UBSan.</p>
+<p><code>tests/test_actor_animation_runtime.py</code> compiles the real native adapters with
+ASan and UBSan (<code>-no-pie</code>, leak scanning disabled). The real-map integration
+passes <strong>75,088 assertions</strong> on all 16 maps: 11,584 animation stages, 32 natural
+CD death-animation completions, 32 corpse releases, 16 reused slots, 2,048
+player jump/H frames, 16 actual player animation setter events, and 560 guards.
+The CD death sequence reaches its original <code>FE</code> completion marker at tick 66;
+the next controller observes it and clears the hit flag. Corpse destruction
+still follows its separate 360-tick timer, not an invented completion gate.
+Death uses native combat and the controller uses native enemy queries.
+Presentation callbacks observe events; no fixture writes animation completion.
+Results and source hashes are in <code>native-actor-animation-validation.json</code>.</p>
+<p><code>recovered/actor_animation_set.c</code> matched 05394 exactly through the actual
+decomp.wtf <code>compile_and_diff</code> engine on the first manual attempt: <strong>60 bytes,
+30 instructions</strong>. Its claim was released automatically. 00908 is behaviorally
+validated native C, not an exact matching claim. The latest export includes this
+60-byte C setter. An independent rebuild with 68 matched C functions reproduces
+the complete original ROM byte for byte; see <code>rebuild-validation.json</code>.</p>
+</main></body></html>

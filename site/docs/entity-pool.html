@@ -1,1 +1,66 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Entity Pool — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="entity-pool.md" download>Markdown ↓</a></header><article><h2>Native entity slot pool</h2><p><code>src/entity_pool.c</code> recovers the index bookkeeping in original initialization <code>08005238</code>, allocation <code>08005170</code> and release <code>080051C8</code>. The native pool owns 100 indices; the caller owns 100 stable payload records. It does not execute ROM instructions or include an emulator runtime.</p><p>The original stores its payload base at <code>03004644</code>, free-stack cursor at <code>0300433C</code>, free count at <code>03004348</code>, active-list end at <code>03004454</code>, and active count at <code>03004354</code>. The free index array begins at <code>03004540</code>; active indices begin at <code>03004470</code>. Each original payload is 116 bytes, with its slot index at <code>+38</code> and its active-list position at <code>+3A</code>.</p><p>Initialization allocates 11,600 payload bytes, clears a separate global frame counter (<code>0300461C</code>), clears all 100 payloads, fills the free array with indices 0 through 99, and starts with no active slots. The host API handles only the pool. Payload clearing and frame-counter initialization remain caller work. Native initialization additionally zeroes stale active-array bytes that the original leaves unchanged; those bytes have no effect until allocated.</p><p>Allocation takes <code>free_slots[active_count]</code>, appends that index to the active list, stores its active-list position, and increments the count. It does not clear payload bytes. A full pool returns no allocation without mutation.</p><p>Release pushes the slot onto the free stack and decrements active count. If it was not the final active entry, the final index replaces its position and that other slot&#x27;s active position is updated. The stale final active entry is not cleared. The original then clears the released payload through <code>080052B0</code>. This produces immediate reuse of the most recently freed slot, not ascending index allocation after releases. Active traversal order therefore changes when a non-final slot is removed.</p><p><code>051C8</code> does <strong>not</strong> remove world links, update script-group counts, or issue audio/effects callbacks. The caller must unlink registered bodies before release, then clear the payload after successful release. Script-group defeat notification is separate gameplay work; equating every release with a defeat would change original behavior. Moving an index never moves its payload.</p><h3>API and guards</h3><p><code>SsaEntityPool</code> exposes <code>free_slots</code>, <code>active_slots</code>, <code>positions</code>, <code>active_count</code>, and native-only <code>occupied</code> bits. Read the active prefix for iteration; free count is <code>100 - active_count</code>. Callers must not mutate these arrays. <code>ssa_entity_pool_init</code> returns 1 or -1 for a null pointer. <code>ssa_entity_pool_allocate</code> returns 1 with an output slot, 0 for exhaustion, or -1 for invalid arguments/state. The output must not alias the pool. <code>ssa_entity_pool_release</code> returns 1 or -1 for invalid state/slot. Failures do not mutate state, and failed allocation leaves its output unchanged.</p><p>Validation checks the live active prefix and free suffix for valid, unique indices, active positions, occupied bits, and the original 100-slot limit. It rejects double releases and inconsistent metadata before mutation. These are native guards; original invalid inputs can corrupt memory. No callbacks, payload allocation, group updates, or world queries occur inside this API.</p><h3>Verification</h3><p><code>tests/test_entity_pool_rom.py</code> passes <strong>36,697 original-routine comparisons</strong>: 110 initialization calls, 20,277 allocations (including exhaustion), and 16,310 releases. It compares all 100 payload records, complete stored free and active arrays including stale entries, positions, counts, and original cursor values after every call. Initial payloads contain random bytes. Every initial capacity from 0 to 100 and every release position at each capacity is exercised, followed by immediate reuse and draining. Eight additional runs of 2,048 operations exercise arbitrary allocation/release order and repeated full/empty boundaries. Twenty-five native guards reject invalid arguments and corrupted metadata.</p><p>The original initialization, allocation, release, and <code>052B0</code> routines execute in the oracle. Heap allocation returns a controlled stable buffer. The original multiplayer clearing branch calls BIOS CpuSet; its zero-fill effect is supplied at the BIOS boundary. The single-player DMA hardware branch is not exercised. Each allocation must issue no clear call; initialization and release must issue their exact ordered clear calls. Payload clearing in the native side is an explicit test adapter implementing the documented caller contract.</p><p>The C library builds with strict warnings and undefined-behavior instrumentation. <code>analysis/native-entity-pool-validation.json</code> records results, ROM identity, and source hash. This is behavioral recovery, not a new byte-exact GBA match.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native entity slot pool — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="entity-pool.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-entity-slot-pool">Native entity slot pool</h1>
+<p><code>src/entity_pool.c</code> recovers the index bookkeeping in original initialization
+<code>08005238</code>, allocation <code>08005170</code> and release <code>080051C8</code>. The native pool owns
+100 indices; the caller owns 100 stable payload records. It does not execute ROM
+instructions or include an emulator runtime.</p>
+<p>The original stores its payload base at <code>03004644</code>, free-stack cursor at
+<code>0300433C</code>, free count at <code>03004348</code>, active-list end at <code>03004454</code>, and active
+count at <code>03004354</code>. The free index array begins at <code>03004540</code>; active indices
+begin at <code>03004470</code>. Each original payload is 116 bytes, with its slot index at
+<code>+38</code> and its active-list position at <code>+3A</code>.</p>
+<p>Initialization allocates 11,600 payload bytes, clears a separate global frame
+counter (<code>0300461C</code>), clears all 100 payloads, fills the free array with indices
+0 through 99, and starts with no active slots. The host API handles only the
+pool. Payload clearing and frame-counter initialization remain caller work.
+Native initialization additionally zeroes stale active-array bytes that the
+original leaves unchanged; those bytes have no effect until allocated.</p>
+<p>Allocation takes <code>free_slots[active_count]</code>, appends that index to the active
+list, stores its active-list position, and increments the count. It does not
+clear payload bytes. A full pool returns no allocation without mutation.</p>
+<p>Release pushes the slot onto the free stack and decrements active count. If it
+was not the final active entry, the final index replaces its position and that
+other slot's active position is updated. The stale final active entry is not
+cleared. The original then clears the released payload through <code>080052B0</code>.
+This produces immediate reuse of the most recently freed slot, not ascending
+index allocation after releases. Active traversal order therefore changes when
+a non-final slot is removed.</p>
+<p><code>051C8</code> does <strong>not</strong> remove world links, update script-group counts, or issue
+audio/effects callbacks. The caller must unlink registered bodies before
+release, then clear the payload after successful release. Script-group defeat
+notification is separate gameplay work; equating every release with a defeat
+would change original behavior. Moving an index never moves its payload.</p>
+<h2 id="api-and-guards">API and guards</h2>
+<p><code>SsaEntityPool</code> exposes <code>free_slots</code>, <code>active_slots</code>, <code>positions</code>,
+<code>active_count</code>, and native-only <code>occupied</code> bits. Read the active prefix for
+iteration; free count is <code>100 - active_count</code>. Callers must not mutate these
+arrays. <code>ssa_entity_pool_init</code> returns 1 or -1 for a null pointer.
+<code>ssa_entity_pool_allocate</code> returns 1 with an output slot, 0 for exhaustion,
+or -1 for invalid arguments/state. The output must not alias the pool.
+<code>ssa_entity_pool_release</code> returns 1 or -1 for invalid state/slot. Failures do
+not mutate state, and failed allocation leaves its output unchanged.</p>
+<p>Validation checks the live active prefix and free suffix for valid, unique
+indices, active positions, occupied bits, and the original 100-slot limit.
+It rejects double releases and inconsistent metadata before mutation. These
+are native guards; original invalid inputs can corrupt memory. No callbacks,
+payload allocation, group updates, or world queries occur inside this API.</p>
+<h2 id="verification">Verification</h2>
+<p><code>tests/test_entity_pool_rom.py</code> passes <strong>36,697 original-routine comparisons</strong>:
+110 initialization calls, 20,277 allocations (including exhaustion), and 16,310
+releases. It compares all 100 payload records, complete stored free and active
+arrays including stale entries, positions, counts, and original cursor values
+after every call. Initial payloads contain random bytes. Every initial capacity
+from 0 to 100 and every release position at each capacity is exercised, followed
+by immediate reuse and draining. Eight additional runs of 2,048 operations
+exercise arbitrary allocation/release order and repeated full/empty boundaries.
+Twenty-five native guards reject invalid arguments and corrupted metadata.</p>
+<p>The original initialization, allocation, release, and <code>052B0</code> routines execute
+in the oracle. Heap allocation returns a controlled stable buffer. The original
+multiplayer clearing branch calls BIOS CpuSet; its zero-fill effect is supplied
+at the BIOS boundary. The single-player DMA hardware branch is not exercised.
+Each allocation must issue no clear call; initialization and release must issue
+their exact ordered clear calls. Payload clearing in the native side is an
+explicit test adapter implementing the documented caller contract.</p>
+<p>The C library builds with strict warnings and undefined-behavior instrumentation.
+<code>analysis/native-entity-pool-validation.json</code> records results, ROM identity, and
+source hash. This is behavioral recovery, not a new byte-exact GBA match.</p>
+</main></body></html>

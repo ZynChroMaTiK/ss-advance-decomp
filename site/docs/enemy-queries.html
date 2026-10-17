@@ -1,1 +1,55 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enemy Queries — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="enemy-queries.md" download>Markdown ↓</a></header><article><h2>Native enemy query integration</h2><p><code>src/enemy_queries.c</code> supplies the three query callbacks used by the native type-CD controller: sector rejection (<code>B18C</code>), nearest eligible enemy (<code>036C4</code>) and the dual navigation rays (<code>1271C</code> with <code>A240</code>/<code>A041</code>). Bind its <code>ops</code> to <code>SsaEnemyCdRuntimeOps.queries</code>. The controller still supplies recovered turning, world movement, gravity and hazards. This completes these previously controlled query boundaries without changing the controller API.</p><p>Initialize after script-spawn initialization with an explicit array of the externally owned entities in original slot order. The adapter copies that array and validates unique registered bodies. It must not infer this order from spatial lists: nearest selection preserves the first exact-distance tie, and release swaps the last active pool slot into the released slot&#x27;s position. Owned scripted actors are resolved from current active slots on every query. Externally owned entities must remain registered and stable while bound.</p><p>Keep the adapter at a stable address because its ops context points to itself. Free it before script-spawn/world teardown. Queries are allowed while the enemy controller holds <code>spawn.updating</code>; initialization and teardown are not. World, level, mover, VM and nested query reentry are rejected. No callbacks are exposed inside the query pipeline. Outputs on successful path queries include the original offset vector and mask; prior path effects remain if a later ray fails.</p><p>The ray owns separate visited-line and intercept buffers. It never writes the world&#x27;s last blocking entity or movement/camera scratch. Sector floor/ceiling heights are read live, while map layout remains fixed. Capacity is one intercept per unique map line; this avoids reproducing an unsafe original fixed buffer overflow. The original 64-cell traversal cap is retained. The ray handles walls only, matching the navigation call&#x27;s flags=1; it does not supply weapon/entity tracing. See <code>enemy-ray.md</code>, <code>ray-traversal.md</code> and <code>ray-intercepts.md</code>.</p><h3>Validation</h3><p>The constituent suites pass 263,969 original-ROM comparisons: targeting and reject tables 214,185, wall collection 22,400, traversal 11,000, and opening/ wall predicates/full rays 16,384. Those counts describe behavioral validation, separately from the decomp.wtf byte-matching catalogue.</p><p>The sector-rejection routine also matches exactly in decomp.wtf: 34 bytes, 17 instructions. <code>sector-reject-match-attempts.json</code> preserves the seven stored attempts and final score zero. The export now rebuilds all 8 MiB byte-identically with 65 C functions, 1,712/87,648 catalogued code bytes (1.95%). The catalogue is incomplete and is not a measure of whole-game coverage. All 39 native CMake libraries build; this remains separate from the GBA rebuild.</p><p><code>test-enemy-queries</code> passes 53,384 assertions under ASan and UBSan, using the established WSL <code>-no-pie</code>, <code>detect_leaks=0</code> settings. It runs all 16 original maps with native queries and controller/world movement: 2,753 controller frames, 2,603 chase frames, 1,774 actual enemy moves and 2,593 walk calls. Its 4,096 player frames include 3,376 airborne and 1,536 third-person frames. Additional path sweeps yield 33 clear and 2,525 blocked dual rays. It exercises corpse release, target removal, slot reuse, exact ties, two reserved entities, invalid ownership/projection, nested reentry and last-blocker preservation. The helper&#x27;s assertions are included in the total; the report&#x27;s named guard/order counters cover only the main fixture. Driver execution also passes.</p><p>The integration uses synthetic spawn instructions in a private ROM copy to construct controlled fixtures. It executes no ROM instructions, while the separate differential suites do. Results and source hashes are in <code>native-enemy-queries-validation.json</code>. Combat, audio and animation playback remain callback boundaries. Other controllers, the outer entity dispatcher, rendering, assets and OS input remain work; there is no playable native build.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native enemy query integration — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="enemy-queries.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-enemy-query-integration">Native enemy query integration</h1>
+<p><code>src/enemy_queries.c</code> supplies the three query callbacks used by the native
+type-CD controller: sector rejection (<code>B18C</code>), nearest eligible enemy (<code>036C4</code>)
+and the dual navigation rays (<code>1271C</code> with <code>A240</code>/<code>A041</code>). Bind its <code>ops</code> to
+<code>SsaEnemyCdRuntimeOps.queries</code>. The controller still supplies recovered turning,
+world movement, gravity and hazards. This completes these previously controlled
+query boundaries without changing the controller API.</p>
+<p>Initialize after script-spawn initialization with an explicit array of the
+externally owned entities in original slot order. The adapter copies that array
+and validates unique registered bodies. It must not infer this order from
+spatial lists: nearest selection preserves the first exact-distance tie, and
+release swaps the last active pool slot into the released slot's position.
+Owned scripted actors are resolved from current active slots on every query.
+Externally owned entities must remain registered and stable while bound.</p>
+<p>Keep the adapter at a stable address because its ops context points to itself.
+Free it before script-spawn/world teardown. Queries are allowed while the enemy
+controller holds <code>spawn.updating</code>; initialization and teardown are not. World,
+level, mover, VM and nested query reentry are rejected. No callbacks are exposed
+inside the query pipeline. Outputs on successful path queries include the
+original offset vector and mask; prior path effects remain if a later ray fails.</p>
+<p>The ray owns separate visited-line and intercept buffers. It never writes the
+world's last blocking entity or movement/camera scratch. Sector floor/ceiling
+heights are read live, while map layout remains fixed. Capacity is one intercept
+per unique map line; this avoids reproducing an unsafe original fixed buffer
+overflow. The original 64-cell traversal cap is retained. The ray handles walls
+only, matching the navigation call's flags=1; it does not supply weapon/entity
+tracing. See <code>enemy-ray.md</code>, <code>ray-traversal.md</code> and <code>ray-intercepts.md</code>.</p>
+<h2 id="validation">Validation</h2>
+<p>The constituent suites pass 263,969 original-ROM comparisons: targeting and
+reject tables 214,185, wall collection 22,400, traversal 11,000, and opening/
+wall predicates/full rays 16,384. Those counts describe behavioral validation,
+separately from the decomp.wtf byte-matching catalogue.</p>
+<p>The sector-rejection routine also matches exactly in decomp.wtf: 34 bytes,
+17 instructions. <code>sector-reject-match-attempts.json</code> preserves the seven stored
+attempts and final score zero. The export now rebuilds all 8 MiB byte-identically
+with 65 C functions, 1,712/87,648 catalogued code bytes (1.95%). The catalogue is
+incomplete and is not a measure of whole-game coverage. All 39 native CMake
+libraries build; this remains separate from the GBA rebuild.</p>
+<p><code>test-enemy-queries</code> passes 53,384 assertions under ASan and UBSan, using the
+established WSL <code>-no-pie</code>, <code>detect_leaks=0</code> settings. It runs all 16 original maps
+with native queries and controller/world movement: 2,753 controller frames,
+2,603 chase frames, 1,774 actual enemy moves and 2,593 walk calls. Its 4,096
+player frames include 3,376 airborne and 1,536 third-person frames. Additional
+path sweeps yield 33 clear and 2,525 blocked dual rays. It exercises corpse
+release, target removal, slot reuse, exact ties, two reserved entities, invalid
+ownership/projection, nested reentry and last-blocker preservation. The helper's
+assertions are included in the total; the report's named guard/order counters
+cover only the main fixture. Driver execution also passes.</p>
+<p>The integration uses synthetic spawn instructions in a private ROM copy to
+construct controlled fixtures. It executes no ROM instructions, while the
+separate differential suites do. Results and source hashes are in
+<code>native-enemy-queries-validation.json</code>. Combat, audio and animation playback
+remain callback boundaries. Other controllers, the outer entity dispatcher,
+rendering, assets and OS input remain work; there is no playable native build.</p>
+</main></body></html>

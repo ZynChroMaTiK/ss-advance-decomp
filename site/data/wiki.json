@@ -1068,7 +1068,7 @@
         },
         {
           "title": "In the PC port",
-          "text": "Hold fire to keep cutting at close range without consuming ammunition. Its running and stopping sounds follow the actual attack state."
+          "text": "Hold fire to keep cutting without consuming ammunition. The PC port doubles the original reach to 192 map units. Its running and stopping sounds follow the actual attack state."
         }
       ],
       "sources": [
@@ -1087,12 +1087,13 @@
           "1"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           0
         ]
       ],
       "appearances": [],
-      "related": []
+      "related": [],
+      "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach."
     },
     {
       "id": "weapon-shotgun",
@@ -1136,7 +1137,7 @@
           "3"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           2
         ]
       ],
@@ -1195,7 +1196,7 @@
           "5"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -1249,7 +1250,7 @@
           "6"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           2
         ]
       ],
@@ -1309,7 +1310,7 @@
           "7"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -1364,7 +1365,7 @@
           "10"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -1422,7 +1423,7 @@
           "2"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -1478,7 +1479,7 @@
           "4"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           2
         ]
       ],
@@ -1534,7 +1535,7 @@
           "9"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -1589,7 +1590,7 @@
           "8"
         ],
         [
-          "Recorded levels",
+          "Maps with pickup records",
           1
         ]
       ],
@@ -2788,7 +2789,7 @@
       "summary": "Restore Sam’s health.",
       "image": "atlas/icons/p0-r049.png",
       "aliases": [
-        "100 health (200 cap)",
+        "100 health (collect below 200)",
         "25 health",
         "50 health"
       ],
@@ -2805,11 +2806,11 @@
       "sections": [
         {
           "title": "How they work",
-          "text": "The export records 25-, 50- and 100-point health pickups. Smaller pickups use a 100-health gate; the large health pickup supports the 200-health limit. Acceptance depends on the current inventory."
+          "text": "The export records +25, +50 and +100 health pickups. Smaller pickups use a 100-health eligibility gate. The +100 pickup is collectible below 200 health, then adds 100 without capping the result: 199 becomes 299."
         },
         {
           "title": "Atlas labels",
-          "text": "100 health (200 cap), 25 health, 50 health."
+          "text": "100 health (collect below 200), 25 health, 50 health."
         }
       ],
       "related": [
@@ -3078,7 +3079,7 @@
     },
     {
       "id": "secret-4-s1",
-      "title": "100 health (200 cap)",
+      "title": "100 health (collect below 200)",
       "category": "secrets",
       "level": 3,
       "summary": "Slave Compound / S1",

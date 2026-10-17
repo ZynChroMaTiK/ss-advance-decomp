@@ -45,10 +45,11 @@ function choose(n){
  $('level-number').textContent=String(n+1).padStart(2,'0');$('level-title').textContent=m.title;$('chapter-title').textContent=n<6?'EGYPT / CAMPAIGN':n<12?'ROME / CAMPAIGN':(n<14?'EGYPT':'ROME')+' / MULTIPLAYER';
  $('previous').disabled=n===0;$('next').disabled=n===15;
  document.querySelectorAll('[data-level]').forEach(b=>{if(+b.dataset.level===n)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
- $('summary').textContent=`${m.markers.filter(p=>p.group!=='enemies').length} placements / ${m.movers.length} doors & lifts`;
+ $('summary').textContent=`${m.markers.length} recorded placements / ${m.movers.length} doors & lifts`;
  $('tab-secrets').textContent='Secrets'+(m.secrets.length?' ('+m.secrets.length+')':'');
  $('secrets').innerHTML=`<p class="coverage">${esc(m.secret_status)}</p>`+m.secrets.map(s=>`<div class="secret">${btn(s.id,s.id+' · '+s.title)}<p>${esc(s.note)}</p>${s.access?btn(s.id+'-access','Show opening trigger'):''}<a class="fine" href="${esc(s.source)}" target="_blank" rel="noopener">Identification source ↗</a></div>`).join('');
  for(const ext of ['png','svg','json'])$(ext).href=`${ext==='json'?'data':ext}/level-${String(n+1).padStart(2,'0')}.${ext}`;
+ document.querySelectorAll('[data-png-download]').forEach(a=>a.href=$('png').href);
  $('search').value='';$('results').innerHTML='';$('details').innerHTML='<div class="empty"><div class="empty-icon" aria-hidden="true">+</div><h2>Awaiting target</h2><p>Select an item, door or room on the map to inspect its location, contents and activation scripts.</p></div>';
  location.hash='level-'+(n+1);
 }
@@ -72,9 +73,10 @@ $('level').onchange=e=>choose(+e.target.value);$('layers').onchange=applyLayers;
 $('previous').onclick=()=>{if(current>0)choose(current-1)};$('next').onclick=()=>{if(current<15)choose(current+1)};
 document.querySelector('.brand').onclick=e=>{e.preventDefault();choose(0)};
 window.addEventListener('hashchange',()=>{const n=Number(location.hash.match(/^#level-(\d+)$/)?.[1]||1)-1;if(n>=0&&n<16&&n!==current)choose(n)});
-$('search').oninput=()=>{let q=$('search').value.trim().toLowerCase(),m=map();$('results').innerHTML=q?m.markers.filter(p=>`${p.name} ${p.code} ${p.id}`.toLowerCase().includes(q)).map(p=>btn(p.id,p.name+' · '+p.id+(p.origin==='script'?' (script)':''))).join('')+m.movers.filter(d=>`${d.label} ${d.kind}`.toLowerCase().includes(q)).map(d=>btn('door-'+d.id,d.label+' · '+d.kind)).join(''):'';if(q&&!$('results').innerHTML)$('results').innerHTML='<p>No matches in this level.</p>'};
+$('search').oninput=()=>{let q=$('search').value.trim().toLowerCase(),m=map();$('results').innerHTML=q?m.markers.filter(p=>`${p.name} ${p.code} ${p.id}`.toLowerCase().includes(q)).map(p=>btn(p.id,p.name+' · '+p.id+(p.origin==='script'?' (script)':''))).join('')+m.movers.filter(d=>`${d.label} ${d.kind}`.toLowerCase().includes(q)).map(d=>btn('door-'+d.id,d.label+' · '+d.kind)).join('')+m.sectors.filter(s=>`room ${s.id} sector ${s.id}`.includes(q)).map(s=>btn('sector-'+s.id,'Room / sector '+s.id)).join('')+m.switches.filter(s=>`switch b${s.id}`.includes(q)).map(s=>btn('switch-'+s.id,'Switch B'+s.id)).join('')+m.lines.filter(l=>`wall ${l.id} line ${l.id}`.includes(q)).map(l=>btn('line-'+l.id,'Wall / line '+l.id)).join(''):'';if(q&&!$('results').innerHTML)$('results').innerHTML='<p>No matches in this level.</p>'};
 document.querySelector('aside').onclick=e=>{let b=e.target.closest('[data-focus],[data-script]');if(!b)return;if(b.dataset.focus)focus(b.dataset.focus);else showScript(+b.dataset.script)};
 function point(e){let p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+$('map').onkeydown=e=>{const pan={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,-.1],ArrowDown:[0,.1]}[e.key];if(pan){e.preventDefault();setBox([box[0]+pan[0]*box[2],box[1]+pan[1]*box[3],box[2],box[3]])}else if(['+','=','-','Home'].includes(e.key)){e.preventDefault();if(e.key==='Home')fit();else zoom(e.key==='-'?1.15:1/1.15)}};
 $('map').addEventListener('wheel',e=>{e.preventDefault();let p=point(e);zoom(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
 $('map').onpointerdown=e=>{if(e.button!==0)return;let p=point(e);down={x:e.clientX,y:e.clientY,px:p.x,py:p.y,box:[...box],ref:e.target.closest('[data-ref]')?.dataset.ref};$('map').setPointerCapture(e.pointerId)};
 $('map').onpointermove=e=>{if(!down)return;let p=point(e);setBox([box[0]+down.px-p.x,box[1]+down.py-p.y,box[2],box[3]])};

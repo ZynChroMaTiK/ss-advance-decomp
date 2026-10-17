@@ -1,1 +1,45 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ray Traversal — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="ray-traversal.md" download>Markdown ↓</a></header><article><h2>Native wall ray traversal</h2><p><code>src/ray_traversal.c</code> recovers the flags=1 wall traversal of <code>0800A240</code> and ordered intercept processing <code>08009C00</code>. The former was previously embedded in the slide-specific query; this API exposes cell collection and ordered predicates for enemy navigation. Original fixed division <code>0800970C</code> is reused through the already verified <code>ssa_trace_divide</code>.</p><p>The query nudges either starting coordinate by one 16.16 world unit when it lies exactly on a block boundary relative to the supplied blockmap origin. The ray&#x27;s delta is measured from that adjusted start. Cells are 128 world units. Stepping uses the original wrapped arithmetic, fixed multiplication and division, X-before-Y comparison, and a maximum of 64 cell visits. A nonadvancing step can visit the same cell repeatedly; do not replace the loop with a conventional DDA that handles ties or rounding differently. Off-map cells are passed to the collector, which decides whether they contain anything.</p><p><code>ssa_ray_traverse_intercepts</code> repeatedly scans for the signed lowest fraction, preserves insertion order for ties, and includes fractions equal to the maximum. An accepted entry is consumed by replacing its fraction with <code>INT32_MAX</code>. Rejection saves the fraction in <code>blocking_fraction</code> and leaves that entry unchanged. Clear queries preserve the prior blocking fraction. This deliberately models the original destructive list rather than sorting a copy. The native API guards the original undefined situation where maximum is <code>INT32_MAX</code> and every remaining entry has that sentinel value.</p><p>Use stable caller-owned intercept storage and a zero-initialized <code>SsaRayTraversal</code>; capacity can match the loaded map&#x27;s line count. Trace resets the count, not the caller&#x27;s line-visited flags. The collector may append entries within capacity and returns 1 to continue, 0 to block, or a negative value on error. A predicate may inspect state but must not mutate/reenter its workspace. Both entry points reject reentry. Errors preserve earlier effects and release the busy flag. There is no entity collection or generic weapon ray behavior.</p><p><code>tests/test_ray_traversal_rom.py</code> executes complete original routines with controlled cell contents and predicates. It compares every visited cell, ray field, intercept fraction, callback order, result and blocking fraction:</p><p class="bullet">• 6,000 original <code>9C00</code> comparisons, including signed extremes, stable ties,</p><p>  cutoff boundaries, empty lists and early rejection.</p><p class="bullet">• 5,000 complete <code>A240</code> comparisons, including block-boundary nudges, degenerate</p><p>  rays, wrapped coordinates, no advancement, the 64-cell limit and collection   early exits.</p><p class="bullet">• 214,169 callback reentry checks, four native guards and two callback errors.</p><p>The test builds native C with UBSan and executes the original fixed arithmetic in Unicorn. Unicorn is test-only. Source hashes and counts are recorded in <code>native-ray-traversal-validation.json</code>. Full real-map collection and the enemy wall predicate are tested separately in <code>enemy-ray.md</code>.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native wall ray traversal — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="ray-traversal.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-wall-ray-traversal">Native wall ray traversal</h1>
+<p><code>src/ray_traversal.c</code> recovers the flags=1 wall traversal of <code>0800A240</code>
+and ordered intercept processing <code>08009C00</code>. The former was previously embedded
+in the slide-specific query; this API exposes cell collection and ordered
+predicates for enemy navigation. Original fixed division <code>0800970C</code> is reused
+through the already verified <code>ssa_trace_divide</code>.</p>
+<p>The query nudges either starting coordinate by one 16.16 world unit when it lies
+exactly on a block boundary relative to the supplied blockmap origin. The ray's
+delta is measured from that adjusted start. Cells are 128 world units. Stepping
+uses the original wrapped arithmetic, fixed multiplication and division,
+X-before-Y comparison, and a maximum of 64 cell visits. A nonadvancing step can
+visit the same cell repeatedly; do not replace the loop with a conventional DDA
+that handles ties or rounding differently. Off-map cells are passed to the
+collector, which decides whether they contain anything.</p>
+<p><code>ssa_ray_traverse_intercepts</code> repeatedly scans for the signed lowest fraction,
+preserves insertion order for ties, and includes fractions equal to the maximum.
+An accepted entry is consumed by replacing its fraction with <code>INT32_MAX</code>.
+Rejection saves the fraction in <code>blocking_fraction</code> and leaves that entry
+unchanged. Clear queries preserve the prior blocking fraction. This deliberately
+models the original destructive list rather than sorting a copy. The native
+API guards the original undefined situation where maximum is <code>INT32_MAX</code> and
+every remaining entry has that sentinel value.</p>
+<p>Use stable caller-owned intercept storage and a zero-initialized
+<code>SsaRayTraversal</code>; capacity can match the loaded map's line count. Trace resets
+the count, not the caller's line-visited flags. The collector may append entries
+within capacity and returns 1 to continue, 0 to block, or a negative value on
+error. A predicate may inspect state but must not mutate/reenter its workspace.
+Both entry points reject reentry. Errors preserve earlier effects and release
+the busy flag. There is no entity collection or generic weapon ray behavior.</p>
+<p><code>tests/test_ray_traversal_rom.py</code> executes complete original routines with
+controlled cell contents and predicates. It compares every visited cell, ray
+field, intercept fraction, callback order, result and blocking fraction:</p>
+<ul>
+<li>6,000 original <code>9C00</code> comparisons, including signed extremes, stable ties,
+cutoff boundaries, empty lists and early rejection.</li>
+<li>5,000 complete <code>A240</code> comparisons, including block-boundary nudges, degenerate
+rays, wrapped coordinates, no advancement, the 64-cell limit and collection
+early exits.</li>
+<li>214,169 callback reentry checks, four native guards and two callback errors.</li>
+</ul>
+<p>The test builds native C with UBSan and executes the original fixed arithmetic
+in Unicorn. Unicorn is test-only. Source hashes and counts are recorded in
+<code>native-ray-traversal-validation.json</code>. Full real-map collection and the enemy
+wall predicate are tested separately in <code>enemy-ray.md</code>.</p>
+</main></body></html>

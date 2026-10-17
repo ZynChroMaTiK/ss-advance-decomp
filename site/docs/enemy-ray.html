@@ -1,1 +1,43 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enemy Ray — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="enemy-ray.md" download>Markdown ↓</a></header><article><h2>Native enemy navigation rays</h2><p><code>src/enemy_ray.c</code> connects native wall collection and traversal to the original <code>0800A040</code> wall predicate and <code>08009C98</code> sector opening. It supplies the <code>A240(flags=1,A041)</code> boundary used by the dual-ray enemy navigation routine. There is no entity-ray branch, weapon hit selection, visibility raycast or general body-clearance interpretation in this API.</p><p>Opening reads live front/back sector heights. It takes the smaller ceiling, the greater floor, the smaller floor, and their wrapped 16.16 opening range. A one-sided opening call changes only range to zero, preserving the other fields. The enemy predicate blocks a line without flag 4 before calling opening. For two-sided lines it compares the signed wrapped absolute difference between the greater and smaller floors against 16 world units, inclusive. It does not check ceiling height, body height or the enemy&#x27;s current floor. In particular, the <code>INT32_MIN</code> absolute-value case remains negative after wrapping and passes the original signed comparison. Extreme sector values retain this behavior.</p><p><code>SsaEnemyRay</code> owns independent visited-line and intercept storage, preserving world movement contacts, world blocking entity and camera collision scratch. Zero-initialize it, initialize with a stable loaded map, query as needed, and free before the map. Sector heights may change between queries. Layout and storage must remain stable. Nested query/free calls and malformed records return -1; normal results are 1 clear and 0 blocked. Accepted intercepts become <code>INT32_MAX</code>; a rejected intercept remains present and records the blocking fraction. Opening state is intentionally retained when no line changes it.</p><p><code>tests/test_enemy_ray_rom.py</code> compares native code with original ROM execution on all 16 loaded maps. No ray, wall collection, predicate or math boundary is hooked; observation hooks only read original state. Every whole query compares return value, adjusted ray, intercept count and insertion order, consumed fractions, blocking fraction and all four opening fields. Live sector mutations exercise negative heights, ceiling crossings, 16/17-unit floor steps and wrapped extremes. The suite passes:</p><p class="bullet">• 4,096 original opening calls.</p><p class="bullet">• 4,096 original enemy wall predicates.</p><p class="bullet">• 8,192 complete original enemy rays: 6,142 clear and 2,050 blocked.</p><p class="bullet">• 145 native guards, including busy owner/traversal/collector states.</p><p>Native C is built with UBSan. The original ROM&#x27;s fixed arithmetic executes in test-only Unicorn. The largest sampled whole-map ray contains seven intercepts; 64-step and wrapped-coordinate behavior is separately exercised with controlled collectors by <code>test_ray_traversal_rom.py</code>. Counts and exact source hashes are in <code>native-enemy-ray-validation.json</code>. This verifies the navigation query boundary; it does not establish a complete AI loop, combat or a playable PC executable.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native enemy navigation rays — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="enemy-ray.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-enemy-navigation-rays">Native enemy navigation rays</h1>
+<p><code>src/enemy_ray.c</code> connects native wall collection and traversal to the original
+<code>0800A040</code> wall predicate and <code>08009C98</code> sector opening. It supplies the
+<code>A240(flags=1,A041)</code> boundary used by the dual-ray enemy navigation routine.
+There is no entity-ray branch, weapon hit selection, visibility raycast or
+general body-clearance interpretation in this API.</p>
+<p>Opening reads live front/back sector heights. It takes the smaller ceiling,
+the greater floor, the smaller floor, and their wrapped 16.16 opening range.
+A one-sided opening call changes only range to zero, preserving the other
+fields. The enemy predicate blocks a line without flag 4 before calling opening.
+For two-sided lines it compares the signed wrapped absolute difference between
+the greater and smaller floors against 16 world units, inclusive. It does not
+check ceiling height, body height or the enemy's current floor. In particular,
+the <code>INT32_MIN</code> absolute-value case remains negative after wrapping and passes
+the original signed comparison. Extreme sector values retain this behavior.</p>
+<p><code>SsaEnemyRay</code> owns independent visited-line and intercept storage, preserving
+world movement contacts, world blocking entity and camera collision scratch.
+Zero-initialize it, initialize with a stable loaded map, query as needed, and
+free before the map. Sector heights may change between queries. Layout and
+storage must remain stable. Nested query/free calls and malformed records return
+-1; normal results are 1 clear and 0 blocked. Accepted intercepts become
+<code>INT32_MAX</code>; a rejected intercept remains present and records the blocking
+fraction. Opening state is intentionally retained when no line changes it.</p>
+<p><code>tests/test_enemy_ray_rom.py</code> compares native code with original ROM execution
+on all 16 loaded maps. No ray, wall collection, predicate or math boundary is
+hooked; observation hooks only read original state. Every whole query compares
+return value, adjusted ray, intercept count and insertion order, consumed
+fractions, blocking fraction and all four opening fields. Live sector mutations
+exercise negative heights, ceiling crossings, 16/17-unit floor steps and wrapped
+extremes. The suite passes:</p>
+<ul>
+<li>4,096 original opening calls.</li>
+<li>4,096 original enemy wall predicates.</li>
+<li>8,192 complete original enemy rays: 6,142 clear and 2,050 blocked.</li>
+<li>145 native guards, including busy owner/traversal/collector states.</li>
+</ul>
+<p>Native C is built with UBSan. The original ROM's fixed arithmetic executes in
+test-only Unicorn. The largest sampled whole-map ray contains seven intercepts;
+64-step and wrapped-coordinate behavior is separately exercised with controlled
+collectors by <code>test_ray_traversal_rom.py</code>. Counts and exact source hashes are in
+<code>native-enemy-ray-validation.json</code>. This verifies the navigation query boundary;
+it does not establish a complete AI loop, combat or a playable PC executable.</p>
+</main></body></html>

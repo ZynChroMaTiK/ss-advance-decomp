@@ -1,1 +1,158 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player Hazards — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="player-hazards.md" download>Markdown ↓</a></header><article><h2>Player interactions and lethal floor checks</h2><p>The PC frontend now enables <code>SsaPlayerGameplay.immediate_use</code>. Type-2 buttons activate on the first valid E press without waiting for the weapon&#x27;s fully stowed <code>DC00</code> action. <code>ssa_player_hazards_step_immediate_use</code> bypasses only that eligibility check: it retains the actual weapon action, use-key requirement, display-local flag8 gate, contact range/order, callbacks, latches and hazards. The original entry point and default gameplay option remain unchanged.</p><p><code>tests/test_immediate_use.py</code> and <code>scripts/test-immediate-use.ps1 -SkipBuild</code> pass1,765 checks /96 scenarios on GCC ASan/UBSan/leaks and MSVC: all eight real buttons, both views, ready/partially lowered/stowed/firing weapons, original-mode denial and no-use denial. A single down/up E pulse activates on its first tick, before stowing completes. Original texture change, sound41 once and repeat latch are verified. Controlled player placement and test invulnerability are fixtures, not campaign progression proof. Reports:<code>immediate-use-validation.json</code> and <code>windows-immediate-use-validation.json</code>. Original hazard recovery still passes 24,576 ROM comparisons. Weapon handoff still passes3,295 Windows checks.</p><p><code>src/player_hazards.c</code> recovers the complete <code>08005680</code> stage and its two dependencies, <code>080055BC</code> and <code>08005548</code>. It also recovers the uncatalogued <code>08003464</code> sector sampler and the contact-list behavior of <code>0800429C</code>. The already matched 20-byte wrapper remains an exact match; this native work does not add another byte-matched function to the catalogue.</p><h3>Recovered behavior</h3><p>Interactions run before hazards. The weapon record&#x27;s word at <code>+10</code> is compared with <code>0xDC00</code> once, before any callback. This is a weapon action value, not a weapon ID. Interactions are skipped when the <strong>display-local player&#x27;s</strong> flag <code>8</code> is set, even when the player being processed is a different player. That gate does not skip the later hazard checks.</p><p>Otherwise, the original eight-bit entity facing produces a point 64 map units ahead. The swept radius rectangle collects intersecting special lines in block X-then-Y order, with duplicate lines suppressed. This is a different query from movement: the original <code>097EC</code> iterator ignores the wall visitor&#x27;s return and <strong>continues after solid or closed walls</strong>. The native dedicated query preserves that behavior and exposes its ordered special-line result. Movement collision scratch cannot be reused while contacts remain in use.</p><p>Type-1 lines invoke activation <code>0801C0D4</code>. Type-2 lines invoke switch activation <code>0801C518</code> only when the player&#x27;s <code>keys &amp; 0x10000</code> is set and the earlier weapon comparison succeeded. The button value is read again for each contact, while weapon eligibility remains latched. Those two script routines remain explicit callbacks; this module does not implement moving-sector state, switch animation, or their audio effects.</p><p>The hazard stage then reads the current entity sector. Sector byte <code>+0A</code> equal to <code>255</code>, or equal to <code>35</code> when the separate level-state halfword at <code>+10</code> is greater than <code>5</code>, kills a player whose signed integer Z equals that sector&#x27;s floor. The fractional Z is discarded, so a Z less than one unit above the floor still qualifies. Death clears entity health and player stats <code>+C4/+C6</code>. The host API writes the authoritative <code>SsaInventory.health/stat_c4/stat_c6</code>; the runtime adapter must mirror health into its other views.</p><p>The second lethal check samples a sector from the player&#x27;s radius once per frame, then tests membership in the active hazard-sector list. Original <code>GAME.frame_counter &amp; 15</code> selects these offsets:</p><p>| Frame nibble | X offset | Y offset | | --- | --- | --- | | 0, 9 | 0 | 0 | | 1, 10 | -radius | -radius | | 2, 11 | +radius | -radius | | 3, 12 | -radius | +radius | | 4, 13 | +radius | +radius | | 5, 14 | -half-radius | -half-radius | | 6, 15 | +half-radius | -half-radius | | 7 | -half-radius | +half-radius | | 8 | +half-radius | +half-radius |</p><p>Half-radius division truncates toward zero. Coordinates wrap at 32 bits before the original BSP lookup. An empty hazard list skips the lookup entirely. This check is independent of Z, so a jump does not avoid an active scripted lethal sector. A jump can avoid the floor-height check once the integer Z changes.</p><h3>Native API and ownership</h3><p><code>SsaPlayerHazards</code> references the existing entity, movement and inventory, plus the facing byte and selected weapon action word. <code>SsaPlayerHazardGame</code> supplies the frame counter, active signed sector list, level counter and independent display-local flags. These are recovered views, not GBA RAM structure overlays.</p><p><code>ssa_player_hazards_step</code> composes interactions and both hazard checks. <code>ssa_player_hazards_apply</code>, <code>ssa_player_hazard_sample</code> and <code>ssa_player_interaction_query</code> expose the original substeps. Query scratch is allocated/freed with the existing map-collision API. Its map, layout, backing storage and player pointers must remain stable. Script callbacks may change gameplay fields and map contents but may not replace pointers, free storage, change map structural metadata, touch scratch or reenter this routine.</p><p>Invalid native inputs, invalid geometry and callback errors return <code>-1</code>. Successful steps/queries return zero; the sampler returns zero or one. Callback errors stop later effects and preserve earlier changes. The native API does not promise rollback or emulate out-of-bounds original RAM reads. The interaction query&#x27;s only promised output is the ordered contact list; original unused scratch heights and wall-query globals are not host state.</p><h3>Verification</h3><p>Run <code>.venv-linux/bin/python tests/test_player_hazards_rom.py</code> under Ubuntu/WSL. The strict-warning native build enables undefined-behavior checking. Unicorn executes the original whole routines with only <code>1C0D4</code> and <code>1C518</code> controlled; all original trigonometry, BSP, block traversal, wall-contact logic and hazard membership code execute unchanged. Tests compare complete 256-byte player and 116-byte entity records plus ordered callback inputs and contact lists.</p><p>The generated <code>native-player-hazards-validation.json</code> reports:</p><p class="bullet">• 8,192 whole-stage comparisons on all 16 actual maps.</p><p class="bullet">• 12,288 isolated sector-sampler comparisons, including signed radius halves</p><p>  and wrapped 32-bit coordinates.</p><p class="bullet">• 4,096 independent contact-query comparisons covering all 256 facing bytes</p><p>  on each map.</p><p class="bullet">• 4,601 ordered callback states, including callbacks changing button edges</p><p>  and weapon records to check reload/latching behavior.</p><p class="bullet">• 96 native guard/failure checks, including callback failure and rejected</p><p>  player pointer replacement.</p><p>Total: <strong>24,576 original-routine comparisons</strong>. Some cases retain real geometry while marking eight nearby walls as triggers to exercise multiple contacts. An initial test that marked every wall caused original contact-array overflow into adjacent globals; the revised fixtures stay within the original ten-slot storage. This was an oracle fixture failure, not hidden passing evidence.</p><p>The module recovers interaction dispatch and hazard decisions. It does not provide the unresolved script effects, combat, enemy AI, renderer or OS input. <code>level_runtime.c</code> now connects its line callbacks to recovered native mover and switch activation and supplies the live closing-door hazard list. See <code>level-runtime.md</code> for integration ordering and remaining effect boundaries.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player interactions and lethal floor checks — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="player-hazards.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="player-interactions-and-lethal-floor-checks">Player interactions and lethal floor checks</h1>
+<p>The PC frontend now enables <code>SsaPlayerGameplay.immediate_use</code>. Type-2 buttons
+activate on the first valid E press without waiting for the weapon's fully
+stowed <code>DC00</code> action. <code>ssa_player_hazards_step_immediate_use</code> bypasses only that
+eligibility check: it retains the actual weapon action, use-key requirement,
+display-local flag8 gate, contact range/order, callbacks, latches and hazards.
+The original entry point and default gameplay option remain unchanged.</p>
+<p><code>tests/test_immediate_use.py</code> and <code>scripts/test-immediate-use.ps1 -SkipBuild</code>
+pass1,765 checks /96 scenarios on GCC ASan/UBSan/leaks and MSVC: all eight real
+buttons, both views, ready/partially lowered/stowed/firing weapons, original-mode
+denial and no-use denial. A single down/up E pulse activates on its first tick,
+before stowing completes. Original texture change, sound41 once and repeat latch
+are verified. Controlled player placement and test invulnerability are fixtures,
+not campaign progression proof. Reports:<code>immediate-use-validation.json</code> and
+<code>windows-immediate-use-validation.json</code>. Original hazard recovery still passes
+24,576 ROM comparisons. Weapon handoff still passes3,295 Windows checks.</p>
+<p><code>src/player_hazards.c</code> recovers the complete <code>08005680</code> stage and its two
+dependencies, <code>080055BC</code> and <code>08005548</code>. It also recovers the uncatalogued
+<code>08003464</code> sector sampler and the contact-list behavior of <code>0800429C</code>.
+The already matched 20-byte wrapper remains an exact match; this native work
+does not add another byte-matched function to the catalogue.</p>
+<h2 id="recovered-behavior">Recovered behavior</h2>
+<p>Interactions run before hazards. The weapon record's word at <code>+10</code> is compared
+with <code>0xDC00</code> once, before any callback. This is a weapon action value, not a
+weapon ID. Interactions are skipped when the <strong>display-local player's</strong> flag
+<code>8</code> is set, even when the player being processed is a different player. That
+gate does not skip the later hazard checks.</p>
+<p>Otherwise, the original eight-bit entity facing produces a point 64 map units
+ahead. The swept radius rectangle collects intersecting special lines in block
+X-then-Y order, with duplicate lines suppressed. This is a different query from
+movement: the original <code>097EC</code> iterator ignores the wall visitor's return and
+<strong>continues after solid or closed walls</strong>. The native dedicated query preserves
+that behavior and exposes its ordered special-line result. Movement collision
+scratch cannot be reused while contacts remain in use.</p>
+<p>Type-1 lines invoke activation <code>0801C0D4</code>. Type-2 lines invoke switch activation
+<code>0801C518</code> only when the player's <code>keys &amp; 0x10000</code> is set and the earlier weapon
+comparison succeeded. The button value is read again for each contact, while
+weapon eligibility remains latched. Those two script routines remain explicit
+callbacks; this module does not implement moving-sector state, switch animation,
+or their audio effects.</p>
+<p>The hazard stage then reads the current entity sector. Sector byte <code>+0A</code> equal
+to <code>255</code>, or equal to <code>35</code> when the separate level-state halfword at <code>+10</code> is
+greater than <code>5</code>, kills a player whose signed integer Z equals that sector's
+floor. The fractional Z is discarded, so a Z less than one unit above the
+floor still qualifies. Death clears entity health and player stats <code>+C4/+C6</code>.
+The host API writes the authoritative <code>SsaInventory.health/stat_c4/stat_c6</code>;
+the runtime adapter must mirror health into its other views.</p>
+<p>The second lethal check samples a sector from the player's radius once per
+frame, then tests membership in the active hazard-sector list. Original
+<code>GAME.frame_counter &amp; 15</code> selects these offsets:</p>
+<table>
+<thead>
+<tr>
+<th>Frame nibble</th>
+<th>X offset</th>
+<th>Y offset</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0, 9</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1, 10</td>
+<td>-radius</td>
+<td>-radius</td>
+</tr>
+<tr>
+<td>2, 11</td>
+<td>+radius</td>
+<td>-radius</td>
+</tr>
+<tr>
+<td>3, 12</td>
+<td>-radius</td>
+<td>+radius</td>
+</tr>
+<tr>
+<td>4, 13</td>
+<td>+radius</td>
+<td>+radius</td>
+</tr>
+<tr>
+<td>5, 14</td>
+<td>-half-radius</td>
+<td>-half-radius</td>
+</tr>
+<tr>
+<td>6, 15</td>
+<td>+half-radius</td>
+<td>-half-radius</td>
+</tr>
+<tr>
+<td>7</td>
+<td>-half-radius</td>
+<td>+half-radius</td>
+</tr>
+<tr>
+<td>8</td>
+<td>+half-radius</td>
+<td>+half-radius</td>
+</tr>
+</tbody>
+</table>
+<p>Half-radius division truncates toward zero. Coordinates wrap at 32 bits before
+the original BSP lookup. An empty hazard list skips the lookup entirely. This
+check is independent of Z, so a jump does not avoid an active scripted lethal
+sector. A jump can avoid the floor-height check once the integer Z changes.</p>
+<h2 id="native-api-and-ownership">Native API and ownership</h2>
+<p><code>SsaPlayerHazards</code> references the existing entity, movement and inventory, plus
+the facing byte and selected weapon action word. <code>SsaPlayerHazardGame</code> supplies
+the frame counter, active signed sector list, level counter and independent
+display-local flags. These are recovered views, not GBA RAM structure overlays.</p>
+<p><code>ssa_player_hazards_step</code> composes interactions and both hazard checks.
+<code>ssa_player_hazards_apply</code>, <code>ssa_player_hazard_sample</code> and
+<code>ssa_player_interaction_query</code> expose the original substeps. Query scratch is
+allocated/freed with the existing map-collision API. Its map, layout, backing
+storage and player pointers must remain stable. Script callbacks may change
+gameplay fields and map contents but may not replace pointers, free storage,
+change map structural metadata, touch scratch or reenter this routine.</p>
+<p>Invalid native inputs, invalid geometry and callback errors return <code>-1</code>.
+Successful steps/queries return zero; the sampler returns zero or one.
+Callback errors stop later effects and preserve earlier changes. The native
+API does not promise rollback or emulate out-of-bounds original RAM reads.
+The interaction query's only promised output is the ordered contact list;
+original unused scratch heights and wall-query globals are not host state.</p>
+<h2 id="verification">Verification</h2>
+<p>Run <code>.venv-linux/bin/python tests/test_player_hazards_rom.py</code> under Ubuntu/WSL.
+The strict-warning native build enables undefined-behavior checking. Unicorn
+executes the original whole routines with only <code>1C0D4</code> and <code>1C518</code> controlled;
+all original trigonometry, BSP, block traversal, wall-contact logic and hazard
+membership code execute unchanged. Tests compare complete 256-byte player and
+116-byte entity records plus ordered callback inputs and contact lists.</p>
+<p>The generated <code>native-player-hazards-validation.json</code> reports:</p>
+<ul>
+<li>8,192 whole-stage comparisons on all 16 actual maps.</li>
+<li>12,288 isolated sector-sampler comparisons, including signed radius halves
+and wrapped 32-bit coordinates.</li>
+<li>4,096 independent contact-query comparisons covering all 256 facing bytes
+on each map.</li>
+<li>4,601 ordered callback states, including callbacks changing button edges
+and weapon records to check reload/latching behavior.</li>
+<li>96 native guard/failure checks, including callback failure and rejected
+player pointer replacement.</li>
+</ul>
+<p>Total: <strong>24,576 original-routine comparisons</strong>. Some cases retain real geometry
+while marking eight nearby walls as triggers to exercise multiple contacts.
+An initial test that marked every wall caused original contact-array overflow
+into adjacent globals; the revised fixtures stay within the original ten-slot
+storage. This was an oracle fixture failure, not hidden passing evidence.</p>
+<p>The module recovers interaction dispatch and hazard decisions. It does not
+provide the unresolved script effects, combat, enemy AI, renderer or OS input.
+<code>level_runtime.c</code> now connects its line callbacks to recovered native mover and
+switch activation and supplies the live closing-door hazard list. See
+<code>level-runtime.md</code> for integration ordering and remaining effect boundaries.</p>
+</main></body></html>

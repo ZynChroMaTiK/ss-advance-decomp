@@ -21,7 +21,7 @@ for(const [type,name] of [[209,'Cyclops'],[213,'Hermit Crabuloid'],[214,'Gunrill
 class Element{
  constructor(tag='div'){Object.assign(this,{tag,children:[],attrs:{},dataset:{},value:'',listeners:{},hidden:false,textContent:''})}
  append(...children){this.children.push(...children)} replaceChildren(...children){this.children=children;this.textContent=''}
- setAttribute(k,v){this.attrs[k]=v} addEventListener(k,fn){this.listeners[k]=fn} focus(){this.focused=true}
+ setAttribute(k,v){this.attrs[k]=v} addEventListener(k,fn){this.listeners[k]=fn} focus(){this.focused=true} scrollIntoView(){this.scrolled=true}
 }
 const elements=new Map(['wiki-search','wiki-count','wiki-results','wiki-empty','wiki-categories','wiki-clear','wiki-article'].map(id=>[id,new Element()]));
 const doc={getElementById:id=>elements.get(id),createElement:tag=>new Element(tag)};
@@ -33,4 +33,6 @@ search.value='nothing matches here';search.listeners.input();assert.equal(elemen
 elements.get('wiki-clear').onclick();assert.equal(search.value,'');assert.equal(search.focused,true);assert.equal(elements.get('wiki-results').children.length,54);
 wiki.open('level-16');assert(allNodes(elements.get('wiki-article')).some(n=>n.href==='#levels/16/3d'));
 wiki.open('invalid-record');assert(allNodes(elements.get('wiki-article')).some(n=>n.href==='#wiki/field-guide'));
+wiki.open('weapon-pistol',{focus:true});assert(elements.get('wiki-article').focused);assert(elements.get('wiki-article').scrolled);
+wiki.open('invalid-record',{focus:true});assert.equal(doc.title,'Entry not found — NETRICSA — Serious Sam Advance');
 console.log(JSON.stringify({status:'PASS',entries:entries.length,categories:counts,checks:'all entries rendered, links, portraits, search, aliases, filters, reset, unknown entry, atlas enemy labels'}));

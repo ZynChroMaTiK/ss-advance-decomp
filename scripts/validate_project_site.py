@@ -36,7 +36,7 @@ def main():
         context.eval('new Function('+json.dumps('return (async()=>{'+plain+'})')+')')
         for dom_id in re.findall(r"\$\('([^']+)'\)",source):assert dom_id in page.ids,dom_id
         for ref in re.findall(r"from '([^']+)'",source):assert (SITE/ref).is_file(),ref
-    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css']:
+    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css',SITE/'accessibility.css',SITE/'reference.css']:
         rules=tinycss2.parse_stylesheet(css.read_text(),skip_comments=True,skip_whitespace=True)
         assert not [r for r in rules if r.type=='error']
     context.eval((SITE/'geometry.js').read_text().replace('export function ','function '))

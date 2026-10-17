@@ -1,1 +1,69 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player Lifecycle — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="player-lifecycle.md" download>Markdown ↓</a></header><article><h2>Player death and respawn</h2><p><code>src/player_lifecycle.c</code> ports the complete control flow of <code>08006154</code> and <code>08005FEC</code> onto the recovered host state. These are behavioral ports, not byte-exact matching candidates. The original ROM remains unchanged.</p><p><code>test-player-lifecycle</code> runs 10,494 differential comparisons: 1,422 death boundary cases, 6,000 randomized death calls, 1,024 direct respawns and 2,048 consecutive frames. It compares 85 known host fields and their values at every ordered external callback. The original nested respawn and <code>08005E04</code> copy execute directly. Twenty native guards/failure paths also pass. GCC uses strict warnings and undefined-behavior checks. See <code>native-player-lifecycle-validation.json</code> for the ROM and source hashes.</p><p>The test controls spawn selection, spatial unlink/insert, animation, notices, mode transitions, sound and effects. It services memcpy and BIOS/DMA zero fills. These are explicit dependency boundaries, not evidence of a complete game. Unknown original player bytes are not represented by native structures, so the comparison is a projection of recovered fields rather than all 256 player bytes.</p><h3>Death behavior</h3><p>Only health <strong>exactly zero</strong> starts death when player flag <code>0x10</code> is absent. Negative health alone does not trigger it. The routine sets player <code>0x10</code> and body <code>0x20</code>, requests animation <code>0x68</code> with period 8, then either consumes the single-player continue flag and starts at 500 ticks or emits the normal death notice/sound and starts at zero. The display-local index is used for the notice; it is distinct from the movement/protection player index.</p><p>A dead player&#x27;s eye offset above four fixed-point units receives eye velocity <code>-2 * ticks</code>; otherwise body flag <code>0x40</code> is set. The death timer is an unsigned 16-bit addition and wraps. Values 301 through 399, inclusive, reset the timer and request input state 4 in single player, state 3 in multiplayer exit mode, or execute respawn. Values above 590 trigger mode 10 and notice <code>0xB4</code> only in single player with the continue flag zero. Skipped timer ranges remain skipped; the port does not replace these tests with broad <code>&gt;=</code> thresholds.</p><h3>Respawn behavior</h3><p>The original saves player <code>+28..A3</code>, clears the player record, unlinks its body, and asks <code>08001B18</code> for a spawn marker. The native port clears known non-weapon player fields and preserves the corresponding inventory/control fields. Body state, including its spatial metadata, is not indiscriminately cleared.</p><p>Heading is the marker&#x27;s low eight bits shifted left eight; X/Y become 16.16. Marker Z is overwritten by the body&#x27;s <strong>old floor</strong> before reinsertion. New floor metadata from insertion does not retroactively change this Z. The body receives type <code>0xC9 + player index</code>, radius 32, height 100, flags <code>0x98</code>, health 100 and protection timer 60. Player flags become 4 and eye offset becomes 96. Player/body coordinates, velocities and facing are copied, then effect 5, animation <code>0x65</code>/4 and insertion occur in that order.</p><p>The saved weapon block is restored after insertion. Current/requested weapon and ownership become 1, first ammo becomes 999, pending count and weapon flags become zero. Other ammo slots and pending entries remain preserved. The weapon display object receives X/Y <code>0x7800</code>/<code>0xA000</code>, flags 2, kind 14 and one-based player number, then weapon animation 0 with period 3 is requested. Health is an entity field, so it is not replaced by the saved weapon block; player <code>+C4/+C6</code> stats are cleared rather than restored.</p><h3>Host API and integration</h3><p><code>SsaPlayerLifecycle</code> references a stable <code>SsaPlayerSpawn</code>, frame, camera, weapon control and weapon-display view. Its death timer is separate from the frame&#x27;s entity protection timer. <code>ssa_player_death_step</code> can invoke native respawn; <code>ssa_player_respawn</code> exposes the same operation directly. Both return 0 on success and -1 on invalid state or a failed dependency.</p><p>Inventory health and movement flags are authoritative; entity-health and vertical-flag mirrors are refreshed at boundaries. Weapon control flags are authoritative during these calls and must equal movement weapon flags on entry. Every external event and the selector is explicit in <code>SsaPlayerLifecycleOps</code>. Callbacks must preserve pointer identities and storage, cannot reenter, and return nonnegative success or negative failure. Animation callbacks update animation state, and world callbacks maintain ownership/list invariants.</p><p>An error retains earlier effects, potentially an unlinked body; it is not a transaction. The host&#x27;s native-only jump latch and cached camera pose need refresh after respawn. The new <code>player_gameplay</code> adapter connects these boundaries to native spatial lists, spawn selection, and the existing runtime. Rendering, animation playback, audio, notices and main-loop state transitions remain outside this module.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Player death and respawn — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="player-lifecycle.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="player-death-and-respawn">Player death and respawn</h1>
+<p><code>src/player_lifecycle.c</code> ports the complete control flow of <code>08006154</code> and
+<code>08005FEC</code> onto the recovered host state. These are behavioral ports, not
+byte-exact matching candidates. The original ROM remains unchanged.</p>
+<p><code>test-player-lifecycle</code> runs 10,494 differential comparisons: 1,422 death
+boundary cases, 6,000 randomized death calls, 1,024 direct respawns and 2,048
+consecutive frames. It compares 85 known host fields and their values at every
+ordered external callback. The original nested respawn and <code>08005E04</code> copy
+execute directly. Twenty native guards/failure paths also pass. GCC uses
+strict warnings and undefined-behavior checks. See
+<code>native-player-lifecycle-validation.json</code> for the ROM and source hashes.</p>
+<p>The test controls spawn selection, spatial unlink/insert, animation, notices,
+mode transitions, sound and effects. It services memcpy and BIOS/DMA zero fills.
+These are explicit dependency boundaries, not evidence of a complete game.
+Unknown original player bytes are not represented by native structures, so the
+comparison is a projection of recovered fields rather than all 256 player bytes.</p>
+<h2 id="death-behavior">Death behavior</h2>
+<p>Only health <strong>exactly zero</strong> starts death when player flag <code>0x10</code> is absent.
+Negative health alone does not trigger it. The routine sets player <code>0x10</code> and
+body <code>0x20</code>, requests animation <code>0x68</code> with period 8, then either consumes the
+single-player continue flag and starts at 500 ticks or emits the normal death
+notice/sound and starts at zero. The display-local index is used for the notice;
+it is distinct from the movement/protection player index.</p>
+<p>A dead player's eye offset above four fixed-point units receives eye velocity
+<code>-2 * ticks</code>; otherwise body flag <code>0x40</code> is set. The death timer is an unsigned
+16-bit addition and wraps. Values 301 through 399, inclusive, reset the timer
+and request input state 4 in single player, state 3 in multiplayer exit mode,
+or execute respawn. Values above 590 trigger mode 10 and notice <code>0xB4</code> only in
+single player with the continue flag zero. Skipped timer ranges remain skipped;
+the port does not replace these tests with broad <code>&gt;=</code> thresholds.</p>
+<h2 id="respawn-behavior">Respawn behavior</h2>
+<p>The original saves player <code>+28..A3</code>, clears the player record, unlinks its body,
+and asks <code>08001B18</code> for a spawn marker. The native port clears known non-weapon
+player fields and preserves the corresponding inventory/control fields. Body
+state, including its spatial metadata, is not indiscriminately cleared.</p>
+<p>Heading is the marker's low eight bits shifted left eight; X/Y become 16.16.
+Marker Z is overwritten by the body's <strong>old floor</strong> before reinsertion. New
+floor metadata from insertion does not retroactively change this Z. The body
+receives type <code>0xC9 + player index</code>, radius 32, height 100, flags <code>0x98</code>, health
+100 and protection timer 60. Player flags become 4 and eye offset becomes 96.
+Player/body coordinates, velocities and facing are copied, then effect 5,
+animation <code>0x65</code>/4 and insertion occur in that order.</p>
+<p>The saved weapon block is restored after insertion. Current/requested weapon
+and ownership become 1, first ammo becomes 999, pending count and weapon flags
+become zero. Other ammo slots and pending entries remain preserved. The weapon
+display object receives X/Y <code>0x7800</code>/<code>0xA000</code>, flags 2, kind 14 and one-based
+player number, then weapon animation 0 with period 3 is requested. Health is an
+entity field, so it is not replaced by the saved weapon block; player <code>+C4/+C6</code>
+stats are cleared rather than restored.</p>
+<h2 id="host-api-and-integration">Host API and integration</h2>
+<p><code>SsaPlayerLifecycle</code> references a stable <code>SsaPlayerSpawn</code>, frame, camera, weapon
+control and weapon-display view. Its death timer is separate from the frame's
+entity protection timer. <code>ssa_player_death_step</code> can invoke native respawn;
+<code>ssa_player_respawn</code> exposes the same operation directly. Both return 0 on
+success and -1 on invalid state or a failed dependency.</p>
+<p>Inventory health and movement flags are authoritative; entity-health and
+vertical-flag mirrors are refreshed at boundaries. Weapon control flags are
+authoritative during these calls and must equal movement weapon flags on entry.
+Every external event and the selector is explicit in <code>SsaPlayerLifecycleOps</code>.
+Callbacks must preserve pointer identities and storage, cannot reenter, and
+return nonnegative success or negative failure. Animation callbacks update
+animation state, and world callbacks maintain ownership/list invariants.</p>
+<p>An error retains earlier effects, potentially an unlinked body; it is not a
+transaction. The host's native-only jump latch and cached camera pose need
+refresh after respawn. The new <code>player_gameplay</code> adapter connects these
+boundaries to native spatial lists, spawn selection, and the existing runtime.
+Rendering, animation playback, audio, notices and main-loop state transitions
+remain outside this module.</p>
+</main></body></html>

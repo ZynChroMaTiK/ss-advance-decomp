@@ -34,7 +34,7 @@ def main():
             if matches:entry['appearances'].append({'level':level['level'],'title':level['title'],'count':len(matches)})
         entry.setdefault('related',[])
         entry.setdefault('facts',[])
-        entry['facts'].append(['Recorded levels',len(entry['appearances'])])
+        entry['facts'].append(['Maps with pickup records' if entry['category']=='weapons' else 'Recorded levels',len(entry['appearances'])])
         entry.setdefault('aliases',[]).extend(entry.get('pickup_names',[]))
     enemy_lookup={e['entity_type']:e for e in entries if e['category']=='enemies'}
     for level in levels:
@@ -53,7 +53,7 @@ def main():
         for secret in level['secrets']:
             entries.append({'id':f'secret-{n+1}-{secret["id"].lower()}','title':secret['title'],'category':'secrets','level':n,'summary':f"{level['title']} / {secret['id']}",'facts':[['Map',n+1],['Location',f"{secret['x']}, {secret['y']}"]],'sections':[{'title':'Finding the location','text':secret['note']},{'title':'Evidence','text':secret['status']}],'related':[f'level-{n+1}','secrets-and-exploration'],'sources':[source('Secret coverage and source links','atlas/sources-and-secret-coverage.json')],'coverage':'A documented secret location from the existing atlas research. Secret identification is not exhaustive.'})
     item_descriptions={
-      'health':('Health pickups','Restore Sam’s health.','The export records 25-, 50- and 100-point health pickups. Smaller pickups use a 100-health gate; the large health pickup supports the 200-health limit. Acceptance depends on the current inventory.','docs/inventory.html'),
+      'health':('Health pickups','Restore Sam’s health.','The export records +25, +50 and +100 health pickups. Smaller pickups use a 100-health eligibility gate. The +100 pickup is collectible below 200 health, then adds 100 without capping the result: 199 becomes 299.','docs/inventory.html'),
       'armor':('Armor and shields','Protection pickups in several sizes.','The atlas identifies separate shield and armor families in 25-, 50- and 100-point variants. The recovered inventory helpers gate protection pickups at 100; damage resolves through the original ordered protection fields.','docs/combat-damage.html'),
       'ammo':('Ammunition','Keep the original weapon set supplied.','Ammo records include bullets, shotgun cartridges, rockets, cannon balls and colored energy cells. In single player, pickup acceptance depends on owning the corresponding weapon and available capacity.','docs/pickups.html'),
       'items':('Backpacks and power-ups','Other inventory and power-up records.','Backpacks and Serious power appear in the extracted placements. Item effects and eligibility follow the recovered pickup dispatch; the atlas separates these from health, protection and ammunition.','docs/pickups.html'),

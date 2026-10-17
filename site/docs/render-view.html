@@ -1,1 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Render View — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="render-view.md" download>Markdown ↓</a></header><article><h2>Native camera and display-local view selection</h2><p><code>render_view.c</code> recovers the whole original02B88 routine. It clears through07C94, scans all four players for active4/automap8 flags, updates their unsignedA8 zoom from held1/2 and GAMEticks, then selects the display-local player&#x27;s automap or world route. It applies the original upper65536/lower4096 clamps after32bit wrapped arithmetic. Player count and movement-control gates are not consulted.</p><p>World routing runs native94E8 sine/cosine with negated camera yaw, then calls the remaining B6B0 world event and optional02CA0 overlay. Original camera fields at03004020 are x/y/z+0/4/8, heading+C, sine+10, cosine+14 and sector+18. The host camera is deliberately not a GBA binary overlay. Clear/automap/world/overlay callbacks carry their original scalar arguments; callbacks may change scalar state that later reads observe. Failures retain completed prefix effects.</p><p><code>ssa_render_view_pose</code> copies the native eye/chase pose and gameplay yaw, finding the camera&#x27;s containing sector in the actual decoded map. Displaced third-person poses therefore do not reuse the player&#x27;s sector. It leaves gameplay state unchanged and rejects an invalid map or busy renderer before changing the camera. The world step refreshes cached sine/cosine. There is no pitch/tilt or player-body drawing in this adapter.</p><p><code>test-render-view</code> passes84,032 whole02B88 comparisons, including all65,536 negative-yaw cases with real94E8 instructions, all256 tick values, unsigned zoom wrap/clamp edges, live callback mutations and5 callback failure prefixes. It checks206,005 callback reentry attempts and6 dependency/use-site guards. Only the four remaining display-stage calls are controlled in the oracle.</p><p>The sanitizer fixture connects2,048 native PC/game frames across all16 maps to the camera adapter, including1,751 airborne frames and1,464 displaced camera frames. All274,785 assertions pass. Its WORLD callback observes camera inputs; it does not claim scene pixels. Complete native world pixel integration is separately verified in <code>world-scene.md</code>.</p><p>The requested decomp.wtf matcher was used for02B88. Two manual attempts reached 72.1%, not exact; its claim was released with notes and the best candidate is <code>recovered/render_view.c</code>. No exact-match count is added for this function.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native camera and display-local view selection — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="render-view.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-camera-and-display-local-view-selection">Native camera and display-local view selection</h1>
+<p><code>render_view.c</code> recovers the whole original02B88 routine. It clears through07C94,
+scans all four players for active4/automap8 flags, updates their unsignedA8 zoom
+from held1/2 and GAMEticks, then selects the display-local player's automap or
+world route. It applies the original upper65536/lower4096 clamps after32bit
+wrapped arithmetic. Player count and movement-control gates are not consulted.</p>
+<p>World routing runs native94E8 sine/cosine with negated camera yaw, then calls
+the remaining B6B0 world event and optional02CA0 overlay. Original camera fields
+at03004020 are x/y/z+0/4/8, heading+C, sine+10, cosine+14 and sector+18. The host
+camera is deliberately not a GBA binary overlay. Clear/automap/world/overlay
+callbacks carry their original scalar arguments; callbacks may change scalar
+state that later reads observe. Failures retain completed prefix effects.</p>
+<p><code>ssa_render_view_pose</code> copies the native eye/chase pose and gameplay yaw, finding
+the camera's containing sector in the actual decoded map. Displaced third-person
+poses therefore do not reuse the player's sector. It leaves gameplay state
+unchanged and rejects an invalid map or busy renderer before changing the camera.
+The world step refreshes cached sine/cosine. There is no pitch/tilt or player-body
+drawing in this adapter.</p>
+<p><code>test-render-view</code> passes84,032 whole02B88 comparisons, including all65,536
+negative-yaw cases with real94E8 instructions, all256 tick values, unsigned zoom
+wrap/clamp edges, live callback mutations and5 callback failure prefixes.
+It checks206,005 callback reentry attempts and6 dependency/use-site guards.
+Only the four remaining display-stage calls are controlled in the oracle.</p>
+<p>The sanitizer fixture connects2,048 native PC/game frames across all16 maps to
+the camera adapter, including1,751 airborne frames and1,464 displaced camera
+frames. All274,785 assertions pass. Its WORLD callback observes camera inputs;
+it does not claim scene pixels. Complete native world pixel integration is
+separately verified in <code>world-scene.md</code>.</p>
+<p>The requested decomp.wtf matcher was used for02B88. Two manual attempts reached
+72.1%, not exact; its claim was released with notes and the best candidate is
+<code>recovered/render_view.c</code>. No exact-match count is added for this function.</p>
+</main></body></html>

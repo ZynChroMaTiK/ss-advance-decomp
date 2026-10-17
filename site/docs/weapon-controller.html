@@ -1,1 +1,103 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon Controller — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="weapon-controller.md" download>Markdown ↓</a></header><article><h2>Native weapon controller</h2><p><code>src/weapon_controller.c</code> recovers complete <code>080116E4</code>, the current/requested weapon transition <code>08012160</code>, and ten cooldown timers <code>08012200</code>. The controller uses the native <code>SsaInventory</code>, <code>SsaWeaponControl</code>, and sprite object projection from <code>weapon_animation.c</code>. Weapon data records at <code>0844BC8C</code> are decoded as data, including continuous-fire mode, animation period, and range. No original code executes in the native implementation.</p><p>Aim, hitscan attacks, projectile allocation, explosion dispatch, special-effect allocation/insertion, particles, and audio remain explicit callback operations. These boundaries are not silent implementations of an unrecovered subsystem. The controller recovers which operations occur, their original arguments, ordering, ammunition/statistics changes, and all inline projectile/effect field writes. The runtime adapter determines which operations can execute natively.</p><h3>Original ordering and state</h3><p><code>122AC</code> first establishes the current source, owner, and weapon globals. For an active player (record flags <code>BC &amp; 4</code>) it runs cooldowns, near-wall interaction <code>12230</code>, acquisition/selection <code>11604</code>, firing <code>116E4</code>, then lower/raise <code>12160</code>. The parent frame <code>0244C</code> runs entities (<code>04E04</code>), movers (<code>1C13C</code>), VM (<code>1C6DC</code>), pickup respawn (<code>1B854</code>), and <code>0908</code>, then sprite-object dispatch <code>F85C</code> and finally animation <code>E460</code>. Type2 object dispatch calls <code>F150</code>, which calls <code>122AC</code>. Weapon firing therefore runs after movers/VM and consumes the preceding animation completion byte; ticking animation before firing changes behavior. <code>F150</code> skips the entire wrapper while GAME flag1 is set and otherwise updates object flag1 according to display-local player flag8. This outer gate is separate from the recovered <code>116E4</code> controller. The source globals owner/weapon clear after the wrapper, while the source pointer remains.</p><p>Every firing-controller call aims even when no fire button is held. It first uses the player&#x27;s heading and full weapon range. If no target is found, it retries at heading +512 with half range, then heading -512 with the same half range. The final heading/range/slope also control attacks. The marker begins at <code>69696969</code>, sets/clears control flag <code>20000</code>, then resets to zero. Blocking fraction starts at <code>INT_MAX</code> and persists across retries. The final slope is written to original player field <code>E4</code>.</p><p>Held and pressed buttons are separate halfwords <code>A4</code> and <code>A6</code>, not the movement or selection flags at <code>BC</code>. Motion/protection index <code>GAME+68</code> controls local sounds and local-only attack branches. The display-local player&#x27;s <code>BC &amp; 8</code> denies starting a shot; it is not the motion index. A local game flag <code>400</code> blocks a held start until released. Ready object Y must be exactly <code>5000</code> and the current cooldown must be exactly zero.</p><p>Starting a shot clears flag <code>1000</code>, sets <code>400</code>, and selects animation weapon+9 (special animation22 for weapon3 with exactly one round). Discrete weapons apply their attack on the next call, set <code>1000</code>, decrement ammo, and increment the current weapon&#x27;s <code>GAME+98+16*i</code> counter once. Weapon3 consumes a second round only if the signed remaining count is positive. Finishing animation resets flags <code>1400</code> and selects idle animation current-1, period3.</p><p>Continuous weapons 1/4/5 fire while held, ammunition is nonzero, and source health is nonzero (negative signed health does not stop them). In single-player their damage is ticks times 1/3/4; multiplayer local damage is 2/3/4. Ammo and shot counters still advance in remote branches that omit a hitscan request. Weapon1 does not consume ammunition. Sound-stop behavior preserves the return value of the preceding sound-play request.</p><p>Weapon6 and10 projectile launch distance uses the final blocking fraction when present, fixed-point multiplication with wrap, and a signed threshold. If the distance changes from80 units, the returned projectile&#x27;s travel field clears. The projectile receives source player index+1 and weapon6/10. Weapon7 sets the owner but leaves its allocation-provided weapon field unchanged. Weapon8 sets its cooldown120, writes request <code>80000009</code>, and requests radius-zero damage1000 explosion. Weapon9 sets eligible target flag800 before allocation, writes request <code>40000009</code>, then builds a typeE3 effect. Pool exhaustion still consumes the shot. Its animation/radius depend on <code>(target.x &gt;&gt; 18) &amp; 3</code>.</p><p>Lowering adds ticks&lt;&lt;11 to signed object Y with 32-bit wrap. When Y is strictly greater than <code>DBFF</code>, it clamps to <code>DC00</code>, clears flag100, commits requested to current, and selects the new idle animation. Raising subtracts the same amount; at Y&lt;=<code>5000</code>, it clamps and clears flag2000. Selection key10 forces lowering. Cooldowns subtract ticks with 16-bit wrap and clamp only a signed-negative result; a large wrapped subtraction can therefore become positive.</p><h3>Native boundaries</h3><p><code>include/ssa/weapon_controller.h</code> documents every event argument and lifetime. Controller state owns no body, inventory, object, or effect allocation. Those must remain stable throughout callbacks. Reentry into step/switch/cooldowns is rejected. A callback failure propagates <code>-1</code> and releases the update lock; earlier flag, animation, target, and attack effects remain. A projectile-create callback returning success without an allocation is an error. The special effect allocator may return NULL to model the original bounded pool failure. No native callback may invalidate retained source/target storage.</p><p>Native guards reject missing dependencies, current weapons outside1..10, requested IDs outside1..10 for switching, and truncated ROM rules. These are explicit safety contracts, not newly claimed original behavior. Controller source health is a projection of the authoritative player inventory health; the native runtime must refresh it each frame.</p><h3>Verification</h3><p><code>tests/test_weapon_controller_rom.py</code> compares whole original routines through Unicorn only in tests. It compares complete256-byte player records,512-byte GAME records,48-byte objects, and complete116-byte source/target/projectile records, plus ordered boundary calls and marker/fraction/request globals. The actual original <code>FC04</code> and <code>116BC</code> instructions execute; aim, hitscan, allocation, explosion, audio, particle, and fixed multiplication boundaries are controlled identically on both sides. All ten weapons and all event kinds are exercised, including pool-full handling, signed ammo, stat wrap, local and remote players, ready/start/fire/finish states, and extreme switch/cooldown arithmetic. Native compilation uses strict C11 and UndefinedBehaviorSanitizer.</p><p>Exact current counts and source hash are in <code>native-weapon-controller-validation.json</code>. These comparisons establish controller behavior; they do not establish a playable weapon renderer or projectile simulation.</p><p>The catalogued48-byte <code>12200</code> matching candidate reached score30 (98.7%) in a bounded16-attempt manual pass through decomp.wtf. All24 instructions align; remaining differences are register allocation. It was released with notes and is <strong>not</strong> an exact match. The clean candidate is <code>recovered/weapon_cooldowns.c</code>; sources/results for every attempt are in <code>weapon-cooldowns-match-attempts.json</code>. Matching progress is separate from the native behavioral validation above.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native weapon controller — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="weapon-controller.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-weapon-controller">Native weapon controller</h1>
+<p><code>src/weapon_controller.c</code> recovers complete <code>080116E4</code>, the current/requested
+weapon transition <code>08012160</code>, and ten cooldown timers <code>08012200</code>. The controller
+uses the native <code>SsaInventory</code>, <code>SsaWeaponControl</code>, and sprite object projection
+from <code>weapon_animation.c</code>. Weapon data records at <code>0844BC8C</code> are decoded as data,
+including continuous-fire mode, animation period, and range. No original code
+executes in the native implementation.</p>
+<p>Aim, hitscan attacks, projectile allocation, explosion dispatch, special-effect
+allocation/insertion, particles, and audio remain explicit callback operations.
+These boundaries are not silent implementations of an unrecovered subsystem.
+The controller recovers which operations occur, their original arguments,
+ordering, ammunition/statistics changes, and all inline projectile/effect field
+writes. The runtime adapter determines which operations can execute natively.</p>
+<h2 id="original-ordering-and-state">Original ordering and state</h2>
+<p><code>122AC</code> first establishes the current source, owner, and weapon globals. For an
+active player (record flags <code>BC &amp; 4</code>) it runs cooldowns, near-wall interaction
+<code>12230</code>, acquisition/selection <code>11604</code>, firing <code>116E4</code>, then lower/raise <code>12160</code>.
+The parent frame <code>0244C</code> runs entities (<code>04E04</code>), movers (<code>1C13C</code>), VM
+(<code>1C6DC</code>), pickup respawn (<code>1B854</code>), and <code>0908</code>, then sprite-object dispatch
+<code>F85C</code> and finally animation <code>E460</code>. Type2 object dispatch calls <code>F150</code>, which
+calls <code>122AC</code>. Weapon firing therefore runs after movers/VM and consumes the
+preceding animation completion byte; ticking animation before firing changes
+behavior. <code>F150</code> skips the entire wrapper while GAME flag1 is set and otherwise
+updates object flag1 according to display-local player flag8. This outer gate
+is separate from the recovered <code>116E4</code> controller. The source globals
+owner/weapon clear after the wrapper, while the source pointer remains.</p>
+<p>Every firing-controller call aims even when no fire button is held. It first
+uses the player's heading and full weapon range. If no target is found, it
+retries at heading +512 with half range, then heading -512 with the same half
+range. The final heading/range/slope also control attacks. The marker begins at
+<code>69696969</code>, sets/clears control flag <code>20000</code>, then resets to zero. Blocking
+fraction starts at <code>INT_MAX</code> and persists across retries. The final slope is
+written to original player field <code>E4</code>.</p>
+<p>Held and pressed buttons are separate halfwords <code>A4</code> and <code>A6</code>, not the movement
+or selection flags at <code>BC</code>. Motion/protection index <code>GAME+68</code> controls local
+sounds and local-only attack branches. The display-local player's <code>BC &amp; 8</code>
+denies starting a shot; it is not the motion index. A local game flag <code>400</code>
+blocks a held start until released. Ready object Y must be exactly <code>5000</code> and
+the current cooldown must be exactly zero.</p>
+<p>Starting a shot clears flag <code>1000</code>, sets <code>400</code>, and selects animation weapon+9
+(special animation22 for weapon3 with exactly one round). Discrete weapons
+apply their attack on the next call, set <code>1000</code>, decrement ammo, and increment
+the current weapon's <code>GAME+98+16*i</code> counter once. Weapon3 consumes a second round
+only if the signed remaining count is positive. Finishing animation resets
+flags <code>1400</code> and selects idle animation current-1, period3.</p>
+<p>Continuous weapons 1/4/5 fire while held, ammunition is nonzero, and source
+health is nonzero (negative signed health does not stop them). In single-player
+their damage is ticks times 1/3/4; multiplayer local damage is 2/3/4. Ammo and
+shot counters still advance in remote branches that omit a hitscan request.
+Weapon1 does not consume ammunition. Sound-stop behavior preserves the return
+value of the preceding sound-play request.</p>
+<p>Weapon6 and10 projectile launch distance uses the final blocking fraction when
+present, fixed-point multiplication with wrap, and a signed threshold. If the
+distance changes from80 units, the returned projectile's travel field clears.
+The projectile receives source player index+1 and weapon6/10. Weapon7 sets the
+owner but leaves its allocation-provided weapon field unchanged. Weapon8 sets
+its cooldown120, writes request <code>80000009</code>, and requests radius-zero damage1000
+explosion. Weapon9 sets eligible target flag800 before allocation, writes
+request <code>40000009</code>, then builds a typeE3 effect. Pool exhaustion still consumes
+the shot. Its animation/radius depend on <code>(target.x &gt;&gt; 18) &amp; 3</code>.</p>
+<p>Lowering adds ticks&lt;&lt;11 to signed object Y with 32-bit wrap. When Y is strictly
+greater than <code>DBFF</code>, it clamps to <code>DC00</code>, clears flag100, commits requested to
+current, and selects the new idle animation. Raising subtracts the same amount;
+at Y&lt;=<code>5000</code>, it clamps and clears flag2000. Selection key10 forces lowering.
+Cooldowns subtract ticks with 16-bit wrap and clamp only a signed-negative
+result; a large wrapped subtraction can therefore become positive.</p>
+<h2 id="native-boundaries">Native boundaries</h2>
+<p><code>include/ssa/weapon_controller.h</code> documents every event argument and lifetime.
+Controller state owns no body, inventory, object, or effect allocation. Those
+must remain stable throughout callbacks. Reentry into step/switch/cooldowns is
+rejected. A callback failure propagates <code>-1</code> and releases the update lock;
+earlier flag, animation, target, and attack effects remain. A projectile-create
+callback returning success without an allocation is an error. The special
+effect allocator may return NULL to model the original bounded pool failure.
+No native callback may invalidate retained source/target storage.</p>
+<p>Native guards reject missing dependencies, current weapons outside1..10,
+requested IDs outside1..10 for switching, and truncated ROM rules. These are
+explicit safety contracts, not newly claimed original behavior. Controller
+source health is a projection of the authoritative player inventory health;
+the native runtime must refresh it each frame.</p>
+<h2 id="verification">Verification</h2>
+<p><code>tests/test_weapon_controller_rom.py</code> compares whole original routines through
+Unicorn only in tests. It compares complete256-byte player records,512-byte
+GAME records,48-byte objects, and complete116-byte source/target/projectile
+records, plus ordered boundary calls and marker/fraction/request globals.
+The actual original <code>FC04</code> and <code>116BC</code> instructions execute; aim, hitscan,
+allocation, explosion, audio, particle, and fixed multiplication boundaries
+are controlled identically on both sides. All ten weapons and all event kinds
+are exercised, including pool-full handling, signed ammo, stat wrap, local and
+remote players, ready/start/fire/finish states, and extreme switch/cooldown
+arithmetic. Native compilation uses strict C11 and UndefinedBehaviorSanitizer.</p>
+<p>Exact current counts and source hash are in
+<code>native-weapon-controller-validation.json</code>. These comparisons establish
+controller behavior; they do not establish a playable weapon renderer or
+projectile simulation.</p>
+<p>The catalogued48-byte <code>12200</code> matching candidate reached score30 (98.7%) in a
+bounded16-attempt manual pass through decomp.wtf. All24 instructions align;
+remaining differences are register allocation. It was released with notes and
+is <strong>not</strong> an exact match. The clean candidate is
+<code>recovered/weapon_cooldowns.c</code>; sources/results for every attempt are in
+<code>weapon-cooldowns-match-attempts.json</code>. Matching progress is separate from the
+native behavioral validation above.</p>
+</main></body></html>

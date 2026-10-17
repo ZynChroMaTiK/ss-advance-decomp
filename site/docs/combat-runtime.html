@@ -1,1 +1,79 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Combat Runtime — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="combat-runtime.md" download>Markdown ↓</a></header><article><h2>Native combat integration</h2><p><code>combat_runtime.c</code> binds recovered damage <code>037F4</code>, explosions <code>035A8</code> and score rewards <code>125E0</code> to native player and scripted actor storage. Its CD wrapper consumes contact and explosion events internally; animation and audio still go to presentation callbacks. Supply <code>enemy_queries.ops</code> to use the recovered navigation queries. Direct damage entry points are available for future weapon and projectile callers; this does not implement firing or hit selection.</p><h3>State and ownership</h3><p>Initialize after players, world and script-spawn construction. Supply existing entities in original reserved-slot order and player runtimes indexed by player ID. Pointer arrays are copied; their objects remain externally owned. Owned script actors resolve through their stable pool slots. Other reserved bodies can participate in explosion iteration, but this adapter has no health view for them: a damage request to an unsupported body fails explicitly. Initial map enemy construction/dispatch still needs a corresponding binding.</p><p>Player <code>inventory.health</code> is canonical; <code>entity_health</code> synchronizes before external damage callbacks and after every exit, including failure. Armor uses the inventory&#x27;s C6 then C4 fields; the hit timer uses <code>runtime.frame.timer</code>. Player movement flags (+BC) and entity body flags (+30) are different fields; damage never copies body flags into movement flags. Scripted enemy health and timer refer directly to <code>actor.activation</code>; script flag/timer mirrors refresh.</p><p>Source and owner explicitly model damage&#x27;s current-source globals. They are independent of an explosion&#x27;s origin and restored after each call. The local view&#x27;s movement flags are sampled from its bound runtime; the previous context value is restored. Difficulty, mode/player count, kill attribution, hit/kill statistics and the hurt-flash counter remain explicit shared context. This adapter does not infer attribution from a damage source or implement the outer loop that decrements presentation counters.</p><p>Combat locks player runtimes and scripted ownership while applying effects. The CD wrapper leaves the spawn lock to the existing controller while retaining its own/player locks. Callbacks must only observe gameplay state and perform their presentation/network operation. Direct world/level APIs do not consult all these locks: the callback contract, rather than universal API-level guards, forbids using them to mutate or tear down the world. Keep all storage stable.</p><p>Damage changes health/flags immediately. An enemy&#x27;s own controller later performs its death transition and script-group release. Corpse expiry subsequently unlinks and releases its slot. Killing a neighboring CD enemy therefore schedules its detonation for that enemy&#x27;s update; it does not recursively destroy it inside the explosion loop. Pool order stays fixed during damage, as in the recovered damage/reward routines. Rewards update the shared score without spawning objects.</p><p>Network damage events remain explicit: a locally attributed outgoing hit can emit a packet request without changing remote health. A received hit with NULL current source applies locally. No networking transport is implemented here.</p><p>Failures preserve effects that already occurred. For example, a player hurt-sound failure retains consumed armor, the hit timer and flash, but happens before health subtraction. An explosion failure can occur after the source enemy has entered its corpse state and notified its script group. The caller must handle that error; retrying the controller does not replay its earlier explosion.</p><h3>Evidence</h3><p>New behavioral suites pass 155,517 original-ROM comparisons:</p><p class="bullet">• Damage: 13,186 whole-routine cases, including armor, difficulty, attribution,</p><p>  statistics, signed halfword wrapping and ordered effects.</p><p class="bullet">• Explosion selection/attenuation: 72,325 cases, including all 16 maps.</p><p class="bullet">• Reward: 65,910 cases, including every 16-bit type and score overflow.</p><p class="bullet">• Combined explosion/damage/reward: 4,096 whole chains on all 16 maps, executing</p><p>  53,417 original damage calls and 9,508 original reward calls. Only network and   sound boundaries are controlled; original damage/reward instructions execute.</p><p><code>test-combat-runtime</code> passes 26,435 native assertions with ASan and UBSan (<code>-no-pie</code>, <code>detect_leaks=0</code>, no LeakSanitizer claim). Its tests cover all 16 maps, 130 combat-controller frames, 32 enemy chain deaths/rewards, corpse release, script-group updates, 16 player deaths and 512 subsequent death frames. Another 2,560 player frames include 1,872 airborne and 1,792 third-person frames. A real world collision exercises contact damage followed by same-frame explosion suppression through flag one. Additional fixtures cover two native players, network routing, invalid bindings, 681 guards and three failure scenarios.</p><p>Synthetic spawn scripts modify a private ROM copy only. Direct damage is a test trigger, not an implemented weapon. The native integration executes no ROM instructions. Reports record exact source hashes; the PowerShell test driver and all 43 native CMake libraries pass.</p><p>This pass adds behavioral native code, not byte-identical matching candidates. The exact catalogue remains 65/526 functions, 1,712/87,648 code bytes (1.95%); the last full ROM export remains unchanged. Reward <code>125E0</code> is outside that incomplete imported catalogue; it was not added speculatively. Remaining work includes weapon firing/projectiles, other enemy attack controllers, initial enemy binding/outer dispatch, rendering, audio playback and OS input. There is no playable native executable yet.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native combat integration — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="combat-runtime.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-combat-integration">Native combat integration</h1>
+<p><code>combat_runtime.c</code> binds recovered damage <code>037F4</code>, explosions <code>035A8</code> and score
+rewards <code>125E0</code> to native player and scripted actor storage. Its CD wrapper
+consumes contact and explosion events internally; animation and audio still
+go to presentation callbacks. Supply <code>enemy_queries.ops</code> to use the recovered
+navigation queries. Direct damage entry points are available for future weapon
+and projectile callers; this does not implement firing or hit selection.</p>
+<h2 id="state-and-ownership">State and ownership</h2>
+<p>Initialize after players, world and script-spawn construction. Supply existing
+entities in original reserved-slot order and player runtimes indexed by player
+ID. Pointer arrays are copied; their objects remain externally owned. Owned
+script actors resolve through their stable pool slots. Other reserved bodies
+can participate in explosion iteration, but this adapter has no health view for
+them: a damage request to an unsupported body fails explicitly. Initial map
+enemy construction/dispatch still needs a corresponding binding.</p>
+<p>Player <code>inventory.health</code> is canonical; <code>entity_health</code> synchronizes before
+external damage callbacks and after every exit, including failure. Armor uses
+the inventory's C6 then C4 fields; the hit timer uses <code>runtime.frame.timer</code>.
+Player movement flags (+BC) and entity body flags (+30) are different fields;
+damage never copies body flags into movement flags. Scripted enemy health and
+timer refer directly to <code>actor.activation</code>; script flag/timer mirrors refresh.</p>
+<p>Source and owner explicitly model damage's current-source globals. They are
+independent of an explosion's origin and restored after each call. The local
+view's movement flags are sampled from its bound runtime; the previous context
+value is restored. Difficulty, mode/player count, kill attribution, hit/kill
+statistics and the hurt-flash counter remain explicit shared context. This
+adapter does not infer attribution from a damage source or implement the outer
+loop that decrements presentation counters.</p>
+<p>Combat locks player runtimes and scripted ownership while applying effects.
+The CD wrapper leaves the spawn lock to the existing controller while retaining
+its own/player locks. Callbacks must only observe gameplay state and perform
+their presentation/network operation. Direct world/level APIs do not consult
+all these locks: the callback contract, rather than universal API-level guards,
+forbids using them to mutate or tear down the world. Keep all storage stable.</p>
+<p>Damage changes health/flags immediately. An enemy's own controller later performs
+its death transition and script-group release. Corpse expiry subsequently unlinks
+and releases its slot. Killing a neighboring CD enemy therefore schedules its
+detonation for that enemy's update; it does not recursively destroy it inside
+the explosion loop. Pool order stays fixed during damage, as in the recovered
+damage/reward routines. Rewards update the shared score without spawning objects.</p>
+<p>Network damage events remain explicit: a locally attributed outgoing hit can
+emit a packet request without changing remote health. A received hit with NULL
+current source applies locally. No networking transport is implemented here.</p>
+<p>Failures preserve effects that already occurred. For example, a player hurt-sound
+failure retains consumed armor, the hit timer and flash, but happens before
+health subtraction. An explosion failure can occur after the source enemy has
+entered its corpse state and notified its script group. The caller must handle
+that error; retrying the controller does not replay its earlier explosion.</p>
+<h2 id="evidence">Evidence</h2>
+<p>New behavioral suites pass 155,517 original-ROM comparisons:</p>
+<ul>
+<li>Damage: 13,186 whole-routine cases, including armor, difficulty, attribution,
+statistics, signed halfword wrapping and ordered effects.</li>
+<li>Explosion selection/attenuation: 72,325 cases, including all 16 maps.</li>
+<li>Reward: 65,910 cases, including every 16-bit type and score overflow.</li>
+<li>Combined explosion/damage/reward: 4,096 whole chains on all 16 maps, executing
+53,417 original damage calls and 9,508 original reward calls. Only network and
+sound boundaries are controlled; original damage/reward instructions execute.</li>
+</ul>
+<p><code>test-combat-runtime</code> passes 26,435 native assertions with ASan and UBSan
+(<code>-no-pie</code>, <code>detect_leaks=0</code>, no LeakSanitizer claim). Its tests cover all 16 maps,
+130 combat-controller frames, 32 enemy chain deaths/rewards, corpse release,
+script-group updates, 16 player deaths and 512 subsequent death frames. Another
+2,560 player frames include 1,872 airborne and 1,792 third-person frames. A real
+world collision exercises contact damage followed by same-frame explosion
+suppression through flag one. Additional fixtures cover two native players,
+network routing, invalid bindings, 681 guards and three failure scenarios.</p>
+<p>Synthetic spawn scripts modify a private ROM copy only. Direct damage is a test
+trigger, not an implemented weapon. The native integration executes no ROM
+instructions. Reports record exact source hashes; the PowerShell test driver
+and all 43 native CMake libraries pass.</p>
+<p>This pass adds behavioral native code, not byte-identical matching candidates.
+The exact catalogue remains 65/526 functions, 1,712/87,648 code bytes (1.95%);
+the last full ROM export remains unchanged. Reward <code>125E0</code> is outside that
+incomplete imported catalogue; it was not added speculatively. Remaining work
+includes weapon firing/projectiles, other enemy attack controllers, initial
+enemy binding/outer dispatch, rendering, audio playback and OS input. There is
+no playable native executable yet.</p>
+</main></body></html>

@@ -1,1 +1,105 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enemy Cd — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="enemy-cd.md" download>Markdown ↓</a></header><article><h2>Native type-CD controller and world adapter</h2><p><code>enemy_cd.c</code> recovers the complete control flow of <code>08013978</code>, its active-state helper <code>08013924</code>, damage/proximity response <code>08013868</code>, and sound postlude <code>080137DC</code>. Type CD is the exploding enemy path. Its presentation and damage effects remain explicit callbacks; this is not yet a complete playable enemy.</p><h3>Original ordering and transitions</h3><p>State zero invokes the recovered initializer, retaining the 60-then-30-tick scripted-spawn countdown. State one runs shared navigation <code>1288C</code>, then the CD branch of contact helper <code>12638</code>, then periodic health drain <code>12E1C</code> and damage/proximity handling. State two invokes corpse update <code>12D9C</code>. Unknown states skip those handlers. Every completed state path still runs the sound postlude, including the frame that destroys the corpse.</p><p>Contact damage requests 20 damage to the latest blocked player entity when navigation&#x27;s last move result is zero and phase is two. <code>combat_runtime.c</code> now binds this callback to recovered general damage <code>037F4</code> and authoritative health.</p><p>Flag one requests a damage reaction. The enemy faces player-record XY using <code>0456C</code>, copies the desired direction to facing, and either proceeds to death when health is nonpositive or clears flag one and selects animation 8/period 6. Player-record position is deliberately separate from the player body used by navigation and proximity. The original uses those two different pointers.</p><p>The proximity target is the alternate entity at original +20 when flag 400 is set and that pointer exists; otherwise it is the player body. Original table distance <code>045C4</code> triggers detonation when its <strong>unsigned</strong> result is at most 127. Extreme wrapped coordinate differences can produce negative signed distances; they must not be mistaken for a nearby target.</p><p>Detonation enters state two, sets flag 20, selects animation 1C/period 6, invokes shared death entry (health zero, flag two clear, group release, timer 360), requests sound 27, then requests <code>035A8</code> with radius argument 20000 hex, damage 30 and flags one. <code>combat_runtime.c</code> supplies actual radial damage; presentation effects remain external. Failures preserve earlier state and stop later effects; no rollback is implied.</p><p>The postlude starts sound 3A when navigation phase is two, signed distance is nonzero and at most 1023, state is not two, and no other entity owns that loop. It stops the current entity&#x27;s loop when phase differs from two, signed distance exceeds 1024, or state becomes two. The asymmetric 1023/1024 thresholds and negative-distance behavior are preserved.</p><p><code>037E0</code> unlinks through <code>A65C</code> and calls <code>051C8</code>, which clears the complete 116-byte payload through <code>052B0</code>. The host controller defers actual clearing until it returns, but its postlude observes the equivalent cleared phase/state when destruction is requested. Thus it still stops a loop owned by the released entity without accessing freed host storage. Check <code>destroy_requested</code> even when a later stop-sound callback fails.</p><h3>Native world integration</h3><p><code>enemy_cd_runtime.c</code> binds one controller to one newly scripted CD actor. Its stable navigation and controller views reference the existing actor storage; it does not allocate a second body. Bind before state-zero activation. The runtime must not be copied, and its slot must not be externally released or reused while bound. It becomes inactive after native corpse release.</p><p>The adapter provides recovered turning, actual world walking/vertical physics, live moving-sector and floor hazards, animation metadata updates, group notification and ordered world unlink/pool release. It refreshes the shared blocker from the world at frame entry as well as after its own movement, so visibility early exits still observe the most recent collision query. Group-release and destroy events are consumed internally. Animation events observe reset native metadata before presentation callbacks.</p><p>Call it in the entity phase before the once-per-world script/mover update. The caller supplies the shared movement-call counter, original frame counter, level counter and ROM speed coefficient, and updates player body/record positions. The outer active-list dispatcher and global scheduling remain separate work. Do not mix manual activation or manual defeat with this bound controller&#x27;s state updates.</p><p>Visibility <code>B18C</code>, nearest-entity selection <code>036C4</code>, and single-ray traversal <code>A240/A041</code> are supplied by <code>enemy_queries.c</code>, including native <code>1271C</code> dual-ray geometry. Ordinary point movement clearance is not equivalent. The optional <code>combat_runtime.c</code> wrapper consumes contact/explosion callbacks with actual damage and reward routines. Audio and animation playback remain external. Query/effect callbacks must retain storage and respect their public contracts.</p><h3>Evidence</h3><p><code>test-enemy-cd</code> passes 7,278 whole-controller comparisons against original ROM instructions, with navigation <code>1288C</code> controlled equally on both sides. The real activation, contact gate, face/distance math, drain, death, corpse and sound control flow execute. External effects are observed; native destruction is projected as cleared payload only after its callback. Coverage includes different player-record/body coordinates, sound thresholds, damage reactions, contact gating and final corpse removal. Twenty guards, 8,206 callback reentry checks and seven effect-failure paths also pass under UBSan.</p><p>The shared modules separately pass 88,226 motion/hazard, 10,725 navigation/path and 15,031 lifecycle ROM comparisons. Read <code>enemy-motion.md</code>, <code>enemy-navigation.md</code> and <code>enemy-lifecycle.md</code> for their exact oracle boundaries.</p><p><code>test-enemy-cd-runtime</code> composes the real native modules with script spawning and all 16 maps under ASan and UBSan. It checks actual enemy movement/collision, player jump/H-view updates, group waits, corpse expiry, slot reuse, callback failures and reentry. Visibility/nearest selection and ray clearance are controlled dependencies in this integration test; its path-offset calculations are native. See <code>native-enemy-cd-runtime-validation.json</code> for final counts and source hashes. The established <code>-no-pie</code>, <code>detect_leaks=0</code> WSL workaround does not claim LeakSanitizer coverage.</p><p>The final integration result is 59,319 assertions over 1,959 controller frames, including 1,583 chase frames and 1,205 actual enemy moves. It covers 2,048 player frames, 36 complete corpse-expiry cycles, 37 releases, 16 reused slots, 84 guards, four failure paths and 5,019 callback reentry checks. The blocker regression uses an actual world query followed by a visibility early exit and verifies that contact damage still requests the correct player target.</p><p><code>sub_08013978</code> also compiled byte-identically through decomp.wtf on its first manual attempt: 31 instructions, 62 bytes. The straightforward switch candidate is <code>recovered/enemy_cd_dispatch.c</code>; the saved matcher result is <code>enemy-cd-match-attempts.json</code>. This small exact match is separate from the larger behavioral controller/native adapters and their explicit external dependencies.</p><p>The original sector-reject/nearest/navigation-wall-ray backend is now supplied by <code>enemy_queries.c</code>; see <code>enemy-queries.md</code> for its separate native integration. The earlier controlled-boundary test remains useful for forced controller branches.</p><p>Remaining work includes other enemy controllers, weapon firing/projectiles, animation playback, the outer entity dispatcher, rendering/audio and OS input. No native playable executable exists.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native type-CD controller and world adapter — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="enemy-cd.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-type-cd-controller-and-world-adapter">Native type-CD controller and world adapter</h1>
+<p><code>enemy_cd.c</code> recovers the complete control flow of <code>08013978</code>, its active-state
+helper <code>08013924</code>, damage/proximity response <code>08013868</code>, and sound postlude
+<code>080137DC</code>. Type CD is the exploding enemy path. Its presentation and damage
+effects remain explicit callbacks; this is not yet a complete playable enemy.</p>
+<h2 id="original-ordering-and-transitions">Original ordering and transitions</h2>
+<p>State zero invokes the recovered initializer, retaining the 60-then-30-tick
+scripted-spawn countdown. State one runs shared navigation <code>1288C</code>, then the
+CD branch of contact helper <code>12638</code>, then periodic health drain <code>12E1C</code> and
+damage/proximity handling. State two invokes corpse update <code>12D9C</code>. Unknown
+states skip those handlers. Every completed state path still runs the sound
+postlude, including the frame that destroys the corpse.</p>
+<p>Contact damage requests 20 damage to the latest blocked player entity when
+navigation's last move result is zero and phase is two. <code>combat_runtime.c</code> now
+binds this callback to recovered general damage <code>037F4</code> and authoritative health.</p>
+<p>Flag one requests a damage reaction. The enemy faces player-record XY using
+<code>0456C</code>, copies the desired direction to facing, and either proceeds to death
+when health is nonpositive or clears flag one and selects animation 8/period 6.
+Player-record position is deliberately separate from the player body used by
+navigation and proximity. The original uses those two different pointers.</p>
+<p>The proximity target is the alternate entity at original +20 when flag 400 is
+set and that pointer exists; otherwise it is the player body. Original table
+distance <code>045C4</code> triggers detonation when its <strong>unsigned</strong> result is at most
+127. Extreme wrapped coordinate differences can produce negative signed
+distances; they must not be mistaken for a nearby target.</p>
+<p>Detonation enters state two, sets flag 20, selects animation 1C/period 6, invokes
+shared death entry (health zero, flag two clear, group release, timer 360),
+requests sound 27, then requests <code>035A8</code> with radius argument 20000 hex, damage
+30 and flags one. <code>combat_runtime.c</code> supplies actual radial damage; presentation
+effects remain external.
+Failures preserve earlier state and stop later effects; no rollback is implied.</p>
+<p>The postlude starts sound 3A when navigation phase is two, signed distance is
+nonzero and at most 1023, state is not two, and no other entity owns that loop.
+It stops the current entity's loop when phase differs from two, signed distance
+exceeds 1024, or state becomes two. The asymmetric 1023/1024 thresholds and
+negative-distance behavior are preserved.</p>
+<p><code>037E0</code> unlinks through <code>A65C</code> and calls <code>051C8</code>, which clears the complete
+116-byte payload through <code>052B0</code>. The host controller defers actual clearing
+until it returns, but its postlude observes the equivalent cleared phase/state
+when destruction is requested. Thus it still stops a loop owned by the released
+entity without accessing freed host storage. Check <code>destroy_requested</code> even
+when a later stop-sound callback fails.</p>
+<h2 id="native-world-integration">Native world integration</h2>
+<p><code>enemy_cd_runtime.c</code> binds one controller to one newly scripted CD actor. Its
+stable navigation and controller views reference the existing actor storage;
+it does not allocate a second body. Bind before state-zero activation. The
+runtime must not be copied, and its slot must not be externally released or
+reused while bound. It becomes inactive after native corpse release.</p>
+<p>The adapter provides recovered turning, actual world walking/vertical physics,
+live moving-sector and floor hazards, animation metadata updates, group
+notification and ordered world unlink/pool release. It refreshes the shared
+blocker from the world at frame entry as well as after its own movement, so
+visibility early exits still observe the most recent collision query.
+Group-release and destroy events are consumed internally. Animation events
+observe reset native metadata before presentation callbacks.</p>
+<p>Call it in the entity phase before the once-per-world script/mover update.
+The caller supplies the shared movement-call counter, original frame counter,
+level counter and ROM speed coefficient, and updates player body/record
+positions. The outer active-list dispatcher and global scheduling remain
+separate work. Do not mix manual activation or manual defeat with this bound
+controller's state updates.</p>
+<p>Visibility <code>B18C</code>, nearest-entity selection <code>036C4</code>, and single-ray traversal
+<code>A240/A041</code> are supplied by <code>enemy_queries.c</code>, including native <code>1271C</code> dual-ray
+geometry. Ordinary point movement clearance is not equivalent. The optional
+<code>combat_runtime.c</code> wrapper consumes contact/explosion callbacks with actual
+damage and reward routines. Audio and animation playback remain external.
+Query/effect callbacks must retain storage and respect their public contracts.</p>
+<h2 id="evidence">Evidence</h2>
+<p><code>test-enemy-cd</code> passes 7,278 whole-controller comparisons against original ROM
+instructions, with navigation <code>1288C</code> controlled equally on both sides. The
+real activation, contact gate, face/distance math, drain, death, corpse and
+sound control flow execute. External effects are observed; native destruction
+is projected as cleared payload only after its callback. Coverage includes
+different player-record/body coordinates, sound thresholds, damage reactions,
+contact gating and final corpse removal. Twenty guards, 8,206 callback reentry
+checks and seven effect-failure paths also pass under UBSan.</p>
+<p>The shared modules separately pass 88,226 motion/hazard, 10,725 navigation/path
+and 15,031 lifecycle ROM comparisons. Read <code>enemy-motion.md</code>,
+<code>enemy-navigation.md</code> and <code>enemy-lifecycle.md</code> for their exact oracle boundaries.</p>
+<p><code>test-enemy-cd-runtime</code> composes the real native modules with script spawning
+and all 16 maps under ASan and UBSan. It checks actual enemy movement/collision,
+player jump/H-view updates, group waits, corpse expiry, slot reuse, callback
+failures and reentry. Visibility/nearest selection and ray clearance are
+controlled dependencies in this integration test; its path-offset calculations
+are native. See <code>native-enemy-cd-runtime-validation.json</code> for final counts and
+source hashes. The established <code>-no-pie</code>, <code>detect_leaks=0</code> WSL workaround does
+not claim LeakSanitizer coverage.</p>
+<p>The final integration result is 59,319 assertions over 1,959 controller frames,
+including 1,583 chase frames and 1,205 actual enemy moves. It covers 2,048 player
+frames, 36 complete corpse-expiry cycles, 37 releases, 16 reused slots, 84 guards,
+four failure paths and 5,019 callback reentry checks. The blocker regression uses
+an actual world query followed by a visibility early exit and verifies that
+contact damage still requests the correct player target.</p>
+<p><code>sub_08013978</code> also compiled byte-identically through decomp.wtf on its first
+manual attempt: 31 instructions, 62 bytes. The straightforward switch candidate
+is <code>recovered/enemy_cd_dispatch.c</code>; the saved matcher result is
+<code>enemy-cd-match-attempts.json</code>. This small exact match is separate from the larger
+behavioral controller/native adapters and their explicit external dependencies.</p>
+<p>The original sector-reject/nearest/navigation-wall-ray backend is now supplied
+by <code>enemy_queries.c</code>; see <code>enemy-queries.md</code> for its separate native integration.
+The earlier controlled-boundary test remains useful for forced controller branches.</p>
+<p>Remaining work includes other enemy
+controllers, weapon firing/projectiles, animation playback, the outer entity
+dispatcher, rendering/audio and OS input. No native playable executable exists.</p>
+</main></body></html>

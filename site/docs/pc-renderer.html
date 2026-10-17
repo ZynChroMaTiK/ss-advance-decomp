@@ -1,10 +1,94 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pc Renderer — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="pc-renderer.md" download>Markdown ↓</a></header><article><h2>Dynamic PC render resolution</h2><p>The playable frontend now renders the world at the window&#x27;s client size by default. Resizing or maximizing the window changes the internal framebuffer, world ray count, geometry edges and texture sampling. This is an additional PC renderer; the original GBA routines and their reference output remain available. The frontend requests per-monitor DPI awareness and responds to DPI changes, avoiding ordinary Windows bitmap enlargement on high-DPI displays.</p><pre><code>.\play-native.cmd
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dynamic PC render resolution — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="pc-renderer.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="dynamic-pc-render-resolution">Dynamic PC render resolution</h1>
+<p>The playable frontend now renders the world at the window's client size by
+default. Resizing or maximizing the window changes the internal framebuffer,
+world ray count, geometry edges and texture sampling. This is an additional PC
+renderer; the original GBA routines and their reference output remain available.
+The frontend requests per-monitor DPI awareness and responds to DPI changes,
+avoiding ordinary Windows bitmap enlargement on high-DPI displays.</p>
+<pre><code class="language-powershell">.\play-native.cmd
 .\play-native.cmd --resolution 1920x1080
 .\play-native.cmd --resolution 3840x2160
 .\play-native.cmd --resolution 7680x4320
 .\play-native.cmd --resolution auto
 .\play-native.cmd --original-renderer
-</code></pre><p>Custom sizes render at exactly the requested dimensions and fit into the window with the same aspect ratio. Auto mode fills the client area. There is no preset resolution ceiling: sizes are checked for integer/address overflow and allocation failure. Color/depth storage costs eight bytes per pixel; pitched rendering adds four bytes per row/column for the flat sky lookup and cached floor topology. Windows presentation adds a client-size 32-bit offscreen DIB. Old and new allocations can briefly coexist during resize. Available memory, software rendering performance, and platform integer/DIB limits still apply.</p><p><code>SsaPcRenderer</code> owns dynamic color/depth buffers and per-column intersection scratch. Its resize operation is atomic: invalid dimensions or allocation failure retain the prior buffers. The frontend reports a requested allocation failure and exits cleanly. Free releases all buffers. Rendering is read-only with respect to gameplay and runs once per presented simulation batch.</p><p>The PC frontend now advances simulation separately from presentation, so it does not draw the original GBA reference world on every simulation/catch-up tick. The original path remains available explicitly. Windows composes each complete frame, bars and text into a memory DIB before one finished-image blit. It never clears the visible client to black between frames. See <a href="render-performance.html">performance and presentation checks</a>.</p><p>Each output column casts a separate ray through decoded original map lines, walking live sector portals and door heights. Perspective-correct wall samples use the original highest-resolution texture archive; original sector flat colors and sky data draw the planes. Per-pixel depth clips original directional actor sprites against geometry and one another. The highest available actor mip is selected, with its original direction, flip, origin and player overlay. The vertical field of view stays consistent as the aspect ratio changes, extending the horizontal view on wide windows.</p><p>HUD and first-person weapon artwork retain their original pixel art. A separate transparent sprite layer is composed from actual OAM/cache data, then scaled inside a centered 3:2 safe area. It does not copy or enlarge the low-resolution world framebuffer. Textures and sprite source art have not been replaced or AI-upscaled. H, jump, aiming, collision and combat remain simulation behavior.</p><p>The original renderer remains the reference for exact GBA behavior. The PC renderer uses floating-point geometry and new depth/raster rules; it does not claim byte-for-byte or pixel-for-pixel equivalence to GBA projection quirks.</p><p>Vertical mouse aiming now rotates the PC camera with proper perspective, near-plane clipping, depth and texture interpolation, including upright actor billboards. Read <a href="free-look.html">vertical aiming</a> for implementation and checks.</p><p>The background is a flat, screen-facing image. Yaw scrolls the original panorama horizontally; pitch shifts the image vertically with the projected horizon. Rows and columns stay straight at every view angle. Level and pitched views use the same sky sampling. Geometry, actors and aiming retain their perspective projection and depth. The sky lookup is separable: one column and one row index, using4*(width+height) bytes instead of4*width*height. At level aim, the PC background fits the actual60-row backdrop into the upper three quarters of the viewport. Looking up moves that image down; looking down moves it up. The offset is focal_length*tan(render_pitch), using the actual presentation camera pitch, including third-person convergence. Artwork size remains fixed. Each column repeats its first displayed pixel above the translated image and its last displayed pixel below, so exposed space never wraps or samples adjacent data. Fractional coverage rounds upward; even at tiny resolutions the extension uses the last actually displayed row. Column and row lookups update in O(width+height) per frame without reallocating on pitch changes. This shared sampler applies to both level and pitched views. The reference sampler&#x27;s 120-row readable window overlaps the next family/other data and is retained only for original GBA behavior, rather than displayed below the PC sky.</p><p>Validation:</p><p class="bullet">• ASan/UBSan with leak detection covers 1×1, 127×73, 240×160, 960×640,</p><p>  1920×1080, 3840×2160 and 8193×17, resize guards, read-only gameplay state,   24 jumping/chase frames and real actor pixels. At 960×640, 257,587 pixels   differ from nearest-neighbor enlargement of the original output.</p><p class="bullet">• Normal-input level completion with unlimited ranged attacks: 4,653 simulation frames,</p><p>  28,000 score, seven pickups, 23 health. The new renderer draws77 normal and77 pitched   1280×720 frames along the entire route without a failure.</p><p class="bullet">• Windows tests verify eight sizes/modes through 65537×1, custom output/snapshot</p><p>  dimensions, one world ray per output column, GDI presentation, original-mode   fallback, four invalid size strings, and live   automatic resizing from 1264×861 to 1008×729. A 4K frame and first/chase   views were visually inspected. Physical-device interaction remains untested.</p><p>Reports: <code>pc-renderer-validation.json</code>, <code>pc-renderer-playability-validation.json</code>, and <code>windows-render-resolution-validation.json</code>.</p><pre><code>.\decomp.ps1 test-pc-renderer
+</code></pre>
+<p>Custom sizes render at exactly the requested dimensions and fit into the window
+with the same aspect ratio. Auto mode fills the client area. There is no preset
+resolution ceiling: sizes are checked for integer/address overflow and allocation
+failure. Color/depth storage costs eight bytes per pixel; pitched rendering
+adds four bytes per row/column for the flat sky lookup and cached floor topology. Windows
+presentation adds a client-size 32-bit offscreen DIB. Old and new allocations
+can briefly coexist during resize. Available memory,
+software rendering performance, and platform integer/DIB limits still apply.</p>
+<p><code>SsaPcRenderer</code> owns dynamic color/depth buffers and per-column intersection
+scratch. Its resize operation is atomic: invalid dimensions or allocation
+failure retain the prior buffers. The frontend reports a requested allocation
+failure and exits cleanly. Free releases all buffers. Rendering is read-only
+with respect to gameplay and runs once per presented simulation batch.</p>
+<p>The PC frontend now advances simulation separately from presentation, so it
+does not draw the original GBA reference world on every simulation/catch-up tick.
+The original path remains available explicitly. Windows composes each complete
+frame, bars and text into a memory DIB before one finished-image blit. It never
+clears the visible client to black between frames. See
+<a href="render-performance.html">performance and presentation checks</a>.</p>
+<p>Each output column casts a separate ray through decoded original map lines,
+walking live sector portals and door heights. Perspective-correct wall samples
+use the original highest-resolution texture archive; original sector flat colors
+and sky data draw the planes. Per-pixel depth clips original directional actor
+sprites against geometry and one another. The highest available actor mip is
+selected, with its original direction, flip, origin and player overlay. The
+vertical field of view stays consistent as the aspect ratio changes, extending
+the horizontal view on wide windows.</p>
+<p>HUD and first-person weapon artwork retain their original pixel art. A separate
+transparent sprite layer is composed from actual OAM/cache data, then scaled
+inside a centered 3:2 safe area. It does not copy or enlarge the low-resolution
+world framebuffer. Textures and sprite source art have not been replaced or
+AI-upscaled. H, jump, aiming, collision and combat remain simulation behavior.</p>
+<p>The original renderer remains the reference for exact GBA behavior. The PC
+renderer uses floating-point geometry and new depth/raster rules; it does not
+claim byte-for-byte or pixel-for-pixel equivalence to GBA projection quirks.</p>
+<p>Vertical mouse aiming now rotates the PC camera with proper perspective,
+near-plane clipping, depth and texture interpolation, including upright actor
+billboards. Read <a href="free-look.html">vertical aiming</a> for implementation and checks.</p>
+<p>The background is a flat, screen-facing image. Yaw scrolls the original panorama
+horizontally; pitch shifts the image vertically with the projected horizon. Rows
+and columns stay straight at every view angle.
+Level and pitched views use the same sky sampling. Geometry, actors and aiming
+retain their perspective projection and depth. The sky lookup is separable:
+one column and one row index, using4*(width+height) bytes instead of4<em>width</em>height.
+At level aim, the PC background fits the actual60-row backdrop into the upper
+three quarters of the viewport. Looking up moves that image down; looking down
+moves it up. The offset
+is focal_length*tan(render_pitch), using the actual presentation camera pitch,
+including third-person convergence. Artwork size remains fixed. Each column
+repeats its first displayed pixel above the translated image and its last
+displayed pixel below, so exposed space never wraps or samples adjacent data.
+Fractional coverage rounds upward; even at tiny resolutions the
+extension uses the last actually displayed row. Column and row lookups update
+in O(width+height) per frame without reallocating on pitch changes. This shared
+sampler applies to both level and pitched views. The reference sampler's
+120-row readable window overlaps the next family/other data and is retained
+only for original GBA behavior, rather than displayed below the PC sky.</p>
+<p>Validation:</p>
+<ul>
+<li>ASan/UBSan with leak detection covers 1×1, 127×73, 240×160, 960×640,
+1920×1080, 3840×2160 and 8193×17, resize guards, read-only gameplay state,
+24 jumping/chase frames and real actor pixels. At 960×640, 257,587 pixels
+differ from nearest-neighbor enlargement of the original output.</li>
+<li>Normal-input level completion with unlimited ranged attacks: 4,653 simulation frames,
+28,000 score, seven pickups, 23 health. The new renderer draws77 normal and77 pitched
+1280×720 frames along the entire route without a failure.</li>
+<li>Windows tests verify eight sizes/modes through 65537×1, custom output/snapshot
+dimensions, one world ray per output column, GDI presentation, original-mode
+fallback, four invalid size strings, and live
+automatic resizing from 1264×861 to 1008×729. A 4K frame and first/chase
+views were visually inspected. Physical-device interaction remains untested.</li>
+</ul>
+<p>Reports: <code>pc-renderer-validation.json</code>,
+<code>pc-renderer-playability-validation.json</code>, and
+<code>windows-render-resolution-validation.json</code>.</p>
+<pre><code class="language-powershell">.\decomp.ps1 test-pc-renderer
 .\decomp.ps1 test-pc-renderer-playability
 powershell -ExecutionPolicy Bypass -File scripts/test-render-resolution.ps1
-</code></pre></article></body></html>
+</code></pre>
+</main></body></html>

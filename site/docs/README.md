@@ -136,8 +136,8 @@ Q swaps to the last equipped weapon. Weapon changes wait until the current
 firing/reload animation ends; automatic weapons finish the current animation cycle.
 Buttons activate immediately on E, without waiting for the weapon to finish lowering.
 Esc releases the mouse; R restarts from the current level's entry state.
-After the first nine exits, Enter advances with your health, armor, weapons,
-ammo and score. Enter replays after the ninth exit.
+Enter advances from supported intermediate levels with your health, armor,
+weapons, ammo and score. At the last supported level, Enter replays it.
 Press M to mute/unmute audio. Use `play-native.cmd --no-music` for effects only,
 or `play-native.cmd --mute` to start silently. Mouse look turns and aims vertically
 through 80 degrees up or down, with perspective-correct world rendering.

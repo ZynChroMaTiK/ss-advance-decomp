@@ -1,1 +1,82 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon Selection — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="weapon-selection.md" download>Markdown ↓</a></header><article><h2>Weapon acquisition and selection</h2><p><code>src/weapon_select.c</code> implements the original pending-weapon and selection phase, using the native inventory structure and ROM-loaded ammunition limits. It contains no emulator or platform input dependency.</p><p>| Original routine | Native API | | --- | --- | | <code>08011588</code> | <code>ssa_weapon_take_request</code> | | <code>08011604</code> | <code>ssa_weapon_update</code> | | <code>08011FFC</code>, <code>08012038</code>, <code>08012050</code> | <code>ssa_weapon_cycle</code> |</p><p>The separate <code>SsaWeaponControl</code> stores current weapon (original player word 28), weapon flags (word 30), requested weapon (halfword 78), and selection keys (halfword BC). <code>SsaInventory</code> remains unchanged. Current and requested weapons are deliberately separate: this phase requests a switch; the unported weapon animation state machine subsequently commits the current weapon.</p><p>Flags <code>0x2C00</code> suppress request consumption. Otherwise the request routine first pops a pending weapon from the end of the inventory stack. If the stack is empty, it clears and consumes key <code>0x40</code> as next-weapon, then key <code>0x80</code> as previous-weapon. If neither key is pending and current ammunition is exactly zero, it requests previous-weapon automatically. Negative signed ammunition does not trigger this automatic request.</p><p>The update grants the queued weapon&#x27;s ownership bit and half its ammunition capacity, rounded down, using the original ammunition helper. It automatically requests that weapon only when the <strong>entire old ownership mask is numerically less than the new weapon bit</strong>. This original condition compares neither the current weapon nor its requested replacement. Duplicate pending grants still add ammunition, subject to the original capacity rules. Automatic selection or an explicit cycle request sets flags <code>0x2100</code>.</p><p>Cycling advances before testing, wraps across sixteen bit positions, and picks an owned weapon whose signed ammunition is nonzero. It starts from the requested weapon. Negative ammunition is eligible. A sole usable weapon can therefore select itself after a full rotation.</p><h3>Native validity contracts</h3><p>Recovered weapon IDs are 1–10. Cycling rejects ownership bits for unsupported slots 11–16 rather than indexing past the native ammunition array. Queued IDs outside 1–10 and counts above ten are rejected. A selector with no eligible weapon returns <code>-1</code>; the original would continue looping indefinitely. Only direction +1 or -1 is accepted. The complete update applies changes to local copies first, so invalid integration leaves both input structures unchanged, including an otherwise-consumed key or stack entry. These guards are native behavior and are tested separately from original valid inputs.</p><h3>Verification and integration</h3><p><code>tests/test_weapon_select_rom.py</code> passes <strong>29,176 ROM comparisons</strong> with no hooked dependencies. The original helper calls execute their actual ROM instructions. Tests compare complete 256-byte player records and unchanged game state, plus the request routine&#x27;s defined return value:</p><p class="bullet">• 4,700 request operations covering blocked flags, LIFO priority, keys,</p><p>  current ammo and signed extrema.</p><p class="bullet">• 16,476 complete acquisition/selection updates, including all 1,024 valid</p><p>  ownership masks against each queued weapon, randomized cases and 1,536   consecutive update frames.</p><p class="bullet">• 4,000 next-weapon and 4,000 previous-weapon selections, including wrapped</p><p>  starting values, unavailable weapons and negative ammunition.</p><p>Another 34 checks cover native guards and atomic failure. Eighteen native integration scenarios run the actual pickup dispatcher, enqueue every one of the nine weapon pickups, then run the actual acquisition update. They verify removal/count effects, delayed ownership, ammunition grants, duplicates, requested selection and rejection of later already-owned weapon pickups. The test library is built as strict C11 with UndefinedBehaviorSanitizer. Evidence is <code>native-weapon-selection-validation.json</code>.</p><p>Firing, weapon animation and current-weapon commit, damage, UI rendering, OS controls and the game loop remain unported. These tests establish native pickup-to-inventory functionality, not visible or playable combat.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon acquisition and selection — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="weapon-selection.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="weapon-acquisition-and-selection">Weapon acquisition and selection</h1>
+<p><code>src/weapon_select.c</code> implements the original pending-weapon and selection
+phase, using the native inventory structure and ROM-loaded ammunition limits.
+It contains no emulator or platform input dependency.</p>
+<table>
+<thead>
+<tr>
+<th>Original routine</th>
+<th>Native API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>08011588</code></td>
+<td><code>ssa_weapon_take_request</code></td>
+</tr>
+<tr>
+<td><code>08011604</code></td>
+<td><code>ssa_weapon_update</code></td>
+</tr>
+<tr>
+<td><code>08011FFC</code>, <code>08012038</code>, <code>08012050</code></td>
+<td><code>ssa_weapon_cycle</code></td>
+</tr>
+</tbody>
+</table>
+<p>The separate <code>SsaWeaponControl</code> stores current weapon (original player word 28),
+weapon flags (word 30), requested weapon (halfword 78), and selection keys
+(halfword BC). <code>SsaInventory</code> remains unchanged. Current and requested weapons
+are deliberately separate: this phase requests a switch; the unported weapon
+animation state machine subsequently commits the current weapon.</p>
+<p>Flags <code>0x2C00</code> suppress request consumption. Otherwise the request routine
+first pops a pending weapon from the end of the inventory stack. If the stack
+is empty, it clears and consumes key <code>0x40</code> as next-weapon, then key <code>0x80</code> as
+previous-weapon. If neither key is pending and current ammunition is exactly
+zero, it requests previous-weapon automatically. Negative signed ammunition
+does not trigger this automatic request.</p>
+<p>The update grants the queued weapon's ownership bit and half its ammunition
+capacity, rounded down, using the original ammunition helper. It automatically
+requests that weapon only when the <strong>entire old ownership mask is numerically
+less than the new weapon bit</strong>. This original condition compares neither the
+current weapon nor its requested replacement. Duplicate pending grants still
+add ammunition, subject to the original capacity rules. Automatic selection or
+an explicit cycle request sets flags <code>0x2100</code>.</p>
+<p>Cycling advances before testing, wraps across sixteen bit positions, and picks
+an owned weapon whose signed ammunition is nonzero. It starts from the
+requested weapon. Negative ammunition is eligible. A sole usable weapon can
+therefore select itself after a full rotation.</p>
+<h2 id="native-validity-contracts">Native validity contracts</h2>
+<p>Recovered weapon IDs are 1–10. Cycling rejects ownership bits for unsupported
+slots 11–16 rather than indexing past the native ammunition array. Queued IDs
+outside 1–10 and counts above ten are rejected. A selector with no eligible
+weapon returns <code>-1</code>; the original would continue looping indefinitely.
+Only direction +1 or -1 is accepted. The complete update applies changes to
+local copies first, so invalid integration leaves both input structures
+unchanged, including an otherwise-consumed key or stack entry. These guards
+are native behavior and are tested separately from original valid inputs.</p>
+<h2 id="verification-and-integration">Verification and integration</h2>
+<p><code>tests/test_weapon_select_rom.py</code> passes <strong>29,176 ROM comparisons</strong> with no
+hooked dependencies. The original helper calls execute their actual ROM
+instructions. Tests compare complete 256-byte player records and unchanged
+game state, plus the request routine's defined return value:</p>
+<ul>
+<li>4,700 request operations covering blocked flags, LIFO priority, keys,
+current ammo and signed extrema.</li>
+<li>16,476 complete acquisition/selection updates, including all 1,024 valid
+ownership masks against each queued weapon, randomized cases and 1,536
+consecutive update frames.</li>
+<li>4,000 next-weapon and 4,000 previous-weapon selections, including wrapped
+starting values, unavailable weapons and negative ammunition.</li>
+</ul>
+<p>Another 34 checks cover native guards and atomic failure. Eighteen native
+integration scenarios run the actual pickup dispatcher, enqueue every one of
+the nine weapon pickups, then run the actual acquisition update. They verify
+removal/count effects, delayed ownership, ammunition grants, duplicates,
+requested selection and rejection of later already-owned weapon pickups.
+The test library is built as strict C11 with UndefinedBehaviorSanitizer.
+Evidence is <code>native-weapon-selection-validation.json</code>.</p>
+<p>Firing, weapon animation and current-weapon commit, damage, UI rendering,
+OS controls and the game loop remain unported. These tests establish native
+pickup-to-inventory functionality, not visible or playable combat.</p>
+</main></body></html>

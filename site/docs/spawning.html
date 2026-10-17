@@ -1,1 +1,279 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spawning — Advance Project</title><link rel="stylesheet" href="../styles.css"><style>article{max-width:920px;margin:auto;padding:40px 24px 90px}article p{font-size:14px;color:#b7c7b0}article h2{font-size:32px;margin-top:45px}article h3{margin-top:30px;font-size:24px}article a{color:var(--lime);text-decoration:underline}pre{padding:20px;background:#091009;overflow:auto;font-size:12px;line-height:1.65;border:1px solid var(--border)}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}.bullet{margin-left:14px}</style></head><body><header class="site-header"><a href="../#development">← Development</a><span class="eyebrow">PROJECT REFERENCE / 17 OCT 2026</span><a href="spawning.md" download>Markdown ↓</a></header><article><h2>Native map entity construction</h2><p><code>src/spawn.c</code> ports the complete map-thing construction routine at <code>08001984</code>. It loads the actual 64-entry translation table from the user&#x27;s ROM, constructs stable native objects, records multiplayer/teleport starts and inserts the objects into the native world in the original order. This is the initial construction phase, not complete enemy AI activation, pickup ticking or player setup. Pickups legitimately retain zero collision dimensions; see the runtime dispatch trace below.</p><h3>Recovered behavior</h3><p>The game calls <code>08005238</code> to initialize a 100-slot entity pool, then <code>08001984</code> to enumerate map things. Type is the halfword at thing offset +6. Enumeration loops types 0 through 63, then scans matching things in file order using <code>0800B14C</code>. Consequently file order alone is not entity allocation order. Types above 63 are ignored; zero-valued table entries are still instantiated if a matching map thing exists. Pool exhaustion drops subsequent ordinary objects, but continues collecting start markers.</p><p>The table begins at ROM offset <code>44A3D4</code>. Each eight-byte entry contains four halfwords: entity type, variant, animation ID, animation tick period. Native loading keeps this data in the supplied ROM rather than embedding asset data. Map types 26 through 63 translate to entity type <code>0xE1</code>; their animation ID is also the ID consumed by the pickup handler at <code>0801B99C</code>.</p><p>Construction initializes the original fields as follows:</p><p>| Original entity field | Initialization | | --- | --- | | +00/+04 | Signed thing X/Y converted to 16.16 | | +08 | BSP sector floor converted to 16.16 after insertion | | +3C | Translation-table entity type | | +3E | Low byte of table variant | | +3F | <code>(thing heading &gt;&gt; 8) + 128</code>, truncated to a byte | | +58 | Animation ID via <code>08005394</code>; also the pickup item ID | | +5C/+5D/+5F | Animation counters reset to zero | | +5E | Low byte of animation tick period | | +68 | Thing halfword at +8; used by trigger processing |</p><p>The original animation setter accepts IDs 0 through <code>0x8D</code> and <code>0xFFFF</code>; other IDs leave the initially zero animation fields unchanged. Thing +A is not consumed by this routine. Native metadata also retains the source thing index for later recovery/debugging.</p><p>Original level index 10 contains a hard-coded coordinate correction: objects at X=2240 or X=3008, Y=-2304 instead receive Y=-2108. This correction applies to ordinary objects before BSP insertion, not start markers.</p><p>Entity types <code>0xC9</code> through <code>0xCC</code> become player-start records, and <code>0xD9</code> becomes a teleport-start record. Records retain signed whole-unit X/Y, zero Z and the upper heading byte. Single-player initialization skips the <code>0xC9</code> pass entirely, since <code>08005E4C</code> later locates thing type 1 separately. Other player marker types are still collected. Full player state, player-body construction, weapon inventory and respawn logic are separate work.</p><p>The original insertion routines <code>0800A5D0</code> and <code>0800A6CC</code> resolve the BSP leaf, sector, floor/ceiling and linked block-cell membership. The native world provides those operations with host pointers. Entity pool slot/active indices are replaced by stable native storage. At this exact stage, radius, height, flags and health remain zero. Later enemy AI updates are responsible for enemy activation. Pickups retain zero dimensions in their normal update path; assigning plausible dimensions here would change the recovered behavior.</p><h3>Ownership and use</h3><p>Load <code>SsaSpawnDefinitions</code> with <code>ssa_spawn_definitions_load</code>. Zero-initialize <code>SsaSpawnPlan</code>, then call <code>ssa_spawn_plan_load</code> with an already validated map, the level index, player count (1 through 4), and available original pool slots (0 through 100). The plan owns its object and marker arrays; its map remains caller-owned. A successful plan load leaves its objects unregistered, with positions and floor/ceiling already computed.</p><p><code>ssa_spawn_plan_insert</code> registers objects in original allocation order. The world must reference the same map and have enough remaining capacity. It refreshes each floor/ceiling and places Z on the current floor. Failed insertion removes any objects inserted by that call. It does not roll back body metadata. Do not modify registered coordinates directly or move/reallocate object storage.</p><p><code>ssa_spawn_plan_free</code> refuses while any object remains registered. Free/detach the world first, then free the plan, then the map. Never free plan storage from inside a world-query callback, including after removing a contacted pickup. This layer does not execute AI, pickup effects, damage, animation stepping or graphics. Spawned enemy bodies still need activation before normal gameplay.</p><h3>Validation</h3><p>Run <code>.venv-linux/bin/python tests/test_spawn_rom.py</code> inside Ubuntu/WSL. The native build uses warnings-as-errors and UBSan. The test executes the entire original <code>08001984</code> routine with its real allocator, thing scanner, animation setter, BSP resolution and block-cell insertion. Only sector-pool allocation at <code>0800D1B4</code> is replaced; native host sector lists are a separate representation.</p><p class="bullet">• 256 complete initialization comparisons: all 16 maps, both one/four-player</p><p>  settings, four pool capacities, plus 128 synthetic thing arrays on real BSP   geometry. Synthetic cases cover full-range coordinates, headings/triggers,   ignored types and both level-10 coordinate fixes.</p><p class="bullet">• 3,128 complete original 116-byte entity records compared with projected</p><p>  native state, including original pool indices and native-to-GBA link mapping.</p><p class="bullet">• 728 start-marker records and 256 complete block-cell-head snapshots compared.</p><p class="bullet">• 370 native guards cover registered-storage lifetime, duplicate insertion,</p><p>  capacity, invalid settings, malformed sections and partial-insert cleanup.</p><p>Evidence is in <code>analysis/native-spawn-validation.json</code>. These are behavioral comparisons; no byte-identical recovered C match is claimed for <code>08001984</code>.</p><h3>Runtime dispatch trace and next recovery targets</h3><p>This section records read-only instruction/table inspection, not newly ported or differentially validated behavior. Frame routine <code>0800244C</code> calls entity dispatcher <code>08004E04</code> at <code>08002488</code>. The dispatcher walks the active index list at <code>03004470</code>, resolves 116-byte entity slots through <code>[03004644]</code>, writes the current entity to <code>[0300443C]</code>, then indexes the 128-entry branch table at <code>08004E68</code> with <code>(entity.type - 100) * 4</code>. Types outside 100..227 use its default path. It calls <code>080083E4</code> before visiting entities. Do not replace this frame dispatcher with arbitrary file-order updates: both its ordering and mutations of the active list still require full recovery.</p><p>The exact type targets selected by this table are:</p><p>| Entity type | Per-entity routine | State-zero initializer | | --- | --- | --- | | C9..CC | <code>08005CCC</code> | Separate player initializer <code>08005E4C</code> | | CD | <code>08013978</code> | <code>08013940</code> | | CE | <code>080135C4</code> | <code>08013584</code> | | CF | <code>08013040</code> | <code>08013008</code> | | D0 | <code>0801319C</code> | <code>0801315C</code> | | D1 | <code>08013B40</code> | <code>08013B08</code> | | D2 | <code>08013350</code> | <code>08013318</code> | | D3 | <code>08013FA4</code> | <code>08013F48</code> | | D4 | <code>080141E8</code> | <code>08014158</code> | | D5 | <code>08013DB0</code> | <code>08013D78</code> | | D6 | <code>08013780</code> | <code>08013748</code> | | D7 | <code>08014AB8</code> | <code>0801485C</code> | | D8 | <code>08014648</code> | <code>080143B0</code> | | D9..E0 | Default, no per-entity call | None in this dispatcher | | E1 | <code>0801B848</code> | <strong>No dimension initializer</strong> | | E2 | <code>080113E4</code> | Not traced | | E3 | <code>08011424</code> | Not traced |</p><p><code>0xE1</code> selects branch <code>08005118</code>, which calls <code>0801B848</code>. That wrapper only calls <code>08012CFC</code> and returns. The helper updates the halfword countdown at entity +4E by subtracting the game tick byte <code>[03004010]-&gt;+7</code>, preserving 16-bit wrapping. If entity flag <code>0x80</code> is clear and the signed countdown expires, it sets the countdown to zero and returns 1. With flag <code>0x80</code> set, expiration clears that flag, resets the countdown to 30 and returns 0; positive countdowns also return 0. The pickup wrapper ignores the return value. Neither routine assigns radius, height or health. Thus ordinary map pickups retaining zero dimensions is intentional original behavior, consistent with <code>08003D7C</code> dispatching type E1 before radius checks. Do not give pickups guessed enemy-style dimensions.</p><p>The separate multiplayer pickup respawner is <code>0801B854</code>, called by the frame at <code>08002494</code>. It uses the D9 marker array at <code>03004040</code>, has level-specific tables for levels 12..15, allocates an E1 entity, sets countdown 60 and flag <code>0x80</code>, sets its animation/item ID, inserts it and places it on the floor. This is a later respawn path, not <code>0801BF14</code>, which sets up sector scripts.</p><p>Enemy initializers use the same countdown helper, then advance byte +3E from state 0 to state 1 and assign collision dimensions/health. Concrete examples: type CD&#x27;s <code>08013940</code> sets height 120, radius 32, health 30, and ORs flag 2; type CF&#x27;s <code>08013008</code> sets height 152, radius 48, health 50, and ORs flag 2; type D1&#x27;s <code>08013B08</code> sets height 140, radius 50, health 100, and ORs flag 2. Dimensions are 16.16. These three routines call <code>080125BC</code>, which increments a per-enemy-type counter in game state at <code>+0x130 + (type-CD)*12</code>. Boss type D8&#x27;s <code>080143B0</code> additionally sets boss globals, calls <code>08014328</code> and emits music/UI effects; it is not safely represented by only assigning three constants.</p><p>Player initialization is already directly reachable after map spawning: level setup calls <code>08001984</code> at <code>0800206E</code>, <code>08000890</code> at <code>08002072</code>, then <code>08005E4C</code> at <code>08002076</code>. <code>08005E4C</code> allocates/clears four 256-byte player records, selects single-player type-1 starts or multiplayer marker positions, allocates player bodies, assigns type C9+index, index byte +54, radius 32, height 100, flags 0x1A (0x9A for the local player), health 100 and animation 0x65/period 4. It then inserts each body and copies floor Z to both body and player state. Player eye offset +D0 starts at 96 units, flag +BC includes 4. Full weapon/inventory setup happens separately; copying this body initializer alone is insufficient to initialize the complete player.</p><p>Player frame routine <code>08005CCC</code> calls death/respawn logic <code>08006154</code>, movement <code>080064B8</code>, camera <code>080062D4</code>, local-camera-state copying, interaction/hazard wrapper <code>08005680</code>, and sector trigger <code>0801C624</code>, followed by timer and movement-animation handling. These paths are now connected in <code>player_runtime.c</code>, <code>player_gameplay.c</code> and <code>level_runtime.c</code>; see their analysis documents. There is no hidden common pickup activation assigning nonzero dimensions.</p><p>All twelve CD..D8 state-zero initializers, including both boss paths, are now native and verified in <code>enemy_activation.c</code>; see <code>enemy-activation.md</code> for exact effects and validation. <code>script_spawn.c</code> connects script creation to the original 100-slot pool, native world insertion, activation and explicit group notification. See <code>script-spawn.md</code> and <code>entity-pool.md</code>. Type-CD control flow, shared navigation and death handling now have native implementations; see <code>enemy-cd.md</code>. Original sight/nearest/ray queries, other enemy controllers and the outer dispatcher remain.</p></article></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native map entity construction — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="spawning.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-map-entity-construction">Native map entity construction</h1>
+<p><code>src/spawn.c</code> ports the complete map-thing construction routine at <code>08001984</code>.
+It loads the actual 64-entry translation table from the user's ROM, constructs
+stable native objects, records multiplayer/teleport starts and inserts the
+objects into the native world in the original order. This is the initial
+construction phase, not complete enemy AI activation, pickup ticking or player
+setup. Pickups legitimately retain zero collision dimensions; see the runtime
+dispatch trace below.</p>
+<h2 id="recovered-behavior">Recovered behavior</h2>
+<p>The game calls <code>08005238</code> to initialize a 100-slot entity pool, then <code>08001984</code>
+to enumerate map things. Type is the halfword at thing offset +6. Enumeration
+loops types 0 through 63, then scans matching things in file order using
+<code>0800B14C</code>. Consequently file order alone is not entity allocation order.
+Types above 63 are ignored; zero-valued table entries are still instantiated
+if a matching map thing exists. Pool exhaustion drops subsequent ordinary
+objects, but continues collecting start markers.</p>
+<p>The table begins at ROM offset <code>44A3D4</code>. Each eight-byte entry contains four
+halfwords: entity type, variant, animation ID, animation tick period. Native
+loading keeps this data in the supplied ROM rather than embedding asset data.
+Map types 26 through 63 translate to entity type <code>0xE1</code>; their animation ID is
+also the ID consumed by the pickup handler at <code>0801B99C</code>.</p>
+<p>Construction initializes the original fields as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Original entity field</th>
+<th>Initialization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+00/+04</td>
+<td>Signed thing X/Y converted to 16.16</td>
+</tr>
+<tr>
+<td>+08</td>
+<td>BSP sector floor converted to 16.16 after insertion</td>
+</tr>
+<tr>
+<td>+3C</td>
+<td>Translation-table entity type</td>
+</tr>
+<tr>
+<td>+3E</td>
+<td>Low byte of table variant</td>
+</tr>
+<tr>
+<td>+3F</td>
+<td><code>(thing heading &gt;&gt; 8) + 128</code>, truncated to a byte</td>
+</tr>
+<tr>
+<td>+58</td>
+<td>Animation ID via <code>08005394</code>; also the pickup item ID</td>
+</tr>
+<tr>
+<td>+5C/+5D/+5F</td>
+<td>Animation counters reset to zero</td>
+</tr>
+<tr>
+<td>+5E</td>
+<td>Low byte of animation tick period</td>
+</tr>
+<tr>
+<td>+68</td>
+<td>Thing halfword at +8; used by trigger processing</td>
+</tr>
+</tbody>
+</table>
+<p>The original animation setter accepts IDs 0 through <code>0x8D</code> and <code>0xFFFF</code>;
+other IDs leave the initially zero animation fields unchanged. Thing +A is
+not consumed by this routine. Native metadata also retains the source thing
+index for later recovery/debugging.</p>
+<p>Original level index 10 contains a hard-coded coordinate correction:
+objects at X=2240 or X=3008, Y=-2304 instead receive Y=-2108. This correction
+applies to ordinary objects before BSP insertion, not start markers.</p>
+<p>Entity types <code>0xC9</code> through <code>0xCC</code> become player-start records, and <code>0xD9</code>
+becomes a teleport-start record. Records retain signed whole-unit X/Y, zero Z
+and the upper heading byte. Single-player initialization skips the <code>0xC9</code>
+pass entirely, since <code>08005E4C</code> later locates thing type 1 separately. Other
+player marker types are still collected. Full player state, player-body
+construction, weapon inventory and respawn logic are separate work.</p>
+<p>The original insertion routines <code>0800A5D0</code> and <code>0800A6CC</code> resolve the BSP leaf,
+sector, floor/ceiling and linked block-cell membership. The native world
+provides those operations with host pointers. Entity pool slot/active indices
+are replaced by stable native storage. At this exact stage, radius, height,
+flags and health remain zero. Later enemy AI updates are responsible for enemy
+activation. Pickups retain zero dimensions in their normal update path;
+assigning plausible dimensions here would change the recovered behavior.</p>
+<h2 id="ownership-and-use">Ownership and use</h2>
+<p>Load <code>SsaSpawnDefinitions</code> with <code>ssa_spawn_definitions_load</code>. Zero-initialize
+<code>SsaSpawnPlan</code>, then call <code>ssa_spawn_plan_load</code> with an already validated map,
+the level index, player count (1 through 4), and available original pool slots
+(0 through 100). The plan owns its object and marker arrays; its map remains
+caller-owned. A successful plan load leaves its objects unregistered, with
+positions and floor/ceiling already computed.</p>
+<p><code>ssa_spawn_plan_insert</code> registers objects in original allocation order. The
+world must reference the same map and have enough remaining capacity. It
+refreshes each floor/ceiling and places Z on the current floor. Failed insertion
+removes any objects inserted by that call. It does not roll back body metadata.
+Do not modify registered coordinates directly or move/reallocate object storage.</p>
+<p><code>ssa_spawn_plan_free</code> refuses while any object remains registered. Free/detach
+the world first, then free the plan, then the map. Never free plan storage from
+inside a world-query callback, including after removing a contacted pickup.
+This layer does not execute AI, pickup effects, damage, animation stepping or
+graphics. Spawned enemy bodies still need activation before normal gameplay.</p>
+<h2 id="validation">Validation</h2>
+<p>Run <code>.venv-linux/bin/python tests/test_spawn_rom.py</code> inside Ubuntu/WSL.
+The native build uses warnings-as-errors and UBSan. The test executes the entire
+original <code>08001984</code> routine with its real allocator, thing scanner, animation
+setter, BSP resolution and block-cell insertion. Only sector-pool allocation
+at <code>0800D1B4</code> is replaced; native host sector lists are a separate representation.</p>
+<ul>
+<li>256 complete initialization comparisons: all 16 maps, both one/four-player
+settings, four pool capacities, plus 128 synthetic thing arrays on real BSP
+geometry. Synthetic cases cover full-range coordinates, headings/triggers,
+ignored types and both level-10 coordinate fixes.</li>
+<li>3,128 complete original 116-byte entity records compared with projected
+native state, including original pool indices and native-to-GBA link mapping.</li>
+<li>728 start-marker records and 256 complete block-cell-head snapshots compared.</li>
+<li>370 native guards cover registered-storage lifetime, duplicate insertion,
+capacity, invalid settings, malformed sections and partial-insert cleanup.</li>
+</ul>
+<p>Evidence is in <code>analysis/native-spawn-validation.json</code>. These are behavioral
+comparisons; no byte-identical recovered C match is claimed for <code>08001984</code>.</p>
+<h2 id="runtime-dispatch-trace-and-next-recovery-targets">Runtime dispatch trace and next recovery targets</h2>
+<p>This section records read-only instruction/table inspection, not newly ported
+or differentially validated behavior. Frame routine <code>0800244C</code> calls entity
+dispatcher <code>08004E04</code> at <code>08002488</code>. The dispatcher walks the active index list
+at <code>03004470</code>, resolves 116-byte entity slots through <code>[03004644]</code>, writes the
+current entity to <code>[0300443C]</code>, then indexes the 128-entry branch table at
+<code>08004E68</code> with <code>(entity.type - 100) * 4</code>. Types outside 100..227 use its default
+path. It calls <code>080083E4</code> before visiting entities. Do not replace this frame
+dispatcher with arbitrary file-order updates: both its ordering and mutations
+of the active list still require full recovery.</p>
+<p>The exact type targets selected by this table are:</p>
+<table>
+<thead>
+<tr>
+<th>Entity type</th>
+<th>Per-entity routine</th>
+<th>State-zero initializer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C9..CC</td>
+<td><code>08005CCC</code></td>
+<td>Separate player initializer <code>08005E4C</code></td>
+</tr>
+<tr>
+<td>CD</td>
+<td><code>08013978</code></td>
+<td><code>08013940</code></td>
+</tr>
+<tr>
+<td>CE</td>
+<td><code>080135C4</code></td>
+<td><code>08013584</code></td>
+</tr>
+<tr>
+<td>CF</td>
+<td><code>08013040</code></td>
+<td><code>08013008</code></td>
+</tr>
+<tr>
+<td>D0</td>
+<td><code>0801319C</code></td>
+<td><code>0801315C</code></td>
+</tr>
+<tr>
+<td>D1</td>
+<td><code>08013B40</code></td>
+<td><code>08013B08</code></td>
+</tr>
+<tr>
+<td>D2</td>
+<td><code>08013350</code></td>
+<td><code>08013318</code></td>
+</tr>
+<tr>
+<td>D3</td>
+<td><code>08013FA4</code></td>
+<td><code>08013F48</code></td>
+</tr>
+<tr>
+<td>D4</td>
+<td><code>080141E8</code></td>
+<td><code>08014158</code></td>
+</tr>
+<tr>
+<td>D5</td>
+<td><code>08013DB0</code></td>
+<td><code>08013D78</code></td>
+</tr>
+<tr>
+<td>D6</td>
+<td><code>08013780</code></td>
+<td><code>08013748</code></td>
+</tr>
+<tr>
+<td>D7</td>
+<td><code>08014AB8</code></td>
+<td><code>0801485C</code></td>
+</tr>
+<tr>
+<td>D8</td>
+<td><code>08014648</code></td>
+<td><code>080143B0</code></td>
+</tr>
+<tr>
+<td>D9..E0</td>
+<td>Default, no per-entity call</td>
+<td>None in this dispatcher</td>
+</tr>
+<tr>
+<td>E1</td>
+<td><code>0801B848</code></td>
+<td><strong>No dimension initializer</strong></td>
+</tr>
+<tr>
+<td>E2</td>
+<td><code>080113E4</code></td>
+<td>Not traced</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><code>08011424</code></td>
+<td>Not traced</td>
+</tr>
+</tbody>
+</table>
+<p><code>0xE1</code> selects branch <code>08005118</code>, which calls <code>0801B848</code>. That wrapper only calls
+<code>08012CFC</code> and returns. The helper updates the halfword countdown at entity +4E
+by subtracting the game tick byte <code>[03004010]-&gt;+7</code>, preserving 16-bit wrapping.
+If entity flag <code>0x80</code> is clear and the signed countdown expires, it sets the
+countdown to zero and returns 1. With flag <code>0x80</code> set, expiration clears that
+flag, resets the countdown to 30 and returns 0; positive countdowns also return
+0. The pickup wrapper ignores the return value. Neither routine assigns
+radius, height or health. Thus ordinary map pickups retaining zero dimensions
+is intentional original behavior, consistent with <code>08003D7C</code> dispatching type
+E1 before radius checks. Do not give pickups guessed enemy-style dimensions.</p>
+<p>The separate multiplayer pickup respawner is <code>0801B854</code>, called by the frame
+at <code>08002494</code>. It uses the D9 marker array at <code>03004040</code>, has level-specific
+tables for levels 12..15, allocates an E1 entity, sets countdown 60 and flag
+<code>0x80</code>, sets its animation/item ID, inserts it and places it on the floor.
+This is a later respawn path, not <code>0801BF14</code>, which sets up sector scripts.</p>
+<p>Enemy initializers use the same countdown helper, then advance byte +3E from
+state 0 to state 1 and assign collision dimensions/health. Concrete examples:
+type CD's <code>08013940</code> sets height 120, radius 32, health 30, and ORs flag 2;
+type CF's <code>08013008</code> sets height 152, radius 48, health 50, and ORs flag 2;
+type D1's <code>08013B08</code> sets height 140, radius 50, health 100, and ORs flag 2.
+Dimensions are 16.16. These three routines call <code>080125BC</code>, which increments a
+per-enemy-type counter in game state at <code>+0x130 + (type-CD)*12</code>. Boss type D8's
+<code>080143B0</code> additionally sets boss globals, calls <code>08014328</code> and emits music/UI
+effects; it is not safely represented by only assigning three constants.</p>
+<p>Player initialization is already directly reachable after map spawning:
+level setup calls <code>08001984</code> at <code>0800206E</code>, <code>08000890</code> at <code>08002072</code>, then
+<code>08005E4C</code> at <code>08002076</code>. <code>08005E4C</code> allocates/clears four 256-byte player
+records, selects single-player type-1 starts or multiplayer marker positions,
+allocates player bodies, assigns type C9+index, index byte +54, radius 32,
+height 100, flags 0x1A (0x9A for the local player), health 100 and animation
+0x65/period 4. It then inserts each body and copies floor Z to both body and
+player state. Player eye offset +D0 starts at 96 units, flag +BC includes 4.
+Full weapon/inventory setup happens separately; copying this body initializer
+alone is insufficient to initialize the complete player.</p>
+<p>Player frame routine <code>08005CCC</code> calls death/respawn logic <code>08006154</code>, movement
+<code>080064B8</code>, camera <code>080062D4</code>, local-camera-state copying, interaction/hazard
+wrapper <code>08005680</code>, and sector trigger <code>0801C624</code>, followed by timer and
+movement-animation handling. These paths are now connected in <code>player_runtime.c</code>,
+<code>player_gameplay.c</code> and <code>level_runtime.c</code>; see their analysis documents. There is
+no hidden common pickup activation assigning nonzero dimensions.</p>
+<p>All twelve CD..D8 state-zero initializers, including both boss paths, are now
+native and verified in <code>enemy_activation.c</code>; see <code>enemy-activation.md</code> for exact
+effects and validation. <code>script_spawn.c</code> connects script creation to the original
+100-slot pool, native world insertion, activation and explicit group notification.
+See <code>script-spawn.md</code> and <code>entity-pool.md</code>. Type-CD control flow, shared navigation
+and death handling now have native implementations; see <code>enemy-cd.md</code>. Original
+sight/nearest/ray queries, other enemy controllers and the outer dispatcher remain.</p>
+</main></body></html>
