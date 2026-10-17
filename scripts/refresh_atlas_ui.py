@@ -1,7 +1,7 @@
 """Refresh the online/offline atlas UI using committed exports, without a ROM."""
 from pathlib import Path
 import hashlib,json,zipfile
-from build_project_site import embed_atlas
+from build_online_atlas import write_online_atlas
 ROOT=Path(__file__).resolve().parents[1]
 def correct_health(text):
     return text.replace('100 health (200 cap)','100 health (collect below 200)').replace('H100 can raise health to 200.','H100 adds 100 when health is below 200; it does not cap the result.').replace('H100 adds 100 health with a 200 cap.','H100 adds 100 health when below 200, without capping the result.')
@@ -28,9 +28,10 @@ def main():
         for name,(info,data) in contents.items():z.writestr(info,data)
     for path in atlas.rglob('*'):
         if path.is_file() and path.suffix in ('.html','.json','.svg','.txt','.md'):
+            if path.name=='index.html':continue
             text=path.read_text(encoding='utf8')
-            text=embed_atlas(viewer(text)) if path.name=='index.html' else correct_health(text)
-            path.write_text(text,encoding='utf8')
+            path.write_text(correct_health(text),encoding='utf8')
+    write_online_atlas(atlas,contents['index.html'][1].decode('utf8'))
     hashes={p.relative_to(atlas).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(atlas.rglob('*')) if p.is_file() and p.name!='manifest-sha256.json'}
     (atlas/'manifest-sha256.json').write_text(json.dumps(hashes,indent=2)+'\n')
     for path in (ROOT/'site/data').glob('level-*.json'):

@@ -54,6 +54,7 @@ export function createWikiView(entries, doc = document) {
     if (entry.related?.length) { const block = node('section'); block.append(node('h3', 'Related records')); const links = node('div', '', 'wiki-related'); for (const id of entry.related) { const related = entries.find(e => e.id === id); if (related) links.append(link(related.title, `#wiki/${id}`)); } block.append(links); article.append(block); }
     const evidence = node('details', '', 'wiki-evidence'); evidence.append(node('summary', 'Sources & coverage'));
     evidence.append(node('p', entry.coverage || 'Compiled from the project’s recovered data and native implementation notes. This field guide is a growing reference, not a reproduction of the original NETRICSA text.'));
+    if (Number.isInteger(entry.original_text_id)) evidence.append(node('p', `Original English NETRICSA record ${entry.original_text_id}. The illustration is original game artwork; the description above is a project-authored summary.`));
     for (const source of entry.sources) evidence.append(link(source.title + ' ↗', source.href, 'text-link'));
     article.append(evidence, link('Link to this entry ↗', `#wiki/${entry.id}`, 'wiki-permalink text-link'));
     doc.title = `${entry.title} — NETRICSA — Serious Sam Advance`;

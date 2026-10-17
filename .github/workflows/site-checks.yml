@@ -19,6 +19,10 @@ jobs:
         run: node scripts/test_site_viewer_loading.mjs
       - name: Verify atlas keyboard controls and lookup
         run: node scripts/test_site_atlas.mjs
+      - name: Verify per-level atlas delivery and loading races
+        run: node scripts/test_site_atlas_loading.mjs
+      - name: Verify object lookup, touch input and reference deep links
+        run: node scripts/test_site_explorer_controls.mjs
       - name: Verify NETRICSA entries, search, links and artwork
         run: node scripts/test_site_wiki.mjs
       - name: Verify resources below the Pages project prefix

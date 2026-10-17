@@ -45,6 +45,8 @@ def main():
         shutil.copy2(path,SITE/'docs'/path.name)
     from build_wiki import main as build_wiki
     build_wiki()
+    from refresh_atlas_ui import main as refresh_atlas_ui
+    refresh_atlas_ui()
     (SITE/'.nojekyll').touch()
     print('Site assembled:',len(list(SITE.rglob('*'))),'paths')
 

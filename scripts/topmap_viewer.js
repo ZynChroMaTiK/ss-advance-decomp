@@ -29,18 +29,34 @@ function themeMap(){
  svg.querySelector('style').textContent=svg.querySelector('style').textContent.replaceAll('#101822','#030a03');
 }
 const layers=[['weapons','Weapons','#f2c94c'],['health','Health','#6ce0b1'],['armor','Armor / shields','#68bdff'],['ammo','Ammo','#b5a2ff'],['items','Other items','#eee'],['doors','Doors / lifts','#ffad5a'],['switches','Switches','#57d5ec'],['secrets','Secrets','#ff7bd5'],['starts','Player starts','#4be3df'],['exits','Exits','#fff'],['respawn','MP respawns','#9fa9bc'],['enemies','Initial enemies','#e77a80'],['scripted-enemies','Scripted enemies','#e77a80'],['triggers','Entry triggers','#9ae1aa']];
-let current=0,svg,box=[0,145,1740,1640],down=null;
+let current=0,requested=0,loadRevision=0,svg,box=[0,145,1740,1640],down=null;
 const map=()=>atlas.maps[current];
 const rows=obj=>'<dl>'+Object.entries(obj).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>';
 const btn=(ref,label)=>`<button class="row" data-focus="${esc(ref)}">${esc(label)}</button>`;
 const scriptBtn=id=>`<button class="row" data-script="${id}">Inspect script ${id}</button>`;
 $('level').innerHTML=atlas.maps.map((m,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${esc(m.title)}${i>=12?' (multiplayer)':''}</option>`).join('');
 $('layers').innerHTML=layers.map(([id,label,color])=>`<label><input type="checkbox" data-layer="${id}" ${['enemies','scripted-enemies','triggers'].includes(id)?'':'checked'}><span>${label}</span><i class="swatch" style="--layer-color:${color}" aria-hidden="true"></i></label>`).join('');
-function applyLayers(){document.querySelectorAll('#layers input').forEach(c=>svg.querySelectorAll(`[data-layer="${c.dataset.layer}"]`).forEach(n=>n.style.display=c.checked?'':'none'));['enemies','scripted-enemies','triggers'].forEach(l=>{if(document.querySelector(`#layers [data-layer="${l}"]`).checked)svg.querySelectorAll(`[data-layer="${l}"]`).forEach(n=>n.style.display='inline')})}
-function setBox(v){box=v;svg.setAttribute('viewBox',v.join(' '));$('zoom').textContent=Math.round(1740/v[2]*100)+'%'}
+function applyLayers(){if(!svg)return;document.querySelectorAll('#layers input').forEach(c=>svg.querySelectorAll(`[data-layer="${c.dataset.layer}"]`).forEach(n=>n.style.display=c.checked?'':'none'));['enemies','scripted-enemies','triggers'].forEach(l=>{if(document.querySelector(`#layers [data-layer="${l}"]`).checked)svg.querySelectorAll(`[data-layer="${l}"]`).forEach(n=>n.style.display='inline')})}
+function setBox(v){if(!svg)return;box=v;svg.setAttribute('viewBox',v.join(' '));$('zoom').textContent=Math.round(1740/v[2]*100)+'%'}
 function fit(){setBox([0,145,1740,1640]);$('full').setAttribute('aria-pressed','false')}
 function zoom(f,x=box[0]+box[2]/2,y=box[1]+box[3]/2){if(box[2]*f<70||box[2]*f>14000)return;setBox([x+(box[0]-x)*f,y+(box[1]-y)*f,box[2]*f,box[3]*f])}
-function choose(n){
+async function choose(n){
+ if(!Number.isInteger(n)||n<0||n>=atlas.maps.length)return;
+ const ticket=++loadRevision;requested=n;down=null;
+ $('level').value=n;$('previous').disabled=n===0;$('next').disabled=n===15;
+ for(const ext of ['png','svg','json'])$(ext).href=`${ext==='json'?'data':ext}/level-${String(n+1).padStart(2,'0')}.${ext}`;
+ document.querySelectorAll('[data-png-download]').forEach(a=>a.href=$('png').href);
+ location.hash='level-'+(n+1);
+ if(atlas.loadLevel){
+  svg=null;$('map').replaceChildren();$('search').disabled=true;$('results').replaceChildren();$('details').replaceChildren();$('secrets').replaceChildren();
+  $('map-notice').hidden=false;$('map-notice-text').textContent='Loading '+atlas.maps[n].title+'…';$('retry-map').hidden=true;
+  $('level-title').textContent=atlas.maps[n].title;$('level-number').textContent=String(n+1).padStart(2,'0');$('summary').textContent='Loading selected level…';
+  try{const loaded=await atlas.loadLevel(n);if(ticket!==loadRevision)return;
+   if(current!==n){atlas.maps[current]={level:current,title:atlas.maps[current].title};atlas.svgs[current]=null;}
+   atlas.maps[n]=loaded.map;atlas.svgs[n]=loaded.svg;
+  }catch(error){if(ticket!==loadRevision)return;$('map-notice-text').textContent=error.message+'. Retry or choose another level.';$('retry-map').hidden=false;$('summary').textContent='Level unavailable';return;}
+ }
+ $('map-notice').hidden=true;$('search').disabled=false;
  current=n;down=null;$('level').value=n;$('map').innerHTML=atlas.svgs[n];svg=$('map').querySelector('svg');svg.removeAttribute('width');svg.removeAttribute('height');themeMap();applyLayers();fit();let m=map();
  $('level-number').textContent=String(n+1).padStart(2,'0');$('level-title').textContent=m.title;$('chapter-title').textContent=n<6?'EGYPT / CAMPAIGN':n<12?'ROME / CAMPAIGN':(n<14?'EGYPT':'ROME')+' / MULTIPLAYER';
  $('previous').disabled=n===0;$('next').disabled=n===15;
@@ -48,10 +64,7 @@ function choose(n){
  $('summary').textContent=`${m.markers.length} recorded placements / ${m.movers.length} doors & lifts`;
  $('tab-secrets').textContent='Secrets'+(m.secrets.length?' ('+m.secrets.length+')':'');
  $('secrets').innerHTML=`<p class="coverage">${esc(m.secret_status)}</p>`+m.secrets.map(s=>`<div class="secret">${btn(s.id,s.id+' · '+s.title)}<p>${esc(s.note)}</p>${s.access?btn(s.id+'-access','Show opening trigger'):''}<a class="fine" href="${esc(s.source)}" target="_blank" rel="noopener">Identification source ↗</a></div>`).join('');
- for(const ext of ['png','svg','json'])$(ext).href=`${ext==='json'?'data':ext}/level-${String(n+1).padStart(2,'0')}.${ext}`;
- document.querySelectorAll('[data-png-download]').forEach(a=>a.href=$('png').href);
  $('search').value='';$('results').innerHTML='';$('details').innerHTML='<div class="empty"><div class="empty-icon" aria-hidden="true">+</div><h2>Awaiting target</h2><p>Select an item, door or room on the map to inspect its location, contents and activation scripts.</p></div>';
- location.hash='level-'+(n+1);
 }
 function focus(ref){let nodes=Array.from(svg.querySelectorAll('[data-ref]')).filter(n=>n.dataset.ref===ref),n=nodes.find(n=>n.tagName!=='text')||nodes[0];if(!n)return;let layer=n.dataset.layer,c=document.querySelector(`#layers [data-layer="${layer}"]`);if(c){c.checked=true;applyLayers()}let b=n.getBBox();let w=Math.max(450,b.width*1.8),h=Math.max(430,b.height*1.8);setBox([b.x+b.width/2-w/2,b.y+b.height/2-h/2,w,h]);inspect(ref)}
 function inspect(ref){panel('intel');svg.querySelectorAll('.selected').forEach(n=>n.classList.remove('selected'));svg.querySelectorAll('[data-ref]').forEach(n=>{if(n.dataset.ref===ref)n.classList.add('selected')});let m=map(),out='',p=m.markers.find(p=>p.id===ref),sec=m.secrets.find(s=>s.id===ref||s.id+'-access'===ref);
@@ -70,15 +83,16 @@ function showScript(id){panel('intel');let m=map(),s=m.scripts.find(s=>s.id===id
  $('details').innerHTML=`<h2>Script ${id}</h2><h3>Activation locations</h3>${triggers||'<p>No map-local switch, sector or pickup trigger found. It may be started by level setup.</p>'}<h3>Sequence</h3><ol id="scriptList">${s.ops.map(o=>'<li>'+optext(o)+'</li>').join('')}</ol>`;
 }
 $('level').onchange=e=>choose(+e.target.value);$('layers').onchange=applyLayers;$('fit').onclick=fit;$('plus').onclick=()=>zoom(.7);$('minus').onclick=()=>zoom(1/.7);$('full').onclick=()=>{if($('full').getAttribute('aria-pressed')==='true')fit();else{setBox([0,0,1760,1900]);$('full').setAttribute('aria-pressed','true')}};
-$('previous').onclick=()=>{if(current>0)choose(current-1)};$('next').onclick=()=>{if(current<15)choose(current+1)};
+$('previous').onclick=()=>{if(requested>0)choose(requested-1)};$('next').onclick=()=>{if(requested<15)choose(requested+1)};
+$('retry-map').onclick=()=>choose(requested);
 document.querySelector('.brand').onclick=e=>{e.preventDefault();choose(0)};
-window.addEventListener('hashchange',()=>{const n=Number(location.hash.match(/^#level-(\d+)$/)?.[1]||1)-1;if(n>=0&&n<16&&n!==current)choose(n)});
+window.addEventListener('hashchange',()=>{const n=Number(location.hash.match(/^#level-(\d+)$/)?.[1]||1)-1;if(n>=0&&n<16&&n!==requested)choose(n)});
 $('search').oninput=()=>{let q=$('search').value.trim().toLowerCase(),m=map();$('results').innerHTML=q?m.markers.filter(p=>`${p.name} ${p.code} ${p.id}`.toLowerCase().includes(q)).map(p=>btn(p.id,p.name+' · '+p.id+(p.origin==='script'?' (script)':''))).join('')+m.movers.filter(d=>`${d.label} ${d.kind}`.toLowerCase().includes(q)).map(d=>btn('door-'+d.id,d.label+' · '+d.kind)).join('')+m.sectors.filter(s=>`room ${s.id} sector ${s.id}`.includes(q)).map(s=>btn('sector-'+s.id,'Room / sector '+s.id)).join('')+m.switches.filter(s=>`switch b${s.id}`.includes(q)).map(s=>btn('switch-'+s.id,'Switch B'+s.id)).join('')+m.lines.filter(l=>`wall ${l.id} line ${l.id}`.includes(q)).map(l=>btn('line-'+l.id,'Wall / line '+l.id)).join(''):'';if(q&&!$('results').innerHTML)$('results').innerHTML='<p>No matches in this level.</p>'};
 document.querySelector('aside').onclick=e=>{let b=e.target.closest('[data-focus],[data-script]');if(!b)return;if(b.dataset.focus)focus(b.dataset.focus);else showScript(+b.dataset.script)};
-function point(e){let p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function point(e){if(!svg)return null;let p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
 $('map').onkeydown=e=>{const pan={ArrowLeft:[-.1,0],ArrowRight:[.1,0],ArrowUp:[0,-.1],ArrowDown:[0,.1]}[e.key];if(pan){e.preventDefault();setBox([box[0]+pan[0]*box[2],box[1]+pan[1]*box[3],box[2],box[3]])}else if(['+','=','-','Home'].includes(e.key)){e.preventDefault();if(e.key==='Home')fit();else zoom(e.key==='-'?1.15:1/1.15)}};
-$('map').addEventListener('wheel',e=>{e.preventDefault();let p=point(e);zoom(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
-$('map').onpointerdown=e=>{if(e.button!==0)return;let p=point(e);down={x:e.clientX,y:e.clientY,px:p.x,py:p.y,box:[...box],ref:e.target.closest('[data-ref]')?.dataset.ref};$('map').setPointerCapture(e.pointerId)};
+$('map').addEventListener('wheel',e=>{e.preventDefault();let p=point(e);if(p)zoom(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
+$('map').onpointerdown=e=>{if(e.button!==0||!svg)return;let p=point(e);down={x:e.clientX,y:e.clientY,px:p.x,py:p.y,box:[...box],ref:e.target.closest('[data-ref]')?.dataset.ref};$('map').setPointerCapture(e.pointerId)};
 $('map').onpointermove=e=>{if(!down)return;let p=point(e);setBox([box[0]+down.px-p.x,box[1]+down.py-p.y,box[2],box[3]])};
 $('map').onpointerup=e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<5&&down.ref)inspect(down.ref);down=null};$('map').onpointercancel=()=>down=null;
 let initial=Number(location.hash.match(/^#level-(\d+)$/)?.[1]||1)-1;choose(initial>=0&&initial<16?initial:0);

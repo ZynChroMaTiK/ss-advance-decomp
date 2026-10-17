@@ -52,7 +52,7 @@ Using the project's Python environment, from the workspace root:
     python scripts/validate_project_site.py
 
 The exporter reads the user's original ROM, validated topmap export, and graphics
-archive. The build script embeds the atlas, copies the archive and generates
+archive. The build script splits the online atlas, copies the archive and generates
 readable reference pages. scripts/fetch_site_vendor.py refreshes the pinned
 official Three.js modules; no dependency download is required for ordinary builds.
 Regeneration runs from the full native project workspace with its recovered data
@@ -71,6 +71,19 @@ Reference HTML uses `scripts/site_documents.py`; install
 `python scripts/refresh_atlas_ui.py` updates online/offline atlas UI from the
 committed exports without a ROM. Pages deployment waits for the website checks.
 
+The online atlas fetches JSON and SVG only for the selected level, shares sprite
+artwork, and caches at most three loaded levels. Failed requests can be retried;
+late responses cannot replace a newer selection. Its navigation rail appears in
+the standalone viewer and is hidden inside the website's shared level selector.
+The downloadable ZIP retains every map and embedded artwork for offline use.
+`test_site_atlas_loading.mjs` covers loading and `test_site_audit.py` verifies
+that online SVGs reproduce the complete offline maps with identical artwork.
+
+Long README and porting references group past milestones into expandable sections.
+Links to headings inside these sections open them automatically. NETRICSA evidence
+includes original English record IDs for weapons/enemies and direct guide links
+for the five documented secrets.
+
 ## Viewer controls and scope
 
 Orbit: drag, scroll to zoom, right-drag to pan. Focus the canvas and use arrow
@@ -79,6 +92,12 @@ fingers zoom/pan. Free flight: drag to look; WASD moves, Q/E changes height,
 Shift speeds up, Escape returns to orbit. The canvas must have keyboard focus.
 Player start moves to the original start location. Select a wall, floor or sprite
 for its data. Secret buttons focus their original locations and link evidence.
+The object browser searches items, enemies, rooms, walls, doors and secrets;
+choose a result with the keyboard and press Enter or Inspect to focus it.
+In free flight, hold the on-screen direction buttons to move on touch devices;
+multiple fingers allow diagonal movement. Releasing or cancelling a press stops
+that direction. `test_site_explorer_controls.mjs` covers object records and input
+state, but real touch, screen-reader and browser visual QA remain unverified.
 
 Floor polygons come from cleaned convex BSP leaves. Walls use original mip0
 textures, offsets, peg flags, palette and decoded heights. Every sector includes

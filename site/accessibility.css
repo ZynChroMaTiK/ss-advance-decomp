@@ -12,6 +12,15 @@ footer{font-size:11px}
 .no-script{padding:24px;text-align:center;border-top:1px solid var(--border)}
 .no-script a{text-decoration:underline;color:var(--lime)}
 button:disabled,select:disabled{opacity:.5;cursor:default}
+.object-browser{margin:24px 0;border-block:1px solid var(--border);padding:18px 0}
+.object-browser summary{cursor:pointer;color:var(--lime);font-size:14px}
+.object-browser label{display:block;font-size:12px;margin:15px 0 7px}
+.object-browser input,.object-browser select{width:100%;min-width:0;padding:10px;color:var(--ink);background:#0c150e;border:1px solid #607853;border-radius:5px;font:12px Segoe UI,sans-serif}
+.object-browser select[size]{height:155px;padding:4px}.object-browser option{padding:7px}
+.object-browser button{width:100%;margin-top:12px}.object-browser #object-count{font-size:12px;margin:12px 0}
+.flight-controls{position:absolute;z-index:2;left:14px;bottom:62px;width:225px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.flight-controls button{min-height:48px;padding:8px 4px;background:#111b12ed;font-size:12px;touch-action:none;user-select:none}
+.flight-controls button[aria-pressed=true]{background:var(--lime);color:#15200d}
 @media(max-width:900px){
  .site-header{height:auto;flex-wrap:wrap;padding:10px 5% 0;gap:0}
  .brand img{width:120px;height:40px}

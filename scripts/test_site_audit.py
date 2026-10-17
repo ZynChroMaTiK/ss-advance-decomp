@@ -2,7 +2,8 @@
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit,unquote
-import hashlib,json,re,zipfile
+import base64,hashlib,json,re,zipfile
+from build_online_atlas import extract_data
 ROOT=Path(__file__).resolve().parents[1];SITE=ROOT/'site'
 class Page(HTMLParser):
     def __init__(self,text):
@@ -56,6 +57,18 @@ with zipfile.ZipFile(SITE/'downloads/ssa-topmaps.zip') as z:
             assert z.read(name)==(SITE/'atlas'/name).read_bytes(),name
     assert b'collect below 200' in z.read('index.html')
     assert b"$('map').onkeydown" in z.read('index.html')
+    offline=extract_data(z.read('index.html').decode('utf8'))
+    for i,original in enumerate(offline['svgs'],1):
+        online=(SITE/f'atlas/views/level-{i:02}.svg').read_text()
+        def embed(match):
+            return 'href="data:image/png;base64,'+base64.b64encode((SITE/'atlas'/match[1]).read_bytes()).decode()+'"'
+        restored=re.sub(r'href="(icons/[^"]+)"',embed,online)
+        assert restored==original,f'Online map {i} lost artwork or records'
+assert (SITE/'atlas/index.html').stat().st_size<12000,'Online shell must not embed every map'
+assert (SITE/'atlas/loader.js').read_bytes()==(ROOT/'scripts/topmap_loader.mjs').read_bytes()
+secrets=[e for e in entries if e['category']=='secrets']
+assert len(secrets)==5
+assert all(any(s['title']=='Original guide evidence' and s['href'].startswith('https://') for s in e['sources']) for e in secrets)
 for name,info in json.loads((SITE/'assets/fonts/manifest.json').read_text())['files'].items():
     assert hashlib.sha256((SITE/'assets/fonts'/name).read_bytes()).hexdigest()==info['sha256']
 print(json.dumps({'status':'PASS','html_pages':len(pages),'local_links_and_fragments':checked,'references':sum(p.parent==SITE/'docs' for p in pages),'tables':sum(p.tables for p in pages.values()),'native_support_boundary':limit,'wiki_entries':len(entries),'offline_atlas':'CRC, hashes and all 48 map files agree','font_hashes':'PASS'}))

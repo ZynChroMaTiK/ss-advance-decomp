@@ -11,3 +11,5 @@ dialog{background:#071006;color:#c9ddba;border:1px solid #609344;padding:24px;ma
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
 #map:focus-visible{outline:2px solid #c0ef78;outline-offset:-4px}.exports a{padding:7px 2px}summary:focus-visible{outline:2px solid white}@media(pointer:coarse){button,.map-toolbar button,.level-arrows button,.exports a{min-height:44px;min-width:44px}.layers label{min-height:44px}}
+
+.map-notice{position:absolute;z-index:4;left:10%;right:10%;top:35%;padding:20px;background:#101a10;border:1px solid #5c7647;text-align:center;font-size:13px}.map-heading>div:nth-child(2){min-width:0}.map-heading h2{overflow-wrap:anywhere}.map-status{flex-wrap:wrap}

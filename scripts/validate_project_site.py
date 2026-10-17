@@ -31,12 +31,13 @@ def main():
             checks+=1
         for script in p.scripts:context.eval('new Function('+json.dumps(script)+')');checks+=1
     page=Page();page.feed((SITE/'index.html').read_text())
-    for filename in ['app.js','viewer3d.js','geometry.js','wiki.js']:
+    for filename in ['app.js','viewer3d.js','geometry.js','wiki.js','viewer_objects.js','flight_controls.js','reference.js','atlas/loader.js','atlas/viewer.js']:
         source=(SITE/filename).read_text();plain=re.sub(r'^import .*?;\s*','',source,flags=re.M);plain=plain.replace('export function ','function ')
         context.eval('new Function('+json.dumps('return (async()=>{'+plain+'})')+')')
-        for dom_id in re.findall(r"\$\('([^']+)'\)",source):assert dom_id in page.ids,dom_id
-        for ref in re.findall(r"from '([^']+)'",source):assert (SITE/ref).is_file(),ref
-    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css',SITE/'accessibility.css',SITE/'reference.css']:
+        bindings=Page();bindings.feed((SITE/('atlas/index.html' if filename.startswith('atlas/') else 'index.html')).read_text())
+        for dom_id in re.findall(r"\$\('([^']+)'\)",source):assert dom_id in bindings.ids,dom_id
+        for ref in re.findall(r"from '([^']+)'",source):assert (SITE/filename).parent.joinpath(ref).is_file(),ref
+    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css',SITE/'accessibility.css',SITE/'reference.css',SITE/'atlas/viewer.css']:
         rules=tinycss2.parse_stylesheet(css.read_text(),skip_comments=True,skip_whitespace=True)
         assert not [r for r in rules if r.type=='error']
     context.eval((SITE/'geometry.js').read_text().replace('export function ','function '))

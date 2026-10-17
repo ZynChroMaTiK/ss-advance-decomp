@@ -11,4 +11,8 @@
 .reference .reference-note{padding:15px;border:1px solid var(--border);font-size:12px}
 .reference :target{scroll-margin-top:20px;outline:2px solid var(--lime);outline-offset:6px}
 .reference:focus-visible{outline:2px solid var(--lime);outline-offset:-4px}
+.recovery-history{margin:28px 0;border:1px solid var(--border);padding:18px;border-radius:6px;background:#131c15}
+.recovery-history>summary{cursor:pointer;color:var(--lime);font-size:16px;line-height:1.6}
+.recovery-history>summary:focus-visible{outline:2px solid var(--lime);outline-offset:5px}
+.recovery-history[open]>summary{margin-bottom:20px}
 @media(max-width:760px){.site-header{padding:16px;min-height:70px;gap:14px}.site-header a{font-size:12px}.reference{padding-inline:16px}}

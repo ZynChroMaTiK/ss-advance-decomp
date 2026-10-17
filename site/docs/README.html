@@ -168,7 +168,7 @@ The native effect runtime now also supports original type-64 wall/sector
 clipping and relocation; see <a href="sector-clip.html">recovery and checks</a>.</p>
 <p>The separate <code>run-native-viewer.cmd [--level 0..15]</code> remains a diagnostic map
 viewer with idle objects; it is not the playable build.</p>
-<h2 id="verified-progress">Verified progress</h2>
+<details class="recovery-history"><summary>Subsystem evidence and recovery history</summary><p>These notes retain the scope and limitations of their original checkpoints. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for current playability and controls.</p><h2 id="verified-progress">Verified progress</h2>
 <ul>
 <li>
 <p>Native first-level gameplay with crowd sliding completes through normal PC input
@@ -539,7 +539,7 @@ weapon hiding. See <code>analysis/hud-presentation.md</code>.</p>
 active original notices, remaining palette effects and audio fidelity still need
 work. Earlier module-by-module limitations above describe those individual
 test boundaries and the separate diagnostic viewer.</p>
-<h2 id="use-the-existing-workspace-from-powershell">Use the existing workspace from PowerShell</h2>
+</details><h2 id="use-the-existing-workspace-from-powershell">Use the existing workspace from PowerShell</h2>
 <pre><code class="language-powershell">.\decomp.ps1 status
 .\decomp.ps1 rebuild
 .\decomp.ps1 test-input
@@ -1064,4 +1064,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1 -T
 </table>
 <p>The tests use Unicorn to execute isolated original functions as an oracle.
 Unicorn is a development dependency; the native library contains no emulator.</p>
-</main></body></html>
+<script type="module" src="../reference.js"></script></main></body></html>

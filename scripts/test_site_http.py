@@ -15,6 +15,8 @@ with http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler) as server:
         paths += [str(p.relative_to(SITE)) for p in (SITE/'assets/textures').rglob('*.png')]
         paths += [str(p.relative_to(SITE)) for p in (SITE/'atlas/icons').glob('*.png')]
         paths += ['wiki.js','wiki.css','data/wiki.json']
+        paths += ['flight_controls.js','viewer_objects.js','reference.js','atlas/loader.js','atlas/viewer.js','atlas/viewer.css']
+        paths += [f'atlas/{folder}/level-{i:02}.{suffix}' for folder,suffix in [('views','svg'),('data','json')] for i in range(1,17)]
         paths += ['gba-font.css','accessibility.css','reference.css','assets/fonts/serious-advance-white.woff','assets/fonts/serious-advance-green.woff']
         paths += [str(p.relative_to(SITE)) for p in (SITE/'assets/netricsa').glob('*.png')]
         for path in paths:

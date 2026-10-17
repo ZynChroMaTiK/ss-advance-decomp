@@ -179,7 +179,7 @@ both patches against the pinned upstream and links real ELF objects to verify
 symbol types, data addresses and absence of added interworking veneers.
 The full rebuilt image is checked against the original. Unmatched code remains assembly
 or original data; the rebuild is not evidence of a complete decompilation.</p>
-<h2 id="next-work-required-for-the-requested-playable-port">Next work required for the requested playable port</h2>
+<details class="recovery-history"><summary>Earlier recovery plan and subsystem checkpoints</summary><p>These notes retain the scope and limitations of their original checkpoints. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for current playability and controls.</p><h2 id="next-work-required-for-the-requested-playable-port">Next work required for the requested playable port</h2>
 <p>The input-to-player path and pre-collision control/vector phase have now been
 recovered. See <code>analysis/movement.md</code> for addresses, original quirks, native API
 scope and 106,577 differential cases. This includes heading math and movement
@@ -372,7 +372,7 @@ catalogue74/526,2152/87648bytes(2.46%),517attempts. FC3C83.9%(2attempts) and
 074F0 83.2%(5attempts) areNOTexact. The74-Cexportrebuild isbyte-identical.
 See <code>sprite-cache.md</code>, <code>sprite-oam.md</code>, <code>sprite-pool.md</code>, <code>display.md</code>,
 <code>hud-scene.md</code> and currentvalidationJSON reports.</p>
-<h2 id="playable-level-one-checkpoint-2026-10-15">Playable level-one checkpoint, 2026-10-15</h2>
+</details><details class="recovery-history"><summary>Historical checkpoint: first playable level — 15 October 2026</summary><p>These notes retain the scope and limitations of their original checkpoints. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for current playability and controls.</p><h2 id="playable-level-one-checkpoint-2026-10-15">Playable level-one checkpoint, 2026-10-15</h2>
 <p><code>native_game.c</code> and <code>platform/win32/game.c</code> now compose real simulation and
 rendering. The new <code>play-native.cmd</code> frontend exposes level0 only. The original
 viewer is retained separately. Normal difficulty, original loadout, live map
@@ -390,7 +390,7 @@ cross-level inventory carry, remaining palette/display effects and audio output.
 Do not claim the complete game is finished or expose unimplemented campaign
 paths as supported gameplay. The byte-matching catalogue remains separate from
 behavioral native coverage. See native-game.md and current validation reports.</p>
-<h2 id="native-weapon-corrections-2026-10-16">Native weapon corrections, 2026-10-16</h2>
+</details><details class="recovery-history"><summary>Historical checkpoints: weapon corrections and campaign progression — 16 October 2026</summary><p>These notes retain the scope and limitations of their original checkpoints. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for current playability and controls.</p><h2 id="native-weapon-corrections-2026-10-16">Native weapon corrections, 2026-10-16</h2>
 <p>Local minigun/chainsaw/machinegun loop ownership now stops stale firing audio
 without cutting music or other sources. The PC game opts into launch-independent
 player rockets; the original recovery runtime retains its attachment quirk.
@@ -418,4 +418,4 @@ handoff and immediate E-button policy, superseding older timing checkpoints.
 Boss/post-boss audio loops now use gameplay music2/19/20; focused126730assertions
 pass. Later D8 natural progression, interchapter presentation and original feature
 parity remain unfinished. See enemy-boss.md and current campaign reports.</p>
-</main></body></html>
+</details><script type="module" src="../reference.js"></script></main></body></html>
