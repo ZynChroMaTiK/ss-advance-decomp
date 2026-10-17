@@ -2919,7 +2919,7 @@
         },
         {
           "title": "Two views, one level",
-          "text": "Use 2D for labels and original sprite markers. Use 3D for room heights and spatial relationships. All surfaces render from both sides; hide ceilings for an unobstructed overhead view."
+          "text": "Use 2D for labels and original sprite markers. Use 3D for room heights and spatial relationships. Surfaces render from the front side only; sky boundaries are omitted. Hide indoor ceilings for an unobstructed overhead view."
         }
       ],
       "related": [

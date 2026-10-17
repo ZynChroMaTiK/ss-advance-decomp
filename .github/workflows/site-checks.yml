@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Verify level geometry and two-sided surfaces
+      - name: Verify level geometry and backface culling
         run: node scripts/test_site.mjs
       - name: Verify unified routing and iframe bridge
         run: node scripts/test_site_routes.mjs
