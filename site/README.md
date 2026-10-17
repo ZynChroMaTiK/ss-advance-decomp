@@ -64,7 +64,7 @@ for its data. Secret buttons focus their original locations and link evidence.
 
 Floor polygons come from cleaned convex BSP leaves. Walls use original mip0
 textures, offsets, peg flags, palette and decoded heights. Every sector includes
-both its floor and ceiling, including sky-sector boundary planes. All surfaces
+its floor; indoor ceilings are included and sky boundary planes are omitted. All surfaces
 render double-sided, without backface culling. Walls, floors, ceilings, items,
 enemies, scripted placements and secret pins are visible by default; individual
 layers can be hidden. Hide ceilings for an unobstructed overhead view.

@@ -4,7 +4,7 @@ import {floorPositions,wallBuffers} from './geometry.js';
 const $=id=>document.getElementById(id);
 export function surfaceMaterial(options){return new T.MeshBasicMaterial({...options,side:T.DoubleSide})}
 export function sectorMeshes(sector){
- return [['floor',sector.initial_floor,sector.floor_rgb],['ceiling',sector.initial_ceiling,sector.ceiling_rgb]].map(([kind,height,color])=>{
+ return [['floor',sector.initial_floor,sector.floor_rgb],['ceiling',sector.initial_ceiling,sector.ceiling_rgb]].filter(([kind])=>kind==='floor'||sector.ceiling_color!==0).map(([kind,height,color])=>{
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(floorPositions(sector.mesh_loops,height),3));
   const object=new T.Mesh(geometry,surfaceMaterial({color}));object.userData={sector,kind,openOffset:kind==='ceiling'?(sector.open_ceiling-sector.initial_ceiling)/64:0};return object;
  });
@@ -26,7 +26,7 @@ export function createViewer(){
  async function load(n,entry){if(index===n&&root)return;const mine=++token;message.hidden=false;message.textContent='Decoding the view…';let next=null;try{const response=await fetch(entry?.path??`data/level-${String(n+1).padStart(2,'0')}.json`);if(!response.ok)throw Error(`Level data unavailable (${response.status})`);const d=await response.json();if(mine!==token)return;
    const paths=new Set([...d.walls.initial,...d.walls.open].map(f=>f.texture).filter(Boolean));d.markers.forEach(m=>{if(m.sprite)paths.add('atlas/'+m.sprite)});const textures=new Map(await Promise.all([...paths].map(async p=>[p,await texture(p)])));if(mine!==token)return;
    next=new T.Group();const gs={};for(const name of ['floors','ceilings','closed','open','markers','secrets']){gs[name]=new T.Group();next.add(gs[name])}
-   for(const s of d.sectors){const [floor,ceiling]=sectorMeshes(s);gs.floors.add(floor);gs.ceilings.add(ceiling)}
+   for(const s of d.sectors){const [floor,ceiling]=sectorMeshes(s);gs.floors.add(floor);if(ceiling)gs.ceilings.add(ceiling)}
    for(const [state,name] of [['initial','closed'],['open','open']]){const batches=new Map();for(const f of d.walls[state]){const key=f.texture??'';if(!batches.has(key))batches.set(key,[]);batches.get(key).push(f)}for(const [path,faces]of batches){const b=wallBuffers(faces),o=mesh(b.positions,surfaceMaterial({map:textures.get(path)||null,color:path?0xffffff:0x000000}),b.uvs,b.indices);o.userData={faces};gs[name].add(o)}}
    // Every placement is retained, including co-located and scripted records.
    if(!cache.has('respawn-symbol')){const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d');ctx.fillStyle='#18271d';ctx.fillRect(4,4,56,56);ctx.strokeStyle='#b3d6a4';ctx.lineWidth=3;ctx.strokeRect(4,4,56,56);ctx.fillStyle='#ecf5df';ctx.font='bold 40px monospace';ctx.textAlign='center';ctx.fillText('R',32,46);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.magFilter=T.NearestFilter;cache.set('respawn-symbol',Promise.resolve(t))}const respawn=await cache.get('respawn-symbol');
