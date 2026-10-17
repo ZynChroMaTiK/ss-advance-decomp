@@ -1,5 +1,5 @@
-@font-face{font-family:'Serious Advance White';src:url('assets/fonts/serious-advance-white.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
-@font-face{font-family:'Serious Advance Green';src:url('assets/fonts/serious-advance-green.woff') format('woff');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Serious Advance White';src:url('assets/fonts/serious-advance-white.woff?v=2') format('woff');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Serious Advance Green';src:url('assets/fonts/serious-advance-green.woff?v=2') format('woff');font-style:normal;font-weight:400;font-display:swap}
 /* Original 16px glyphs at integer scales; normal text retains the UI typeface. */
 .hero h1,.content-page>h1,.tool-heading h1,.wiki-heading h1,.section-heading h2,.wiki-entry-heading h2{font-family:'Serious Advance White',Segoe UI,sans-serif;font-weight:400;font-synthesis:none;letter-spacing:0;line-height:1.25;overflow-wrap:anywhere}
 .hero h1{font-size:48px}.content-page>h1{font-size:48px}.tool-heading h1,.wiki-heading h1,.section-heading h2,.wiki-entry-heading h2{font-size:32px}

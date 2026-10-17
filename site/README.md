@@ -21,7 +21,11 @@ palettes and spacing, with normal text selection, wrapping and accessible headin
 semantics. Body text, controls and small labels keep the readable UI font.
 Rebuild with `python scripts/build_site_fonts.py` after installing
 `scripts/site-font-requirements.txt`. Inputs and pixel-equivalence hashes are in
-`assets/fonts/`; the converter checks all 126 glyphs in both saved WOFF files.
+`assets/fonts/`. Original PNG bitmap strikes replace layered color masks, with
+solid outlines as a fallback. The converter checks all 126 glyphs in both saved
+WOFF files and rasterizes each at 16, 32, 48 and 64px against the source pixels
+(1,008 rendered comparisons). Private-use test aliases prevent Unicode layout
+controls from suppressing glyphs during this check.
 
 Serve this directory over HTTP. ES modules and JSON fetches do not work by opening
 index.html as a file. Example from the repository root:

@@ -3,25 +3,61 @@
   "validation": {
     "white": {
       "glyphs_pixel_exact": 126,
+      "bitmap_strikes": [
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        60,
+        64,
+        72,
+        80,
+        96,
+        128,
+        144,
+        192
+      ],
+      "rasterized_glyphs_pixel_exact": 504,
       "character_mappings": 198,
       "original_advances": "PASS",
-      "rgba_palette": "PASS"
+      "rgba_palette": "PASS",
+      "layered_color_masks": false
     },
     "green": {
       "glyphs_pixel_exact": 126,
+      "bitmap_strikes": [
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        60,
+        64,
+        72,
+        80,
+        96,
+        128,
+        144,
+        192
+      ],
+      "rasterized_glyphs_pixel_exact": 504,
       "character_mappings": 198,
       "original_advances": "PASS",
-      "rgba_palette": "PASS"
+      "rgba_palette": "PASS",
+      "layered_color_masks": false
     }
   },
   "files": {
     "serious-advance-white.woff": {
-      "sha256": "14a467392989efcbbbc6bad89756a04c075d746775a36c9db27c736f41a43dba",
-      "bytes": 21232
+      "sha256": "62f585c4bd418e049cc3fb80fac896f637281981e775d274b350e6e84dc8bb0f",
+      "bytes": 381176
     },
     "serious-advance-green.woff": {
-      "sha256": "eb4069d13bfa4658324f0140126f2ff5b2296558e98802ffb6eb6d4fdff73185",
-      "bytes": 21220
+      "sha256": "b31456a5dc8965df20c77a35b950c214a0b2d869e21a42879e3ee2bc8e661864",
+      "bytes": 335992
     }
   },
   "inputs": {
