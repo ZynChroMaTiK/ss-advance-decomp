@@ -3,12 +3,31 @@ import {readFileSync} from 'node:fs';
 import * as THREE from '../site/vendor/three.module.js';
 import {OrbitControls} from '../site/vendor/OrbitControls.js';
 import {floorPositions,wallBuffers} from '../site/geometry.js';
-import {sectorMeshes,surfaceMaterial,entryTrigger} from '../site/viewer3d.js';
+import {sectorMeshes,surfaceMaterial,entryTrigger,triggerArrows,updateTriggerArrows} from '../site/viewer3d.js';
 assert.equal(THREE.REVISION,'180');assert.equal(typeof OrbitControls,'function');
 const catalog=JSON.parse(readFileSync(new URL('../site/data/catalog.json',import.meta.url)));
 let meshes=0,triangles=0,skyCeilingsSkipped=0,wallSideChecks=0;
 let triggers=0;
+let arrowCount=0;
 for(const entry of catalog){const d=JSON.parse(readFileSync(new URL('../site/'+entry.path,import.meta.url)));
+ const tg=new THREE.Group(),mg=new THREE.Group();
+ for(const s of d.sectors){const t=entryTrigger(s,d);if(t)tg.add(t)}
+ for(const m of d.markers){const target=new THREE.Object3D();target.userData.marker=m;target.position.set(m.x/64,m.initial_floor/64+(m.group.includes('enemies')?1.1:.625)+.03,-m.y/64);mg.add(target)}
+ const arrows=triggerArrows(d,tg,mg);
+ const expected=d.sectors.filter(s=>s.flags&256).flatMap(s=>d.markers.filter(m=>m.origin==='script'&&m.script===(s.flags&255)).map(m=>`${s.id}:${m.id}`));
+ assert.deepEqual(arrows.children.map(a=>`${a.userData.trigger.userData.trigger.id}:${a.userData.target.userData.marker.id}`).sort(),expected.sort());
+ arrowCount+=arrows.children.length;
+ for(const open of [false,true]){
+  tg.children.forEach(t=>{const s=t.userData.trigger;t.scale.y=((open?s.open_ceiling:s.initial_ceiling)-s.initial_floor)/64});
+  updateTriggerArrows(arrows,tg,mg);arrows.updateMatrixWorld(true);
+  for(const arrow of arrows.children){
+   assert(arrow.visible);assert(arrow.position.toArray().every(Number.isFinite));
+   assert(arrow.cone.localToWorld(new THREE.Vector3()).distanceTo(arrow.userData.target.position)<1e-6,'arrowhead ends at target');
+   assert.equal(arrow.cone.material.side,THREE.FrontSide);
+   const hits=[];arrow.cone.raycast(new THREE.Raycaster(),hits);assert.equal(hits.length,0,'arrow cannot steal object picking');
+  }
+ }
+ for(const g of [arrows,tg])g.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});
  for(const s of d.sectors){
   const trigger=entryTrigger(s,d);
   if(!(s.flags&256)){assert.equal(trigger,null);continue}
@@ -73,5 +92,6 @@ const page=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 for(const id of ['show-floors','show-ceilings','show-walls','show-items','show-enemies','show-scripted','show-secrets'])assert(new RegExp(`id="${id}"[^>]*checked`).test(page),`${id} defaults visible`);
 assert(skyCeilingsSkipped>0);
 assert.equal(triggers,53);assert(/id="show-triggers"[^>]*checked/.test(page));
+assert(arrowCount>0);console.log(JSON.stringify({status:'PASS',trigger_arrows:arrowCount,arrow_checks:'exact script-to-placement links on all maps, both door states, arrowhead direction, non-intercepting picking'}));
 console.log(JSON.stringify({status:'PASS',entry_triggers:triggers,trigger_checks:'original sector boundaries, transparent green fill, black borders, closed volumes, floor/ceiling heights, outward faces, front-side picking, default visibility'}));
 console.log(JSON.stringify({status:'PASS',three_revision:THREE.REVISION,levels:catalog.length,meshes,triangles,camera_fits:48,sky_ceilings_skipped:skyCeilingsSkipped,indoor_ceilings_retained:true,front_side_raycast:'PASS',wall_culling_rays:wallSideChecks,all_layers_visible_by_default:true}));

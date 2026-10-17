@@ -110,7 +110,11 @@ layers can be hidden. Entry triggers are also visible by default as transparent 
 volumes from floor to ceiling, with black perimeter and vertical edges and no
 internal BSP seams. Their height follows open-door preview; closed doors have
 zero height until opened. Select a volume or search Entry triggers to inspect
-its sector and script ID.
+its sector and script ID. Pale green arrows point from each trigger to the
+placements spawned by its script. Each arrow appears only while Entry triggers,
+Scripted placements, and the target category (Enemies or Items) are enabled.
+Arrow origins follow the trigger height during open-door preview. These links
+include later waves in the script; they do not imply simultaneous spawning.
 The overlay represents sector entry, not a simulated gameplay effect. Hide ceilings for an unobstructed overhead view.
 Open-door preview uses recovered ceiling-door height floor+224; lifts retain their
 initialized height. This is a static inspection tool with no collision or gameplay

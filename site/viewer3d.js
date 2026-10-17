@@ -5,6 +5,36 @@ import {objectRecords,filterObjects,triggerRecord} from './viewer_objects.js';
 import {bindFlightControls} from './flight_controls.js';
 const $=id=>document.getElementById(id);
 export function surfaceMaterial(options){return new T.MeshBasicMaterial({...options,side:T.FrontSide})}
+export function triggerArrows(data,triggers,markers){
+ const group=new T.Group();group.name='trigger-arrows';
+ const scripts=new Map(data.scripts.map(s=>[s.id,new Set(s.ops.filter(o=>o.op===1).flatMap(o=>o.markers??[]))]));
+ const targets=new Map(markers.children.filter(o=>o.userData.marker.origin==='script').map(o=>[o.userData.marker.id,o]));
+ for(const trigger of triggers.children)for(const id of scripts.get(trigger.userData.trigger.flags&255)??[]){
+  const target=targets.get(id);if(!target)continue;
+  const arrow=new T.ArrowHelper(new T.Vector3(0,1,0),new T.Vector3(),1,0x9affae,.5,.3);
+  // ArrowHelper normally shares geometry; each level owns and disposes its copies.
+  for(const part of [arrow.line,arrow.cone]){
+   part.geometry=part.geometry.clone();part.material.transparent=true;part.material.opacity=.9;part.material.depthWrite=false;
+   part.renderOrder=3;part.raycast=()=>{}; // Annotations must not intercept object picking.
+  }
+  arrow.userData={trigger,target};group.add(arrow);
+ }
+ updateTriggerArrows(group,triggers,markers);return group;
+}
+export function updateTriggerArrows(group,triggers,markers){
+ group.visible=triggers.visible&&markers.visible;
+ for(const arrow of group.children){
+  const {trigger,target}=arrow.userData,s=trigger.userData.trigger;
+  arrow.position.set(s.center[0]/64,trigger.position.y+trigger.scale.y/2,-s.center[1]/64);
+  // Keep a direction even when a placement coincides with the sector center.
+  if(arrow.position.distanceToSquared(target.position)<1e-8){
+   const p=s.mesh_loops[0][0];arrow.position.x=(s.center[0]+p[0])/128;arrow.position.z=-(s.center[1]+p[1])/128;
+  }
+  const direction=target.position.clone().sub(arrow.position),length=direction.length();
+  arrow.visible=trigger.visible&&target.visible&&length>1e-6;
+  if(length>1e-6){arrow.setDirection(direction.divideScalar(length));arrow.setLength(length,Math.min(.65,length*.25),Math.min(.4,length*.15))}
+ }
+}
 export function entryTrigger(sector,data){
  if(!(sector.flags&256))return null;
  const group=new T.Group(),geometry=new T.BufferGeometry(),positions=[],edges=[],corners=new Map();
@@ -56,7 +86,7 @@ export function createViewer(makeRenderer=()=>new T.WebGLRenderer({antialias:tru
  function focus(x,y,h=0,focusCanvas=true){setFlight(false,focusCanvas);const p=new T.Vector3(x/64,h/64,-y/64);controls.target.copy(p);camera.position.copy(p).add(new T.Vector3(8,13,12));controls.update()}
  function showInfo(title,fields,note,source){const dest=$('selection');dest.replaceChildren();const h=document.createElement('h3');h.textContent=title;dest.append(h);const dl=document.createElement('dl');for(const [k,v] of Object.entries(fields)){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd)}dest.append(dl);if(note){const p=document.createElement('p');p.textContent=note;dest.append(p)}if(source&&/^https:\/\//.test(source)){const a=document.createElement('a');a.href=source;a.textContent='Identification source ↗';a.target='_blank';a.rel='noopener';dest.append(a)}}
  function secretInfo(s){const m=data.markers.find(m=>m.id===s.marker);showInfo(s.title,{Location:s.id,X:s.x,Y:s.y,Status:s.status},s.note,s.source);focus(s.x,s.y,m?.initial_floor??0);if(s.access?.point){const button=document.createElement('button');button.className='secret-button';button.textContent='Show opening trigger ↗';button.onclick=()=>{focus(...s.access.point,m?.initial_floor??0);showInfo('Secret access',s.access,s.note,s.source)};$('selection').append(button)}}
- function settings(){if(!root)return;const opened=$('open-doors').checked;groups.closed.visible=!opened&&$('show-walls').checked;groups.open.visible=opened&&$('show-walls').checked;groups.floors.visible=$('show-floors').checked;groups.ceilings.visible=$('show-ceilings').checked;groups.ceilings.children.forEach(o=>{o.position.y=opened?o.userData.openOffset:0});groups.markers.children.forEach(o=>{const m=o.userData.marker;const enemy=m.group.includes('enemies');o.visible=(enemy?$('show-enemies').checked:$('show-items').checked)&&(m.origin==='map'||$('show-scripted').checked)});groups.secrets.visible=$('show-secrets').checked;groups.triggers.visible=$('show-triggers').checked;groups.triggers.children.forEach(o=>{const s=o.userData.trigger;o.scale.y=((opened?s.open_ceiling:s.initial_ceiling)-s.initial_floor)/64});for(const name of ['floors','ceilings','closed','open'])groups[name].traverse(o=>{if(o.material)o.material.wireframe=$('show-wireframe').checked})}
+ function settings(){if(!root)return;const opened=$('open-doors').checked;groups.closed.visible=!opened&&$('show-walls').checked;groups.open.visible=opened&&$('show-walls').checked;groups.floors.visible=$('show-floors').checked;groups.ceilings.visible=$('show-ceilings').checked;groups.ceilings.children.forEach(o=>{o.position.y=opened?o.userData.openOffset:0});groups.markers.children.forEach(o=>{const m=o.userData.marker;const enemy=m.group.includes('enemies');o.visible=(enemy?$('show-enemies').checked:$('show-items').checked)&&(m.origin==='map'||$('show-scripted').checked)});groups.secrets.visible=$('show-secrets').checked;groups.triggers.visible=$('show-triggers').checked;groups.triggers.children.forEach(o=>{const s=o.userData.trigger;o.scale.y=((opened?s.open_ceiling:s.initial_ceiling)-s.initial_floor)/64});updateTriggerArrows(groups.arrows,groups.triggers,groups.markers);for(const name of ['floors','ceilings','closed','open'])groups[name].traverse(o=>{if(o.material)o.material.wireframe=$('show-wireframe').checked})}
  function levelInfo(){records=objectRecords(data,$('open-doors').checked);renderObjects();$('view-name').textContent=`${String(index+1).padStart(2,'0')} / ${data.title}`;$('secret-list').replaceChildren();if(!data.secrets.length)$('secret-list').textContent='No documented pins for this level.';for(const s of data.secrets){const button=document.createElement('button');button.className='secret-button';button.textContent=`${s.id} / ${s.title} ↗`;button.onclick=()=>secretInfo(s);$('secret-list').append(button)}showInfo(data.title,{Sectors:data.sectors.length,Placements:data.markers.length,Secrets:data.secrets.length},'Select a surface or sprite for original level data.');}
  async function load(n,entry){const mine=++token;if(index===n&&root){root.visible=true;levelInfo();message.hidden=true;return}if(root)root.visible=false;keys.clear();touch.clear();records=[];renderObjects();$('selection').replaceChildren();$('secret-list').replaceChildren();$('view-name').textContent='Loading selected level…';message.hidden=false;message.textContent='Loading the view…';let next=null;try{const response=await fetch(entry?.path??`data/level-${String(n+1).padStart(2,'0')}.json`);if(!response.ok)throw Error(`Level data unavailable (${response.status})`);const d=await response.json();if(mine!==token)return;
    const paths=new Set([...d.walls.initial,...d.walls.open].map(f=>f.texture).filter(Boolean));d.markers.forEach(m=>{if(m.sprite)paths.add('atlas/'+m.sprite)});const textures=new Map(await Promise.all([...paths].map(async p=>[p,await texture(p)])));if(mine!==token)return;
@@ -66,6 +96,7 @@ export function createViewer(makeRenderer=()=>new T.WebGLRenderer({antialias:tru
    // Every placement is retained, including co-located and scripted records.
    if(!cache.has('respawn-symbol')){const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d');ctx.fillStyle='#18271d';ctx.fillRect(4,4,56,56);ctx.strokeStyle='#b3d6a4';ctx.lineWidth=3;ctx.strokeRect(4,4,56,56);ctx.fillStyle='#ecf5df';ctx.font='bold 40px monospace';ctx.textAlign='center';ctx.fillText('R',32,46);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.magFilter=T.NearestFilter;cache.set('respawn-symbol',Promise.resolve(t))}const respawn=await cache.get('respawn-symbol');
    for(const m of d.markers){const t=m.sprite?textures.get('atlas/'+m.sprite):respawn,isActor=m.group==='starts'||m.group.includes('enemies'),height=isActor?2.2:1.25,o=new T.Sprite(new T.SpriteMaterial({side:T.FrontSide,map:t,transparent:true,alphaTest:.15,depthWrite:false}));o.scale.set(height*t.image.width/t.image.height,height,1);o.position.set(m.x/64,m.initial_floor/64+height/2+.03,-m.y/64);o.userData={marker:m};gs.markers.add(o)}
+   gs.arrows=triggerArrows(d,gs.triggers,gs.markers);next.add(gs.arrows);
    for(const s of d.secrets){const m=d.markers.find(m=>m.id===s.marker),h=(m?.initial_floor??0)/64;const o=new T.Mesh(new T.CylinderGeometry(.15,.15,6,8),surfaceMaterial({color:0xff7bd5,transparent:true,opacity:.8}));o.position.set(s.x/64,h+3,-s.y/64);o.userData={secret:s};gs.secrets.add(o);const ring=new T.Mesh(new T.TorusGeometry(1,.1,6,24),surfaceMaterial({color:0xff7bd5}));ring.rotation.x=Math.PI/2;ring.position.set(s.x/64,h+.12,-s.y/64);ring.userData={secret:s};gs.secrets.add(ring)}
    if(mine!==token){dispose(next);return}if(root){scene.remove(root);dispose(root)}root=next;groups=gs;data=d;index=n;scene.add(root);const b=entry.bounds;span=Math.max(b.max_x-b.min_x,b.max_y-b.min_y)/64;center.set((b.min_x+b.max_x)/128,b.min_height/64,-(b.min_y+b.max_y)/128);camera.far=Math.max(2000,span*15);camera.updateProjectionMatrix();resize();reset(false,false);settings();levelInfo();message.hidden=true;resize();
   }catch(e){if(next&&next!==root)dispose(next);if(mine===token){message.hidden=false;message.textContent=`Unable to load this level: ${e.message}. Choose another level or switch to 2D Atlas.`}}}

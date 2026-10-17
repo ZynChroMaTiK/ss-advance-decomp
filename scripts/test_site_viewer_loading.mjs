@@ -11,29 +11,36 @@ class Element {
  getContext(){return {fillRect(){},strokeRect(){},fillText(){}}}
 }
 const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id)};
-globalThis.document={getElementById:get,createElement:()=>new Element(),querySelectorAll:s=>s==='.view-options input'?[get('show-triggers'),get('show-floors'),get('open-doors')]:[],addEventListener(){},removeEventListener(){},hidden:false};
+globalThis.document={getElementById:get,createElement:()=>new Element(),querySelectorAll:s=>s==='.view-options input'?[get('show-triggers'),get('show-floors'),get('open-doors'),get('show-scripted'),get('show-items'),get('show-enemies')]:[],addEventListener(){},removeEventListener(){},hidden:false};
 globalThis.window={addEventListener(){}};globalThis.devicePixelRatio=1;globalThis.ResizeObserver=class{observe(){}};
 let tick,scene,camera;globalThis.requestAnimationFrame=f=>tick=f;
 const canvas=new Element(),renderer={domElement:canvas,setPixelRatio(){},setSize(){},render:(s,c)=>{scene=s;camera=c}};
 const pending=[];globalThis.fetch=path=>new Promise((resolve,reject)=>pending.push({path,resolve,reject}));
 const catalog=JSON.parse(readFileSync(new URL('../site/data/catalog.json',import.meta.url)));
 const source=JSON.parse(readFileSync(new URL('../site/'+catalog[0].path,import.meta.url)));
-const data={...source,sectors:[source.sectors[0],{...source.sectors.find(s=>s.flags&256),initial_ceiling:0,open_ceiling:224}],walls:{initial:[],open:[]},markers:[],movers:[],secrets:[]};
+const data={...source,sectors:[source.sectors[0],{...source.sectors.find(s=>s.flags&256),initial_ceiling:0,open_ceiling:224}],walls:{initial:[],open:[]},markers:[{id:'enemy',origin:'script',group:'enemies',name:'Enemy',x:512,y:512,initial_floor:0},{id:'item',origin:'script',group:'items',name:'Item',x:256,y:256,initial_floor:0}],scripts:[{id:5,ops:[{op:1,markers:['enemy','item']}]}],movers:[],secrets:[]};
 const viewer=createViewer(()=>renderer);viewer.setActive(true);
 let load=viewer.load(0,catalog[0]);pending.shift().resolve({ok:true,json:async()=>data});await load;tick(16);
 const original=scene.children[0];assert(original.visible);assert.equal(canvas.focusCount,0,'async loads must not steal focus');
 assert.equal(get('view-name').textContent,`01 / ${data.title}`);
-assert.equal(get('object-results').children.length,3,'rooms and entry trigger available without a pointer pick');
+assert.equal(get('object-results').children.length,5,'rooms, placements and entry trigger available without a pointer pick');
 const triggers=original.getObjectByName('triggers');assert(triggers.visible);assert.equal(triggers.children.length,1);
-get('open-doors').checked=false;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,0);
-get('open-doors').checked=true;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,3.5);
+const arrows=original.getObjectByName('trigger-arrows');assert.equal(arrows.children.length,2);
+for(let mask=0;mask<16;mask++){
+ const ids=['show-triggers','show-scripted','show-enemies','show-items'];ids.forEach((id,i)=>get(id).checked=!!(mask&(1<<i)));get('show-triggers').onchange();
+ const visible=[];arrows.traverseVisible(o=>{if(o.type==='ArrowHelper')visible.push(o.userData.target.userData.marker.id)});
+ assert.deepEqual(visible,[(mask&7)===7?'enemy':null,(mask&11)===11?'item':null].filter(Boolean));
+}
+const oldArrowHeight=arrows.children[0].position.y;
+get('open-doors').checked=false;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,0);assert.notEqual(arrows.children[0].position.y,oldArrowHeight);
+get('open-doors').checked=true;get('open-doors').onchange();assert.equal(triggers.children[0].scale.y,3.5);assert.equal(arrows.children[0].position.y,oldArrowHeight);
 get('show-triggers').checked=false;get('show-triggers').onchange();assert(!triggers.visible);
 get('show-triggers').checked=true;get('show-triggers').onchange();assert(triggers.visible);
 get('show-floors').checked=false;get('show-floors').onchange();assert(triggers.visible,'trigger visibility is independent of floors');
 get('object-kind').value='triggers';get('object-kind').listeners.change[0]();assert.equal(get('object-results').children.length,1);
 get('object-inspect').onclick();assert.match(get('selection').children[0].textContent,/Entry trigger.*script/);
 get('object-kind').value='all';get('object-kind').listeners.change[0]();
-const firstRoom=get('object-results').children[0];
+const firstRoom=get('object-results').children.find(o=>o.value==='sector:0');
 get('object-results').value=firstRoom.value;const before=camera.position.clone();
 for(const event of [{key:'Enter',code:''},{key:'Enter',code:'NumpadEnter'},{code:'Enter'}]){
  camera.position.copy(before);let prevented=false;
