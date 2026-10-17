@@ -1,0 +1,18 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "tick_time_pause_render_edges": 6144,
+    "callback_bit_mutations": 192,
+    "game_and_display_rebinding": 48,
+    "random_stage_mutations": 4096,
+    "failure_prefixes": 12,
+    "repair_before_read": 1,
+    "guard_setup": 7
+  },
+  "callback_reentry_guards": 90023,
+  "native_guards": 7,
+  "callback_failure_cases": 12,
+  "rom_comparisons_total": 10500,
+  "source_sha256": "269c17ba16e9e43975bb0c9aaeaefff92099b04fd80175a32c3e39c075468df5",
+  "scope": "Complete 0244C control flow, all twelve callees controlled identically. Stage internals are not validated here. Counter/input/time projections, pointer replacement, pause/render gates, all tick values, ordered callbacks and failure prefixes. UBSan."
+}

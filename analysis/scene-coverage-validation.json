@@ -1,0 +1,12 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_reset_calls": 7893,
+  "whole_merge_calls": 40268,
+  "guards": 10,
+  "max_stored_ranges": 61,
+  "source_sha256": {
+    "src/world_scene.c": "526d944880076a741c8e3b96e0484edaa376d56e444c79e85a53da65dbde58b5",
+    "include/ssa/world_scene.h": "b5adbf17d1f550688e446880ba428bd28e9dc3890688774ef00de3290f83a0b2",
+    "tests/test_scene_coverage_rom.py": "025d8601d10789a9728f2bc90864fdf6759e11c06d5c97efa7cdfc4f565c0956"
+  }
+}

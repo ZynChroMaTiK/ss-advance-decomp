@@ -1,0 +1,23 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "resources": 142,
+  "nonempty_resources": 138,
+  "image_references": 5407,
+  "unique_images": 2607,
+  "decoded_reference_bytes": 7053920,
+  "columns": 152440,
+  "whole_rom_draws": 13787,
+  "metadata_rom_cases": 1,
+  "malformed_cases": 2617,
+  "guards": 11,
+  "decoded_sha256": "649e8e13fb6ef2ce19e8b69d270b09dbaef34530ec62db9428d66b841344606b",
+  "asan_ubsan_assertions": 37860,
+  "source_sha256": {
+    "src/actor_assets.c": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544",
+    "src/actor_raster.c": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65",
+    "include/ssa/actor_assets.h": "3c5e4b100ced3c8eb74ae7ac385f71ef622644003e5c2b63b3fc93d19949e332",
+    "include/ssa/actor_raster.h": "4016d1120a8d64382dae16c55f16eda55b1076499154c71eb3702256f46981c0",
+    "tests/test_actor_assets.py": "5bc3e3da85a7ec08a13b30abdee021e243e957da18bb9aa01b394d2b51623323",
+    "tests/test_actor_assets.c": "46f7839921d3fcc172832f1963a5e689bb18de237baed166a8c971356a5b0f34"
+  }
+}

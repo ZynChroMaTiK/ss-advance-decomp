@@ -1,0 +1,43 @@
+diff --git a/src/decompnet/rom/export_gba_build.py b/src/decompnet/rom/export_gba_build.py
+index cf91b33..ed49221 100644
+--- a/src/decompnet/rom/export_gba_build.py
++++ b/src/decompnet/rom/export_gba_build.py
+@@ -212,13 +212,28 @@ def linker_script(items: list[tuple[int, str, str]], c_objs: dict[str, str]) ->
+     linked = {obj for _, obj, _ in items}
+     defined = set().union(*(_globals(obj) for obj in linked))
+     wanted = {fn["name"]: fn["addr"] for fn in B["functions"]} | B["symbols"]
++    thumb_calls = set()
+     # luvdis's labels (_08001234) jumped to from another piece: their names are their addresses
+     for p in json.loads((ROOT / "asm" / "pieces.json").read_text(encoding="utf-8")):
+         text = (ROOT / p["src"]).read_text(encoding="utf-8")
++        # Thumb BL cannot switch to ARM mode. Preserve that mode for absolute
++        # fallback labels, otherwise ld inserts interworking stubs into the ROM.
++        thumb_calls.update(re.findall(r"^\s*bl\s+(\w+)\s*(?:@.*)?$", text, re.M))
+         own = set(re.findall(r"^(_[0-9A-F]{8}):", text, re.M))
+         wanted.update({lab: int(lab[1:], 16) for lab in set(_LABEL.findall(text)) - own})
+         wanted.update({name: int(name[4:], 16) for name in re.findall(r"\b(sub_[0-9A-F]{8})\b", text)})
+-    lines += [f"{name} = 0x{addr:08X};" for name, addr in sorted(wanted.items(), key=lambda kv: kv[1]) if name not in defined]
++    # An odd linker-script absolute symbol is still STT_NOTYPE. GNU ld needs
++    # real Thumb function symbols to avoid synthesizing interworking veneers.
++    thumb_symbols = [".syntax unified", ".thumb", ".text"]
++    for name, addr in sorted(wanted.items(), key=lambda kv: kv[1]):
++        if name in defined:
++            continue
++        if name in thumb_calls:
++            thumb_symbols += [f".global {name}", f".type {name}, %function", f".thumb_set {name}, 0x{addr | 1:08X}"]
++        else:
++            lines.append(f"{name} = 0x{addr:08X};")
++    (ROOT / "build/thumb_symbols.s").write_text("\n".join(thumb_symbols) + "\n", encoding="utf-8")
++    run([arm("as"), *AS_FLAGS, "-o", "build/thumb_symbols.o", "build/thumb_symbols.s"])
+     return "\n".join(lines) + "\n"
+ 
+ 
+@@ -227,7 +242,7 @@ def build() -> bool:
+     pieces, c_objs = build_objects()
+     items = layout(pieces, c_objs)
+     (ROOT / "build" / "game.ld").write_text(linker_script(items, c_objs), encoding="utf-8")
+-    objs = sorted({obj for _, obj, _ in items} | set(c_objs.values()))
++    objs = sorted({obj for _, obj, _ in items} | set(c_objs.values()) | {"build/thumb_symbols.o"})
+     run([arm("ld"), "-e", f"0x{B['base']:X}", "-T", "build/game.ld", "-o", "build/game.elf", *objs])
+     run([arm("objcopy"), "-O", "binary", "build/game.elf", B["output"]])
+     out, base = (ROOT / B["output"]).read_bytes(), (ROOT / B["image"]).read_bytes()

@@ -1,0 +1,4 @@
+# Used only to execute the original isolated Thumb functions as a test oracle.
+# No emulator is part of the native port.
+unicorn==2.1.4
+cmake==3.31.6

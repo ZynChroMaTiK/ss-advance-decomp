@@ -1,0 +1,64 @@
+# Enemy targeting and sector rejection
+
+`src/enemy_targeting.c` recovers the complete nearest-enemy routine `080036C4`,
+nearest-pickup routine `08003758`, and sector reject lookup `0800B18C`. These
+native helpers read decoded data and host entities; no ROM instructions execute
+at runtime. `recovered/sector_reject.c` is an exact matching C candidate for
+`0800B18C`: decomp.wtf `compile_and_diff` verified all 34 bytes / 17 instructions.
+The nearest routines remain behavioral ports, not exact matching C.
+
+The nearest routines traverse the original active-index order. The native API
+takes that order as at most 100 stable entity pointers. It does not discover
+entities through spatial lists: a swap on pool release can change the next
+nearest result when two distances tie. Source identity is skipped. Enemy
+selection accepts types CD through D6 inclusive, excluding flag `0x20`; bosses
+D7 and D8 are excluded. Pickup selection accepts E1 and does not test flags.
+Neither routine tests health, Z, line of sight, registration or radius.
+
+Distance uses the signed high half of each **wrapped coordinate subtraction**,
+then a wrapped signed sum of squared whole-unit differences. In particular,
+both differences equal to -32768 produce distance `INT32_MIN`, which wins over
+an ordinary nearby entity. Preserve this behavior instead of replacing it with
+64-bit Euclidean distance. Strictly smaller distances replace the result;
+equal distances retain the first eligible pointer. No eligible candidate yields
+NULL. The native API rejects invalid arguments before writing its output.
+
+Sector rejection reads bit `source_sector * sector_count + target_sector` from
+the map reject lump. The result is the actual mask, from 1 through 128 when set,
+and zero otherwise. This is an ordered lookup: do not exchange the two sectors
+or assume table symmetry. A nonzero bit rejects visibility, while zero alone
+does not establish a clear sight ray. The original arguments truncate to signed
+16 bits; the native API restricts sectors to valid nonnegative signed-16 values
+and bounds-checks the complete reject table instead of permitting invalid
+original memory access.
+
+`tests/test_enemy_targeting_rom.py` compiles the native code with strict warnings
+and UndefinedBehaviorSanitizer, and executes the three complete original ROM
+routines without replacing any callees. Validation passes **214,185 ROM
+comparisons**:
+
+- 69,812 nearest-enemy and 69,812 nearest-pickup comparisons, including all
+  65,536 type values, randomized active-index permutations, empty/full pools,
+  self exclusion, corpse flags, exact ties and signed distance overflow.
+- All 73,600 ordered sector pairs across all 16 decoded original maps.
+- 961 additional ordered pairs in an asymmetric synthetic reject table, which
+  exercise every bit position and row stride.
+- 21 invalid-argument and truncated-table checks; invalid nearest calls retain
+  the caller's output pointer.
+
+Randomized nearest cases verify both native and original entity payloads remain
+unchanged, and original active indices remain unchanged. Real-map checks verify
+the source map and original reject bytes remain unchanged. Results and source
+hashes are in `analysis/native-enemy-targeting-validation.json`.
+
+These helpers do not supply combat, full visibility tracing or an outer entity
+dispatcher. The caller owns the ordered entity snapshot and its lifetime.
+
+The matching sector lookup loads the reject address before calculating the bit
+index. Reusing an unsigned local for the address and then its loaded byte makes
+the original compiler preserve register r3 for the last load. This candidate
+uses ordinary C without inline assembly; native code retains host pointers and
+explicit bounds checks and is a separate implementation.
+All seven stored compile attempts and the final score-zero evidence are saved
+in `sector-reject-match-attempts.json`. The 65-function export subsequently
+rebuilt the complete 8 MiB ROM byte for byte, with no fallback C functions.

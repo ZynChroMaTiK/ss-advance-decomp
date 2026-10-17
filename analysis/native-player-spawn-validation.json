@@ -1,0 +1,10 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_initializer_comparisons": 688,
+  "player_records": 2752,
+  "body_records": 2000,
+  "grid_snapshots": 688,
+  "native_guards": 679,
+  "scope": "Entire 08005E4C including original scanner, allocator, player/body synchronization, animation setup and BSP/grid insertion. Heap allocation, BIOS/DMA zero-fill and D1B4 sector-pool allocation are explicit test platform boundaries. No weapon setup, respawn or player frame.",
+  "source_sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f"
+}

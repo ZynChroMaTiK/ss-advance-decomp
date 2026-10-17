@@ -1,0 +1,40 @@
+{
+  "result": "pass",
+  "pitch_register_rom_comparisons": 3840,
+  "dac_level_checks": 256,
+  "wave_note_rom_comparisons": 960,
+  "wave_instruments": [
+    1,
+    5,
+    7,
+    18,
+    24,
+    32
+  ],
+  "unique_waveforms": 3,
+  "first_level_bass": [
+    {
+      "velocity": 44,
+      "volume_goal": 4,
+      "dac_register": 96,
+      "frequency_hz": 41.21761006289308,
+      "peak_to_peak": 1536
+    },
+    {
+      "velocity": 108,
+      "volume_goal": 10,
+      "dac_register": 128,
+      "frequency_hz": 41.21761006289308,
+      "peak_to_peak": 5632
+    }
+  ],
+  "test_only_arm_execution": true,
+  "physical_listening_tested": false,
+  "hardware_reference": "https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c",
+  "source_sha256": {
+    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "tests/audio_wave_oracle.c": "9ed064d53df7603fff3a0599f6ebbaaa0bdc45fd9bb4046010e89881cadc2ca5",
+    "tests/test_audio_wave.py": "3bd737e14f11848c236992fb7b0eb3d62f00805cf28bbe56f88af964fa6dbea0"
+  }
+}

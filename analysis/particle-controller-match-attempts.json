@@ -1,0 +1,6 @@
+[
+  {
+    "source": "extern void sub_080037E0(void *);\nvoid sub_08014C58(unsigned char *entity) {\n    if (entity[0x5f]) sub_080037E0(entity);\n}\n",
+    "result": "score 100 (90.9% match) \u2014 best so far 100. Target 11 insns, yours 10.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET           | YOURS\n   ...\n   pop {r0}         | pop {r0}\n   bx r0            | bx r0\n < movs r0, r0      | "
+  }
+]

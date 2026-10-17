@@ -1,0 +1,20 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_rom_frames": 6036,
+  "oam_entries": 45603,
+  "affine_objects": 10054,
+  "guards": 10,
+  "images": 311,
+  "asan_ubsan_assertions": 13183,
+  "sanitizer_frames": 4536,
+  "source_sha256": {
+    "sprite_oam.c": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411",
+    "sprite_assets.c": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+  },
+  "fixture_sha256": {
+    "include/ssa/sprite_oam.h": "3d566c0be819af7e2274f6590ceaecb9485f9168545d0dd59f9ea2d4e6ac48da",
+    "tests/test_sprite_oam_rom.py": "68fc9a301e7298e68226feb7dfa7bf7ab6a22fdc79d6bdbbdf56151d89d584ff",
+    "tests/test_sprite_oam.c": "b46e8e7198a9a60dd6ab2e4ddc08649cf76ee3f4636269d3859664e0645f315e"
+  }
+}

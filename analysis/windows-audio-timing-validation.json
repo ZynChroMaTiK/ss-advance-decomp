@@ -1,0 +1,47 @@
+{
+    "result":  "pass",
+    "output_muted":  true,
+    "physical_listening_tested":  false,
+    "cases":  [
+                  {
+                      "case":  "idle",
+                      "effects":  0,
+                      "seconds":  3.005661,
+                      "played_frames":  144274,
+                      "speed_ratio":  1.000016,
+                      "recycled":  180,
+                      "errors":  0,
+                      "result":  "pass"
+                  },
+                  {
+                      "case":  "assisted",
+                      "effects":  0,
+                      "seconds":  3.013678,
+                      "played_frames":  144661,
+                      "speed_ratio":  1.000031,
+                      "recycled":  181,
+                      "errors":  0,
+                      "result":  "pass"
+                  },
+                  {
+                      "case":  "idle",
+                      "effects":  1,
+                      "seconds":  3.002686,
+                      "played_frames":  144141,
+                      "speed_ratio":  1.000084,
+                      "recycled":  180,
+                      "errors":  0,
+                      "result":  "pass"
+                  }
+              ],
+    "checker_sha256":  "7e723ba294f2c1f7b8eb14c57095898376f21df35a39821a4f2ea28298886cc4",
+    "source_sha256":  {
+                          "src/audio.c":  "d55d3d7efb137d7c0cdf2bc89799cd42dd7c92b3bad1b65b6033a33d93dbda4a",
+                          "include/ssa/audio.h":  "f84c9c194425e362cbb883b0fed52e877a3454ca7f8aaa6ab2381b6686e0cf96",
+                          "platform/win32/audio_win32.c":  "6a42f098ebb2c990bd661cd2c10ce6c5e53b3a68c3864f9dd673cd6ff6b4dd0d",
+                          "platform/win32/audio_win32.h":  "b81f97d846f3ee8b596ab7acf93749f065bd9e29730fbbdf2a0d73fb27131506",
+                          "tests/test_audio_win32_timing.c":  "3053ccd0ad6ab33be7e7d8d0975ed26ae92895348c0c14d337fdaf1de92c7ead",
+                          "scripts/test-audio-timing.ps1":  "3e7ac904a59b38a2c7bb957c477b0eda6ae10311e868b76ad39c459825e6f671",
+                          "CMakeLists.txt":  "c790e767ea32c719a4ccbc8ed824c2d40fa979644cb2ffc73e5eb8eb51562782"
+                      }
+}

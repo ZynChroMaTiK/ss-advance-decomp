@@ -1,0 +1,13 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "initializer_comparisons": 530,
+  "lookup_comparisons": 2120,
+  "activation_comparisons": 3932,
+  "native_guards": 25,
+  "callback_failures": 128,
+  "real_maps": 16,
+  "scope": "Whole 1C3B4/1C374/1C518; original 0C57F4 comparator and ROM character classification execute. Allocation boundary supplies zero-filled storage. Activation enqueue/sound are controlled, with ordered state snapshots and callback mutation. No script or audio implementation.",
+  "rom_comparisons": 6582,
+  "source_sha256": "d9400ca5b4cc7a76569c09925c04eab506d99108a834ec69f89ad6ae647d7a95",
+  "passed": true
+}

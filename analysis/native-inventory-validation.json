@@ -1,0 +1,30 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "ammo_capacities": [
+    999,
+    999,
+    100,
+    300,
+    300,
+    25,
+    10,
+    3,
+    10,
+    10
+  ],
+  "scope": "whole 080114B8,08011558,080114D4,08011534,0800549C,080054D8,08005510; no hooked calls; complete player/entity bytes and defined returns; queue count bounded below 10",
+  "rom_comparisons": {
+    "has_weapon": 10240,
+    "queue_weapon": 2000,
+    "add_ammo": 11600,
+    "fill_ammo": 1000,
+    "add_health": 2300,
+    "add_stat_c4": 2300,
+    "add_stat_c6": 2300
+  },
+  "native_guard_cases": 31,
+  "total_rom_comparisons": 31740,
+  "source_sha256": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe",
+  "compiler": "GCC C11 -O2 -Wall -Wextra -Werror -pedantic, UndefinedBehaviorSanitizer",
+  "result": "pass"
+}

@@ -1,0 +1,13 @@
+{
+  "result": "pass",
+  "rom_calls": 7936,
+  "palette_entries_compared": 2031616,
+  "maps": 16,
+  "guards": 6,
+  "scope": "Whole original0750C call; compare background palette/request/counter. Blend-register callback and hardware DMA are controlled. No native ROM execution.",
+  "source_sha256": {
+    "src/palette_effect.c": "fb737be2c5473788131eadc5049a11139ba0f9d63177545df5517852ff22b8a3",
+    "include/ssa/palette_effect.h": "2fc543dcdd628d5ffd53fca8eb8d98a0c5158a15345cdd12a134b24763dbc4d0",
+    "tests/test_palette_effect_rom.py": "b5e912da97b6c171f2be7b8462c8bb8924fce10835eb110e5dda752ce26f7910"
+  }
+}

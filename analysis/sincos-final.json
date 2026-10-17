@@ -1,0 +1,40 @@
+[
+  {
+    "pins": [
+      "s",
+      "c",
+      "phase",
+      "quadrant"
+    ],
+    "result": "\u274c COMPILE ERROR (context v1)\nrejected: inline assembly is not allowed: matches must come from C"
+  },
+  {
+    "pins": [
+      "c"
+    ],
+    "result": "\u274c COMPILE ERROR (context v1)\nrejected: inline assembly is not allowed: matches must come from C"
+  },
+  {
+    "pins": [
+      "phase"
+    ],
+    "result": "\u274c COMPILE ERROR (context v1)\nrejected: inline assembly is not allowed: matches must come from C"
+  },
+  {
+    "pins": [
+      "quadrant"
+    ],
+    "result": "\u274c COMPILE ERROR (context v1)\nrejected: inline assembly is not allowed: matches must come from C"
+  },
+  {
+    "pins": [
+      "c",
+      "phase"
+    ],
+    "result": "\u274c COMPILE ERROR (context v1)\nrejected: inline assembly is not allowed: matches must come from C"
+  },
+  {
+    "pins": [],
+    "result": "score 1940 (82.0% match) \u2014 best so far 1940. Target 108 insns, yours 108.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET                                | YOURS\n   ...\n   lsls r0, r0, #0x10                    | lsls r0, r0, #0x10\n   movs r4, #0                           | movs r4, #0\n r movs r1, #0                           | movs r2, #0\n r lsrs r3, r0, #0x1e                    | lsrs r1, r0, #0x1e\n   lsls r0, r0, #2                       | lsls r0, r0, #2\n r lsrs r2, r0, #0x12                    | lsrs r3, r0, #0x12\n r cmp r2, #0                            | cmp r3, #0\n   bne #0x48                             | bne #0x48\n r cmp r3, #1                            | cmp r1, #1\n   beq #0x30                             | beq #0x30\n r cmp r3, #1                            | cmp r1, #1\n   blo #0x28                             | blo #0x28\n r cmp r3, #2                            | cmp r1, #2\n   beq #0x36                             | beq #0x36\n r cmp r3, #3                            | cmp r1, #3\n   beq #0x40                             | beq #0x40\n i b #0xc6                               | b #0xc4\n   movs r4, #0                           | movs r4, #0\n r movs r1, #0x80                        | movs r2, #0x80\n r lsls r1, r1, #9                       | lsls r2, r2, #9\n i b #0xc6                               | b #0xc4\n   movs r4, #0x80                        | movs r4, #0x80\n   lsls r4, r4, #9                       | lsls r4, r4, #9\n i b #0xc6                               | b #0xc4\n   movs r4, #0                           | movs r4, #0\n r ldr r1, [pc, #0]                      | ldr r2, [pc, #0]\n i b #0xc6                               | b #0xc4\n   movs r0, r0                           | movs r0, r0\n   vdup.8 d20, d0[7]                     | vdup.8 d20, d0[7]\n i b #0xc6                               | b #0xc4\n   movs r0, r0                           | movs r0, r0\n i vtbl.8 d18, {d15, d16, d17, d18}, d1  | vtbl.8 d18, {d15, d16}, d1\n   beq #0x74                             | beq #0x74\n r cmp r3, #1                            | cmp r1, #1\n   blo #0x5a                             | blo #0x5a\n r cmp r3, #2                            | cmp r1, #2\n i beq #0x90                             | beq #0x8c\n r cmp r3, #3                            | cmp r1, #3\n i beq #0xb0                             | beq #0xac\n i b #0xc6                               | b #0xc4\n   ldr r1, [pc, #0x14]                   | ldr r1, [pc, #0x14]\n r lsls r0, r2, #1                       | lsls r0, r3, #1\n   adds r0, r0, r1                       | adds r0, r0, r1\n r ldrh r4, [r0]                         | ldrh r0, [r0]\n >                                       | adds r4, r0, #0\n   movs r0, #0x80                        | movs r0, #0x80\n   lsls r0, r0, #7                       | lsls r0, r0, #7\n r subs r0, r0, r2                       | subs r0, r0, r3\n   lsls r0, r0, #1                       | lsls r0, r0, #1\n < adds r0, r0, r1                       | \n < ldrh r1, [r0]                         | \n i b #0xc6                               | b #0xbe\n >                                       | movs r0, r0\n   ldm r1!, {r4, r5}                     | ldm r1!, {r4, r5}\n   lsrs r1, r0, #0x20                    | lsrs r1, r0, #0x20\n i ldr r0, [pc, #0x14]                   | ldr r1, [pc, #0x10]\n r movs r1, #0x80                        | movs r0, #0x80\n r lsls r1, r1, #7                       | lsls r0, r0, #7\n r subs r1, r1, r2                       | subs r0, r0, r3\n r lsls r1, r1, #1                       | lsls r0, r0, #1\n r adds r1, r1, r0                       | adds r0, r0, r1\n r ldrh r4, [r1]                         | ldrh r0, [r0]\n >                                       | adds r4, r0, #0\n r lsls r1, r2, #1                       | lsls r0, r3, #1\n | adds r1, r1, r0                       | b #0x9e\n < ldrh r1, [r1]                         | \n   rsbs r1, r1, #0                       | rsbs r1, r1, #0\n   b #0xc6                               | b #0xc6\n < ldm r1!, {r4, r5}                     | \n < lsrs r1, r0, #0x20                    | \n   ldr r1, [pc, #0x18]                   | ldr r1, [pc, #0x18]\n r lsls r0, r2, #1                       | lsls r0, r3, #1\n   adds r0, r0, r1                       | adds r0, r0, r1\n   ldrh r0, [r0]                         | ldrh r0, [r0]\n   ...\n   movs r0, #0x80                        | movs r0, #0x80\n   lsls r0, r0, #7                       | lsls r0, r0, #7\n r subs r0, r0, r2                       | subs r0, r0, r3\n   ... (32 more rows truncated)\nwhen linking your code at the function's address:\n- a pointer to D_0801C930 where the original has 0xE01C4249 (D_E01C4249)\n- a pointer to D_0801C930 where the original has 0x0000E00D (D_0000E00D)"
+  }
+]

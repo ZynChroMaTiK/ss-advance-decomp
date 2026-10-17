@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "original_reference_arbitration_rom_comparisons": 12000,
+  "volume_rom_comparisons": 6000,
+  "pc_uses_original_allocator": false,
+  "rom_pcm_channels": 3,
+  "rom_psg_channels": 4,
+  "rom_sound_mode": 9622272,
+  "rom_pcm_master": 13,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "tests/audio_channels_oracle.c": "917442628d4d0f3cc2a369e6b30180189994eff4c6f5b40705604f949140feee",
+    "tests/test_audio_channels.py": "5b4d089150e9f69e1cf380ae11f11d84ede5782f66effde2d8f3ed5a8d67b177"
+  }
+}

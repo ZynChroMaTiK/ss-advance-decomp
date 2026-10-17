@@ -1,0 +1,15 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_rom_comparisons": 12979,
+  "native_guards": 17,
+  "callback_reentry_guards": 13018,
+  "native_failure_paths": 2,
+  "allocation_calls": 13012,
+  "scope": "Complete1240C with original12050/11FFC/FC04; only F9B4 allocation controlled.; all36table rows plus setting0,player counts0..4,active masks,godmode,signedtable/capacity fuzz; full256byteplayer and48bytesprite snapshots",
+  "source_sha256": {
+    "weapon_loadout.c": "8e1bf94850a7efeb9a8b31785455bb2be9dc976c7573034591842a64df56b081",
+    "weapon_select.c": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085",
+    "weapon_animation.c": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd",
+    "inventory.c": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe"
+  }
+}

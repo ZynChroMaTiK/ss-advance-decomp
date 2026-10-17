@@ -1,0 +1,9 @@
+{
+  "path": "/mnt/c/SeriousEngine/Coding/ss-advance-decomp/decomp/serious-sam-3/source",
+  "identical": true,
+  "matched": 74,
+  "functions": 526,
+  "log": "identical: build/game.gba matches baserom.gba byte for byte (74 of 526 functions in C)\n",
+  "verified_at": 1792048310.092951,
+  "sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e"
+}

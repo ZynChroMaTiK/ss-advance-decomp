@@ -1,0 +1,12 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "whole 08012CFC and 0801B848; no hooks; complete entity/game bytes; defined 12CFC return only (wrapper returns void)",
+  "rom_comparisons": {
+    "countdown": 143360,
+    "wrapper": 4096
+  },
+  "native_guards": 6,
+  "total_rom_comparisons": 147456,
+  "source_sha256": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e",
+  "passed": true
+}

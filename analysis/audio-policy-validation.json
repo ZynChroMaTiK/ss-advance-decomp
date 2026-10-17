@@ -1,0 +1,14 @@
+{
+  "result": "pass",
+  "fade_frame_rom_comparisons": 8360,
+  "request_rom_comparisons": 166,
+  "fade_start_rom_comparisons": 1552,
+  "automatic_return_rom_comparisons": 2688,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "tests/audio_policy_oracle.c": "2858cb707bada09731583876d185573b4cd3d75e3b52506d82ea9d77ab30a46e",
+    "tests/test_audio_policy.py": "3f02fe7579229590be9f67a0303d4620f92db3798d610da434cd44d0af307c99"
+  }
+}

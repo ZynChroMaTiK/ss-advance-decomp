@@ -1,0 +1,14 @@
+{
+  "result": "pass",
+  "draw_submission_rom_cases": 864,
+  "background_rom_pixels": 4147200,
+  "composed_rom_pixels": 691200,
+  "fade_input_rom_frames": 8976,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+    "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "tests/test_map_view_rom.py": "4b906800c02a4f383f1f712410177bced6aeed55a83aa01fe4eee3c407519f4b"
+  }
+}

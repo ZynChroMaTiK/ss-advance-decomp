@@ -1,0 +1,81 @@
+# Native player gameplay integration
+
+`src/player_gameplay.c` connects the recovered death/respawn and environmental
+interaction/hazard routines to the existing native player runtime. Initialize
+the player runtime first, then `ssa_player_gameplay_init` with the same map's
+spawn plan. Call `ssa_player_gameplay_step` with the runtime input and external
+script/presentation callbacks. Free the gameplay binding before the runtime.
+
+The adapter owns a separate interaction-query workspace. It never overwrites
+the pending movement contacts or the third-person camera query. The original
+frame order remains death, movement/jump, camera, local-view snapshot,
+interaction/hazards, sector script, and animation scheduling. Thus health
+cleared by a hazard is processed by death logic on the following frame.
+
+Death uses the native lifecycle routine. Multiplayer respawn removes the body
+from its world, chooses a spawn point using `ssa_respawn_select`, restores the
+original player/body fields, and reinserts the same stable entity. Other player
+body coordinates supplied in `input.motion.players` must match their player
+coordinates. The current player's coordinates are already zeroed when selecting,
+as in the original. Missing starts or no positive selection return an error;
+the original caller ignores selector failure and would consume uninitialized
+stack data. Errors preserve earlier changes and may leave the body unlinked.
+
+The original initial respawn Z uses the body's old floor height. Insertion
+updates floor/ceiling, and the following physics step handles vertical placement.
+The adapter does not silently rewrite that original order. The native jump
+button latch follows the current held input after reinsertion, preventing an
+automatic new jump from a held button. Custom jump velocity and H camera mode
+survive. Previous camera bob is reset; the normal camera stage computes the
+new eye and final first/third-person pose.
+
+The gameplay binding owns `weapon`, `weapon_view`, lifecycle counters, and
+hazard configuration. It does not invent initial weapon ownership or recover
+weapon firing. Set current/requested weapon fields from game initialization
+when known. At frame entry, movement's weapon flags are authoritative and are
+mirrored into the lifecycle weapon view. `weapon_action` is the selected weapon
+record's value at offset `+10`, which the original interaction routine compares
+with `0xDC00`; it is not a weapon ID.
+
+The caller supplies hazard frame/level counters and a stable list of scripted
+hazard sectors. For the display-local player, the adapter reads its flags
+directly. When updating another player, `hazard_game.local_flags` must describe
+the display-local player's flags. The existing independent gameplay-protection
+and display-player indices remain separate.
+
+All external callbacks are required. Animation and sound requests share the
+runtime callbacks. Lifecycle notice, mode, effect and weapon-animation requests
+are forwarded through `event`; interaction lines go through `line`. These are
+requests for actual implementations, not implemented UI, audio, effects or
+scripts. `life_game.input_state` reports original menu/level transition requests
+for the future main loop. It does not change a level on its own. Callback failure
+aborts the frame with earlier effects retained and its final view pose unchanged.
+Reentry/free during an update is rejected. Callbacks must keep all object
+identities and map structure stable.
+
+This is native game-logic integration, not a rendered or playable PC build.
+Rendering, OS input delivery, scripts, combat and the main game loop remain.
+The newer `level_runtime.c` adapter implements the line/sector boundaries with
+native mover/switch activation and script enqueueing. Its once-per-world update
+then runs mover heights followed by the script VM; see `level-runtime.md`.
+
+## Verification
+
+`decomp.ps1 test-player-gameplay` passes **211,701 assertions over 10,016
+successful native frames** on all 16 actual maps. It runs 32 complete 301-frame
+death/respawn sequences, half in third person, plus 32 hazard-to-next-frame-death
+transitions. It checks spatial ownership, ammo/pending-entry preservation,
+weapon reset, jump locking, held-jump/custom-speed preservation, H mode,
+callback errors, reentry rejection and unchanged final poses after failure.
+The recovered camera clamps the dead eye offset at 24 units while player flag
+4 remains set; the tests preserve that composition rather than assuming the
+death routine's four-unit threshold will be reached.
+
+The test builds with AddressSanitizer and UndefinedBehaviorSanitizer using
+`-no-pie`. Leak scanning remains disabled for the established WSL workaround;
+this is not LeakSanitizer coverage. A real-map line callback failure uses a
+temporary line-type edit restored before cleanup. Respawn fixtures use valid
+map-start markers and a distant peer; these are controlled native integration
+fixtures, not original whole-game runs. The constituent differential suites
+separately compare the recovered routines against the ROM. The final PowerShell
+driver invocation and all 22 native CMake library targets pass.

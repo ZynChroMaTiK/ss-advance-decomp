@@ -1,0 +1,101 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "type_eligibility": 65686,
+  "random_arrays": 4096,
+  "attenuation_edges": 431,
+  "real_maps": 2048,
+  "live_mutations": 64,
+  "reentry": 61681,
+  "guards": 9,
+  "callback_failures": 3,
+  "damage_requests": 61671,
+  "maps": [
+    {
+      "level": 0,
+      "cases": 128,
+      "sectors": 63
+    },
+    {
+      "level": 1,
+      "cases": 128,
+      "sectors": 112
+    },
+    {
+      "level": 2,
+      "cases": 128,
+      "sectors": 85
+    },
+    {
+      "level": 3,
+      "cases": 128,
+      "sectors": 93
+    },
+    {
+      "level": 4,
+      "cases": 128,
+      "sectors": 109
+    },
+    {
+      "level": 5,
+      "cases": 128,
+      "sectors": 51
+    },
+    {
+      "level": 6,
+      "cases": 128,
+      "sectors": 46
+    },
+    {
+      "level": 7,
+      "cases": 128,
+      "sectors": 77
+    },
+    {
+      "level": 8,
+      "cases": 128,
+      "sectors": 33
+    },
+    {
+      "level": 9,
+      "cases": 128,
+      "sectors": 30
+    },
+    {
+      "level": 10,
+      "cases": 128,
+      "sectors": 97
+    },
+    {
+      "level": 11,
+      "cases": 128,
+      "sectors": 77
+    },
+    {
+      "level": 12,
+      "cases": 128,
+      "sectors": 22
+    },
+    {
+      "level": 13,
+      "cases": 128,
+      "sectors": 9
+    },
+    {
+      "level": 14,
+      "cases": 128,
+      "sectors": 25
+    },
+    {
+      "level": 15,
+      "cases": 128,
+      "sectors": 13
+    }
+  ],
+  "scope": "Whole 035A8; real B18C, unsigned division and IWRAM signed fixed multiply. 037F4 callback recorded, not real damage here. Stable active pool order/count; damage callbacks may mutate live body fields. UBSan enabled.",
+  "rom_comparisons": 72325,
+  "source_sha256": {
+    "combat_explosion.c": "ef14c63631b9bd7ad02354b8baf0216ee98b41f0252c9bd6366481e4d65111c8",
+    "enemy_targeting.c": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  }
+}

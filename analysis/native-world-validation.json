@@ -1,0 +1,25 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "entity_predicate_cases": 14000,
+  "world_queries": 4800,
+  "world_moves": 4800,
+  "spatial_snapshots": 848,
+  "native_guard_checks": 400,
+  "integrated_horizontal_frames": 2048,
+  "jump_view_frames": 2048,
+  "complete_player_motion_frames": 2048,
+  "synchronous_removal_queries": 1024,
+  "synchronous_guard_checks": 144,
+  "scope": "whole 03D7C predicate with special-handler recorder; whole 03E5C/043D0 and 04BDC horizontal integration with original grid/BSP/sliding; sector-pool D1B4/D214 hooks and BIOS signed division service only; native sector list order and jump/view integration checked separately",
+  "synchronous_scope": "1,024 whole original queries with controlled unlink-and-zero special handler; validates head/middle/tail retention/removal and multi-cell callback traversal, not pickup effects or original allocator/DMA",
+  "native_pickup_world_queries": 64,
+  "source_sha256": {
+    "world.c": "f51e1a9e37804f0707513de12fbd16446e28bb2d671193c992acdd972aea50c9",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+    "view.c": "6a26f31c7112ee063f63f403af2928d9690951963c3a4a0543fae43eef3ffb67",
+    "player_motion.c": "980d909ff4952fc70e1e55f62c6ad05be684a1733cd813f55f4bb298413deaa5"
+  }
+}

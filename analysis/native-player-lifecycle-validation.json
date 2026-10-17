@@ -1,0 +1,12 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "boundary_death_calls": 1422,
+  "random_death_calls": 6000,
+  "respawn_calls": 1024,
+  "sequence_frames": 2048,
+  "native_guards": 20,
+  "scope": "Whole original 06154 and 05FEC, including nested respawn and actual 05E04 synchronization; projected known native player/body/weapon/game fields and ordered boundary snapshots. Spawn selection, spatial unlink/insert, animation, notices, sound, effects and mode transition controlled. memcpy and BIOS/DMA fill serviced. Unknown player fields are not represented by native state.",
+  "rom_comparisons": 10494,
+  "projected_fields": 85,
+  "source_sha256": "7f10f6e1a2a448df7b99e7ea825498977b3aa4942264499e57a91706f29a0300"
+}

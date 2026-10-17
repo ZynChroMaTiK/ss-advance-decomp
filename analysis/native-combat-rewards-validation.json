@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Complete 080125E0 with every 16-bit type; full entity and GAME memory compared; no hooked dependencies",
+  "total_rom_comparisons": 65910,
+  "native_guards": 1,
+  "source_sha256": "0e2e79ca3b667b76b2e3b793464b303c25eae3aa9c9021a34ace7f8a47a79da1"
+}

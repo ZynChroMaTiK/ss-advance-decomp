@@ -1,0 +1,19 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "comparisons": 16384,
+  "reentry": 28510,
+  "guards": 11,
+  "callback_failures": 9,
+  "branches": {
+    "move": 11272,
+    "blocker": 8466,
+    "unlink": 481,
+    "insert": 481,
+    "bounce": 481,
+    "vertical": 5641,
+    "damage": 1083,
+    "freeze": 105
+  },
+  "scope": "whole 10A20; original trig and fixed multiply; move/vertical/blocker/damage/allocation/animation/insertion/bounce controlled; no runtime emulation",
+  "source_sha256": "eae7428d2c843c0041d2816e74faa7648bf29ca9c24847a833428dab8bab6c0d"
+}

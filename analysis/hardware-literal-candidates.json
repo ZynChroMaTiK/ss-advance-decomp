@@ -1,0 +1,1132 @@
+[
+  {
+    "rom_address": "0x08002D48",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08002DBC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08002DD4",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x08002E64",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08002EA8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08002EE8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08002F14",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08003054",
+    "value": "0x04000130",
+    "candidate": "KEYINPUT"
+  },
+  {
+    "rom_address": "0x080052F0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08005EF8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08006148",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08006EA0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08006EF0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08006F30",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800706C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080070B0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080070F4",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007138",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800717C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080071C0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007204",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007248",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800728C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800730C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007360",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080073AC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080073EC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800749C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080074E4",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007CFC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007D54",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007DB0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007E18",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08007E58",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080089C8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08008A24",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08008A80",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08008ADC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08008B20",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800B078",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800B5E8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800B640",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800B69C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800C91C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800CA78",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800CC24",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800E390",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800E6F4",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0800FB50",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08014E78",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x08014ED8",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x08014F6C",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x08014FC0",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x080158CC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801609C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080161F0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08016228",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801631C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080164E0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08016624",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08018760",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08018B20",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080190A8",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08019118",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080191A0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080193AC",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08019A28",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08019BC4",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08019D4C",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x08019EE0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801A024",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801A1D0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801A264",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801A998",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801AA14",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801AD48",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801ADC4",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x0801BFD0",
+    "value": "0x040000D4",
+    "candidate": "DMA3"
+  },
+  {
+    "rom_address": "0x080C4300",
+    "value": "0x040000A0",
+    "candidate": "FIFO_A"
+  },
+  {
+    "rom_address": "0x080C4304",
+    "value": "0x040000A4",
+    "candidate": "FIFO_B"
+  },
+  {
+    "rom_address": "0x0837B1E0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837B3CC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837B3D4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837BC9C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837BDC8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837C63C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837C828",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837C830",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837D224",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837DAA0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837DC84",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837DC8C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837E680",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837EEFC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837F0E0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837F0E8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837FAC4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0837FAD4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08380310",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083804FC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08380504",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08380AF4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08380ED8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08380EE8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083818E4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08381908",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08381910",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083822F4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083870EC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08387160",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08387168",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08387170",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08387FE8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083887B0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08389834",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838A358",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838BD44",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838BD4C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838DAC4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838DACC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838FB60",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0838FB68",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08390340",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839035C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839B178",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839B180",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839B260",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839B2D0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839B398",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839C0FC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839C644",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839CE84",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839EAA0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839EAA8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839EB88",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839EBF8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839ECC0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839FA24",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839FE9C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839FEA4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839FF6C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x0839FF74",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A07AC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A16D0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A2458",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A337C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A37FC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A38C4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A38CC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A4104",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A60B4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A7DF0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083A9CB8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083AA960",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083AA968",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083AA970",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083ACA10",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083ADB28",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083ADCF0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083ADCF8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083AFCC8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B01A8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B01B8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B01C0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B01C8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B0DDC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B115C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B1348",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B28A0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B28B0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B28B8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B28C0",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B34D4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B4A30",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B6120",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B6128",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B6498",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B6684",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B7CD4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B7CE8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B7E9C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083B93CC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BA840",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BA848",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BAB34",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BAB48",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BACFC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BC218",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BC404",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BE9B4",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083BEFF8",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083E6D44",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x083F8D10",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0840365C",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08405440",
+    "value": "0x04000200",
+    "candidate": "IE"
+  },
+  {
+    "rom_address": "0x0841D4BC",
+    "value": "0x06000000",
+    "candidate": "VRAM"
+  },
+  {
+    "rom_address": "0x08459118",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459250",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084594EC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459514",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845964C",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459674",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084596EC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845984C",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084598DC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084598F0",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459904",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459A2C",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459CC8",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x08459CD0",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A118",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A4EC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A514",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A53C",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A674",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A6EC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A84C",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A8DC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A8F0",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845A904",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845AC10",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845ACC8",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845ACD0",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x0845ADEC",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084CECD4",
+    "value": "0x04000000",
+    "candidate": "DISPCNT"
+  },
+  {
+    "rom_address": "0x084E1DB4",
+    "value": "0x07000000",
+    "candidate": "OAM"
+  }
+]

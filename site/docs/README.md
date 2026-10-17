@@ -1,9 +1,47 @@
 # Serious Sam Advance - playable native prototype
 
+[Project website, features and roadmap](https://zynchromatik.github.io/ss-advance-decomp/)
+· [Combined 2D atlas / 3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/2d)
+
+## Build from a fresh checkout
+
+Install Visual Studio 2022 Build Tools with the C++ desktop workload and CMake
+tools. Clone this repository, open PowerShell in its folder, and run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
+```
+
+Compilation does not require a ROM. To play, place your own game ROM at
+`orig/SSA.gba`, then run `play-native.cmd`. The launcher uses
+`build/native-windows/Release/ssa_native_game.exe`; build it first.
+The first ten campaign levels are supported; the final two remain unavailable.
+
+The repository includes native source, Windows frontend, tests, scripts,
+research, recovered C and the complete static website. ROMs, saves, generated
+assembly, toolchains, dependency checkouts and local server databases stay local.
+See [preserved recovery sources](recovered/snapshot/README.md) for the exact C
+export and sanitized candidate/attempt/note history.
+GitHub Pages publishes only `site/`; source additions do not change its URL.
+
+Optional original-ROM timing tests use a pinned test-only mGBA checkout:
+
+```sh
+git clone https://github.com/mgba-emu/mgba tools/mgba-timing
+git -C tools/mgba-timing checkout --detach 26b7884bc25a5933960f3cdcd98bac1ae14d42e2
+```
+
+The native game does not link against mGBA. Decompilation tooling is provisioned
+separately by `scripts/bootstrap.sh` under WSL/Ubuntu; see the setup below.
+
+## Current prototype
+
 **The first ten levels are playable natively on Windows.** Run `play-native.cmd` to use your
 supplied `orig/SSA.gba`. This build includes actual enemy AI, weapon firing,
 damage/death, pickups, scripted waves, doors, the exit, and restart, with the
 original world, actors, HUD and weapon graphics.
+Time Strike targets now keep a valid rendered frame if their controller changes
+animation while frozen, preventing a reference-renderer failure during combat.
 Health, armor and boss bars now use the original scanline palette colors,
 including the original health-above100 variation.
 Player collision now detects large enemies before Sam enters their bodies.

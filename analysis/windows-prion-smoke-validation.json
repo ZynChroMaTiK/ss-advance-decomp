@@ -1,0 +1,51 @@
+{
+    "result":  "pass",
+    "scope":  "Targeted native Windows launch/render smoke after the Prion fix, not physical firing or full campaign verification.",
+    "windows_smoke":  [
+                          {
+                              "renderer":  "pc",
+                              "startup":  {
+                                              "result":  "pass",
+                                              "frames":  180,
+                                              "health":  100,
+                                              "entities":  17,
+                                              "score":  0,
+                                              "hidden_window":  true,
+                                              "render_width":  1264,
+                                              "render_height":  861,
+                                              "world_rays":  0,
+                                              "initial_width":  1264,
+                                              "initial_height":  861,
+                                              "pitch":  0,
+                                              "buffered_presents":  1,
+                                              "presentation_samples":  3
+                                          }
+                          },
+                          {
+                              "renderer":  "reference",
+                              "startup":  {
+                                              "result":  "pass",
+                                              "frames":  180,
+                                              "health":  100,
+                                              "entities":  17,
+                                              "score":  0,
+                                              "hidden_window":  true,
+                                              "render_width":  240,
+                                              "render_height":  160,
+                                              "world_rays":  0,
+                                              "initial_width":  240,
+                                              "initial_height":  160,
+                                              "pitch":  0,
+                                              "buffered_presents":  1,
+                                              "presentation_samples":  0
+                                          }
+                          }
+                      ],
+    "executable_sha256":  "27c92b667117555f232ea59dd366478b1afc57effeff25b5f3e6b83965a7f336",
+    "source_sha256":  {
+                          "src/native_game.c":  "300e33660442d58a12c1d708b8191974af1fa1fd3bc7c8ef898d1aeba04615c0",
+                          "src/weapon_runtime.c":  "541efd64f5dc0fd4042de1d0626e4227a7f683ebe92d0e7dc3ca685e5c012afe",
+                          "src/projectile_runtime.c":  "062cf9e86be0e2aaf132695ce19ee39fb55d8349d1c2a806c130df3f09c0fdcf",
+                          "include/ssa/projectile_runtime.h":  "3a01162149e0e431ee82e0f3b90c1a3c8c4a4f16644fb63c34be6d37939e6152"
+                      }
+}

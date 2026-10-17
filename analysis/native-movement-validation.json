@@ -1,0 +1,9 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "sincos_cases": 65536,
+  "direction_cases": 4177,
+  "movement_cases": 36864,
+  "scope": "single-player controls and vectors through 0x08006A3E, before collision/entity sync; BIOS division stub only",
+  "source_sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+  "total_cases": 106577
+}

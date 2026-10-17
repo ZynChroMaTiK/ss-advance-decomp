@@ -1,0 +1,6 @@
+[
+  {
+    "source": "extern int sub_0800B1B0(const int *, const int *, const int *);\nint sub_0800B220(const int *camera, const short *node)\n{\n    int direction[2], origin[2];\n    direction[0] = node[2];\n    direction[1] = node[3];\n    origin[0] = node[0];\n    origin[1] = node[1];\n    return sub_0800B1B0(camera, origin, direction);\n}\n",
+    "result": "\u2705 MATCH! sub_0800B220 is byte-identical to the target (21 instructions). Credited to codex-session; your claim is released. Call claim_function for the next one."
+  }
+]

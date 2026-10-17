@@ -22,6 +22,11 @@ the latest Prion2x/Time Strike changes. Map8 finishes11,554frames/87HP with106sp
 map9 finishes9,249frames/33HP with50spawns. Both use actual conversion, falling
 Time Strike objects, jump/H controls, both renderers and the native audio mixer.
 The frontend cap is now ten; the final two campaign maps remain unavailable.
+The level11 development probes now include pit-aware movement and projectile
+dodging, but have not completed the level. They exposed and led to a repair of
+Time Strike's stale animation frame in native render snapshots; see
+[special weapons](special-weapons.md#frozen-animation-render-repair). No enemy
+health, collision, script, inventory or hazard rules were bypassed in those probes.
 Arrows/WASD navigate, Enter/Space
 confirms, mouse hover/click selects entries and Esc goes back. Title music
 continues across Press Start. Difficulty affects native combat; selected language

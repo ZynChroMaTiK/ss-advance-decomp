@@ -1,0 +1,27 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "turn": 65536,
+  "face": 8273,
+  "distance": 8273,
+  "walk": 4096,
+  "hazards": 2048,
+  "guards": 31,
+  "reentry": 4097,
+  "callback_failures": 1,
+  "native_world_frames": 4096,
+  "native_world_moved": 3435,
+  "native_world_blocked": 661,
+  "scope": "whole 04614/0456C/045C4/04498/0354C; real trig/fixed multiply/vertical and hazard BSP; 043D0 collision controlled in walk oracle; BIOS division service replaced; native world walk separately on all16maps; no enemy AI claim",
+  "rom_comparisons": 88226,
+  "source_sha256": {
+    "enemy_motion.c": "0427524033982567e87b0cbeca706af7312e56258eee5841486e3300d8e5ebef",
+    "player_hazards.c": "b7184a94249272776a7b065f1410d74845b24711c376d17ed87375e026e6ad13",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "world.c": "a5ca3379c9ddab13acc7f0247f0f11fdcb03a333283eda026d23faba34ea004a",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  }
+}

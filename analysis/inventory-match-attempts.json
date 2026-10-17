@@ -1,0 +1,20 @@
+[
+  {
+    "function": "sub_080054D8",
+    "label": "natural struct",
+    "source": "typedef struct PickupStats {\n    u8 padding[0xc4];\n    s16 value;\n} PickupStats;\n\nvoid sub_080054D8(PickupStats *player, s16 amount) {\n    if (amount == 100) {\n        player->value += 100;\n    } else if (player->value < 100) {\n        player->value += amount;\n        if (player->value > 100) player->value = 100;\n    }\n}\n",
+    "result": "\u2705 MATCH! sub_080054D8 is byte-identical to the target (28 instructions). Credited to codex-inventory; your claim is released. Call claim_function for the next one."
+  },
+  {
+    "function": "sub_08005510",
+    "label": "natural struct",
+    "source": "typedef struct PickupStats {\n    u8 padding[0xc6];\n    s16 value;\n} PickupStats;\n\nvoid sub_08005510(PickupStats *player, s16 amount) {\n    if (amount == 100) {\n        player->value += 100;\n    } else if (player->value < 100) {\n        player->value += amount;\n        if (player->value > 100) player->value = 100;\n    }\n}\n",
+    "result": "\u2705 MATCH! sub_08005510 is byte-identical to the target (28 instructions). Credited to codex-inventory; your claim is released. Call claim_function for the next one."
+  },
+  {
+    "function": "sub_0800549C",
+    "label": "natural struct",
+    "source": "typedef struct PickupBody {\n    u8 padding[0x32];\n    s16 health;\n} PickupBody;\ntypedef struct PickupPlayer {\n    u8 padding[0xac];\n    PickupBody *body;\n} PickupPlayer;\n\nvoid sub_0800549C(PickupPlayer *player, s16 amount) {\n    if (amount == 100) {\n        player->body->health += 100;\n    } else if (player->body->health < 100) {\n        player->body->health += amount;\n        if (player->body->health > 100) player->body->health = 100;\n    }\n}\n",
+    "result": "\u2705 MATCH! sub_0800549C is byte-identical to the target (30 instructions). Credited to codex-inventory; your claim is released. Call claim_function for the next one."
+  }
+]

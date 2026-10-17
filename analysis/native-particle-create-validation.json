@@ -1,0 +1,14 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "particle_creation": 4096,
+  "particle_controller": 256,
+  "impact_selection": 8192,
+  "guards": 6,
+  "callback_failures": 4,
+  "reentry_guards": 15295,
+  "source_sha256": {
+    "include/ssa/particle_create.h": "5d4d3201ccdef2835d51938d5c5f67453d64c24aa0b3dcce55c35bafcc49a0ea",
+    "src/particle_create.c": "5d79e5c8791ac33689229234a363cd1efd0165a236e15fc849f1fecb23d6e564",
+    "tests/test_particle_create_rom.py": "8e690db88bf521d36d0003305b699f8b9b58854795c085265b9fb68fce83d22f"
+  }
+}

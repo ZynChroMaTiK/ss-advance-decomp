@@ -1,0 +1,22 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "maps": 16,
+  "rom_comparisons": 16384,
+  "bounced": 5141,
+  "clear": 11243,
+  "guards": 144,
+  "scope": "Full4718 including468C and all wall rays on16maps, actual math/geometry.; BIOS integer division service replaced only; original ray and predicate code executed",
+  "ray_calls": 49152,
+  "predicate_calls": 19377,
+  "maximum_intercepts": 8,
+  "source_sha256": {
+    "projectile_bounce.c": "906c8a511a34b74bb9b8537393d0152b4726810e9ce1df328e008b54dc3430f8",
+    "enemy_ray.c": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159",
+    "ray_intercepts.c": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807",
+    "ray_traversal.c": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+  }
+}

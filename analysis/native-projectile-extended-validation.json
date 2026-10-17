@@ -1,0 +1,17 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "controllers": {
+    "0x64": 4096,
+    "0x68": 4096,
+    "0x6a": 4096,
+    "0xe3": 4096
+  },
+  "created_children": 5445,
+  "reentry_guards": 36520,
+  "scope": "Whole64/68/6A/E3 dispatch with original trig/fixed multiply; motion10A20,creation10830,relocation053D0,particles,explosions and destruction are controlled explicit boundaries. Full116-byte actors and ordered events compared, including immediatechild6A stepping and68spread.",
+  "source_sha256": {
+    "src/projectile_extended.c": "72274a27f3aa0133d067bd033a471cf96e70271e1ad20d9242fef4ecdeb1456c",
+    "include/ssa/projectile_extended.h": "5bc09ea07aaca81eec64904491739424d9970224ed2092e097dbdb472162e567",
+    "tests/test_projectile_extended_rom.py": "b3c9fd723aac1f6518282d59b2e334973b5566bd62783ed44b40b0a8503f88d8"
+  }
+}

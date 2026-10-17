@@ -1,0 +1,13 @@
+080000c0: mov      r0, #0x12
+080000c4: msr      cpsr_fc, r0
+080000c8: ldr      sp, [pc, #0x28]
+080000cc: mov      r0, #0x1f
+080000d0: msr      cpsr_fc, r0
+080000d4: ldr      sp, [pc, #0x18]
+080000d8: ldr      r1, [pc, #0x1c]
+080000dc: add      r0, pc, #0x20
+080000e0: str      r0, [r1]
+080000e4: ldr      r1, [pc, #0x14]
+080000e8: mov      lr, pc
+080000ec: bx       r1
+080000f0: b        #0x80000c0

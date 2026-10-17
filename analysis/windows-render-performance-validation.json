@@ -1,0 +1,60 @@
+{
+    "result":  "pass",
+    "timing_scope":  "Local hidden-window throughput, including simulation/rendering and process startup; real-time simulation remains fixed at60Hz.",
+    "physical_display_tested":  false,
+    "timings":  [
+                    {
+                        "version":  "before",
+                        "vertical_look":  false,
+                        "frames":  180,
+                        "elapsed_ms":  2824.4492,
+                        "simulated_frames_per_second":  63.7292396691008
+                    },
+                    {
+                        "version":  "after",
+                        "vertical_look":  false,
+                        "frames":  180,
+                        "elapsed_ms":  2447.3746,
+                        "simulated_frames_per_second":  73.548201407336663
+                    },
+                    {
+                        "version":  "before",
+                        "vertical_look":  true,
+                        "frames":  180,
+                        "elapsed_ms":  6729.7049000000006,
+                        "simulated_frames_per_second":  26.747086636740939
+                    },
+                    {
+                        "version":  "after",
+                        "vertical_look":  true,
+                        "frames":  180,
+                        "elapsed_ms":  1233.3019000000002,
+                        "simulated_frames_per_second":  145.94966569012828
+                    }
+                ],
+    "presentation":  {
+                         "result":  "pass",
+                         "frames":  600,
+                         "health":  82,
+                         "entities":  22,
+                         "score":  0,
+                         "hidden_window":  true,
+                         "render_width":  1008,
+                         "render_height":  729,
+                         "world_rays":  0,
+                         "initial_width":  1264,
+                         "initial_height":  861,
+                         "pitch":  -5440,
+                         "buffered_presents":  601,
+                         "presentation_samples":  1803
+                     },
+    "source_sha256":  {
+                          "platform/win32/game.c":  "97a2a8b4d741e91299bee2842aff770f2de166d68d9246b565ba4d4f73006a3c",
+                          "src/native_game.c":  "ed0e97f4a2c5951ca4e66961d5957ceba1b867e2ee3782f54666c57b28e169a0",
+                          "src/pc_renderer.c":  "8e65da9b134fc8e1599a5e46c64535874e3d5929deeeef3502fd16d53c9860d3",
+                          "src/pc_renderer_pitch.inc":  "99c5f9e9ebc94776ad3d6b786de9e2d982bf17af4265e80d69fade19a96cb2af",
+                          "src/weapon_runtime.c":  "049ac36efc0623b78a3fab5657fb9b89d507938f85886268472bc2a2afe6ae70"
+                      },
+    "executable_sha256":  "1b402275a7713bdcaf25b2db030125ee573cf892fc4da244261c1d5764a801a2",
+    "before_executable_sha256":  "9ef685d809b300d802f2f137ff8f2e41a3bf61a2759de3e1e05b65c1990696c9"
+}

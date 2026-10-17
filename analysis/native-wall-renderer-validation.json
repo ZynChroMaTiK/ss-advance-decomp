@@ -1,0 +1,28 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_be60_solid": 7207,
+  "whole_be60_portal": 7115,
+  "maps": 16,
+  "pixels_changed": 12104309,
+  "plane_splits": 9154,
+  "native_guards": 128,
+  "solid_segments": 5927,
+  "portal_segments": 5067,
+  "original_raster_calls": 239251,
+  "bios_dma_copies": 145281,
+  "modified_sector_cases": 2048,
+  "top_row_predecessor_reads": 4,
+  "clip_bytes": 243048,
+  "source_sha256": {
+    "wall_renderer.c": "86dbdd789a9114297da3ce64d5e63861a9d50fc9251d67e4632a49b9dd27d593",
+    "world_raster.c": "1470230ab7b63ef153349361c705e575a534a39e14022f536e2a75bfd074cc8c",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "map_texture_bindings.c": "a74d2ac8a020b007548c3ba40d97bf46d01c5a18617fc6beb86b0901b58becb7",
+    "texture_assets.c": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed",
+    "plane_renderer.c": "76b2bd8697de071cd53ffd306ae2aefc09106869dd41054eee3c4598c429b527",
+    "raster_fill.c": "91518ef3c54529d67af76082d1b68645b044314606b754880e7210986b24e98e"
+  },
+  "header_sha256": "558922940f4526c21e4770bccf7ce4850b5b4ad4e3cd5de925aaebcdce852394",
+  "test_sha256": "3bfd6916eb839891ddf28cc2a69e9c9750561ab5a497efdffa482d94e8d2a362",
+  "scope": "Complete BE60 solid and portal walls, real maps/textures and original pixels.\n\nOnly BIOS/DMA copies are modeled. Original fixed math, plane allocation/checks\nand textured raster execute. The self-modifying ARM instruction requires an\nexplicit Unicorn translation-cache synchronization after its real STR.\n"
+}

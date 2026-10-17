@@ -1,0 +1,13 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "init": 110,
+    "allocate": 20277,
+    "release": 16310
+  },
+  "native_guards": 25,
+  "scope": "Whole 05238, 05170, 051C8 and original 052B0 clear; heap allocation and BIOS CpuSet fill controlled. All 100 payload records, complete free/active arrays, slot positions and counts compared after every call. Native caller clears payloads after pool release. Multiplayer CpuSet branch exercised, DMA hardware branch excluded.",
+  "total_rom_comparisons": 36697,
+  "source_sha256": "0c83949cf474ab7477d9ae213f25bbe9efa9137c2d1b298caa0be7b7f7fb9745",
+  "passed": true
+}

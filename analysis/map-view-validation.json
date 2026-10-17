@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "checks": 8084,
+  "map_song_terminal_wait_frames": 1080,
+  "music_modes": 3,
+  "map_families": 2,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "source_sha256": {
+    "src/map_view.c": "59f2895a1ee127c8ca86f4f54c92661bc15334711c62847ac2be6e0c31ff8790",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "src/audio.c": "d55d3d7efb137d7c0cdf2bc89799cd42dd7c92b3bad1b65b6033a33d93dbda4a",
+    "tests/test_map_view.c": "772d790e179facba8114892e30d780287da05b9879f5d4ff2539e786e87b04d8",
+    "include/ssa/map_view.h": "4bf8d5df714f3402589206450e68061d18c894216cbbcff11d9896039a0e3c3c",
+    "include/ssa/audio.h": "f84c9c194425e362cbb883b0fed52e877a3454ca7f8aaa6ab2381b6686e0cf96",
+    "tests/test_map_view.py": "578f5636cef5ad7d508c85edbf4041d7926831241f8c11147c22428f81b85aae"
+  }
+}

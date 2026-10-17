@@ -1,0 +1,22 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "phase_mask_boundaries": 1540,
+    "retarget_boundaries": 320,
+    "coordinate_boundaries": 120,
+    "random": 4096,
+    "reset": 40,
+    "guard_setup": 1,
+    "dual_path": 4608
+  },
+  "callback_reentry_guards": 53548,
+  "native_guards": 31,
+  "callback_failure_cases": 8,
+  "scope": "Whole 1288C/12850 and 1271C/083F0 vs native with controlled boundaries.\nOriginal 093E8/094E8 and IWRAM fixed multiply run. BIOS division is substituted.\nThe pathfinder, visibility, nearest selection, motion and finish are explicit\nboundaries in navigation tests; dual-path tests run the native combiner with\ncontrolled A240(flags=1,A041) rays. No complete AI or ray/world claim.\n",
+  "total_rom_comparisons": 10725,
+  "source_sha256": {
+    "src/enemy_navigation.c": "7e2d20a17c29f61bd5b2f16e1d8f5f99fd71774f5298039ca7a80a9d1c7f111b",
+    "include/ssa/enemy_navigation.h": "2b5e790f86754c7c15a2df37c3f86110d1cbbe9a95a3e202f5337d8d7355f8df",
+    "tests/test_enemy_navigation_rom.py": "42cf842a31a0d986fde3090dc2e0fef3ebd34ea853e38e74ea335ddc41c84ae8"
+  }
+}

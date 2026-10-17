@@ -1,0 +1,5 @@
+{
+  "result": "pass",
+  "checks": 531,
+  "scope": "Current source hashes match GCC sanitizer and Windows build/completion reports; executable hashes match tested binaries; normal-input completion identical; ROM unchanged; test-driver commands resolve."
+}

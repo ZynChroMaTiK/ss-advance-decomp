@@ -59,3 +59,66 @@ Deployable archive: `build/exports/ssa-project-site.zip` (11,487,588 bytes).
 SHA256: `d5ff6ddb1ea3aa3ebf89fdb79fb4e5a6cacf0697b146894613cb68c0838b40c6`.
 Validation evidence: `build/exports/ssa-project-site-validation.json` and
 `build/exports/ssa-site-http-validation.json`.
+
+## Legend removal update (2026-10-17)
+
+Removed the map key, doors/lifts list and secret-coverage sidebar from all 16
+generated sheets. HTML panels retain the information. Sheet dimensions are now
+1760x1900; map geometry, sprites, labels, titles and scale retain their positions.
+Updated the full-sheet viewBox, overview aspect ratio, hero crop, generators,
+SVG/PNG exports, embedded atlas, integrity manifests and both local archives.
+All 16 sheets pass package checks and the overview was visually inspected.
+The static-site validator and 315-resource HTTP check pass.
+
+Current local atlas archive SHA256:
+`7ac13e21e6ff4d14d48d069c2aba911d9b47285b3092f3896c3f180de37700bd` (3,709,761 bytes).
+Current local project-site archive SHA256:
+`44cf0cbc34ddbba5cfd9e6c8baafb9306770a43c6bcc43fb6f0b5e8ee1dcb867` (10,416,252 bytes).
+These supersede the initial archive figures above.
+
+Publication initially failed because of upload errors, not missing authorization.
+Local publication commit is `29976201d1e1f9ce092f26b2b433233331f4c30e` in
+`build/site-publish`. Two Git pushes failed with HTTP408 (default transport and
+buffered HTTP1.1). An API fallback uploaded some content-addressed blobs, but
+the large HTML request returned HTTP401, the connector returned HTTP500, and
+the sequential uploader stopped on level11 SVG with HTTP400. No tree, commit
+or branch update was made through that fallback. The live main branch remained
+`176705678e3d027afbc31ba258309a0f3a343a1c`; the live site therefore remains the
+previous version during those failed attempts.
+Temporary API request files are under `build/site-api-upload` and contain only
+website content, not credentials.
+
+After the user restored their connection, a normal push succeeded. Commit
+`29976201d1e1f9ce092f26b2b433233331f4c30e` is now published on main.
+Pages run `39030103428` completed successfully. The live level01 SVG matches
+the local SHA256, contains no legend headings, and the live validation report
+confirms `sheet_legends_removed: 16`. Publication is complete.
+
+## Full-source publication and PC-focused website (2026-10-17)
+
+The repository now includes native source, Windows frontend, tests, scripts,
+patches, research and recovery sources alongside the existing Pages website.
+ROMs, generated assembly, saves, caches, toolchains, upstream checkouts and local
+server databases remain excluded. `recovered/snapshot` preserves 74 exact C
+sources, 348 best candidates, 527 attempts and 102 notes using explicit allowed
+fields; it does not publish the live database or authentication records.
+
+The website now leads with the PC port, implemented features, remaining parity
+work and fresh-checkout build instructions. A single Levels tab shares selection
+between 2D Atlas and 3D World. Old atlas/explorer links redirect to the corresponding
+view; the iframe bridge preserves origin/source/range validation and async viewer
+initialization cannot reactivate a hidden page.
+
+Every sector now includes floor and ceiling meshes, including sky boundary
+planes. All mesh materials are double-sided. All placement records are retained,
+including co-located and scripted records. Floors, ceilings, walls, items,
+enemies, scripted placements and secrets default visible; layer controls remain.
+The sky boundary is a ceiling plane in the inspection tool, not the game's sky
+renderer. Door preview remains static and gameplay is not simulated.
+
+Node tests pass on all 16 maps: 1,916 geometry buffers, 42,168 triangles, 48 camera
+fits, actual material ray intersections from both sides, default layer visibility,
+unified routing, legacy links, selection synchronization and async navigation.
+Pages continues to upload only `site/`. Separate workflows compile the Windows
+source without a ROM and validate site geometry, routing and HTTP resources.
+Browser/WebGL visual QA remains unavailable because no browser is connected.

@@ -1,0 +1,14 @@
+{
+  "title": "SERIOUS SAM",
+  "game_code": "AENP",
+  "region": "Europe",
+  "version": 0,
+  "size": 8388608,
+  "sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "entrypoint": 134217728,
+  "platform": "gba",
+  "byte_order": "gba",
+  "compiler_guess": "unverified; decomp.wtf defaults all GBA ROMs to agbcc",
+  "gp": 0,
+  "sha256": "f3eafb3cb3a7e19d4a0daad87a6d60e9250b2a4e1075779aca8af1b1e3981258"
+}

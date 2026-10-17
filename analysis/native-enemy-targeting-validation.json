@@ -1,0 +1,112 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "nearest_enemy": 69812,
+  "nearest_pickup": 69812,
+  "reject_real_map_pairs": 73600,
+  "reject_synthetic": 961,
+  "guards": 21,
+  "maps": [
+    {
+      "level": 0,
+      "sectors": 63,
+      "pairs": 3969,
+      "rejected": 2846
+    },
+    {
+      "level": 1,
+      "sectors": 112,
+      "pairs": 12544,
+      "rejected": 10674
+    },
+    {
+      "level": 2,
+      "sectors": 85,
+      "pairs": 7225,
+      "rejected": 6142
+    },
+    {
+      "level": 3,
+      "sectors": 93,
+      "pairs": 8649,
+      "rejected": 7236
+    },
+    {
+      "level": 4,
+      "sectors": 109,
+      "pairs": 11881,
+      "rejected": 9872
+    },
+    {
+      "level": 5,
+      "sectors": 51,
+      "pairs": 2601,
+      "rejected": 1872
+    },
+    {
+      "level": 6,
+      "sectors": 46,
+      "pairs": 2116,
+      "rejected": 1506
+    },
+    {
+      "level": 7,
+      "sectors": 77,
+      "pairs": 5929,
+      "rejected": 4856
+    },
+    {
+      "level": 8,
+      "sectors": 33,
+      "pairs": 1089,
+      "rejected": 800
+    },
+    {
+      "level": 9,
+      "sectors": 30,
+      "pairs": 900,
+      "rejected": 432
+    },
+    {
+      "level": 10,
+      "sectors": 97,
+      "pairs": 9409,
+      "rejected": 7748
+    },
+    {
+      "level": 11,
+      "sectors": 77,
+      "pairs": 5929,
+      "rejected": 4776
+    },
+    {
+      "level": 12,
+      "sectors": 22,
+      "pairs": 484,
+      "rejected": 304
+    },
+    {
+      "level": 13,
+      "sectors": 9,
+      "pairs": 81,
+      "rejected": 2
+    },
+    {
+      "level": 14,
+      "sectors": 25,
+      "pairs": 625,
+      "rejected": 0
+    },
+    {
+      "level": 15,
+      "sectors": 13,
+      "pairs": 169,
+      "rejected": 66
+    }
+  ],
+  "scope": "Whole036C4/03758/B18C unhooked ROM instructions; stable ordered pool snapshots; allsectorpairs on16maps; UBSan native helpers; visibility bit does not prove lineofsight.",
+  "rom_comparisons": 214185,
+  "source_sha256": {
+    "enemy_targeting.c": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  }
+}

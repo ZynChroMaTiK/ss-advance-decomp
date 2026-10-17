@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/mgba-emu/mgba",
+  "tag": "0.10.5",
+  "revision": "26b7884bc25a5933960f3cdcd98bac1ae14d42e2",
+  "scope": "Test-only original-ROM timing oracle. Never linked into native game."
+}

@@ -1,0 +1,16 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "line_cases": 9600,
+  "cell_cases": 6400,
+  "duplicate_cases": 6880,
+  "guard_cases": 256,
+  "hits": 5490,
+  "maps": 16,
+  "rom_comparisons": 22400,
+  "scope": "Original 09A88 and 0975C execute with real map geometry and original fixed math; wall flags and mutable heights are consumed by the later predicate, outside collection. Dedicated visited storage replaces global validcount. Native malformed/reentry/capacity guards are additional policy.",
+  "source_sha256": {
+    "src/ray_intercepts.c": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807",
+    "include/ssa/ray_intercepts.h": "63ec90ac3ecf0cd8bddf9a321b4f0ae88ee275519146fe83eb72dbd03be6f8e3",
+    "tests/test_ray_intercepts_rom.py": "ecbd7a13b483a8a1def8754bb873905cb882500265e32ae2a63e9e69062c991f"
+  }
+}

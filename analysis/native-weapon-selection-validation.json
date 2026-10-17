@@ -1,0 +1,16 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "take": 4700,
+    "update": 16476,
+    "next": 4000,
+    "previous": 4000
+  },
+  "native_guards": 34,
+  "pickup_integration_cases": 18,
+  "scope": "whole11588,11604,12038,12050 with actual1FFC/114D4/114B8 dependencies; no hooks; full player bytes; cycling ownership mask0x3FF and at least one eligible weapon",
+  "total_rom_comparisons": 29176,
+  "source_sha256": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085",
+  "compiler": "GCC C11 -O2 strict warnings, UndefinedBehaviorSanitizer",
+  "result": "pass"
+}

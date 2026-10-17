@@ -1,0 +1,16 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "creation_cases": 34816,
+  "aimed_cases": 34816,
+  "allocation_exhaustion": 256,
+  "guards": 12,
+  "callback_failures": 2,
+  "callback_reentry_guards": 278028,
+  "scope": "whole10830/109F0 actual ROM sincos and fixed multiply; allocation and insertion controlled with full116-byte snapshots; every16bit type and heading, player/nonplayer velocity, ordering and pool exhaustion",
+  "total_rom_comparisons": 69632,
+  "source_sha256": {
+    "src/projectile_create.c": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa",
+    "include/ssa/projectile_create.h": "9d6dad87cffe56b9d12905b59782d521ff9fc64b4cfc71c67b4c6dde6fd01e2d",
+    "include/ssa/projectile.h": "5beb54f6433029e69fff518ee318dfa6e6fd767064596b6c06908986dcaee897"
+  }
+}

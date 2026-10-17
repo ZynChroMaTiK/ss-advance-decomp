@@ -1,0 +1,17 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "routine": "080002F4 / 03000270",
+  "whole_arm_comparisons": 67678,
+  "overlap_cases": 1050,
+  "one_pixel_cases": 2681,
+  "final_pixel_repeated": 39288,
+  "final_pixel_kept": 28390,
+  "guards": 44,
+  "real_texture_cases": 7992,
+  "real_texture_records": 666,
+  "source_sha256": "1470230ab7b63ef153349361c705e575a534a39e14022f536e2a75bfd074cc8c",
+  "header_sha256": "ff4406f5395b808c59fedc965dd48d41c65cfd69b5a0384cfbb1d84a89d17757",
+  "texture_assets_source_sha256": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed",
+  "test_sha256": "b631e8d66602c604759bdd4d97ee300a5bb81947c3aaafbb9fa75ef2d87b736b",
+  "validation": "Complete original relocated ARM, actual self-modifying LDRB with Unicorn cache synchronization after its STR, no hooks; native GCC C11 with UBSan; native texture_assets loader supplies all 666 actual mip images"
+}

@@ -1,0 +1,14 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole1097C": 8194,
+  "retained_slot_cases": 2,
+  "pool_exhaustion_guard": 1,
+  "guards": 0,
+  "callback_reentry_guards": 32778,
+  "source_sha256": {
+    "src/projectile_target.c": "4bd626a11d6da9477a738fb482916976cec2bb93e151916fbe42565210b479c4",
+    "src/projectile_create.c": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa",
+    "include/ssa/projectile_create.h": "4b7b6e95661bc7f74f185a040144dcf7ef358638e556e19dd66c6bd81f0ac652",
+    "tests/test_projectile_target_rom.py": "73049b3fd06c87b7a830432a11a08051871bab4264a3dbeac37b6436dec1164a"
+  }
+}

@@ -1,5 +1,31 @@
 # Native special weapons and palette effects
 
+## Frozen animation render repair
+
+A normal-input level11(index10) development probe exposed an Arachnoid changing from
+walking to attack animation72 while Time Strike flag800 held00908 playback.
+The canonical displayed frame remained4, but that resource has only two frames
+per mip. Reference projection then selected an image outside its six-image table;
+the PC renderer could instead select a frame from another mip.
+
+`ssa_native_game_prepare_view` now repairs only the render snapshot when flag800
+is set, the animation index is freshly reset to zero, the displayed frame is
+outside that resource's frame stride, and the new sequence's first frame is valid.
+The canonical actor, animation index, elapsed time, completion marker, health,
+Time Strike timing and damage remain unchanged. Valid frozen frames and FFFE/FFFF
+display markers retain their original behavior. Default recovery animation and
+projection functions are unchanged; this is a native presentation repair.
+
+The special-weapon suite now passes32318ASan/UBSan/leak assertions and matches
+MSVC. Twelve directed cases cover both views: stale and valid frozen frames,
+unfrozen metadata, nonzero animation indices and both display markers. Actual
+reference projections confirm the repaired sprite is submitted with a valid image;
+PC flat/pitched rendering also succeeds, and full actor snapshots remain identical.
+The natural failing probe at frame2880 subsequently renders beyond that frame.
+This adds no campaign admission or byte-matching claim.
+
+## Weapon integration
+
 Weapon 8 and weapon 9 now connect the recovered weapon controller to native
 combat, entity allocation, actor animation, world insertion and presentation.
 They previously reached unsupported callbacks in the playable frontend.

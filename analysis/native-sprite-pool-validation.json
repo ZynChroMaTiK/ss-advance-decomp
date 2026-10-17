@@ -1,0 +1,19 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "pool_calls": 18576,
+  "hud_construction": 480,
+  "hud_handlers": 40960,
+  "transient_handlers": 1024,
+  "objects_compared": 1600704,
+  "native_guards": 679,
+  "scope": "Complete84-slot pool and101F4 HUD construction plus scalar HUD handlers.\n\nOnly BIOS CpuSet/DMA hardware memory copies are modeled. Native tests use actual\npool allocation, original object initialization/FC04, and strict sanitizer builds.\n",
+  "numeric_handlers": 16384,
+  "asan_ubsan_native_cycles": 256,
+  "source_sha256": {
+    "src/sprite_pool.c": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a",
+    "include/ssa/sprite_pool.h": "1e528f9e0e4a966954f521c03c9c3ebfc14296fe35ce1772a62c44f4cd0a6c99",
+    "src/hud_sprites.c": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93",
+    "include/ssa/hud_sprites.h": "0533f5067be3179af63122b89ec2cf2d3de656f4855d7ecf890c0de147d5e05d",
+    "tests/test_sprite_pool_rom.py": "fa1b5152d4847b4e1244938cf45c609bbb9b1adc9038f9bf455c4cb4dacdbac3"
+  }
+}

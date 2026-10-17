@@ -1,0 +1,18 @@
+name: Build native Windows project
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
+  pull_request:
+    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compile native libraries and Windows frontend (no ROM required)
+        shell: powershell
+        run: ./scripts/build-windows.ps1

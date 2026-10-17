@@ -1,0 +1,48 @@
+--- a/src/decompnet/rom/export_gba_build.py
++++ b/src/decompnet/rom/export_gba_build.py
+@@ -165,6 +165,31 @@
+         symtab = ELFFile(f).get_section_by_name(".symtab")
+         return {s.name for s in symtab.iter_symbols() if s["st_info"]["bind"] == "STB_GLOBAL"
+                 and s["st_shndx"] != "SHN_UNDEF"} if symtab else set()
++
++
++def _externals(obj: str) -> tuple[set[str], set[str]]:
++    """Unresolved references and Thumb branch targets from compiled C.
++
++    Such references can be absent from the catalogue and luvdis assembly.
++    Branch mode comes from relocation types, not the symbol's name.
++    """
++    from elftools.elf.elffile import ELFFile
++
++    with open(ROOT / obj, "rb") as f:
++        elf = ELFFile(f)
++        symtab = elf.get_section_by_name(".symtab")
++        wanted = {s.name for s in symtab.iter_symbols()
++                  if s.name and s["st_shndx"] == "SHN_UNDEF"} if symtab else set()
++        thumb = set()
++        for section in elf.iter_sections():
++            if section["sh_type"] not in ("SHT_REL", "SHT_RELA"):
++                continue
++            symbols = elf.get_section(section["sh_link"])
++            for relocation in section.iter_relocations():
++                # R_ARM_THM_CALL (old name THM_PC22), R_ARM_THM_JUMP24.
++                if relocation["r_info_type"] in (10, 30):
++                    thumb.add(symbols.get_symbol(relocation["r_info_sym"]).name)
++        return wanted, thumb
+ 
+ 
+ def layout(pieces: list[dict], c_objs: dict[str, str]) -> list[tuple[int, str, str]]:
+@@ -213,6 +238,13 @@
+     defined = set().union(*(_globals(obj) for obj in linked))
+     wanted = {fn["name"]: fn["addr"] for fn in B["functions"]} | B["symbols"]
+     thumb_calls = set()
++    for obj in c_objs.values():
++        external, calls = _externals(obj)
++        thumb_calls.update(calls)
++        for name in external:
++            match = re.fullmatch(r"(?:sub_|func_|D_|_)([0-9A-Fa-f]{8})", name)
++            if match:
++                wanted.setdefault(name, int(match.group(1), 16))
+     # luvdis's labels (_08001234) jumped to from another piece: their names are their addresses
+     for p in json.loads((ROOT / "asm" / "pieces.json").read_text(encoding="utf-8")):
+         text = (ROOT / p["src"]).read_text(encoding="utf-8")

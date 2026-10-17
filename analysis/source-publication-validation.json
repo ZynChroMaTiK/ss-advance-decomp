@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "tracked_files": 1603,
+  "native_clean_checkout": {
+    "result": "pass",
+    "library_count": 107,
+    "campaign_levels": 10,
+    "rom_present": false
+  },
+  "hash_preservation": "atlas and recovery snapshot verified after Git checkout",
+  "publication_exclusions": "ROM, saves, binaries, databases, toolchains and build output absent",
+  "website": "16 levels; 1916 buffers; 42168 triangles; 48 camera fits; double-sided surfaces and unified routes pass",
+  "browser_webgl_visual_qa": "unavailable: no browser connected"
+}

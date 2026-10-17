@@ -1,0 +1,15 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": 13186,
+  "callback_reentry_guards": 6586,
+  "native_guards": 10,
+  "callback_failure_cases": 3,
+  "events": [
+    232,
+    1052,
+    2009
+  ],
+  "scope": "Complete original037F4; original unsigned division executes; only5850 network,8D5C sound,125E0 reward controlled; full target/game/player/settings bytes and ordered effect snapshots",
+  "source_sha256": "45144b7eab60440a2e46045113e835cc9aaa495c5558e4d024982e4031ca72c8",
+  "status": "passed"
+}

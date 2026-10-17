@@ -1,0 +1,23 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole 65/66/67/69/6B controllers, verified 04E04 dispatch. 10A20 motion controlled with body/speed mutations; animation setter, explosion, particle and release effects controlled. All projected fields and ordered callbacks compared. Runtime world/impact integration is separate.",
+  "rom_comparisons": {
+    "0x65": 5120,
+    "0x66": 5120,
+    "0x67": 5120,
+    "0x69": 5120,
+    "0x6b": 5120
+  },
+  "callback_reentry_guards": 28969,
+  "callback_failures": 23,
+  "native_guards": 12,
+  "dispatch_types": [
+    "0x65",
+    "0x66",
+    "0x67",
+    "0x69",
+    "0x6b"
+  ],
+  "total_rom_comparisons": 25600,
+  "source_sha256": "81ccd22accc72e23f8b8f228d4c6a87ace07d6c2e86585034b988f518653376d"
+}

@@ -1,0 +1,121 @@
+{
+    "result":  "pass",
+    "oracle":  "mGBA0.10.5, built-in BIOS, original first-level scene",
+    "oracle_revision":  "26b7884bc25a5933960f3cdcd98bac1ae14d42e2",
+    "scope":  "RAM fixture converts an already linked pickup into E3 at its existing XY/floor,520units above the floor, using weapon9 artwork. No ROM instructions are patched. Original controller, frame timing and rendering execute. This is a measured scene, not campaign-wide hardware timing.",
+    "gba_cpu_hz":  16777216,
+    "gba_frame_cycles":  280896,
+    "steady_intervals":  9,
+    "steady_refreshes":  60,
+    "six_refresh_intervals":  3,
+    "seven_refresh_intervals":  6,
+    "native_average_intervals":  3,
+    "native_average_refreshes":  20,
+    "trace":  [
+                  {
+                      "vblank":  0,
+                      "frame":  26,
+                      "ticks":  7,
+                      "z":  34078720,
+                      "vz":  0,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  2,
+                      "frame":  27,
+                      "ticks":  6,
+                      "z":  33292288,
+                      "vz":  -131072,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  9,
+                      "frame":  28,
+                      "ticks":  7,
+                      "z":  31457280,
+                      "vz":  -262144,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  16,
+                      "frame":  29,
+                      "ticks":  7,
+                      "z":  28704768,
+                      "vz":  -393216,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  23,
+                      "frame":  30,
+                      "ticks":  7,
+                      "z":  25034752,
+                      "vz":  -524288,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  29,
+                      "frame":  31,
+                      "ticks":  6,
+                      "z":  21102592,
+                      "vz":  -655360,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  35,
+                      "frame":  32,
+                      "ticks":  6,
+                      "z":  16384000,
+                      "vz":  -786432,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  41,
+                      "frame":  33,
+                      "ticks":  6,
+                      "z":  10878976,
+                      "vz":  -917504,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  48,
+                      "frame":  34,
+                      "ticks":  7,
+                      "z":  3538944,
+                      "vz":  -1048576,
+                      "state":  0,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  55,
+                      "frame":  35,
+                      "ticks":  7,
+                      "z":  0,
+                      "vz":  0,
+                      "state":  1,
+                      "type":  227
+                  },
+                  {
+                      "vblank":  62,
+                      "frame":  36,
+                      "ticks":  7,
+                      "z":  0,
+                      "vz":  0,
+                      "state":  0,
+                      "type":  0
+                  }
+              ],
+    "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e",
+    "source_sha256":  {
+                          "tests/probe_original_time_strike.c":  "34a1a0c032e1056e00e050a21737c6e079215599db9da31a32fce8b9ab13c85d",
+                          "scripts/test-original-time-strike.ps1":  "cf40f3609c3d29b647be2d3a2fb97e777f15a75e555a97e3ecee679b3fad31fa",
+                          "tools/mgba-timing.lock.json":  "3094fb17247823cdc775b04980a0799414b57f7d15d90328a087498aed7b4a6f"
+                      }
+}

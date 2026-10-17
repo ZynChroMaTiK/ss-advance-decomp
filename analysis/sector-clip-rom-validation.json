@@ -1,0 +1,22 @@
+{
+  "result": "pass",
+  "maps": 16,
+  "find_calls": 4096,
+  "clip_calls": 4011,
+  "relocate_calls": 3941,
+  "corrections": 1840,
+  "link_pairs": 1840,
+  "guards": 48,
+  "live_height_cases": 2048,
+  "iteration_limit_cases": 240,
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Complete D000/CE50/053D0 against original ROM on sixteen maps. Only BIOS division and sector-list allocator calls are controlled; native game never executes ROM instructions.",
+  "source_sha256": {
+    "src/sector_clip.c": "a7e85913c9b2a7929c481f67251b63c66e54d7f0fca6dfe34e21271a5b92f413",
+    "src/geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "src/movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "include/ssa/sector_clip.h": "7190aed0bc83b1ed60c9d67e695f62a72319782ef1aa1f3b7f80be49f50bbbd2",
+    "tests/test_sector_clip_rom.py": "cc0fa92aff70647cb8e233cad6e361569afe3789fda2dd02c5740aae2e8168f0"
+  }
+}

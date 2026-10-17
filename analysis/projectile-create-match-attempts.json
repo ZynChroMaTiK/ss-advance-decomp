@@ -1,0 +1,12 @@
+{
+  "function": "sub_080109F0",
+  "rom_address": "0x080109F0",
+  "bytes": 48,
+  "instructions": 24,
+  "tool": "decomp.wtf compile_and_diff through scripts/decomp.py",
+  "attempts": [
+    {"score": 10, "match_percent": 99.5, "note": "Identical instruction layout; unrecognized _0800036C call symbol."},
+    {"score": 0, "match_percent": 100, "note": "Canonical sub_0800036C symbol resolves existing ARM multiply thunk."}
+  ],
+  "source": "recovered/projectile_create_aimed.c"
+}

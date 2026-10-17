@@ -1,0 +1,16 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "comparisons": {
+    "initialization": 32,
+    "commands": 2504,
+    "line_activation": 1408,
+    "update": 12695,
+    "hazard_lookup": 4096
+  },
+  "native_guards": 20,
+  "callback_reentry_guards": 10068,
+  "scope": "Whole mover init (allocator, DMA and BIOS CpuSet serviced, final switch init isolated), commands, line activation, update and hazard lookup; full 500-byte records, map data, 8-word hazard list and ordered sound events.",
+  "total_rom_comparisons": 20735,
+  "source_sha256": "0e7d11f35b5f1ec04ab36113347ed68c1ea1e50bd3c13db3a494cf4622e1ad92",
+  "passed": true
+}

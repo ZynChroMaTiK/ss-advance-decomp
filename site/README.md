@@ -1,6 +1,9 @@
 # Serious Sam Advance project website
 
-A buildless, static frontend with Project, Atlas, 3D Explorer and Development sections.
+A buildless, static frontend with PC Port, Features & Roadmap, Levels, and
+Build & Source sections. Levels combines the 2D atlas and 3D world viewer with
+one selection and shareable `#levels/1/2d` or `#levels/1/3d` URLs. Legacy
+`#atlas/1` and `#explorer/1` URLs redirect to the corresponding view.
 Target: https://zynchromatik.github.io/ss-advance-decomp/
 
 Serve this directory over HTTP. ES modules and JSON fetches do not work by opening
@@ -32,8 +35,15 @@ archive. The build script embeds the atlas, copies the archive and generates
 readable reference pages. scripts/fetch_site_vendor.py refreshes the pinned
 official Three.js modules; no dependency download is required for ordinary builds.
 Regeneration runs from the full native project workspace with its recovered data
-and validation inputs. This website repository contains a frontend snapshot;
-it does not include the native game's source tree or toolchains.
+and validation inputs. The repository now includes the native source, tests,
+recovery sources and research alongside this frontend. Toolchains and the ROM
+remain local. The existing exported website can be served without regeneration.
+
+From a fresh checkout, Node.js 22 can run `node scripts/test_site.mjs` and
+`node scripts/test_site_routes.mjs`. Python 3 can run
+`python scripts/test_site_http.py`. Full export validation additionally needs
+`pip install -r scripts/site-validation-requirements.txt`, the original ROM and
+the HTTP validation result. It packages `build/exports/ssa-project-site.zip`.
 
 ## Viewer controls and scope
 
@@ -44,10 +54,15 @@ Player start moves to the original start location. Select a wall, floor or sprit
 for its data. Secret buttons focus their original locations and link evidence.
 
 Floor polygons come from cleaned convex BSP leaves. Walls use original mip0
-textures, offsets, peg flags, palette and decoded heights. Sky ceilings are open.
+textures, offsets, peg flags, palette and decoded heights. Every sector includes
+both its floor and ceiling, including sky-sector boundary planes. All surfaces
+render double-sided, without backface culling. Walls, floors, ceilings, items,
+enemies, scripted placements and secret pins are visible by default; individual
+layers can be hidden. Hide ceilings for an unobstructed overhead view.
 Open-door preview uses recovered ceiling-door height floor+224; lifts retain their
 initialized height. This is a static inspection tool with no collision or gameplay
-simulation. Sprites mark locations; scripted placements are separately selectable.
+simulation. Sprites mark locations; co-located records are preserved and scripted
+placements can be toggled separately.
 Five documented secret pins are preserved; this is not a claim that all secrets
 have been identified. All 16 maps and every decoded room are included.
 

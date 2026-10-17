@@ -1,0 +1,8 @@
+* text=auto eol=lf
+# Integrity manifests cover exact bytes; preserve these exported assets.
+site/atlas/** -text
+site/vendor/** -text
+recovered/snapshot/** -text
+*.png binary
+*.bmp binary
+*.zip binary

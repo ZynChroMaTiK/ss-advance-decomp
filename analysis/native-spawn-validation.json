@@ -1,0 +1,10 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_spawn_runs": 256,
+  "entity_comparisons": 3128,
+  "marker_comparisons": 728,
+  "grid_snapshots": 256,
+  "native_guards": 370,
+  "scope": "Entire 08001984 with original 05170 allocator, B14C scanner, 5394 animation setter and A5D0/A6CC BSP/grid insertion. Only D1B4 sector-pool allocation is hooked. Native host sector lists are separate. AI activation and player-state initialization excluded.",
+  "source_sha256": "23fd1eedffc0c6012ec3063cd704a8479119fe56f928fffd5b7301cc5cb1ab72"
+}

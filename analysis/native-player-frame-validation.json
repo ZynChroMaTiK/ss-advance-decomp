@@ -1,0 +1,11 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "boundary_cases": 1512,
+  "random_cases": 4000,
+  "consecutive_frames": 2048,
+  "predicate_cases": 4096,
+  "native_guards": 14,
+  "scope": "whole 08005CCC and actual 05C7C/05CA4 predicates; death, movement, camera, hazards, sector script and animation dependencies controlled; full player/entity/game/view bytes and ordered calls; not full gameplay",
+  "rom_comparisons": 11656,
+  "source_sha256": "b07862303c3c06f1a30ca2ed6202304626255f329ec803ca86a405dc4ef84e63"
+}

@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "checks": {
-    "html_links_and_inline_scripts": 399,
+    "html_links_and_inline_scripts": 406,
     "viewer_javascript": "syntax and DOM bindings",
     "geometry_helpers": "executed against all exported levels",
     "css": "parsed",
@@ -17,7 +17,7 @@
   "http": {
     "status": "PASS",
     "prefix": "/ss-advance-decomp/",
-    "http_resources": 315,
+    "http_resources": 317,
     "javascript_mime": "PASS"
   },
   "browser_webgl_visual_qa": "unavailable: no browser connected"

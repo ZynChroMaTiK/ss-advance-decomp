@@ -1,0 +1,9 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "vertical_cases": 22471,
+  "camera_cases": 9096,
+  "jump_scenarios": 36,
+  "scope": "whole 0x08004CE0 routine without mocked calls; 0x080062D4 camera with audio event hook only; native jump tested separately",
+  "source_sha256": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+  "movement_source_sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+}

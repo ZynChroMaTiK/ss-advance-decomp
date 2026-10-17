@@ -1,0 +1,51 @@
+{
+    "result":  "pass",
+    "completion":  {
+                       "result":  "pass",
+                       "frames":  4977,
+                       "finished":  1,
+                       "score":  28000,
+                       "collected":  7,
+                       "spawned":  19,
+                       "health":  69,
+                       "pistol_shots":  13,
+                       "shotgun_shots":  23
+                   },
+    "audio":  {
+                  "door_moving_frames":  394,
+                  "door_stopped_loop_frames":  0,
+                  "door_unowned_loop_frames":  0,
+                  "max_effect_instances":  16,
+                  "max_effect_voices":  11,
+                  "max_music_voices":  5,
+                  "effect_recycles":  0,
+                  "voice_recycles":  0,
+                  "audio_frames":  4977,
+                  "mixed_frames":  3981600,
+                  "notes":  2623,
+                  "loops":  0,
+                  "nonzero_samples":  7961018,
+                  "clipped_samples":  0,
+                  "effects_limited_frames":  1011272,
+                  "footstep_events":  282,
+                  "spatial_events":  180,
+                  "listener_updates":  5117,
+                  "source_updates":  20949,
+                  "music_preserved":  1,
+                  "music_events":  1,
+                  "completion_song":  120,
+                  "level_seen":  1,
+                  "errors":  0
+              },
+    "checker_sha256":  "ec8ec5bfab313571e532cd9e5d19998d11770a5651bec7378b08421d67e2b55c",
+    "source_sha256":  {
+                          "src/audio.c":  "6f799ecfb5cfb876142a7600a870d0a41294c3f9707dd2e4cf497364f3e0ca3f",
+                          "include/ssa/audio.h":  "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+                          "src/native_game.c":  "a00ac24621dbff96f247fdbdc03f06f1450e416a1458531a686e94a6ccca320a",
+                          "src/native_audio.inc":  "3d870483dd981263e1a93633de4171656ea3137c508a19fef152e8a64fe2e260",
+                          "include/ssa/native_game.h":  "87a8b04632325b94d5f22faadd95a28533b389ae908069d031517a95e3ebef10",
+                          "tests/test_audio_playability.c":  "356e2864451871c432eef309f5b56fb393ae1dbd423a868ce59c868c5da5e7d0",
+                          "tests/test_native_playability.c":  "58d99f2583283200e3b71f2831453a9df065e29e5b4ec0a8a4b55169786db508",
+                          "scripts/test-audio-playability.ps1":  "fddb8195e0d74372767fffb21ee14f2c6938ccec655c9f936a8ff79915603895"
+                      }
+}

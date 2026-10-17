@@ -1,0 +1,20 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "bsp_side_cases": 6000,
+  "line_side_cases": 6000,
+  "box_side_cases": 6000,
+  "leaf_cases": 15659,
+  "sector_cases": 15659,
+  "map_query_cases": 6400,
+  "move_cases": 6400,
+  "real_map_jump_scenarios": 16,
+  "spawn_jump_scenarios": 16,
+  "spawn_cases": 16,
+  "rejected_geometry_cases": 112,
+  "scope": "whole original point/line/box/BSP and static map query routines; empty entity grid; move routine hooks only spatial unlink/link; native jump integration separately",
+  "source_sha256": {
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98"
+  }
+}

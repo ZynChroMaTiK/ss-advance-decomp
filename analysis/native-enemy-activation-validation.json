@@ -1,0 +1,15 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "12 whole state-zero initializers CD..D8; original 12CFC,125BC,14328,147D4,05394 execute; sound/music/notice controlled; full entity/game/boss-global bytes and ordered callback snapshots",
+  "rom_comparisons": {
+    "boundary": 8064,
+    "random": 6000,
+    "boss_facing": 512
+  },
+  "native_guards": 29,
+  "callback_reentry_guards": 3983,
+  "callback_failure_cases": 7,
+  "total_rom_comparisons": 14576,
+  "source_sha256": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2",
+  "passed": true
+}

@@ -1,0 +1,23 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "divide_cases": 5000,
+  "trace_side_cases": 5000,
+  "intercept_cases": 5000,
+  "projection_cases": 4000,
+  "trace_cases": 4000,
+  "slide_cases": 6400,
+  "guard_cases": 64,
+  "scope": "Original wall-only trace/projection/full slide; original fixed arithmetic and trigonometry execute; BIOS integer divide serviced; dynamic grid empty and spatial unlink/relink hooked in full-slide oracle.",
+  "slide_branch_visits": {
+    "0x8004ae4": 6147,
+    "0x8004b14": 1036,
+    "0x8004b20": 991,
+    "0x8004b8e": 285,
+    "0x8004bb4": 32
+  },
+  "source_sha256": {
+    "src/slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "include/ssa/slide.h": "6d58e9940a9dd6021834b63c45b881949a51bd152f5eda62eee8ce99ec1db590",
+    "tests/test_slide_rom.py": "f13a7b4091e9ee1cb0da81120f15ea8b53d91b92b334731ff26ba2e9c987c629"
+  }
+}

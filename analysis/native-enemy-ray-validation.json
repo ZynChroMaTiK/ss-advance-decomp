@@ -1,0 +1,23 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "opening": 4096,
+    "wall": 4096,
+    "whole_ray": 8192
+  },
+  "native_guards": 145,
+  "maps": 16,
+  "clear_rays": 6142,
+  "blocked_rays": 2050,
+  "maximum_intercepts": 7,
+  "scope": "Complete A240(flags=1,A041) vs native on all 16 maps; no ray hooks.\nOpening 9C98 and A040 wall predicates are also compared with mutable floors,\nceilings, signed wrap and the 16/17-unit threshold. Original math executes.\n",
+  "source_sha256": {
+    "enemy_ray.c": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159",
+    "ray_intercepts.c": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807",
+    "ray_traversal.c": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/i12bp8/decomp.wtf.git",
+  "commit": "2b0321db4a505a04c4e9aa47ed914758dd7aaf6c",
+  "version": "0.9.6",
+  "patches": ["patches/decomp-wtf-thumb-symbols.patch", "patches/decomp-wtf-c-externals.patch"],
+  "luvdis_patch": "scripts/patch_luvdis.py"
+}

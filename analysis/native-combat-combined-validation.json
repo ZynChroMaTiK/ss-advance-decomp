@@ -1,0 +1,102 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": 4096,
+  "damage_calls": 53417,
+  "reward_calls": 9508,
+  "network_events": 887,
+  "sound_events": 830,
+  "distinct_current_source_cases": 3072,
+  "zero_radius_cases": 1024,
+  "maps": [
+    {
+      "level": 0,
+      "cases": 256,
+      "sectors": 63
+    },
+    {
+      "level": 1,
+      "cases": 256,
+      "sectors": 112
+    },
+    {
+      "level": 2,
+      "cases": 256,
+      "sectors": 85
+    },
+    {
+      "level": 3,
+      "cases": 256,
+      "sectors": 93
+    },
+    {
+      "level": 4,
+      "cases": 256,
+      "sectors": 109
+    },
+    {
+      "level": 5,
+      "cases": 256,
+      "sectors": 51
+    },
+    {
+      "level": 6,
+      "cases": 256,
+      "sectors": 46
+    },
+    {
+      "level": 7,
+      "cases": 256,
+      "sectors": 77
+    },
+    {
+      "level": 8,
+      "cases": 256,
+      "sectors": 33
+    },
+    {
+      "level": 9,
+      "cases": 256,
+      "sectors": 30
+    },
+    {
+      "level": 10,
+      "cases": 256,
+      "sectors": 97
+    },
+    {
+      "level": 11,
+      "cases": 256,
+      "sectors": 77
+    },
+    {
+      "level": 12,
+      "cases": 256,
+      "sectors": 22
+    },
+    {
+      "level": 13,
+      "cases": 256,
+      "sectors": 9
+    },
+    {
+      "level": 14,
+      "cases": 256,
+      "sectors": 25
+    },
+    {
+      "level": 15,
+      "cases": 256,
+      "sectors": 13
+    }
+  ],
+  "scope": "Whole035A8 -> real037F4 -> real125E0. Only network5850 and sound8D5C mocked; damage/reward entry hooks observe without replacing instructions. Native C composition shim. Full pool/game/player/settings snapshots and ordered network/sound callback snapshots. All16 actual reject tables, UBSan.",
+  "source_sha256": {
+    "combat_explosion.c": "ef14c63631b9bd7ad02354b8baf0216ee98b41f0252c9bd6366481e4d65111c8",
+    "combat_damage.c": "45144b7eab60440a2e46045113e835cc9aaa495c5558e4d024982e4031ca72c8",
+    "combat_rewards.c": "0e2e79ca3b667b76b2e3b793464b303c25eae3aa9c9021a34ace7f8a47a79da1",
+    "enemy_targeting.c": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  },
+  "shim_sha256": "4849e170b769f0fa5763fb2389504b71116c7d78dab947ee2da9d2b94c1f7a8c",
+  "status": "passed"
+}

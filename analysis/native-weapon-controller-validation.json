@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "comparisons": {
+    "fire": 5440,
+    "switch": 3160,
+    "cooldown": 3052
+  },
+  "total_rom_comparisons": 11652,
+  "native_guards": 33,
+  "failure_paths": 6,
+  "event_coverage": {
+    "0": 616,
+    "1": 200,
+    "3": 465,
+    "2": 106,
+    "4": 446,
+    "5": 446,
+    "10": 257,
+    "9": 159,
+    "6": 98,
+    "7": 45,
+    "8": 45
+  },
+  "reentry_checks": 18047,
+  "source_sha256": "21ba8b4a5a438f15b3687411118afca09cee497876015c2e4a863a06078023f9",
+  "scope": "Whole116E4 with controlled aim, hitscan, allocation, explosion, audio and particle boundaries; realFC04/116BC. Whole12160 and12200. Full player/game/source/target/object/projectile records and ordered calls compared."
+}

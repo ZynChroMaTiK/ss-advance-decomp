@@ -1,0 +1,32 @@
+{
+  "result": "pass",
+  "comparisons": {
+    "0xd7": 2474,
+    "0xd8": 2474
+  },
+  "reentry_guards": 5708,
+  "failure_cases": 22,
+  "projectiles": 276,
+  "script_requests": 477,
+  "total_rom_comparisons": 4948,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/enemy_boss.c": "6a9feb028fa5b0299c1ca04ce36f1a2d87165076dfacb5016385540b1a636a4f",
+    "src/enemy_activation.c": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2",
+    "src/entity_timer.c": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e",
+    "src/enemy_lifecycle.c": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627",
+    "src/enemy_motion.c": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd",
+    "src/projectile_create.c": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa",
+    "src/player_hazards.c": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954",
+    "src/movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "src/world.c": "0c3b7854ff09c13c3c048ab1e3d84bb9b7ac890e8bc40ccb840c20138f63a77b",
+    "src/physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+    "src/geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "src/slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "src/horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "include/ssa/enemy_boss.h": "7c0071cd006f39acb2f8805a6f1a6ac08a2a8ce28fbb90439d290226ef30f04d",
+    "include/ssa/enemy_control.h": "0500fd7b3efa71bd28222443e36bfa0657cdb1243a387ff945695ca416e3bacb",
+    "tests/test_enemy_boss_rom.py": "aadeed64b9d4cf9e5e4b2c7fdc73b015d16fd2ed06ba41d6ae84093911e1337a"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_spawn_runs": 16,
+  "entity_comparisons": 385,
+  "marker_comparisons": 83,
+  "grid_snapshots": 16,
+  "native_guards": 119,
+  "whole_animation_frames": 2048,
+  "animated_records": 49280,
+  "maps": [
+    {
+      "level": 0,
+      "objects": 15,
+      "unused_slots_before_player": 85
+    },
+    {
+      "level": 1,
+      "objects": 46,
+      "unused_slots_before_player": 54
+    },
+    {
+      "level": 2,
+      "objects": 67,
+      "unused_slots_before_player": 33
+    },
+    {
+      "level": 3,
+      "objects": 55,
+      "unused_slots_before_player": 45
+    },
+    {
+      "level": 4,
+      "objects": 50,
+      "unused_slots_before_player": 50
+    },
+    {
+      "level": 5,
+      "objects": 6,
+      "unused_slots_before_player": 94
+    },
+    {
+      "level": 6,
+      "objects": 21,
+      "unused_slots_before_player": 79
+    },
+    {
+      "level": 7,
+      "objects": 38,
+      "unused_slots_before_player": 62
+    },
+    {
+      "level": 8,
+      "objects": 20,
+      "unused_slots_before_player": 80
+    },
+    {
+      "level": 9,
+      "objects": 16,
+      "unused_slots_before_player": 84
+    },
+    {
+      "level": 10,
+      "objects": 43,
+      "unused_slots_before_player": 57
+    },
+    {
+      "level": 11,
+      "objects": 7,
+      "unused_slots_before_player": 93
+    },
+    {
+      "level": 12,
+      "objects": 1,
+      "unused_slots_before_player": 99
+    },
+    {
+      "level": 13,
+      "objects": 0,
+      "unused_slots_before_player": 100
+    },
+    {
+      "level": 14,
+      "objects": 0,
+      "unused_slots_before_player": 100
+    },
+    {
+      "level": 15,
+      "objects": 0,
+      "unused_slots_before_player": 100
+    }
+  ],
+  "asan_ubsan_assertions": 5404,
+  "ownership_frames": 2048,
+  "retained_players": 16,
+  "source_sha256": {
+    "map_actors.c": "97d692475514b229bd9c091b78f42262bb57e3777544dc85c4eef0bcef579b0c",
+    "actor_animation.c": "d203b4aff9c4af1b600ba33a08a0c19f93304af59802eca6d66bf7530bccd8cd",
+    "entity_pool.c": "0c83949cf474ab7477d9ae213f25bbe9efa9137c2d1b298caa0be7b7f7fb9745",
+    "spawn.c": "23fd1eedffc0c6012ec3063cd704a8479119fe56f928fffd5b7301cc5cb1ab72",
+    "world.c": "47ed6f7956095fa7d75bcfbfece3033cb381c01c64e1968b7cb907e9d9df1fc0",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+    "player_spawn.c": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f",
+    "actor_assets.c": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544",
+    "actor_raster.c": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65"
+  },
+  "ownership_test_sha256": "103bfc389cd28c309e1bed4f4ff9f2768fcc766dd766a5aa699cfe56876b0b94",
+  "scope": "Original01984 construction with real pool/setter/BSP/grid and whole00908 animation on map objects. Only original sector-list allocation is modeled. Native ownership test retains a separately spawned player after map-actor teardown on all16 maps. No enemy AI activation, scripts, pickups or completed gameplay claim."
+}

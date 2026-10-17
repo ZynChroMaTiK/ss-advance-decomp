@@ -1,0 +1,9 @@
+{
+  "comparisons": 8192,
+  "guards": 6,
+  "reentry": 8349,
+  "callback_failures": 2,
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "source_sha256": "a46fea096eb8566b096e6fb485c886b2fc1070d3c09dd4e3616ee8e68deb0068",
+  "scope": "Whole113E4; original unlink/insert/release boundaries controlled. Native destruction deferred; full entity bytes and ordered callback positions compared. UBSan."
+}

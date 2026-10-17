@@ -1,0 +1,63 @@
+{
+    "result":  "pass",
+    "core":  {
+                 "result":  "pass",
+                 "assertions":  418,
+                 "launch_headings":  8,
+                 "return_hits":  8,
+                 "wall_hits":  1,
+                 "player_hits":  1,
+                 "enemy_hits":  1,
+                 "projectile_frames":  39
+             },
+    "windows_smoke":  [
+                          {
+                              "renderer":  "pc",
+                              "startup":  {
+                                              "result":  "pass",
+                                              "frames":  180,
+                                              "health":  100,
+                                              "entities":  17,
+                                              "score":  0,
+                                              "hidden_window":  true,
+                                              "render_width":  1264,
+                                              "render_height":  861,
+                                              "world_rays":  0,
+                                              "initial_width":  1264,
+                                              "initial_height":  861,
+                                              "pitch":  0,
+                                              "buffered_presents":  1,
+                                              "presentation_samples":  3
+                                          }
+                          },
+                          {
+                              "renderer":  "reference",
+                              "startup":  {
+                                              "result":  "pass",
+                                              "frames":  180,
+                                              "health":  100,
+                                              "entities":  17,
+                                              "score":  0,
+                                              "hidden_window":  true,
+                                              "render_width":  240,
+                                              "render_height":  160,
+                                              "world_rays":  0,
+                                              "initial_width":  240,
+                                              "initial_height":  160,
+                                              "pitch":  0,
+                                              "buffered_presents":  1,
+                                              "presentation_samples":  0
+                                          }
+                          }
+                      ],
+    "executable_sha256":  "86197facea846c9a034ef830951491921352d256fadfbef62847317abeb17189",
+    "checker_sha256":  "b80808335e112da8fa14ff97c856a2d9f6dff2cec54c24362a4578d2284f5935",
+    "source_sha256":  {
+                          "src/world.c":  "56397dc9b823e859038e46594fabdfe78af88db329db80a9db90dcab2428df28",
+                          "include/ssa/world.h":  "548ffcb185c09a60961179350c2cd8ba3471114a878118cb2d76d5b34877edac",
+                          "src/projectile_runtime.c":  "693eae69c4ee6381fa662b9342cd0460964c13088937a1b17e2f44daeec04c41",
+                          "tests/test_gunrilla.c":  "9408c6cd8c4c49c3b62eb78145065129fd33399ec6b5c7203b0ffb869aba1726",
+                          "tests/test_gunrilla.py":  "03c26e8aaec989c742b8a7e7d6369c9ad1472f4f50210f21a8b00b7344c98927",
+                          "CMakeLists.txt":  "a7956d13c6eaf3cf0a38e56db90641384ea56a1d5aca975e53e981c35ecd5b24"
+                      }
+}

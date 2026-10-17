@@ -1,0 +1,18 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "setter": 131072,
+    "tick": 36352,
+    "consecutive": 45440,
+    "flag800_skip": 2048,
+    "markers": 3072,
+    "whole_pool_frames": 256,
+    "whole_pool_entities": 11531
+  },
+  "native_guards": 13,
+  "animations": 142,
+  "sequence_words": 772,
+  "scope": "Whole05394 and00908, no instruction hooks; complete116-byte entities, actual ROM sequence data, all100 active slots and explicit marker data mutations.",
+  "total_rom_comparisons": 218240,
+  "source_sha256": "d203b4aff9c4af1b600ba33a08a0c19f93304af59802eca6d66bf7530bccd8cd"
+}

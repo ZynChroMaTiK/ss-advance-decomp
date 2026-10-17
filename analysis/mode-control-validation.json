@@ -1,0 +1,18 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "flags_buttons_selection_count": 7680,
+    "random_reserved_bits": 5000,
+    "live_callback_mutations": 368,
+    "failure_baseline": 3,
+    "callback_failure_prefix": 41
+  },
+  "callback_reentry_checks": 60101,
+  "callback_failure_cases": 41,
+  "guards": 11,
+  "source_sha256": {
+    "src/mode_control.c": "897fecd6daee50cd0012e4a27ff43d4b02fc3b8c8c44ae0aab10cf3b9aa1d0b0",
+    "include/ssa/mode_control.h": "6e985ece300f971c7fbac4ef79a2c516e91d6806d464d697ac59a898abc01f49",
+    "tests/test_mode_control_rom.py": "7bc31e3517a336e0f9a53d2b34a315d2ffbcb9955dc186776fcc3bc859c5f108"
+  }
+}

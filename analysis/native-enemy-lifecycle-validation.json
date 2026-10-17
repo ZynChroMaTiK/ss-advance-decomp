@@ -1,0 +1,15 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole 12D5C death entry,12D9C corpse update,12E1C periodic drain; group release 1C6B0 and unlink/destroy 037E0 controlled callbacks; complete entity bytes and ordered callback snapshots",
+  "rom_comparisons": {
+    "death": 4355,
+    "corpse": 5860,
+    "drain": 4816
+  },
+  "native_guards": 20,
+  "callback_reentry_guards": 21201,
+  "callback_failure_cases": 2,
+  "source_sha256": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627",
+  "total_rom_comparisons": 15031,
+  "status": "passed"
+}

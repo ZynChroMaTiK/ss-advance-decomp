@@ -1,0 +1,21 @@
+{
+    "result":  "pass",
+    "validation":  {
+                       "result":  "pass",
+                       "checks":  158,
+                       "physical_input":  false,
+                       "real_window_messages":  true
+                   },
+    "scope":  "Hidden Win32 window using the actual frontend wheel/Q message handler and native weapon switching. No physical device delivery tested.",
+    "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e",
+    "executable_sha256":  "275a8bbb211e0a6343d776e488855f92a887b8de1e560e8b1fc4060b67381eea",
+    "checker_sha256":  "32d183204463f061fc0a60d500e763e96afcdf887bc30ec07f692d172763ca14",
+    "source_sha256":  {
+                          "src/native_game.c":  "0ad318c50cd70122c0f9463ed35956fa6b37beb5f556010b27a1d5a7b1ff0d53",
+                          "include/ssa/native_game.h":  "7697cd2f43d725b79f8f708ff6b7d18413c4940b65f570dcc1ca4c4e642125a3",
+                          "platform/win32/game.c":  "d42af664fcab2b99b5568aeb398d103da87ac57705f55780a1ae00575ebf0ece",
+                          "tests/test_weapon_wheel_win32.c":  "7dcabc433cd2e0e520dc5688a934d29c117a571b500db6b58f6f2826fb5b34a2",
+                          "CMakeLists.txt":  "1e5ae60b60d8495d1ecf4aea9325c5418f2fb188b9d9b46463187c3a85f5d62a",
+                          "scripts/test-weapon-wheel.ps1":  "d82b8c73dd4eb50ba98d2811b9ac980c33c27c6bb19260e316b47c3721da0114"
+                      }
+}

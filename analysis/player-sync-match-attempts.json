@@ -1,0 +1,22 @@
+[
+  {
+    "function": "sub_08005E04",
+    "source": "typedef signed int s32;\ntypedef unsigned char u8;\ntypedef unsigned short u16;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0xa0];\n    u16 heading;\n} SyncPlayer;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0x27];\n    u8 facing;\n} SyncEntity;\nvoid sub_08005E04(SyncPlayer *player, SyncEntity *entity) {\n    entity->x=player->x;\n    entity->y=player->y;\n    entity->z=player->z;\n    entity->vx=player->vx;\n    entity->vy=player->vy;\n    entity->vz=player->vz;\n    entity->facing=player->heading>>8;\n}\n",
+    "result": "\u274c COMPILE ERROR (context v1)\nfunc.c:1: redefinition of `s32'\ninclude/context.h:8: `s32' previously declared here\nfunc.c:2: redefinition of `u8'\ninclude/context.h:5: `u8' previously declared here\nfunc.c:3: redefinition of `u16'\ninclude/context.h:7: `u16' previously declared here"
+  },
+  {
+    "function": "sub_08005E28",
+    "source": "typedef signed int s32;\ntypedef unsigned char u8;\ntypedef unsigned short u16;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0xa0];\n    u16 heading;\n} SyncPlayer;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0x27];\n    u8 facing;\n} SyncEntity;\nvoid sub_08005E28(SyncEntity *entity, SyncPlayer *player) {\n    player->x=entity->x;\n    player->y=entity->y;\n    player->z=entity->z;\n    player->vx=entity->vx;\n    player->vy=entity->vy;\n    player->vz=entity->vz;\n    player->heading=entity->facing<<8;\n}\n",
+    "result": "\u274c COMPILE ERROR (context v1)\nfunc.c:1: redefinition of `s32'\ninclude/context.h:8: `s32' previously declared here\nfunc.c:2: redefinition of `u8'\ninclude/context.h:5: `u8' previously declared here\nfunc.c:3: redefinition of `u16'\ninclude/context.h:7: `u16' previously declared here"
+  },
+  {
+    "function": "sub_08005E04",
+    "source": "typedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0xa0];\n    u16 heading;\n} SyncPlayer;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0x27];\n    u8 facing;\n} SyncEntity;\nvoid sub_08005E04(SyncPlayer *player, SyncEntity *entity) {\n    entity->x=player->x;\n    entity->y=player->y;\n    entity->z=player->z;\n    entity->vx=player->vx;\n    entity->vy=player->vy;\n    entity->vz=player->vz;\n    entity->facing=player->heading>>8;\n}\n",
+    "result": "\u2705 MATCH! sub_08005E04 is byte-identical to the target (18 instructions). Credited to codex-player-sync; your claim is released. Call claim_function for the next one."
+  },
+  {
+    "function": "sub_08005E28",
+    "source": "typedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0xa0];\n    u16 heading;\n} SyncPlayer;\ntypedef struct {\n    s32 x, y, z, vx, vy, vz;\n    u8 padding[0x27];\n    u8 facing;\n} SyncEntity;\nvoid sub_08005E28(SyncEntity *entity, SyncPlayer *player) {\n    player->x=entity->x;\n    player->y=entity->y;\n    player->z=entity->z;\n    player->vx=entity->vx;\n    player->vy=entity->vy;\n    player->vz=entity->vz;\n    player->heading=entity->facing<<8;\n}\n",
+    "result": "\u2705 MATCH! sub_08005E28 is byte-identical to the target (18 instructions). Credited to codex-player-sync; your claim is released. Call claim_function for the next one."
+  }
+]

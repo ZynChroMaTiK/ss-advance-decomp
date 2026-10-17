@@ -1,0 +1,14 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_respawn": 69638,
+  "whole_occupancy": 4096,
+  "reentry_guards": 186977,
+  "guards": 16,
+  "failures": 5,
+  "particles": 40091,
+  "allocated": 19959,
+  "exhausted": 20132,
+  "scope": "Whole1B854 with actual05330/05394; controlled allocation/insertion/particles. Fullgame/entity/callback snapshots; all65536elapsedvalues; originalnullallocationreadataddress8 suppliedexplicitly asfallbackZ.",
+  "rom_comparisons": 73734,
+  "source_sha256": "5c7a7f3493b8b37598802fb05b1292c014131e3f1c022d653e47816d41731d3e"
+}

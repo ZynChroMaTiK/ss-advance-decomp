@@ -1,0 +1,13 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "boundary_cases": 8712,
+  "random_cases": 6000,
+  "consecutive_frames": 2048,
+  "invalid_api_cases": 12,
+  "move_calls": 239728,
+  "slide_calls": 23492,
+  "scope": "whole 08004BDC, hooking only move 080043D0 and slide 08004A38; whole entity bytes and ordered dependency calls; controlled collision responses, not actual geometry",
+  "rom_comparisons": 16760,
+  "source_sha256": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+  "compiler": "GCC C11 -O2 -Wall -Wextra -Werror -pedantic; UBSan, nonrecovering"
+}

@@ -1,0 +1,28 @@
+{
+  "result": "pass",
+  "completion": {
+    "result": "pass",
+    "frames": 4653,
+    "finished": 1,
+    "score": 28000,
+    "collected": 7,
+    "spawned": 19,
+    "health": 23,
+    "pistol_shots": 13,
+    "shotgun_shots": 22
+  },
+  "renderer": {
+    "pc_frames": 77,
+    "pc_pitched_frames": 77,
+    "pc_failures": 0,
+    "width": 1280,
+    "height": 720
+  },
+  "source_sha256": {
+    "src/pc_renderer.c": "b729acac16ce2af7010adb654aee05e4dc8ba39721c37cf89f674a1c1172c454",
+    "src/pc_renderer_pitch.inc": "9a6bb72a3fc45504aa6e05d7cb2e15412478a32ad56a6ba4b3bb222099f81d98",
+    "src/native_game.c": "e7555adbdeb72e2a87312d1a972e7e33997cb26222dcdc5f1f1b8a05cf22b762",
+    "tests/test_pc_playability.c": "e3c1b8eb43e48832f279f39ad7cafec8f46c0f1d3d2651c0da2edbed356f7d45",
+    "tests/test_native_playability.c": "789c3e3caa9053a5b700e7bb85728aab5d52a29bf1ff7bb8468d5d44613ee529"
+  }
+}

@@ -1,0 +1,261 @@
+# Native weapon gameplay composition
+
+`src/weapon_runtime.c` binds the recovered weapon controller, animation state,
+selection and switching to native map/entity aiming, hitscan geometry and combat.
+An actual shot from weapons 1 through 5 can now change a registered script
+actor's health, award a kill, and feed its existing enemy death/group/corpse
+handling. This document describes the weapon library integration; the current
+playable frontend also supplies rendering, audio and PC input. See
+[native-game.md](native-game.md) for admitted campaign coverage and limits.
+
+## Automatic cadence in the PC port
+
+The frontend now enables `finish_fire_before_switch`: a requested weapon change
+cannot lower the current weapon until its firing/reload sequence completes.
+Continuous weapons stop issuing attacks while their current animation cycle
+finishes, then use the original release/wind-down and handoff. A stale loop
+completion marker cannot bypass the wait. Selection changes can replace the
+queued destination; selecting the current firing weapon cancels the handoff.
+Pause freezes the wait. This option defaults off for recovery comparisons.
+Q is a frontend last-used request; history records actual weapon commits and
+survives campaign carry, rather than recording every intermediate request.
+
+Current switch checks pass3,295 assertions on GCC ASan/UBSan/leaks and MSVC,
+covering all ten weapons in both views and506waiting frames. The Win32 wheel/Q
+handler passes158checks, and the default library regression retains133,923.
+The current Windows real-mixer weapon-loop/rocket check passes126,732.
+See`weapon-switch-validation.json`,`windows-weapon-switch-validation.json`
+and`windows-weapon-wheel-validation.json`. Full campaign progression was not
+rerun for this isolated PC handoff change.
+
+Latest PC settings (2026-10-16): Tommy gun and minigun both use their measured
+original-GBA cadence of8.532500081 rounds/s. The minigun's earlier requested2x
+multiplier is now disabled (`double_minigun=0`), with its existing28damage
+per single-player round. Chainsaw uses its own original-GBA timing
+measurement:85 steady attack intervals over584 refreshes, or8.693214980 attacks/s.
+The actual trace contains74 seven-refresh intervals and11 six-refresh intervals.
+This calibrates a fixed PC average; it does not replay scene-dependent rendering
+jitter or claim one exact original firing rate throughout the campaign.
+
+The user confirmed192-unit chainsaw reach, twice the ROM's96-unit table value.
+`chainsaw_range` scales both aim and damage traces, including the original
+half-range retry. Camera convergence retains its independent common sight ray.
+The chainsaw remains finite, wall-blocked and infinite-ammo. Original rules and
+canonical controller calls remain unchanged.
+
+The frontend sets `clocked_chainsaw=SSA_CHAINSAW_GBA_CADENCE` (mode2). Its rational
+clock accumulates85 attacks per584 GBA refreshes. A separate remainder distributes
+six/seven original damage ticks per bite, totaling584 ticks per85 bites. Normal
+damage is6/7, Easy9/10 and Hard4 per bite. Thus damage survives Hard's integer
+rounding while preserving the original elapsed damage budget. Mode1 retains the
+earlier Tommy cadence; mode0/default retains recovered per-call behavior.
+
+Both GCC ASan/UBSan/leaks and MSVC pass53,141 cadence/input checks:21 timing/
+damage cases across0/30/60/144/240Hz view schedules, eight quick-click cases and
+12cancellation cases. Over600simulation ticks, both guns admit85rounds with7/8
+tick spacing, and chainsaw86 with6/7. The earlier six actual map
+hitscan/combat cases test160-unit hits beyond the old reach, unobstructed256-unit
+misses beyond the new reach, and85-bite damage budgets across all difficulties
+and both aim modes. Normal/Easy/Hard budgets are584/839/340. The legacy six
+Tommy-cadence damage cases remain. The runtime suite passes133,923 assertions,
+retaining original16-map behavior and multiplayer checks below.
+
+The earlier doubled minigun cadence altered the campaign bot's route/ammo use. Its first
+run died in map6 before the boss (8,531ticks); logs are preserved under
+`build/native-campaign/firerate-initial-completion.*`. The test bot now selects
+its earned shotgun for targets closer than700units instead of always preferring
+an automatic gun. This changes only ordinary input selection in the fixture,
+without granting supplies or changing gameplay damage, enemies or scripts.
+That campaign evidence predates restoration of the original minigun cadence;
+the full six-map route was not rerun for this isolated setting change. The
+focused Windows weapon-audio/rocket suite still passes126,730 checks, including
+46 continuous-weapon cases and minigun wind-down/loop cleanup.
+
+The original-rate evidence below supplies the current minigun/Tommy clock.
+
+The prior20rounds/s setting was an estimate and has been removed. A test-only
+original-ROM trace now establishes both guns' cadence in the first-level start
+scene. For each gun,600 GBA refreshes produce85 actual shots/ammo deductions;
+all84 consecutive steady shot intervals span exactly seven refreshes. The
+original engine increments its GAME frame only once per completed render, and
+fires once per such frame. Main2134 waits for VBlank, runs244C and rendering,
+then copies VBlank counter GAME+06 into the next timestep GAME+07. There is no
+separate fixed low-FPS limit in this recovered loop: GBA rendering cost supplies
+the slower cadence. The measured rate is8.532500081 rounds/s, using16777216Hz
+CPU and280896 cycles per refresh, not an assumed60Hz screen clock.
+
+`tests/probe_original_frame_rate.c` boots the user's unchanged ROM in the
+[mGBA](https://github.com/mgba-emu/mgba)0.10.5 test core, commit
+`26b7884bc25a5933960f3cdcd98bac1ae14d42e2`. It selects each gun by changing
+RAM inventory/current weapon/weapon object only, then holds original A input.
+No ROM instructions or timing are patched. mGBA uses its built-in BIOS. This
+test core has no connection to the native game executable. Reproduce with
+`powershell -ExecutionPolicy Bypass -File scripts/test-original-fire-timing.ps1`;
+the complete traces and hashes are in`original-fire-timing-validation.json`.
+This measures one scene. Original frame rate can vary with renderer workload;
+scene-dependent GBA CPU slowdowns throughout the campaign are not reproduced.
+
+The native frontend sets`automatic_period=7` and`automatic_gba_clock=1`.
+An integer rational accumulator maps60Hz simulation ticks onto seven original
+refreshes, avoiding the0.46% speed error of seven PC ticks. The first attack
+waits one original-frame interval after starting; subsequent rounds retain
+fractional timing. Each gun shot applies seven original ticks of single-player
+damage; chainsaw uses the fractional budget above. Original muzzle flashes use
+frame&3: they run on every fourth virtual
+original frame, instead of every attack or every fourth PC tick. Aim, start,
+release, switching, cooldowns and animations still update each simulation tick.
+Release after the buffered first shot, empty ammo, weapon changes and respawn
+clear cadence; pause freezes it.
+No post-pause catch-up burst is emitted. Canonical controller_step/step_free
+and runtime automatic_period0 preserve original per-call behavior for ROM
+comparisons. Discrete weapon timing remains unchanged.
+
+The native cadence suite covers21 scenarios: chainsaw and both guns across view
+preparation at0/30/60/144/240Hz, plus six damage/aim/flash cases. It verifies the
+exact rational schedule, first-shot delay, release/repress, pause/input
+suppression and empty ammo. Reports:`weapon-cadence-validation.json` and
+`windows-weapon-cadence-validation.json`. Windows command:
+`powershell -ExecutionPolicy Bypass -File scripts/test-weapon-cadence.ps1`.
+
+## Short PC fire clicks
+
+The frontend enables `buffer_fire`. The input sampler already retains a mouse
+down/up pair between polls, but that one-tick pulse could end before the weapon
+started firing. The runtime now records one pending attack for the requested
+weapon. It keeps fire held through startup, raising, cooldown and reload until
+the controller increments that weapon's actual shot counter. That clears the
+pending attack; the next released update stops continuous fire. Starting an
+animation alone does not consume the click. Holding the button continues normally
+with the measured automatic cadence, without an accelerated initial shot.
+
+This is one outstanding attack, not a queue of every click during a reload.
+Focus loss, disabled controls, pause, death, respawn, input state3, empty ammo
+or a different requested weapon cancel it. A physical release still acknowledges
+the original held-fire protection gate while the pending attack is retained.
+The option defaults off in the library; canonical ROM controllers are unchanged.
+
+GCC ASan/UBSan with leak detection and Windows MSVC pass53,141 checks:
+the21 cadence/damage scenarios, eight quick-click scenarios (weapons
+1..7 and10), and12 focus/disable/pause/switch cancellation scenarios.
+Clicks released before polling, during reload and during raising each produce
+exactly one attack, with no extra attacks over90 released ticks. The tests check
+ammo as well as shot counters, retaining original infinite ammo for weapons1/2.
+Tommy gun and minigun each fire85times, chainsaw86 over600ticks at all five view schedules.
+The normal-input audio-enabled level-one route also completes on both compilers
+in4977 ticks,28000 score,7 pickups,69 health,13 pistol and23 shotgun shots.
+Its extra buffered shotgun attack changes the bot's subsequent combat and route;
+no enemy, aim or movement logic was changed. There are no stuck door loops,
+clipped samples, voice recycling or audio errors on that route. The updated
+six-map campaign now also completes under GCC ASan/UBSan/leak detection and
+MSVC:882,000score,61health, including the original D7 boss and9,064,800mixed
+stereo frames on the sixth map. See `campaign-validation.json`.
+
+## Ownership and frame ordering
+
+Current special-weapon integration also binds weapon8's native combat explosion,
+weapon9's shared-pool E3 allocation/animation/insertion, and both palette requests.
+See [special-weapons.md](special-weapons.md). The standalone legacy fixture below
+deliberately leaves optional projectile services unbound; its unsupported cases
+describe that fixture, not the current playable frontend.
+
+Initialize `SsaWeaponRuntime` at a stable address after player gameplay and
+combat bindings exist. Current/requested weapon must already be valid; init
+does not invent a loadout. The player must be one of combat's indexed runtimes.
+The initial weapon-view fields provide position, sprite type, layer and owner;
+the owner is the original player index plus one. The runtime owns dedicated
+aim/hit and interaction scratch and does not borrow movement or camera scratch.
+Free it before gameplay, combat and world teardown.
+
+`ssa_weapon_runtime_step` composes the F150 wrapper gates and original 122AC
+sequence: cooldowns, 12230 near-wall lowering, selection 11604, controller
+116E4, and lower/commit/raise 12160. Supply the original held/pressed button
+masks separately from movement flags. Fire is bit 1. The GAME projections,
+including local display/motion player indices, remain explicit inputs.
+
+Original main 0244C updates entities, sector movers and scripts before sprite
+controllers F85C; the weapon object reaches F150 and 122AC there. E460 animation
+advancement follows all sprite controllers. Keep animation separate and tick
+each object once after gameplay/VM work: controller decisions consume the
+previous tick's completion state. See `weapon-animation.md` and
+`weapon-controller.md` for recovered timing and state behavior.
+
+Pause flag 1 skips the wrapper, including its visibility update. Input state 3
+skips the weapon controller but still refreshes object flag 1 from the display
+local player's movement flag 8. Object ownership and all required callbacks
+are validated before either skip. Native errors preserve prior effects; they
+are not transactions.
+
+## Tracing and combat
+
+Aiming and hitscan share their dedicated trace state, retaining opening and
+slope globals in the original order. The controller's temporary aim marker is
+cleared before attack events. The hit query uses the body's original facing
+byte, as recovered from A444, while autoaim uses the controller heading. The
+adapter consumes HITSCAN and EXPLOSION internally. Wall hits call `impact`
+with a NULL target. For entity hits, zero damage or zero health suppress impact;
+otherwise impact precedes damage. Failure there leaves the target unharmed.
+
+A synchronous combat scope locks combat, script spawning and every bound player
+through callbacks. Nested weapon/gameplay/runtime teardown is rejected. Callback
+implementations must not mutate map layout or directly remove registered bodies.
+Ordinary world tracing obtains and releases its own query lock before damage.
+
+Damage source remains the firing body after a step. Credit player and selected
+shot-hit pointer clear on exit, including failure. The selected hit counter is
+indexed by the weapon current before selection. Multiplayer callers must bind
+`credited_kills` to that shooter's persistent kill byte. The shared combat kill
+pointer is borrowed during firing and restored afterward; two shooters must not
+share an accidental scratch counter.
+
+The gameplay `WEAPON_ANIMATION` respawn callback can call
+`ssa_weapon_runtime_respawn`. This helper is allowed while player gameplay owns
+its update lock, copies the recovered view fields, and sets animation/period
+and weapon action. It is prohibited during a weapon update. This preserves the
+existing native jump settings and H camera mode across actual respawn.
+
+Presentation events remain mandatory external callbacks. Unsupported projectile
+or effect allocation requests must fail explicitly. This adapter does not supply
+a silent no-op projectile implementation. Weapons 6, 7 and 10 reach their real
+creation boundary but have no native projectile runtime here; advanced effect
+and request consumers likewise remain outside this module.
+
+## Native integration validation
+
+`tests/test_weapon_runtime.c` composes actual native animation, selection,
+aim/hitscan and combat code using all 16 original decoded maps. Scripted CD
+fixtures use a private in-memory ROM copy; the original file is unchanged.
+The test-only original-ROM CPU is not linked or used. Tests run with ASan and
+UBSan, `-no-pie`, and `ASAN_OPTIONS=detect_leaks=0`.
+
+The final suite passes **100,466 assertions**, including:
+
+- 7,888 single-player weapon frames and 305 genuine two-player weapon frames.
+- One first-hit case for each weapon 1 through 5 on each of 16 maps. Exact
+  remaining CD health is 29, 20, 0, 27 and 26 respectively from initial 30.
+- 16 direct single-player shotgun kills and their score rewards. The other
+  64 nearby CD actors survive the shot and then use their original proximity
+  detonation branch. All 80 traverse group notification and corpse release.
+- 16 lower/commit/raise selection cycles; 80 inhibited cooldown frames; four
+  shots during 100 consecutive frames of actual semi-automatic animation timing.
+- Actual map wall impact and near-wall lowering. The latter changes only a
+  real line's interaction kind in a private decoded map and restores it.
+- 2,048 movement/jump/H frames, including 1,760 airborne and 1,536 third person.
+- 4,816 single-player death frames. These correctly reach input state 4 instead
+  of automatically respawning. Sixteen separate checks invoke the bound respawn
+  helper with original view defaults during gameplay update ownership.
+- Two registered player bodies, two player/weapon runtimes and distinct kill
+  counters. Each shooter kills a real script actor; its own kill byte increments,
+  the other's does not, and the previously borrowed shared pointer is restored.
+  This fixture also performs a complete 301-frame multiplayer death and automatic
+  respawn, invoking the actual bound weapon callback and preserving jump/H state.
+- 2,262 guard assertions and 320 callback reentry groups. Five failure paths
+  cover presentation particle failure, impact failure before damage, and
+  the three unsupported projectile creation branches.
+
+Impact counts include the deliberately failed pre-damage callback. Counts and
+hashes for every linked native source are in
+`native-weapon-runtime-validation.json`. Enemy activation, damage, death/group
+release and corpse expiration are native in this suite. Enemy navigation
+boundaries and enemy corpse animation completion remain controlled test inputs;
+weapon animation completion comes from the real recovered animation table.
+These tests do not establish a complete game loop or playable port.

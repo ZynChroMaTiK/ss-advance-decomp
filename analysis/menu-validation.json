@@ -1,0 +1,19 @@
+{
+  "result": "pass",
+  "checks": 72577,
+  "frames": 9547,
+  "new_games": 18,
+  "languages": 3,
+  "difficulties": 3,
+  "music_modes": 2,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "source_sha256": {
+    "src/menu.c": "78f5e7fa2e8297b01e1ead9b06713a5691474f1ff58467fbd080c4aae71957a8",
+    "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "tests/test_menu.c": "dd0930920b6c86953886315310512f7ca3a12636314e8f3457edff3242281380",
+    "include/ssa/menu.h": "f59a6c3fa42f354e8ac391ef67e3ed9e9441178086a9df9ab9f528815618c9fd",
+    "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
+    "tests/test_menu.py": "e44c654f529856232dcd622b3c0c149c3b6a38b3f334b670906c643b797fa5bc"
+  }
+}

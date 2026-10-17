@@ -1,0 +1,104 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_builds": 2048,
+  "segment_calls": 175904,
+  "box_calls": 8192,
+  "clip_calls": 32768,
+  "walls_compared": 21723,
+  "ranges_compared": 22028,
+  "live_height_frames": 1024,
+  "maps": [
+    {
+      "level": 0,
+      "frames": 128,
+      "linked_walls": 1987
+    },
+    {
+      "level": 1,
+      "frames": 128,
+      "linked_walls": 1139
+    },
+    {
+      "level": 2,
+      "frames": 128,
+      "linked_walls": 1347
+    },
+    {
+      "level": 3,
+      "frames": 128,
+      "linked_walls": 1455
+    },
+    {
+      "level": 4,
+      "frames": 128,
+      "linked_walls": 1636
+    },
+    {
+      "level": 5,
+      "frames": 128,
+      "linked_walls": 1300
+    },
+    {
+      "level": 6,
+      "frames": 128,
+      "linked_walls": 1669
+    },
+    {
+      "level": 7,
+      "frames": 128,
+      "linked_walls": 1384
+    },
+    {
+      "level": 8,
+      "frames": 128,
+      "linked_walls": 1109
+    },
+    {
+      "level": 9,
+      "frames": 128,
+      "linked_walls": 1808
+    },
+    {
+      "level": 10,
+      "frames": 128,
+      "linked_walls": 1606
+    },
+    {
+      "level": 11,
+      "frames": 128,
+      "linked_walls": 1517
+    },
+    {
+      "level": 12,
+      "frames": 128,
+      "linked_walls": 521
+    },
+    {
+      "level": 13,
+      "frames": 128,
+      "linked_walls": 926
+    },
+    {
+      "level": 14,
+      "frames": 128,
+      "linked_walls": 1180
+    },
+    {
+      "level": 15,
+      "frames": 128,
+      "linked_walls": 904
+    }
+  ],
+  "scope": "Original B6B0 list construction, B818/B428 and AC8/C10 differential tests.\nOnly BIOS division/copy/DMA and the three subsequent drawing-stage calls are boundaries.\nOriginal traversal, math, clipping, wall projection and plane allocation execute.\n",
+  "native_sanitizers": {
+    "assertions": 206121,
+    "native_frames": 4096,
+    "native_guards": 485
+  },
+  "sha256": {
+    "include/ssa/world_visibility.h": "82c41aa50ff0ce6ce6ab888d946019c4271d3fdfe2c4a5c107ae78f1d6ae543a",
+    "src/world_visibility.c": "69858740b3b43e693c6886b201c5e61d4e7abd5b2d030509c3afce94b099bff4",
+    "tests/test_world_visibility.c": "be3dbfa763155eb5840f21adcda5ec799615a976ac5ac513aef5bd823ec089e9",
+    "tests/test_world_visibility_rom.py": "30847bfbd704337f9b29be7121262f7e674c834579baf0e8ebee31418c4da4dd"
+  }
+}

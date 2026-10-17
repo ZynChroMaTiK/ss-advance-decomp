@@ -1,0 +1,12 @@
+{
+  "result": "pass",
+  "pcm_envelope_rom_comparisons": 18307,
+  "echo_command_rom_comparisons": 512,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "tests/audio_echo_oracle.c": "f16b996b1beffd56f32ec1ff7c667109081d97b34bd7fcc726542f3db6c65d40",
+    "tests/test_audio_echo.py": "253a1f4a61f54b063e94b6b3df58291176f68e8a743dfb475bbf34ba48a977c1"
+  }
+}

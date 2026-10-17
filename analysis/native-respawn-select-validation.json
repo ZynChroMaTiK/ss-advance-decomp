@@ -1,0 +1,8 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": 4998,
+  "native_guards": 5,
+  "scope": "Whole 08001B18, original direction and trig; BIOS signed division serviced. Full output, marker, player and game buffers compared.",
+  "source_sha256": "627acc5704d438d538a38259d698cdad8fdeeda323e87ccf06f586397ca03c3f",
+  "passed": true
+}

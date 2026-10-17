@@ -1,0 +1,21 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "pool_init": 16,
+  "pool_reset": 256,
+  "pool_find": 6144,
+  "pool_check": 4096,
+  "spans": 8195,
+  "edges": 4096,
+  "complete_plane_frames": 1152,
+  "real_map_sector_cases": 128,
+  "real_map_levels": 16,
+  "guards": 24,
+  "failure_prefixes": 1,
+  "sky_bytes": 184320,
+  "sanitizer_assertions": 230583,
+  "source_sha256": {
+    "src/plane_renderer.c": "76b2bd8697de071cd53ffd306ae2aefc09106869dd41054eee3c4598c429b527",
+    "include/ssa/plane_renderer.h": "a650cae7c792513485deccd0a7e787a32148b6a799aaf7ad988c24bc6bf4e2e4",
+    "tests/test_plane_renderer_rom.py": "85fb9cbf8ac502294334b07d52dde44cf0429ab74b70a33bcfe264613955e184"
+  }
+}

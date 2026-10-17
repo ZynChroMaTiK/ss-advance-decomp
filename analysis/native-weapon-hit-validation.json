@@ -1,0 +1,28 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_hitscan": 8192,
+  "maps": 16,
+  "entity_hits": 1775,
+  "wall_impacts": 1693,
+  "no_impact": 4724,
+  "suppressed_effects": 1091,
+  "effect_calls": 3061,
+  "native_guards": 64,
+  "reentry_checks": 80,
+  "callback_failures": 16,
+  "maximum_intercepts": 13,
+  "scope": "Whole A444/A240/9DE4; only terminal impact9D4C and damage37F4 captured, native deferred geometry compared plus ordered effect/damage arguments. No combat effects executed in this test.",
+  "source_sha256": {
+    "weapon_hit.c": "a4f21ace0e023e9f6d1eac78f06d4448a6edc4b20c9d208061144a0222692f37",
+    "weapon_aim.c": "5991a6e07f5fceaf2e1e65162cba641d510917767cac72f23160f518621cc370",
+    "enemy_ray.c": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159",
+    "ray_intercepts.c": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807",
+    "ray_traversal.c": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e",
+    "world.c": "0c3b7854ff09c13c3c048ab1e3d84bb9b7ac890e8bc40ccb840c20138f63a77b",
+    "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  }
+}

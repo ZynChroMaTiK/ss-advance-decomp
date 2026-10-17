@@ -1,0 +1,81 @@
+{
+  "function": "sub_0800B18C",
+  "project": "serious-sam-3",
+  "evidence_source": "Read-only snapshot of decomp/.decomp/decomp.db after compile_and_diff; no matching rerun.",
+  "status": "matched",
+  "size": 34,
+  "instructions": 17,
+  "best_score": 0,
+  "matched_at": 1792005754.7883744,
+  "matched_agent_id": 2,
+  "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u32 reject = (u32)map->reject;\n    u32 bit = source * map->sector_count + target;\n    u32 mask;\n    reject += bit >> 3;\n    mask = 1 << (bit & 7);\n    reject = *(u8 *)reject;\n    return mask & reject;\n}\n",
+  "source_sha256": "6d3df98ed90812d398e93c93f8cbfcc449ad410beb97b3398a1e08e58fa5a297",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "target_sha256": "d0f35b9db9539ea7a0f3fdde3b4193988b441e092d75d6067cb2240f76cb72d5",
+  "attempts": [
+    {
+      "id": 453,
+      "agent_id": 2,
+      "score": 1140,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u32 bit = source * map->sector_count + target;\n    return (1 << (bit & 7)) & map->reject[bit >> 3];\n}\n",
+      "created_at": 1792005659.5980966
+    },
+    {
+      "id": 454,
+      "agent_id": 2,
+      "score": 10,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u8 *reject = map->reject;\n    u32 bit = source * map->sector_count + target;\n    reject += bit >> 3;\n    return (1 << (bit & 7)) & *reject;\n}\n",
+      "created_at": 1792005674.6338053
+    },
+    {
+      "id": 455,
+      "agent_id": 2,
+      "score": 35,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u8 *reject = map->reject;\n    u32 bit = source * map->sector_count + target;\n    reject += bit >> 3;\n    bit = 1 << (bit & 7);\n    return *reject & bit;\n}\n",
+      "created_at": 1792005695.2687254
+    },
+    {
+      "id": 456,
+      "agent_id": 2,
+      "score": 35,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u8 *reject = map->reject;\n    u32 bit = source * map->sector_count + target;\n    reject += bit >> 3;\n    bit = 1 << (bit & 7);\n    return bit & *reject;\n}\n",
+      "created_at": 1792005709.1281307
+    },
+    {
+      "id": 457,
+      "agent_id": 2,
+      "score": 10,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u8 *reject = map->reject;\n    u32 bit = source * map->sector_count + target;\n    u32 mask;\n    u32 value;\n    reject += bit >> 3;\n    mask = 1 << (bit & 7);\n    value = *reject;\n    return mask & value;\n}\n",
+      "created_at": 1792005728.213901
+    },
+    {
+      "id": 458,
+      "agent_id": 2,
+      "score": null,
+      "compiled": 0,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u8 *reject = map->reject;\n    u32 bit = source * map->sector_count + target;\n    u32 mask;\n    register u32 value asm(\"r3\");\n    reject += bit >> 3;\n    mask = 1 << (bit & 7);\n    value = *reject;\n    return mask & value;\n}\n",
+      "created_at": 1792005740.274811
+    },
+    {
+      "id": 459,
+      "agent_id": 2,
+      "score": 0,
+      "compiled": 1,
+      "context_version": 1,
+      "source": "typedef struct RejectMap {\n    u8 pad0[10];\n    u16 sector_count;\n    u8 padC[52];\n    u8 *reject;\n} RejectMap;\n\ns32 sub_0800B18C(RejectMap *map, s16 source, s16 target) {\n    u32 reject = (u32)map->reject;\n    u32 bit = source * map->sector_count + target;\n    u32 mask;\n    reject += bit >> 3;\n    mask = 1 << (bit & 7);\n    reject = *(u8 *)reject;\n    return mask & reject;\n}\n",
+      "created_at": 1792005754.7883744
+    }
+  ],
+  "result": "MATCH: sub_0800B18C is byte-identical to the target (17 instructions)."
+}

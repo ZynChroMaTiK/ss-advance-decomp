@@ -1,0 +1,19 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "whole VM 1C6DC, queue 1C670, enter 1C624, reset 1C5A8, release 1C6B0; allocation/animation/insertion/particles/movers hooked and compared in order; script data read natively",
+  "rom_comparisons": {
+    "reset": 128,
+    "queue": 580,
+    "sector_enter": 4096,
+    "release": 2048,
+    "vm_mixed": 8192,
+    "vm_real_data": 2072
+  },
+  "native_guards": 48,
+  "real_scripts": 116,
+  "real_script_frames": 2072,
+  "allocation_failure_z": "explicit incoming r10 supplied as fallback_z; not an original defined value",
+  "total_rom_comparisons": 17116,
+  "source_sha256": "0277471c34d595a7027c6b188a267cd76f1780e049a652a8e66a8c0e5bd6cb93",
+  "passed": true
+}

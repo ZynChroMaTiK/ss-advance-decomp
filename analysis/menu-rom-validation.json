@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "rom_frames": 8694,
+  "composed_rom_pixels": 15552000,
+  "test_only_arm_execution": true,
+  "credits_frames": 2670,
+  "credits_complete_scrolls": 3,
+  "password_frames": 4830,
+  "password_starts": 36,
+  "source_sha256": {
+    "src/menu.c": "30b2a7f090f7516dcebd328e5540007d6c0a38b819c61adcb02b8630c7baa542",
+    "include/ssa/menu.h": "f59a6c3fa42f354e8ac391ef67e3ed9e9441178086a9df9ab9f528815618c9fd",
+    "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+    "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
+    "tests/test_menu_rom.py": "d7e1330bb44450b6b57a77d1b56a6b3549574f983263ad8b568456a7cefab3ee"
+  }
+}

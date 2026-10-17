@@ -1,0 +1,7 @@
+[
+  {
+    "function": "sub_0800FC04",
+    "source": "typedef struct WeaponSprite {\n    u8 pad0[32];\n    u16 animation;\n    u16 frame;\n    u8 period;\n    u8 elapsed;\n    u8 done;\n} WeaponSprite;\n\nvoid sub_0800FC04(WeaponSprite *object, u16 animation, u16 period) {\n    if (animation <= 0xE8 || animation == 0xFFFF) {\n        object->animation = animation;\n        object->period = period;\n        object->frame = 0;\n        object->elapsed = 0;\n        object->done = 0;\n    }\n}\n",
+    "result": "\u2705 MATCH! sub_0800FC04 is byte-identical to the target (28 instructions). Credited to codex-session; your claim is released. Call claim_function for the next one."
+  }
+]

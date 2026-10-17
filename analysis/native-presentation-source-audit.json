@@ -1,0 +1,1549 @@
+{
+  "result": "pass",
+  "scope": "Current presentation sources, tests and Windows binary equal their completed verification records; this audit does not rerun tests.",
+  "checks": 306,
+  "reports": [
+    "native-sprite-pool-validation.json",
+    "native-sprite-cache-validation.json",
+    "native-sprite-oam-validation.json",
+    "native-display-validation.json",
+    "native-hud-scene-integration-validation.json",
+    "native-hud-scene-rom-validation.json",
+    "windows-native-build-validation.json",
+    "native-viewer-validation.json"
+  ],
+  "matched_functions": 74,
+  "rom_rebuild_identical": true,
+  "files": [
+    {
+      "report": "native-sprite-pool-validation.json",
+      "file": "src/sprite_pool.c",
+      "sha256": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a"
+    },
+    {
+      "report": "native-sprite-pool-validation.json",
+      "file": "include/ssa/sprite_pool.h",
+      "sha256": "1e528f9e0e4a966954f521c03c9c3ebfc14296fe35ce1772a62c44f4cd0a6c99"
+    },
+    {
+      "report": "native-sprite-pool-validation.json",
+      "file": "src/hud_sprites.c",
+      "sha256": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93"
+    },
+    {
+      "report": "native-sprite-pool-validation.json",
+      "file": "include/ssa/hud_sprites.h",
+      "sha256": "0533f5067be3179af63122b89ec2cf2d3de656f4855d7ecf890c0de147d5e05d"
+    },
+    {
+      "report": "native-sprite-pool-validation.json",
+      "file": "tests/test_sprite_pool_rom.py",
+      "sha256": "fa1b5152d4847b4e1244938cf45c609bbb9b1adc9038f9bf455c4cb4dacdbac3"
+    },
+    {
+      "report": "native-sprite-cache-validation.json",
+      "file": "src/sprite_cache.c",
+      "sha256": "57679035438748a93eb93b16f4c770938d22d581181e722c907f467d1cb8e914"
+    },
+    {
+      "report": "native-sprite-cache-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "native-sprite-cache-validation.json",
+      "file": "include/ssa/sprite_cache.h",
+      "sha256": "95958a5678319378c72a77c2a64eb7859c3abb4194010b49d245f6a417117914"
+    },
+    {
+      "report": "native-sprite-cache-validation.json",
+      "file": "tests/test_sprite_cache.c",
+      "sha256": "e98a6962fcd24a4e67acae1f76e7fe4a89bc60dd636874fad87c9d8095c9f634"
+    },
+    {
+      "report": "native-sprite-cache-validation.json",
+      "file": "tests/test_sprite_cache_rom.py",
+      "sha256": "9a592d90b9f208cde9b5cfff4c8a131600d678290a489ebb2da0b8c8d1831d1b"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "src/sprite_oam.c",
+      "sha256": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "src/movement.c",
+      "sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "include/ssa/sprite_oam.h",
+      "sha256": "3d566c0be819af7e2274f6590ceaecb9485f9168545d0dd59f9ea2d4e6ac48da"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "tests/test_sprite_oam_rom.py",
+      "sha256": "68fc9a301e7298e68226feb7dfa7bf7ab6a22fdc79d6bdbbdf56151d89d584ff"
+    },
+    {
+      "report": "native-sprite-oam-validation.json",
+      "file": "tests/test_sprite_oam.c",
+      "sha256": "b46e8e7198a9a60dd6ab2e4ddc08649cf76ee3f4636269d3859664e0645f315e"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "src/display.c",
+      "sha256": "ef7fa4a880442d485c4e1246017fb59f0ed3c2134b9b06224e5634f63088dc0b"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "src/sprite_oam.c",
+      "sha256": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "src/movement.c",
+      "sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "include/ssa/display.h",
+      "sha256": "77df874ab5c420bf1b6e6b8bc2f26ec2d333792ce74dbbc5695eda61176b75ee"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "include/ssa/sprite_oam.h",
+      "sha256": "3d566c0be819af7e2274f6590ceaecb9485f9168545d0dd59f9ea2d4e6ac48da"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "include/ssa/sprite_assets.h",
+      "sha256": "03434415ef48be02dd50996b894adaf92e2b9afdb8b266bc5ea28461692f1e6f"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "tests/test_display.py",
+      "sha256": "9fd846e7657f579d3e557c2b1a9f677e528a0ed360b8773d0cb6017445ce1f5a"
+    },
+    {
+      "report": "native-display-validation.json",
+      "file": "tests/test_display.c",
+      "sha256": "a954e4d4a5cc95b3805a14d49392cc3fe0417a4f22c2bf6e1dfc6634338ed7a8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_animation.c",
+      "sha256": "d203b4aff9c4af1b600ba33a08a0c19f93304af59802eca6d66bf7530bccd8cd"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_animation_runtime.c",
+      "sha256": "38358deefeb08d956f34373a53a4703e378a83f001a1c37ba9e160c4774322a0"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_assets.c",
+      "sha256": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_projection.c",
+      "sha256": "bc740ab2853a53726b1fd482a09564b8293d2da316f06d7c79c581f6458a89c2"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_queue.c",
+      "sha256": "1f77fcf321ad0136ab7547193abe915e031d67f070794475ab41c90f7f53985e"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_raster.c",
+      "sha256": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/actor_scene.c",
+      "sha256": "5fc25cb020dbfc64365e78a952788f7af9cedf772394f4efbbf63d0819a17b2c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/combat_damage.c",
+      "sha256": "45144b7eab60440a2e46045113e835cc9aaa495c5558e4d024982e4031ca72c8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/combat_explosion.c",
+      "sha256": "ef14c63631b9bd7ad02354b8baf0216ee98b41f0252c9bd6366481e4d65111c8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/combat_rewards.c",
+      "sha256": "0e2e79ca3b667b76b2e3b793464b303c25eae3aa9c9021a34ace7f8a47a79da1"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/combat_runtime.c",
+      "sha256": "b52da30fa44203e37ea75145a00cd2bc6aa5bb3988e2b7a4ca75ec30052dff67"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/display.c",
+      "sha256": "ef7fa4a880442d485c4e1246017fb59f0ed3c2134b9b06224e5634f63088dc0b"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_activation.c",
+      "sha256": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_cd.c",
+      "sha256": "062778a3c127f1ea1edf2b9affa6b2f608cf708b0a3a2c9efd41a62117a488cc"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_cd_runtime.c",
+      "sha256": "83f4be974225abca4de1b49cf51de0b9165be9fb7581586b5b0676166cb89175"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_lifecycle.c",
+      "sha256": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_motion.c",
+      "sha256": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_navigation.c",
+      "sha256": "7e2d20a17c29f61bd5b2f16e1d8f5f99fd71774f5298039ca7a80a9d1c7f111b"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_queries.c",
+      "sha256": "7253e314034e785f1b22474a72aaebe0eeec9c3fd26541e0f81c3f917221694c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_ray.c",
+      "sha256": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/enemy_targeting.c",
+      "sha256": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/entity_dispatch.c",
+      "sha256": "4495dbcd5981e2561988677d30356d8352370ceaaecd9d71d63414642d294b77"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/entity_pool.c",
+      "sha256": "0c83949cf474ab7477d9ae213f25bbe9efa9137c2d1b298caa0be7b7f7fb9745"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/entity_runtime.c",
+      "sha256": "d06e1b5ee58b9a3a410b84181eeeb8be662e7bca9eabf9787c368892f5d0ee54"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/entity_timer.c",
+      "sha256": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/frame.c",
+      "sha256": "269c17ba16e9e43975bb0c9aaeaefff92099b04fd80175a32c3e39c075468df5"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/game_runtime.c",
+      "sha256": "34841ee022db99b25ca5802e59e225a8470ab06befe2ab39227b71ef7266a5d5"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/geometry.c",
+      "sha256": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/horizontal.c",
+      "sha256": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/hud_scene.c",
+      "sha256": "a2a910c5752731025d3d0c5977c022c1dbccb291507ee9219b63ea331eb03ef8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/hud_sprites.c",
+      "sha256": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/input.c",
+      "sha256": "4f1648bb69c2816d2ca9000206d0aaa7eccb3b360225a9ad1fe613770f6b1439"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/input_dispatch.c",
+      "sha256": "e716c1ac859ad100e979411cd30bd2137ac33f3d14b95e84422bc68eec423a8a"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/inventory.c",
+      "sha256": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/level_runtime.c",
+      "sha256": "fe800e179a6b45be433954f68bb425ca74f93526f30719232324d95338e9a04f"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/level_script.c",
+      "sha256": "0277471c34d595a7027c6b188a267cd76f1780e049a652a8e66a8c0e5bd6cb93"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/map_actors.c",
+      "sha256": "97d692475514b229bd9c091b78f42262bb57e3777544dc85c4eef0bcef579b0c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/map_assets.c",
+      "sha256": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/map_texture_bindings.c",
+      "sha256": "a74d2ac8a020b007548c3ba40d97bf46d01c5a18617fc6beb86b0901b58becb7"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/mode_control.c",
+      "sha256": "897fecd6daee50cd0012e4a27ff43d4b02fc3b8c8c44ae0aab10cf3b9aa1d0b0"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/movement.c",
+      "sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/pc_input.c",
+      "sha256": "073422978e62f5286b65899655780ef4a1efa9db79241bcc94d03d343da1acce"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/pc_input_runtime.c",
+      "sha256": "f8cd045351bae85300dd82b82e075642f06fdbefe4f0ab49fe1d102bc19c36d1"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/physics.c",
+      "sha256": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/pickup.c",
+      "sha256": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/pickup_respawn.c",
+      "sha256": "5c7a7f3493b8b37598802fb05b1292c014131e3f1c022d653e47816d41731d3e"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/pickup_respawn_runtime.c",
+      "sha256": "5a3c919ed643d8a3e136413f3ec236b658a7920a4cc1089646bc561407fd8c2d"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/plane_renderer.c",
+      "sha256": "76b2bd8697de071cd53ffd306ae2aefc09106869dd41054eee3c4598c429b527"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_frame.c",
+      "sha256": "b07862303c3c06f1a30ca2ed6202304626255f329ec803ca86a405dc4ef84e63"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_gameplay.c",
+      "sha256": "e05dc891aa397c1c2518b868872665e8edf3edb4f1659e1331ce2204277d3070"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_hazards.c",
+      "sha256": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_lifecycle.c",
+      "sha256": "7f10f6e1a2a448df7b99e7ea825498977b3aa4942264499e57a91706f29a0300"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_motion.c",
+      "sha256": "13ca6ce7aaea173d009ac0a6c9b3525a22f418eee8ab27abefd3918ef797aff3"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_runtime.c",
+      "sha256": "44fc6941407dd7cf1af5243501d33f847a2c4a4353fcb0a3d86d7718a3b6f72b"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/player_spawn.c",
+      "sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_bounce.c",
+      "sha256": "906c8a511a34b74bb9b8537393d0152b4726810e9ce1df328e008b54dc3430f8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_controller.c",
+      "sha256": "81ccd22accc72e23f8b8f228d4c6a87ace07d6c2e86585034b988f518653376d"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_create.c",
+      "sha256": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_effect.c",
+      "sha256": "a46fea096eb8566b096e6fb485c886b2fc1070d3c09dd4e3616ee8e68deb0068"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_motion.c",
+      "sha256": "ba43c21bf0d0fdc72c23e3c1853310e782710a87b4afcf6cdc5f59d27d962712"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/projectile_runtime.c",
+      "sha256": "48a410f75aa2dc7590fbc530976390aa2be73ea240c4e74466c2e4b5cffa5904"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/raster_fill.c",
+      "sha256": "91518ef3c54529d67af76082d1b68645b044314606b754880e7210986b24e98e"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/ray_intercepts.c",
+      "sha256": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/ray_traversal.c",
+      "sha256": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/render_view.c",
+      "sha256": "ceb76657e7d83a27b60ce2b9ae8a393b135cbf901aacc41fa7e558864f0db23b"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/respawn_select.c",
+      "sha256": "627acc5704d438d538a38259d698cdad8fdeeda323e87ccf06f586397ca03c3f"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/script_spawn.c",
+      "sha256": "9e0b93e3cb7036b81f00d53465e1d64c4352388ae9a1e66042bce52d92dc2dcc"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sector_movers.c",
+      "sha256": "0e7d11f35b5f1ec04ab36113347ed68c1ea1e50bd3c13db3a494cf4622e1ad92"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/slide.c",
+      "sha256": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/spawn.c",
+      "sha256": "23fd1eedffc0c6012ec3063cd704a8479119fe56f928fffd5b7301cc5cb1ab72"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sprite_cache.c",
+      "sha256": "57679035438748a93eb93b16f4c770938d22d581181e722c907f467d1cb8e914"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sprite_dispatch.c",
+      "sha256": "e9c6b7ac4359bbdcf41f65b5a4a013455e383e6853ca463f326f40edf1cb388c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sprite_oam.c",
+      "sha256": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/sprite_pool.c",
+      "sha256": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/switches.c",
+      "sha256": "d9400ca5b4cc7a76569c09925c04eab506d99108a834ec69f89ad6ae647d7a95"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/texture_assets.c",
+      "sha256": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/view.c",
+      "sha256": "3f167641d4f5cf0872b67778f25e99239d9bfb61c42585c280a0cffdb0a2faf5"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/wall_renderer.c",
+      "sha256": "be2dbd6b62d1e0b5451f7b7b8cc6d11e002e183efdbee98881f3192fad006d08"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_aim.c",
+      "sha256": "5991a6e07f5fceaf2e1e65162cba641d510917767cac72f23160f518621cc370"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_animation.c",
+      "sha256": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_controller.c",
+      "sha256": "b1affb9fb6953d8bab53b33cbf41c10cdfa92b4085036e202d6ce88fa47743c8"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_hit.c",
+      "sha256": "685a25dcdcdd2a2f901eb177a2aef008878f4ede0645f34cd20903590662ec42"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_loadout.c",
+      "sha256": "8e1bf94850a7efeb9a8b31785455bb2be9dc976c7573034591842a64df56b081"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_runtime.c",
+      "sha256": "f207b0fbc5f69ebf4749106136321c6a01eaf38a7d8981a8edd99fc043f615bc"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/weapon_select.c",
+      "sha256": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/world.c",
+      "sha256": "47ed6f7956095fa7d75bcfbfece3033cb381c01c64e1968b7cb907e9d9df1fc0"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/world_raster.c",
+      "sha256": "691e7faffcafa98a280b5d17d4dd5fa909a1b7b706407bd6fabb52b7ef7e11fc"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/world_scene.c",
+      "sha256": "526d944880076a741c8e3b96e0484edaa376d56e444c79e85a53da65dbde58b5"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "src/world_visibility.c",
+      "sha256": "69858740b3b43e693c6886b201c5e61d4e7abd5b2d030509c3afce94b099bff4"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "tests/test_hud_scene.c",
+      "sha256": "52b7b32569591135527d1f9b835b703c4e2292386dde1ab0303c8c87792db42c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "tests/test_hud_scene.py",
+      "sha256": "572b7e85b4e1033c4fa3f6df1e33d39cee47e9f63ec12cc8002ab42165a2df1a"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "tests/test_actor_scene.c",
+      "sha256": "4e97be6f5699fde82d52ae11770e8414f7e4f326b044d23e42ae4a8c50be063c"
+    },
+    {
+      "report": "native-hud-scene-integration-validation.json",
+      "file": "tests/test_display.py",
+      "sha256": "9fd846e7657f579d3e557c2b1a9f677e528a0ed360b8773d0cb6017445ce1f5a"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_animation.c",
+      "sha256": "d203b4aff9c4af1b600ba33a08a0c19f93304af59802eca6d66bf7530bccd8cd"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_animation_runtime.c",
+      "sha256": "38358deefeb08d956f34373a53a4703e378a83f001a1c37ba9e160c4774322a0"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_assets.c",
+      "sha256": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_projection.c",
+      "sha256": "bc740ab2853a53726b1fd482a09564b8293d2da316f06d7c79c581f6458a89c2"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_queue.c",
+      "sha256": "1f77fcf321ad0136ab7547193abe915e031d67f070794475ab41c90f7f53985e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_raster.c",
+      "sha256": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/actor_scene.c",
+      "sha256": "5fc25cb020dbfc64365e78a952788f7af9cedf772394f4efbbf63d0819a17b2c"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/combat_damage.c",
+      "sha256": "45144b7eab60440a2e46045113e835cc9aaa495c5558e4d024982e4031ca72c8"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/combat_explosion.c",
+      "sha256": "ef14c63631b9bd7ad02354b8baf0216ee98b41f0252c9bd6366481e4d65111c8"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/combat_rewards.c",
+      "sha256": "0e2e79ca3b667b76b2e3b793464b303c25eae3aa9c9021a34ace7f8a47a79da1"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/combat_runtime.c",
+      "sha256": "b52da30fa44203e37ea75145a00cd2bc6aa5bb3988e2b7a4ca75ec30052dff67"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/display.c",
+      "sha256": "ef7fa4a880442d485c4e1246017fb59f0ed3c2134b9b06224e5634f63088dc0b"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_activation.c",
+      "sha256": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_cd.c",
+      "sha256": "062778a3c127f1ea1edf2b9affa6b2f608cf708b0a3a2c9efd41a62117a488cc"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_cd_runtime.c",
+      "sha256": "83f4be974225abca4de1b49cf51de0b9165be9fb7581586b5b0676166cb89175"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_lifecycle.c",
+      "sha256": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_motion.c",
+      "sha256": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_navigation.c",
+      "sha256": "7e2d20a17c29f61bd5b2f16e1d8f5f99fd71774f5298039ca7a80a9d1c7f111b"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_queries.c",
+      "sha256": "7253e314034e785f1b22474a72aaebe0eeec9c3fd26541e0f81c3f917221694c"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_ray.c",
+      "sha256": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/enemy_targeting.c",
+      "sha256": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/entity_dispatch.c",
+      "sha256": "4495dbcd5981e2561988677d30356d8352370ceaaecd9d71d63414642d294b77"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/entity_pool.c",
+      "sha256": "0c83949cf474ab7477d9ae213f25bbe9efa9137c2d1b298caa0be7b7f7fb9745"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/entity_runtime.c",
+      "sha256": "d06e1b5ee58b9a3a410b84181eeeb8be662e7bca9eabf9787c368892f5d0ee54"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/entity_timer.c",
+      "sha256": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/frame.c",
+      "sha256": "269c17ba16e9e43975bb0c9aaeaefff92099b04fd80175a32c3e39c075468df5"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/game_runtime.c",
+      "sha256": "34841ee022db99b25ca5802e59e225a8470ab06befe2ab39227b71ef7266a5d5"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/geometry.c",
+      "sha256": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/horizontal.c",
+      "sha256": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/hud_scene.c",
+      "sha256": "a2a910c5752731025d3d0c5977c022c1dbccb291507ee9219b63ea331eb03ef8"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/hud_sprites.c",
+      "sha256": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/input.c",
+      "sha256": "4f1648bb69c2816d2ca9000206d0aaa7eccb3b360225a9ad1fe613770f6b1439"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/input_dispatch.c",
+      "sha256": "e716c1ac859ad100e979411cd30bd2137ac33f3d14b95e84422bc68eec423a8a"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/inventory.c",
+      "sha256": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/level_runtime.c",
+      "sha256": "fe800e179a6b45be433954f68bb425ca74f93526f30719232324d95338e9a04f"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/level_script.c",
+      "sha256": "0277471c34d595a7027c6b188a267cd76f1780e049a652a8e66a8c0e5bd6cb93"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/map_actors.c",
+      "sha256": "97d692475514b229bd9c091b78f42262bb57e3777544dc85c4eef0bcef579b0c"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/map_assets.c",
+      "sha256": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/map_texture_bindings.c",
+      "sha256": "a74d2ac8a020b007548c3ba40d97bf46d01c5a18617fc6beb86b0901b58becb7"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/mode_control.c",
+      "sha256": "897fecd6daee50cd0012e4a27ff43d4b02fc3b8c8c44ae0aab10cf3b9aa1d0b0"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/movement.c",
+      "sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/pc_input.c",
+      "sha256": "073422978e62f5286b65899655780ef4a1efa9db79241bcc94d03d343da1acce"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/pc_input_runtime.c",
+      "sha256": "f8cd045351bae85300dd82b82e075642f06fdbefe4f0ab49fe1d102bc19c36d1"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/physics.c",
+      "sha256": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/pickup.c",
+      "sha256": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/pickup_respawn.c",
+      "sha256": "5c7a7f3493b8b37598802fb05b1292c014131e3f1c022d653e47816d41731d3e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/pickup_respawn_runtime.c",
+      "sha256": "5a3c919ed643d8a3e136413f3ec236b658a7920a4cc1089646bc561407fd8c2d"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/plane_renderer.c",
+      "sha256": "76b2bd8697de071cd53ffd306ae2aefc09106869dd41054eee3c4598c429b527"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_frame.c",
+      "sha256": "b07862303c3c06f1a30ca2ed6202304626255f329ec803ca86a405dc4ef84e63"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_gameplay.c",
+      "sha256": "e05dc891aa397c1c2518b868872665e8edf3edb4f1659e1331ce2204277d3070"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_hazards.c",
+      "sha256": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_lifecycle.c",
+      "sha256": "7f10f6e1a2a448df7b99e7ea825498977b3aa4942264499e57a91706f29a0300"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_motion.c",
+      "sha256": "13ca6ce7aaea173d009ac0a6c9b3525a22f418eee8ab27abefd3918ef797aff3"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_runtime.c",
+      "sha256": "44fc6941407dd7cf1af5243501d33f847a2c4a4353fcb0a3d86d7718a3b6f72b"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/player_spawn.c",
+      "sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_bounce.c",
+      "sha256": "906c8a511a34b74bb9b8537393d0152b4726810e9ce1df328e008b54dc3430f8"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_controller.c",
+      "sha256": "81ccd22accc72e23f8b8f228d4c6a87ace07d6c2e86585034b988f518653376d"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_create.c",
+      "sha256": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_effect.c",
+      "sha256": "a46fea096eb8566b096e6fb485c886b2fc1070d3c09dd4e3616ee8e68deb0068"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_motion.c",
+      "sha256": "ba43c21bf0d0fdc72c23e3c1853310e782710a87b4afcf6cdc5f59d27d962712"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/projectile_runtime.c",
+      "sha256": "48a410f75aa2dc7590fbc530976390aa2be73ea240c4e74466c2e4b5cffa5904"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/raster_fill.c",
+      "sha256": "91518ef3c54529d67af76082d1b68645b044314606b754880e7210986b24e98e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/ray_intercepts.c",
+      "sha256": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/ray_traversal.c",
+      "sha256": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/render_view.c",
+      "sha256": "ceb76657e7d83a27b60ce2b9ae8a393b135cbf901aacc41fa7e558864f0db23b"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/respawn_select.c",
+      "sha256": "627acc5704d438d538a38259d698cdad8fdeeda323e87ccf06f586397ca03c3f"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/script_spawn.c",
+      "sha256": "9e0b93e3cb7036b81f00d53465e1d64c4352388ae9a1e66042bce52d92dc2dcc"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sector_movers.c",
+      "sha256": "0e7d11f35b5f1ec04ab36113347ed68c1ea1e50bd3c13db3a494cf4622e1ad92"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/slide.c",
+      "sha256": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/spawn.c",
+      "sha256": "23fd1eedffc0c6012ec3063cd704a8479119fe56f928fffd5b7301cc5cb1ab72"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sprite_cache.c",
+      "sha256": "57679035438748a93eb93b16f4c770938d22d581181e722c907f467d1cb8e914"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sprite_dispatch.c",
+      "sha256": "e9c6b7ac4359bbdcf41f65b5a4a013455e383e6853ca463f326f40edf1cb388c"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sprite_oam.c",
+      "sha256": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/sprite_pool.c",
+      "sha256": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/switches.c",
+      "sha256": "d9400ca5b4cc7a76569c09925c04eab506d99108a834ec69f89ad6ae647d7a95"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/texture_assets.c",
+      "sha256": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/view.c",
+      "sha256": "3f167641d4f5cf0872b67778f25e99239d9bfb61c42585c280a0cffdb0a2faf5"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/wall_renderer.c",
+      "sha256": "be2dbd6b62d1e0b5451f7b7b8cc6d11e002e183efdbee98881f3192fad006d08"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_aim.c",
+      "sha256": "5991a6e07f5fceaf2e1e65162cba641d510917767cac72f23160f518621cc370"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_animation.c",
+      "sha256": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_controller.c",
+      "sha256": "b1affb9fb6953d8bab53b33cbf41c10cdfa92b4085036e202d6ce88fa47743c8"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_hit.c",
+      "sha256": "685a25dcdcdd2a2f901eb177a2aef008878f4ede0645f34cd20903590662ec42"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_loadout.c",
+      "sha256": "8e1bf94850a7efeb9a8b31785455bb2be9dc976c7573034591842a64df56b081"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_runtime.c",
+      "sha256": "f207b0fbc5f69ebf4749106136321c6a01eaf38a7d8981a8edd99fc043f615bc"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/weapon_select.c",
+      "sha256": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/world.c",
+      "sha256": "47ed6f7956095fa7d75bcfbfece3033cb381c01c64e1968b7cb907e9d9df1fc0"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/world_raster.c",
+      "sha256": "691e7faffcafa98a280b5d17d4dd5fa909a1b7b706407bd6fabb52b7ef7e11fc"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/world_scene.c",
+      "sha256": "526d944880076a741c8e3b96e0484edaa376d56e444c79e85a53da65dbde58b5"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "src/world_visibility.c",
+      "sha256": "69858740b3b43e693c6886b201c5e61d4e7abd5b2d030509c3afce94b099bff4"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "tests/test_hud_scene_rom.c",
+      "sha256": "3f81f7e52404b3c4b118e3a7d7203d5bf8877a963c9fd735e986d4135bc5a420"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "tests/test_hud_scene_rom.py",
+      "sha256": "d4faad33df87d2e14494a0f9ab2e4f24244411170f54661deea1409145f1792e"
+    },
+    {
+      "report": "native-hud-scene-rom-validation.json",
+      "file": "tests/test_display.py",
+      "sha256": "9fd846e7657f579d3e557c2b1a9f677e528a0ed360b8773d0cb6017445ce1f5a"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_animation.c",
+      "sha256": "d203b4aff9c4af1b600ba33a08a0c19f93304af59802eca6d66bf7530bccd8cd"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_animation_runtime.c",
+      "sha256": "38358deefeb08d956f34373a53a4703e378a83f001a1c37ba9e160c4774322a0"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_assets.c",
+      "sha256": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_projection.c",
+      "sha256": "bc740ab2853a53726b1fd482a09564b8293d2da316f06d7c79c581f6458a89c2"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_queue.c",
+      "sha256": "1f77fcf321ad0136ab7547193abe915e031d67f070794475ab41c90f7f53985e"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_raster.c",
+      "sha256": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/actor_scene.c",
+      "sha256": "5fc25cb020dbfc64365e78a952788f7af9cedf772394f4efbbf63d0819a17b2c"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/combat_damage.c",
+      "sha256": "45144b7eab60440a2e46045113e835cc9aaa495c5558e4d024982e4031ca72c8"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/combat_explosion.c",
+      "sha256": "ef14c63631b9bd7ad02354b8baf0216ee98b41f0252c9bd6366481e4d65111c8"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/combat_rewards.c",
+      "sha256": "0e2e79ca3b667b76b2e3b793464b303c25eae3aa9c9021a34ace7f8a47a79da1"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/combat_runtime.c",
+      "sha256": "b52da30fa44203e37ea75145a00cd2bc6aa5bb3988e2b7a4ca75ec30052dff67"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/display.c",
+      "sha256": "ef7fa4a880442d485c4e1246017fb59f0ed3c2134b9b06224e5634f63088dc0b"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_activation.c",
+      "sha256": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_cd.c",
+      "sha256": "062778a3c127f1ea1edf2b9affa6b2f608cf708b0a3a2c9efd41a62117a488cc"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_cd_runtime.c",
+      "sha256": "83f4be974225abca4de1b49cf51de0b9165be9fb7581586b5b0676166cb89175"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_lifecycle.c",
+      "sha256": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_motion.c",
+      "sha256": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_navigation.c",
+      "sha256": "7e2d20a17c29f61bd5b2f16e1d8f5f99fd71774f5298039ca7a80a9d1c7f111b"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_queries.c",
+      "sha256": "7253e314034e785f1b22474a72aaebe0eeec9c3fd26541e0f81c3f917221694c"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_ray.c",
+      "sha256": "40d9fe1964d2e47273b22175338904570c47b0a48cf067e1008b3f12c991d159"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/enemy_targeting.c",
+      "sha256": "1368e9bf079d37e432c427dacef9571cf2f3636d32e090dc18af8031a34da71d"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/entity_dispatch.c",
+      "sha256": "4495dbcd5981e2561988677d30356d8352370ceaaecd9d71d63414642d294b77"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/entity_pool.c",
+      "sha256": "0c83949cf474ab7477d9ae213f25bbe9efa9137c2d1b298caa0be7b7f7fb9745"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/entity_runtime.c",
+      "sha256": "d06e1b5ee58b9a3a410b84181eeeb8be662e7bca9eabf9787c368892f5d0ee54"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/entity_timer.c",
+      "sha256": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/frame.c",
+      "sha256": "269c17ba16e9e43975bb0c9aaeaefff92099b04fd80175a32c3e39c075468df5"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/game_runtime.c",
+      "sha256": "34841ee022db99b25ca5802e59e225a8470ab06befe2ab39227b71ef7266a5d5"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/geometry.c",
+      "sha256": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/horizontal.c",
+      "sha256": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/hud_scene.c",
+      "sha256": "a2a910c5752731025d3d0c5977c022c1dbccb291507ee9219b63ea331eb03ef8"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/hud_sprites.c",
+      "sha256": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/input.c",
+      "sha256": "4f1648bb69c2816d2ca9000206d0aaa7eccb3b360225a9ad1fe613770f6b1439"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/input_dispatch.c",
+      "sha256": "e716c1ac859ad100e979411cd30bd2137ac33f3d14b95e84422bc68eec423a8a"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/inventory.c",
+      "sha256": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/level_runtime.c",
+      "sha256": "fe800e179a6b45be433954f68bb425ca74f93526f30719232324d95338e9a04f"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/level_script.c",
+      "sha256": "0277471c34d595a7027c6b188a267cd76f1780e049a652a8e66a8c0e5bd6cb93"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/map_actors.c",
+      "sha256": "97d692475514b229bd9c091b78f42262bb57e3777544dc85c4eef0bcef579b0c"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/map_assets.c",
+      "sha256": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/map_texture_bindings.c",
+      "sha256": "a74d2ac8a020b007548c3ba40d97bf46d01c5a18617fc6beb86b0901b58becb7"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/mode_control.c",
+      "sha256": "897fecd6daee50cd0012e4a27ff43d4b02fc3b8c8c44ae0aab10cf3b9aa1d0b0"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/movement.c",
+      "sha256": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/pc_input.c",
+      "sha256": "073422978e62f5286b65899655780ef4a1efa9db79241bcc94d03d343da1acce"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/pc_input_runtime.c",
+      "sha256": "f8cd045351bae85300dd82b82e075642f06fdbefe4f0ab49fe1d102bc19c36d1"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/physics.c",
+      "sha256": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/pickup.c",
+      "sha256": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/pickup_respawn.c",
+      "sha256": "5c7a7f3493b8b37598802fb05b1292c014131e3f1c022d653e47816d41731d3e"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/pickup_respawn_runtime.c",
+      "sha256": "5a3c919ed643d8a3e136413f3ec236b658a7920a4cc1089646bc561407fd8c2d"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/plane_renderer.c",
+      "sha256": "76b2bd8697de071cd53ffd306ae2aefc09106869dd41054eee3c4598c429b527"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_frame.c",
+      "sha256": "b07862303c3c06f1a30ca2ed6202304626255f329ec803ca86a405dc4ef84e63"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_gameplay.c",
+      "sha256": "e05dc891aa397c1c2518b868872665e8edf3edb4f1659e1331ce2204277d3070"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_hazards.c",
+      "sha256": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_lifecycle.c",
+      "sha256": "7f10f6e1a2a448df7b99e7ea825498977b3aa4942264499e57a91706f29a0300"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_motion.c",
+      "sha256": "13ca6ce7aaea173d009ac0a6c9b3525a22f418eee8ab27abefd3918ef797aff3"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_runtime.c",
+      "sha256": "44fc6941407dd7cf1af5243501d33f847a2c4a4353fcb0a3d86d7718a3b6f72b"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/player_spawn.c",
+      "sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_bounce.c",
+      "sha256": "906c8a511a34b74bb9b8537393d0152b4726810e9ce1df328e008b54dc3430f8"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_controller.c",
+      "sha256": "81ccd22accc72e23f8b8f228d4c6a87ace07d6c2e86585034b988f518653376d"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_create.c",
+      "sha256": "c2408268c3269c45bc21fc2bcd9e31620e850e62260cf5ef39b53bdb0b9d26aa"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_effect.c",
+      "sha256": "a46fea096eb8566b096e6fb485c886b2fc1070d3c09dd4e3616ee8e68deb0068"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_motion.c",
+      "sha256": "ba43c21bf0d0fdc72c23e3c1853310e782710a87b4afcf6cdc5f59d27d962712"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/projectile_runtime.c",
+      "sha256": "48a410f75aa2dc7590fbc530976390aa2be73ea240c4e74466c2e4b5cffa5904"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/raster_fill.c",
+      "sha256": "91518ef3c54529d67af76082d1b68645b044314606b754880e7210986b24e98e"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/ray_intercepts.c",
+      "sha256": "37ace2a5929f8ee521c37383a243c757edfa1a2137cbd8c14a4aff171005c807"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/ray_traversal.c",
+      "sha256": "94363a2606dea1f524fb847d016ffa536fb5cf7046e3ab6a01738e06c7750c8e"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/render_view.c",
+      "sha256": "ceb76657e7d83a27b60ce2b9ae8a393b135cbf901aacc41fa7e558864f0db23b"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/respawn_select.c",
+      "sha256": "627acc5704d438d538a38259d698cdad8fdeeda323e87ccf06f586397ca03c3f"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/script_spawn.c",
+      "sha256": "9e0b93e3cb7036b81f00d53465e1d64c4352388ae9a1e66042bce52d92dc2dcc"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sector_movers.c",
+      "sha256": "0e7d11f35b5f1ec04ab36113347ed68c1ea1e50bd3c13db3a494cf4622e1ad92"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/slide.c",
+      "sha256": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/spawn.c",
+      "sha256": "23fd1eedffc0c6012ec3063cd704a8479119fe56f928fffd5b7301cc5cb1ab72"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sprite_assets.c",
+      "sha256": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sprite_cache.c",
+      "sha256": "57679035438748a93eb93b16f4c770938d22d581181e722c907f467d1cb8e914"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sprite_dispatch.c",
+      "sha256": "e9c6b7ac4359bbdcf41f65b5a4a013455e383e6853ca463f326f40edf1cb388c"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sprite_oam.c",
+      "sha256": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/sprite_pool.c",
+      "sha256": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/switches.c",
+      "sha256": "d9400ca5b4cc7a76569c09925c04eab506d99108a834ec69f89ad6ae647d7a95"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/texture_assets.c",
+      "sha256": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/view.c",
+      "sha256": "3f167641d4f5cf0872b67778f25e99239d9bfb61c42585c280a0cffdb0a2faf5"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/wall_renderer.c",
+      "sha256": "be2dbd6b62d1e0b5451f7b7b8cc6d11e002e183efdbee98881f3192fad006d08"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_aim.c",
+      "sha256": "5991a6e07f5fceaf2e1e65162cba641d510917767cac72f23160f518621cc370"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_animation.c",
+      "sha256": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_controller.c",
+      "sha256": "b1affb9fb6953d8bab53b33cbf41c10cdfa92b4085036e202d6ce88fa47743c8"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_hit.c",
+      "sha256": "685a25dcdcdd2a2f901eb177a2aef008878f4ede0645f34cd20903590662ec42"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_loadout.c",
+      "sha256": "8e1bf94850a7efeb9a8b31785455bb2be9dc976c7573034591842a64df56b081"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_runtime.c",
+      "sha256": "f207b0fbc5f69ebf4749106136321c6a01eaf38a7d8981a8edd99fc043f615bc"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/weapon_select.c",
+      "sha256": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/world.c",
+      "sha256": "47ed6f7956095fa7d75bcfbfece3033cb381c01c64e1968b7cb907e9d9df1fc0"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/world_raster.c",
+      "sha256": "691e7faffcafa98a280b5d17d4dd5fa909a1b7b706407bd6fabb52b7ef7e11fc"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/world_scene.c",
+      "sha256": "526d944880076a741c8e3b96e0484edaa376d56e444c79e85a53da65dbde58b5"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "src/world_visibility.c",
+      "sha256": "69858740b3b43e693c6886b201c5e61d4e7abd5b2d030509c3afce94b099bff4"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "platform/win32/input_win32.c",
+      "sha256": "13f9fa9b0b37f0c52ec1ffc9399b071481aaa82002ac8f625c09ed8862ebc5cc"
+    },
+    {
+      "report": "windows-native-build-validation.json",
+      "file": "platform/win32/viewer.c",
+      "sha256": "5ed9dc88844ea792fee4ce4d3d7243d99bf36b64f32d574bab43798fc4d3958c"
+    },
+    {
+      "report": "native-viewer-validation.json",
+      "file": "platform/win32/viewer.c",
+      "sha256": "5ed9dc88844ea792fee4ce4d3d7243d99bf36b64f32d574bab43798fc4d3958c"
+    },
+    {
+      "report": "native-viewer-validation.json",
+      "file": "build/native-windows/Release/ssa_native_viewer.exe",
+      "sha256": "b3fb59cb2b5dc7579629074dec372e24d309054db81a277fabb7b6461868c46c"
+    }
+  ]
+}

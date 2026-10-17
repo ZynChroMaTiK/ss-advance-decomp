@@ -1,0 +1,24 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_allocations": 33792,
+  "whole_insertions": 32768,
+  "whole_order_passes": 1024,
+  "whole_pixel_passes": 256,
+  "actual_resource_draws": 8192,
+  "clip_words_compared": 47723672,
+  "linked_records_compared": 789504,
+  "guards": 1024,
+  "scope": "Whole1238 mixed depth/clip insertion and01828 final native actor drawing.",
+  "native_sanitizers": {
+    "assertions": 36564,
+    "guards": 432,
+    "native_frames": 1024,
+    "native_actor_draws": 8192
+  },
+  "source_sha256": {
+    "include/ssa/actor_queue.h": "f95193480e0bd14df8c50e12a4ac70db7d8171652cbd3dcfbc9a30470c044583",
+    "src/actor_queue.c": "1f77fcf321ad0136ab7547193abe915e031d67f070794475ab41c90f7f53985e",
+    "tests/test_actor_queue.c": "b683566ef66b816ce217214621d08960c9f959e8eff114dfce1d129a4d85b056",
+    "tests/test_actor_queue_rom.py": "40c97a3f63c34a36763f625fdd4028471411b34f491da53a35c45633b867adc4"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole13978 CD controller incl13924,13868,137DC; navigation1288C controlled no-change on both sides. Real activation,contact branch,drain,face/distance/math,death/corpse. Combat/audio/group/destruction controlled. Animation setter executes; native animation_done reset compared at defined event boundary. Deferred native destruction projected as cleared after request.",
+  "rom_comparisons": {
+    "sound_thresholds": 384,
+    "activation": 275,
+    "corpse": 275,
+    "proximity_and_hurt": 320,
+    "contact": 24,
+    "random": 6000
+  },
+  "native_guards": 20,
+  "callback_reentry_guards": 8206,
+  "callback_failure_cases": 7,
+  "source_sha256": {
+    "enemy_cd.c": "062778a3c127f1ea1edf2b9affa6b2f608cf708b0a3a2c9efd41a62117a488cc",
+    "enemy_activation.c": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2",
+    "entity_timer.c": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e",
+    "enemy_lifecycle.c": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627",
+    "enemy_motion.c": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd",
+    "player_hazards.c": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "world.c": "47ed6f7956095fa7d75bcfbfece3033cb381c01c64e1968b7cb907e9d9df1fc0",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
+    "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
+    "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
+    "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
+  },
+  "navigation_stub_sha256": "bbe40fb3af27ca57921ab0cafb87527e30797481b61c00b35c9b36fc313644ba",
+  "total_rom_comparisons": 7278,
+  "status": "passed"
+}

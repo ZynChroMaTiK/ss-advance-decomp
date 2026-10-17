@@ -1,0 +1,12 @@
+{
+  "result": "pass",
+  "rom_comparisons": 1400,
+  "diagnostic_map_guards": 2,
+  "invalid_argument_guards": 6,
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "tests/test_music_selection.py": "bb4c997c6bba7d10777b578d301a4f43b36bc182e1b9d5c0ffbaf8775b2c5b36"
+  }
+}

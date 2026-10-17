@@ -1,0 +1,15 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "local_routine_comparisons": 180916,
+  "network_entry_checks": 19788,
+  "poll_dispatch_chains": 3072,
+  "guards": 10,
+  "preserved_nonselected_slots": 717961,
+  "result": "pass",
+  "rom_comparisons": 183988,
+  "scope": "Complete original05898 local/bypass return paths only; network entry checks stop at014D44 and are counted separately. Network transport, packet collection, position correction, received damage/pickups and packet sending remain unsupported. Native source executes no ROM instructions.",
+  "source_sha256": {
+    "input_dispatch.c": "e716c1ac859ad100e979411cd30bd2137ac33f3d14b95e84422bc68eec423a8a",
+    "input.c": "4f1648bb69c2816d2ca9000206d0aaa7eccb3b360225a9ad1fe613770f6b1439"
+  }
+}

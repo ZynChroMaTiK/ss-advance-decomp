@@ -1,0 +1,20 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole FC04,116BC,E460; no instruction hooks. Complete 48-byte objects and control bytes. Actual 233 ROM animation sequences plus explicit marker-data mutations.",
+  "rom_comparisons": {
+    "set": 131072,
+    "idle": 8192,
+    "tick": 59648,
+    "consecutive": 74560,
+    "disabled": 768,
+    "markers": 1024,
+    "active_pool_frames": 256
+  },
+  "native_guards": 23,
+  "animations": 233,
+  "largest_sequence_words": 18,
+  "native_initializer_checks": 1,
+  "total_rom_comparisons": 275520,
+  "source_sha256": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd",
+  "passed": true
+}

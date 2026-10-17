@@ -1,0 +1,18 @@
+[
+  {
+    "variant": "pointer comparison, global append",
+    "result": "score 206 (97.5% match) \u2014 best so far 206. Target 85 insns, yours 85.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET                | YOURS\n   ...\n   adds r3, r0, #0       | adds r3, r0, #0\n   ldr r0, [pc, #0x18]   | ldr r0, [pc, #0x18]\n >                       | ldrh r2, [r0, #0x1e]\n s ldr r1, [pc, #0x1c]   | ldr r1, [pc, #0x18]\n   adds r4, r0, #0       | adds r4, r0, #0\n < ldrh r0, [r4, #0x1e]  | \n r cmp r0, r1            | cmp r2, r1\n   bhi #0xa4             | bhi #0xa4\n   movs r2, #0           | movs r2, #0\n   ..."
+  },
+  {
+    "variant": "local unsigned limit, global append",
+    "result": "score 210 (97.5% match) \u2014 best so far 206. Target 85 insns, yours 85.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET                | YOURS\n   ...\n   adds r3, r0, #0       | adds r3, r0, #0\n   ldr r0, [pc, #0x18]   | ldr r0, [pc, #0x18]\n r ldr r1, [pc, #0x1c]   | ldr r2, [pc, #0x1c]\n >                       | ldrh r1, [r0, #0x1e]\n   adds r4, r0, #0       | adds r4, r0, #0\n < ldrh r0, [r4, #0x1e]  | \n r cmp r0, r1            | cmp r1, r2\n   bhi #0xa4             | bhi #0xa4\n   movs r2, #0           | movs r2, #0\n   ..."
+  },
+  {
+    "variant": "local signed limit, global append",
+    "result": "score 410 (95.1% match) \u2014 best so far 206. Target 85 insns, yours 85.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET                | YOURS\n   ...\n   adds r3, r0, #0       | adds r3, r0, #0\n   ldr r0, [pc, #0x18]   | ldr r0, [pc, #0x18]\n r ldr r1, [pc, #0x1c]   | ldr r2, [pc, #0x1c]\n >                       | ldrh r1, [r0, #0x1e]\n   adds r4, r0, #0       | adds r4, r0, #0\n < ldrh r0, [r4, #0x1e]  | \n r cmp r0, r1            | cmp r1, r2\n | bhi #0xa4             | bgt #0xa4\n   movs r2, #0           | movs r2, #0\n   movs r0, #0x20        | movs r0, #0x20\n   ..."
+  },
+  {
+    "variant": "limit declared first, global append",
+    "result": "score 610 (92.8% match) \u2014 best so far 206. Target 85 insns, yours 85.\nmarkers: r=regalloc s=stack-offset i=operand |=different insn <=missing (target only) >=extra (yours only) o=reordered\n   TARGET                | YOURS\n   ...\n   ldr r0, [pc, #0x18]   | ldr r0, [pc, #0x18]\n   ldr r1, [pc, #0x1c]   | ldr r1, [pc, #0x1c]\n >                       | ldrh r2, [r1, #0x1e]\n r adds r4, r0, #0       | adds r4, r1, #0\n < ldrh r0, [r4, #0x1e]  | \n r cmp r0, r1            | cmp r2, r0\n   bhi #0xa4             | bhi #0xa4\n   movs r2, #0           | movs r2, #0\n   ...\n   b #0x32               | b #0x32\n   movs r0, r0           | movs r0, r0\n | cmn r0, r6            | lsrs r6, r1, #0x18\n | lsls r0, r0, #0xc     | movs r0, r0\n   lsrs r6, r1, #0x18    | lsrs r6, r1, #0x18\n   movs r0, r0           | movs r0, r0\n   ...\nwhen linking your code at the function's address:\n- a pointer to D_030042F0 where the original has 0x00000E0E (D_00000E0E)"
+  }
+]

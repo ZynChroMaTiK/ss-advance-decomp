@@ -1,0 +1,40 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": {
+    "all_types": 65536,
+    "capacities": 85,
+    "dead_cursor_repeats": 85,
+    "swap_release": 3570,
+    "append_release_redirect": 24,
+    "submit_clear_keeps_cursor": 1,
+    "random_mutation": 1024,
+    "failure_prefixes": 8,
+    "guard_setup": 11
+  },
+  "callback_reentry_guards": 537900,
+  "native_guards": 10,
+  "callback_failures": 8,
+  "handler_mapping": {
+    "0x2": "0x800f150",
+    "0x3": "0x800f100",
+    "0x4": "0x800f0b8",
+    "0x5": "0x800e700",
+    "0x6": "0x800e7a4",
+    "0x7": "0x800f1c0",
+    "0x8": "0x800f27c",
+    "0x9": "0x800ecf8",
+    "0xa": "0x800ee60",
+    "0xb": "0x800efb4",
+    "0xc": "0x800f344",
+    "0xd": "0x800e9d4",
+    "0xe": "0x800f4a4",
+    "0xf": "0x800f5a4",
+    "0x10": "0x800f6c8",
+    "0x11": "0x800f724",
+    "0x12": "0x800f794"
+  },
+  "optional_observer_full_queue": 1,
+  "rom_comparisons_total": 70344,
+  "source_sha256": "e9c6b7ac4359bbdcf41f65b5a4a013455e383e6853ca463f326f40edf1cb388c",
+  "scope": "Whole F85C plus actual101C4 reset and101D0 queue append, controlled handlers and post-submit observers, all65536types, allcapacity/releasepositions, append/deletion/currentredirection, alive-dependentcursor, state/counter changes. Full84queuebytes/lowbyte active_index truncation. Nativecallbackfailurecleanup and guards. UBSan."
+}

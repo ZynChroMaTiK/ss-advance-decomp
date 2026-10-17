@@ -1,0 +1,14 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "boundary_cases": 624,
+  "random_cases": 6000,
+  "sequence_frames": 2048,
+  "native_guard_checks": 14,
+  "scope": "Whole 080064B8 including multiplayer push, actual original math, player/body synchronization and 4CE0 vertical physics. Horizontal 4BDC is a controlled state-mutating callback; BIOS division is provided by the test. Full player/body bytes, peer preservation and horizontal callback entry state/order compared. Native jump/retained-heading options excluded.",
+  "total_rom_comparisons": 8672,
+  "source_sha256": {
+    "player_motion.c": "980d909ff4952fc70e1e55f62c6ad05be684a1733cd813f55f4bb298413deaa5",
+    "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98"
+  }
+}

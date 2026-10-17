@@ -1,0 +1,13 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "row_comparisons": 2563,
+  "column_comparisons": 2563,
+  "sky_comparisons": 1063,
+  "overlap_comparisons": 819,
+  "guards": 22,
+  "source_sha256": {
+    "src/raster_fill.c": "91518ef3c54529d67af76082d1b68645b044314606b754880e7210986b24e98e",
+    "include/ssa/raster_fill.h": "d1e5bf918d159766dbf0f57343a2ee1f1a8bd53cd2a7cb528f7ff767c0f20214",
+    "tests/test_raster_fill_rom.py": "6e9d063b9957dea824710b7260ff3913671c4a58df7b6805c4ecbb182580c2d4"
+  }
+}

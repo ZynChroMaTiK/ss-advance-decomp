@@ -1,0 +1,99 @@
+{
+    "result":  "pass",
+    "modes":  [
+                  {
+                      "snapshot":  "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\native-game-smoke\\look-up.bmp",
+                      "name":  "look-up",
+                      "frontend":  {
+                                       "result":  "pass",
+                                       "frames":  30,
+                                       "health":  100,
+                                       "entities":  15,
+                                       "score":  0,
+                                       "hidden_window":  true,
+                                       "render_width":  640,
+                                       "render_height":  480,
+                                       "world_rays":  0,
+                                       "initial_width":  640,
+                                       "initial_height":  480,
+                                       "pitch":  5440,
+                                       "buffered_presents":  1,
+                                       "presentation_samples":  0
+                                   }
+                  },
+                  {
+                      "snapshot":  "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\native-game-smoke\\look-down-chase.bmp",
+                      "name":  "look-down-chase",
+                      "frontend":  {
+                                       "result":  "pass",
+                                       "frames":  120,
+                                       "health":  100,
+                                       "entities":  16,
+                                       "score":  0,
+                                       "hidden_window":  true,
+                                       "render_width":  1280,
+                                       "render_height":  720,
+                                       "world_rays":  0,
+                                       "initial_width":  1280,
+                                       "initial_height":  720,
+                                       "pitch":  -5440,
+                                       "buffered_presents":  1,
+                                       "presentation_samples":  0
+                                   }
+                  },
+                  {
+                      "snapshot":  "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\native-game-smoke\\look-up-4k.bmp",
+                      "name":  "look-up-4k",
+                      "frontend":  {
+                                       "result":  "pass",
+                                       "frames":  11,
+                                       "health":  100,
+                                       "entities":  16,
+                                       "score":  0,
+                                       "hidden_window":  true,
+                                       "render_width":  3840,
+                                       "render_height":  2160,
+                                       "world_rays":  0,
+                                       "initial_width":  3840,
+                                       "initial_height":  2160,
+                                       "pitch":  5440,
+                                       "buffered_presents":  1,
+                                       "presentation_samples":  0
+                                   }
+                  },
+                  {
+                      "snapshot":  "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\native-game-smoke\\look-original.bmp",
+                      "name":  "look-original",
+                      "frontend":  {
+                                       "result":  "pass",
+                                       "frames":  30,
+                                       "health":  100,
+                                       "entities":  15,
+                                       "score":  0,
+                                       "hidden_window":  true,
+                                       "render_width":  240,
+                                       "render_height":  160,
+                                       "world_rays":  0,
+                                       "initial_width":  240,
+                                       "initial_height":  160,
+                                       "pitch":  0,
+                                       "buffered_presents":  1,
+                                       "presentation_samples":  0
+                                   }
+                  }
+              ],
+    "physical_devices_tested":  false,
+    "executable_sha256":  "41ac793e789d710ce567dd9001a2d77a80bf588a57a8cb9259fbf2150c0b9e76",
+    "source_sha256":  {
+                          "platform/win32/game.c":  "e0b461b0accc4269e0220f1e706d0bde4bfd3319985b9aa17ec1f2f8b014668e",
+                          "src/native_game.c":  "300e33660442d58a12c1d708b8191974af1fa1fd3bc7c8ef898d1aeba04615c0",
+                          "src/pc_input.c":  "f0c21aa6dd332ee362c63ab7b43ef146a0380e34a4ecd41776923b1ae325bba8",
+                          "src/pc_input_runtime.c":  "5209c87de7352a39ef85ed527d67397c9676800942b4cc12e27194fbea37f33e",
+                          "src/player_runtime.c":  "2d41e19982060115fd5561afbcd91dc5562e478fa951fd855464d907ccf11b2e",
+                          "src/pc_renderer.c":  "21dcda5ce3b0517af8998b92b3802a0b8ad9ee324340301addc39ed3a4646980",
+                          "src/pc_renderer_pitch.inc":  "c299beb83c9a23aa799028fd96466342fedc3b58237a9148e698f3bb52e8617c",
+                          "src/weapon_hit.c":  "a4f21ace0e023e9f6d1eac78f06d4448a6edc4b20c9d208061144a0222692f37",
+                          "src/weapon_controller.c":  "3326a2a1416f6fdd578cc601efb9c98927b5cac0ad09b421b5143deaf7864172",
+                          "src/weapon_runtime.c":  "541efd64f5dc0fd4042de1d0626e4227a7f683ebe92d0e7dc3ca685e5c012afe"
+                      }
+}

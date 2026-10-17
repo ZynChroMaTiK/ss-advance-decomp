@@ -1,0 +1,7 @@
+[
+  {
+    "function": "sub_08013978",
+    "source": "extern void sub_08013940(void *);\nextern void sub_08013924(void *);\nextern void sub_0801385C(void *);\nextern void sub_080137DC(void *);\n\nvoid sub_08013978(void *entity)\n{\n    switch (*(u8 *)((u8 *)entity + 0x3e)) {\n    case 0:\n        sub_08013940(entity);\n        break;\n    case 1:\n        sub_08013924(entity);\n        break;\n    case 2:\n        sub_0801385C(entity);\n        break;\n    }\n    sub_080137DC(entity);\n}\n",
+    "result": "\u2705 MATCH! sub_08013978 is byte-identical to the target (31 instructions). Credited to codex-session; your claim is released. Call claim_function for the next one."
+  }
+]

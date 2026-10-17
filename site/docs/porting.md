@@ -11,6 +11,12 @@ original1097C behavior, with16 native Gunrilla regressions and two directed ROM
 comparisons. Read
 [native-game.md](native-game.md) for the current composition, validation and limits.
 Earlier sections retain the recovery history and individual subsystem boundaries.
+The next-level probes found a Time Strike render failure: an animation change
+while frozen retained a frame from a longer sequence. The native view adapter
+now supplies a valid frame in its render snapshot, without advancing animation
+or changing gameplay. Both renderers and views pass the32318-check special-weapon
+suite on GCC sanitizers and MSVC. Level11 remains unavailable because its earned
+carry probe has not completed; see [special-weapons.md](special-weapons.md).
 Weapon7 Prion shots now launch independently on the sight line immediately,
 including level aim before any pitch input; the old sideways offset is removed.
 See [weapon-fixes.md](weapon-fixes.md).

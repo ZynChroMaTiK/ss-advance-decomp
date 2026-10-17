@@ -1,0 +1,21 @@
+name: Check project website
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'scripts/test_site*', '.github/workflows/site-checks.yml']
+  pull_request:
+    paths: ['site/**', 'scripts/test_site*', '.github/workflows/site-checks.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify level geometry and two-sided surfaces
+        run: node scripts/test_site.mjs
+      - name: Verify unified routing and iframe bridge
+        run: node scripts/test_site_routes.mjs
+      - name: Verify resources below the Pages project prefix
+        run: python3 scripts/test_site_http.py

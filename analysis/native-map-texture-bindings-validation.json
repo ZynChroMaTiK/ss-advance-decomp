@@ -1,0 +1,247 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_rom_calls": 1059,
+  "records_compared": 10910,
+  "map_cases": [
+    {
+      "level": 0,
+      "family": 0,
+      "selected": true,
+      "records": 63,
+      "missing_names": 14
+    },
+    {
+      "level": 0,
+      "family": 1,
+      "selected": false,
+      "records": 63,
+      "missing_names": 26
+    },
+    {
+      "level": 1,
+      "family": 0,
+      "selected": true,
+      "records": 73,
+      "missing_names": 19
+    },
+    {
+      "level": 1,
+      "family": 1,
+      "selected": false,
+      "records": 73,
+      "missing_names": 45
+    },
+    {
+      "level": 2,
+      "family": 0,
+      "selected": true,
+      "records": 79,
+      "missing_names": 20
+    },
+    {
+      "level": 2,
+      "family": 1,
+      "selected": false,
+      "records": 79,
+      "missing_names": 42
+    },
+    {
+      "level": 3,
+      "family": 0,
+      "selected": true,
+      "records": 70,
+      "missing_names": 17
+    },
+    {
+      "level": 3,
+      "family": 1,
+      "selected": false,
+      "records": 70,
+      "missing_names": 27
+    },
+    {
+      "level": 4,
+      "family": 0,
+      "selected": true,
+      "records": 77,
+      "missing_names": 18
+    },
+    {
+      "level": 4,
+      "family": 1,
+      "selected": false,
+      "records": 77,
+      "missing_names": 40
+    },
+    {
+      "level": 5,
+      "family": 0,
+      "selected": true,
+      "records": 70,
+      "missing_names": 13
+    },
+    {
+      "level": 5,
+      "family": 1,
+      "selected": false,
+      "records": 70,
+      "missing_names": 33
+    },
+    {
+      "level": 6,
+      "family": 0,
+      "selected": false,
+      "records": 67,
+      "missing_names": 40
+    },
+    {
+      "level": 6,
+      "family": 1,
+      "selected": true,
+      "records": 67,
+      "missing_names": 10
+    },
+    {
+      "level": 7,
+      "family": 0,
+      "selected": false,
+      "records": 53,
+      "missing_names": 19
+    },
+    {
+      "level": 7,
+      "family": 1,
+      "selected": true,
+      "records": 53,
+      "missing_names": 13
+    },
+    {
+      "level": 8,
+      "family": 0,
+      "selected": false,
+      "records": 65,
+      "missing_names": 36
+    },
+    {
+      "level": 8,
+      "family": 1,
+      "selected": true,
+      "records": 65,
+      "missing_names": 6
+    },
+    {
+      "level": 9,
+      "family": 0,
+      "selected": false,
+      "records": 23,
+      "missing_names": 15
+    },
+    {
+      "level": 9,
+      "family": 1,
+      "selected": true,
+      "records": 23,
+      "missing_names": 3
+    },
+    {
+      "level": 10,
+      "family": 0,
+      "selected": false,
+      "records": 59,
+      "missing_names": 23
+    },
+    {
+      "level": 10,
+      "family": 1,
+      "selected": true,
+      "records": 59,
+      "missing_names": 22
+    },
+    {
+      "level": 11,
+      "family": 0,
+      "selected": false,
+      "records": 70,
+      "missing_names": 51
+    },
+    {
+      "level": 11,
+      "family": 1,
+      "selected": true,
+      "records": 70,
+      "missing_names": 16
+    },
+    {
+      "level": 12,
+      "family": 0,
+      "selected": true,
+      "records": 13,
+      "missing_names": 3
+    },
+    {
+      "level": 12,
+      "family": 1,
+      "selected": false,
+      "records": 13,
+      "missing_names": 3
+    },
+    {
+      "level": 13,
+      "family": 0,
+      "selected": true,
+      "records": 18,
+      "missing_names": 3
+    },
+    {
+      "level": 13,
+      "family": 1,
+      "selected": false,
+      "records": 18,
+      "missing_names": 9
+    },
+    {
+      "level": 14,
+      "family": 0,
+      "selected": false,
+      "records": 19,
+      "missing_names": 8
+    },
+    {
+      "level": 14,
+      "family": 1,
+      "selected": true,
+      "records": 19,
+      "missing_names": 6
+    },
+    {
+      "level": 15,
+      "family": 0,
+      "selected": false,
+      "records": 35,
+      "missing_names": 15
+    },
+    {
+      "level": 15,
+      "family": 1,
+      "selected": true,
+      "records": 35,
+      "missing_names": 2
+    }
+  ],
+  "live_side_lookups": 59778,
+  "image_lookups": 5124,
+  "live_changes": 160,
+  "native_guards": 324,
+  "scope": "Whole original B0C4 including B0FC and real C57F4, no instruction hooks. Both archive families/all16 maps; bounded live wall-side lookup. No rasterizer or sector texture invention.",
+  "source_sha256": {
+    "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "texture_assets.c": "07835a96d4fab270f78491fae8d653ac541633131dd07748523261b08c851fed",
+    "map_texture_bindings.c": "a74d2ac8a020b007548c3ba40d97bf46d01c5a18617fc6beb86b0901b58becb7"
+  },
+  "sanitizer_integration": {
+    "assertions": 59951,
+    "live_side_lookups": 29889,
+    "native_switch_changes": 8,
+    "guards": 33
+  }
+}

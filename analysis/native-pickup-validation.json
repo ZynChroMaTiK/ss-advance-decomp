@@ -1,0 +1,13 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "normal_cases": 2640,
+  "replay_cases": 780,
+  "random_cases": 2000,
+  "native_guards": 6,
+  "effects": 6482,
+  "scope": "whole0801B99C plus all seven unhooked inventory helpers; hooks only script/sound/text/network/nearest/destruction; full bytes and effect-time inventory/counter snapshots",
+  "total_rom_comparisons": 5420,
+  "source_sha256": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4",
+  "compiler": "GCC C11 strict warnings and UndefinedBehaviorSanitizer",
+  "result": "pass"
+}

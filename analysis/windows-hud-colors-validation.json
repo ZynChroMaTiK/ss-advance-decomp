@@ -1,0 +1,53 @@
+{
+    "result":  "pass",
+    "scope":  "Targeted hidden Windows gameplay smoke after original HUD bar palette restoration; not full campaign validation.",
+    "cases":  [
+                  {
+                      "renderer":  "pc",
+                      "result":  {
+                                     "result":  "pass",
+                                     "frames":  180,
+                                     "health":  100,
+                                     "entities":  17,
+                                     "score":  0,
+                                     "hidden_window":  true,
+                                     "render_width":  1264,
+                                     "render_height":  861,
+                                     "world_rays":  0,
+                                     "initial_width":  1264,
+                                     "initial_height":  861,
+                                     "pitch":  0,
+                                     "buffered_presents":  1,
+                                     "presentation_samples":  3
+                                 },
+                      "snapshot_sha256":  "bc32b48c621c2c2a06070aca78ced5805480eb738982f0c79f11913e63113095"
+                  },
+                  {
+                      "renderer":  "reference",
+                      "result":  {
+                                     "result":  "pass",
+                                     "frames":  180,
+                                     "health":  100,
+                                     "entities":  17,
+                                     "score":  0,
+                                     "hidden_window":  true,
+                                     "render_width":  240,
+                                     "render_height":  160,
+                                     "world_rays":  0,
+                                     "initial_width":  240,
+                                     "initial_height":  160,
+                                     "pitch":  0,
+                                     "buffered_presents":  1,
+                                     "presentation_samples":  0
+                                 },
+                      "snapshot_sha256":  "557c718e576bd7b8cd0212e056bee2a74c3d354631381b3b1a1044b8cf7cd8c2"
+                  }
+              ],
+    "executable_sha256":  "a65fc19561386f95d7ec6d160238b76bc091ab2828182dd5dbd08aff12cac1aa",
+    "source_sha256":  {
+                          "src/display.c":  "25362cd8c23983aa5e672283919ae16a34faf15d713776da5f9a150105336302",
+                          "src/native_game.c":  "cfdc0b66365eb0d60c611a2d786fc75191b24af7563a1665e6b9f85a9c543893",
+                          "src/pc_renderer.c":  "fb0ed016de2e8721e4b5671cfb523c54b786da7f27ab486ac5baa03f5528c956",
+                          "include/ssa/display.h":  "22dad1d6e7d0846eeb530fc6460db508d5fd28922d28725dd1929129b354e6ab"
+                      }
+}

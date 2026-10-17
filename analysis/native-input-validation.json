@@ -1,0 +1,9 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "record_cases": 5120,
+  "playback_cases": 1536,
+  "poll_cases": 8192,
+  "total_cases": 14848,
+  "result": "pass",
+  "native_source_sha256": "4f1648bb69c2816d2ca9000206d0aaa7eccb3b360225a9ad1fe613770f6b1439"
+}

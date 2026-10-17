@@ -1,0 +1,24 @@
+{
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "whole_visibility": 9952,
+  "whole_preparation": 2048,
+  "whole_allocator": 11147,
+  "whole_release": 5337,
+  "whole_transfer": 2048,
+  "whole_reset": 64,
+  "uploaded_bytes": 7769920,
+  "guards": 9,
+  "scope": "Whole DBF4/DBDC/E0A8/E2EC and E358 transfers; BIOS/DMA only modeled.",
+  "sanitizers": {
+    "assertions": 20624,
+    "frames": 2359,
+    "guards": 11
+  },
+  "source_sha256": {
+    "src/sprite_cache.c": "57679035438748a93eb93b16f4c770938d22d581181e722c907f467d1cb8e914",
+    "src/sprite_assets.c": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5",
+    "include/ssa/sprite_cache.h": "95958a5678319378c72a77c2a64eb7859c3abb4194010b49d245f6a417117914",
+    "tests/test_sprite_cache.c": "e98a6962fcd24a4e67acae1f76e7fe4a89bc60dd636874fad87c9d8095c9f634",
+    "tests/test_sprite_cache_rom.py": "9a592d90b9f208cde9b5cfff4c8a131600d678290a489ebb2da0b8c8d1831d1b"
+  }
+}
