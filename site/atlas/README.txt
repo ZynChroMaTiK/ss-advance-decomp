@@ -18,12 +18,13 @@ Egypt/Rome chapter artwork and bitmap font sheets. Green framed panels and
 white selection states follow the game's menus and NETRICSA presentation.
 The interactive map uses a matching green palette while keeping the sprite
 colors and category colors. Printable PNG/SVG sheets retain their export palette.
+Sheet legends are provided by the HTML interface; PNG/SVG maps omit the sidebar.
 All visual assets and scripts are embedded in index.html for offline use.
 
 CONTENTS
   index.html                 Offline interactive atlas, all 16 levels
   all-levels.png             Overview/contact sheet
-  png/level-01.png ... 16    2200 x 1900 annotated maps
+  png/level-01.png ... 16    1760 x 1900 annotated maps, without legend sidebars
   svg/level-01.svg ... 16    Scalable annotated maps
   data/level-01.json ... 16  All map geometry, placements, scripts and metadata
   icons/                     Original sprite PNGs used on the maps

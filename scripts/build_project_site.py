@@ -53,7 +53,8 @@ def main():
     hashes['index.html']=hashlib.sha256((SITE/'atlas/index.html').read_bytes()).hexdigest()
     (SITE/'atlas/manifest-sha256.json').write_text(json.dumps(hashes,indent=2)+'\n')
     shutil.copytree(ATLAS/'theme',SITE/'assets/theme',dirs_exist_ok=True)
-    hero=(ATLAS/'svg/level-01.svg').read_text(encoding='utf8').replace('viewBox="0 0 2200 1900"','viewBox="65 340 1630 1230"')
+    hero=re.sub(r'viewBox="[^"]+"','viewBox="65 340 1630 1230"',(ATLAS/'svg/level-01.svg').read_text(encoding='utf8'),count=1)
+    hero=re.sub(r'width="\d+" height="\d+"','width="1630" height="1230"',hero,count=1)
     for old,new in {'#101822':'#101b12','#334555':'#2c422d','#26323f':'#172719','#172330':'#152418','#23303e':'#203523','#c5d3e2':'#abc294','#6b8196':'#52734b','#dfe7f2':'#dfebd3','#5ed8d0':'#c0ef78'}.items():hero=hero.replace(old,new)
     (SITE/'assets/theme/hero-map.svg').write_text(hero,encoding='utf8')
     page=SITE/'index.html'

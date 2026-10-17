@@ -15,6 +15,7 @@
   "scripts": 116,
   "svg_xml_valid": 16,
   "png_dimensions_verified": 16,
+  "sheet_legends_removed": 16,
   "original_theme_assets_byte_identical": 7,
   "sprite_png_hashes_verified": 66,
   "original_single_layer_sprites_byte_identical": true,

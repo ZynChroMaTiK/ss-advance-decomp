@@ -1,10 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1900" viewBox="0 0 2200 1900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1900" viewBox="0 0 1760 1900">
 <style>text{font-family:Arial,sans-serif;paint-order:stroke;stroke:#101822;stroke-width:2px;stroke-linejoin:round} [data-ref]{cursor:pointer} [data-layer="enemies"],[data-layer="scripted-enemies"],[data-layer="triggers"]{display:none}</style>
-<rect data-layer="base" fill="#101822" stroke="none" stroke-width="0" x="0" y="0" width="2200" height="1900"/>
-<rect data-layer="base" fill="#172330" stroke="none" stroke-width="0" x="1750" y="160" width="410" height="1590"/>
+<rect data-layer="base" fill="#101822" stroke="none" stroke-width="0" x="0" y="0" width="1760" height="1900"/>
 <text data-layer="base" x="60" y="49" fill="#5ed8d0" font-size="18">SERIOUS SAM ADVANCE   /   EXPLORATION ATLAS</text>
 <text data-layer="base" x="60" y="102" fill="#ffffff" font-size="38">15  Rome Multiplayer 1</text>
-<text data-layer="base" x="60" y="138" fill="#a1b5c9" font-size="18">Complete ROM geometry  |  +Y up, +X right  |  Door labels match the panel  |  Coordinates in original map units</text>
+<text data-layer="base" x="60" y="138" fill="#a1b5c9" font-size="18">Complete ROM geometry  |  +Y up, +X right  |  Select doors in the atlas for details  |  Coordinates in original map units</text>
 <path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M324.84,1680.0 L324.84,220.0"/>
 <path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M513.23,1680.0 L513.23,220.0"/>
 <path data-layer="base" fill="none" stroke="#23303e" stroke-width="1" d="M701.61,1680.0 L701.61,220.0"/>
@@ -184,37 +183,6 @@
 <image data-layer="starts" data-ref="M019" fill="none" stroke="none" stroke-width="0" x="1497.1632786885245" y="292.88" width="12.39344262295082" height="36.0" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAA9CAMAAAB1NtL/AAADAFBMVEUAAAD////GvbWclIx7e3NzY1KlazneexB7e3OcWghCOTFrCACUAADOCAD/AAD/lBD/1gj//wj/tWuMzv9alP8xWtb///8AAAAA3gAApQAAewAAUgAAKVopIQAA/wAhIQD//////87//3v//0Le3v///wDvtdb33jn3vXO9/wD3xgCUrf//nDm91gC1xkLWpTnOrQClpZSEhOetvQDvczFr1gDnewCMpTG1lACMc6WtlAi1czFjrQCcewCEhEJSa72MjAC9YxCtYxCtWgBzY0qEaxhKhAA5Y4xzYwClQghSaxiMQiGEMVpSYwCtMQA5QnN7ORAxYwBjSgBzQgBSUhBKQjFCUgBjOQgYQmMhSgBCMRhaIQBKMQAhMSFKIQApMRAYIUIYMQBKEAApGAghGAAhEAAhGBghEAgIGAAIEAAhAAAQCAAACAgACAAIAAAAAAAIAAAxhAiUjGOUAADWziEhSgjWjCk5QnNjQhiMzveMhIycSgDe1pxKEAjerXulpZxzYyHGWgAAnP8hawD/77XWvQiUewghIRitnAC1rXP/5xB7Y3uce1JKQjFajJT3rQgYOUpSSkJaMRBrY2NalP+9hCn/AP+tjHvW1s7v7+drpa1ahDnWIQjezkLGzr1Ca2MxKRDvrVo5a3ulpaW1YwiMIRD3nAC9va05UkKEOSFjjHO959ZzUiFCayn//8attaVKOUJje97/znuUrVoxWnMxUlq9cwjWpVq1EAD/zghac3tzY0J7nIy1lFoYGAjWnDn//wgQOQCUWhiMe4x7jCG9rTH3zpStKRBrCAClezGcnGO1nHOcnJTWvYxCMRCUvbVzlEr3vWP3MRgYWrXOvTmMtZy1nCGMazFaWkrGxnuMGAjecwDvjAhae0re3r33/+97rb1zcxhjlJz//0ohMTmEc1J7e3NCe4z33hApAAAYMYTvtSG9rQAxOTkxSqWMOQCEYxBjY2NjY1KEWhhjWjljWjFSUlJ7QhBjShhaSikxUlrWCAClAJylAJylAJwAAAC+AAQQAAAAAXRSTlMAQObYZgAAAe5JREFUeNpt1E+r4yAQAHA/yzv1JjkGYXMZ8CDUd5EdLMIQWQNb2ff9bztjEpO0Fdo0v0zH8U9Uam/P5c9TvbYnGBPeNOuvL3jT6MCF/KpBG/2eIsKvD3lLAIhvGmIIVzWGc8YYnfHQ6zBaT1pr067G7Hi7TV7zNyvzSadba5O+mTUH8L/1qtOhjjsz09a4W7er29F6t44lMBJ669F7RPp2LjTVhgiRUfT3OqEcy0q4hhLfwtIUtljR6rg1jVVUGlEOIFWA0TEfeVtJCni9ouIipDCPVRRU5u8AtIViVgGktMgTq3alrFLi5VuiK0vmJyElSDGqfylHzqCdIrZQSqCQZFWyekp1iNamVLy1iCqGpc2PTIO18mman5va1sSxr6YocgV2nKytfS9IHMkznmG6KFbyov4aWwudEyPJTaq15fBdeX2oqJpET7EeWVXFcwbk4okrKjLGroxYREkC+iBOinRSSbv9Uj0xL+Om9oPSi5Zd8VCiume4KH1SpF7jJba2tOh7b3xH0h3JAuKh1LRcFdfYtoXOug7jUoNs9VbwVffBXWanFbEqXXTtLchEd00lpSQv7zjAcaDw7g0Ss8xx/jkOnRjnma+P+7ebdxzB3e+PWf1l7YcJDMM4z4/ECeZxGDbm06m9For7BJDg/1Od+sJa4r9tAAAAAElFTkSuQmCC" style="image-rendering:pixelated"/>
 <path data-layer="starts" data-ref="M019" fill="none" stroke="#4be3df" stroke-width="0.65" d="M1503.36,310.88 L1501.36,286.88"/>
 <text data-layer="starts" data-ref="M019" x="1493.36" y="291.88" fill="#4be3df" font-size="14">P1</text>
-<text data-layer="base" x="1775" y="196" fill="#ffffff" font-size="22">MAP KEY</text>
-<text data-layer="base" x="1775" y="235" fill="#f2c94c" font-size="16">PI / SG / TG</text>
-<text data-layer="base" x="1775" y="252" fill="#a9bdcf" font-size="13">Pistol / Shotgun / Tommygun</text>
-<text data-layer="base" x="1775" y="278" fill="#f2c94c" font-size="16">MG / RL / CA</text>
-<text data-layer="base" x="1775" y="295" fill="#a9bdcf" font-size="13">Minigun / Rocket / Cannon</text>
-<text data-layer="base" x="1775" y="321" fill="#f2c94c" font-size="16">PR / TS / UM</text>
-<text data-layer="base" x="1775" y="338" fill="#a9bdcf" font-size="13">Prion / Timestrike / U.M.T</text>
-<text data-layer="base" x="1775" y="364" fill="#6ce0b1" font-size="16">H25 / H50 / H100</text>
-<text data-layer="base" x="1775" y="381" fill="#a9bdcf" font-size="13">Health; H100 caps at 200</text>
-<text data-layer="base" x="1775" y="407" fill="#68bdff" font-size="16">A25 / A50 / A100</text>
-<text data-layer="base" x="1775" y="424" fill="#a9bdcf" font-size="13">Armor</text>
-<text data-layer="base" x="1775" y="450" fill="#68bdff" font-size="16">S25 / S50 / S100</text>
-<text data-layer="base" x="1775" y="467" fill="#a9bdcf" font-size="13">Shield</text>
-<text data-layer="base" x="1775" y="493" fill="#b5a2ff" font-size="16">PB / SC / RK / CB</text>
-<text data-layer="base" x="1775" y="510" fill="#a9bdcf" font-size="13">Bullets / Shells / Rockets / Balls</text>
-<text data-layer="base" x="1775" y="536" fill="#b5a2ff" font-size="16">TA / MA / YC / BC / RC</text>
-<text data-layer="base" x="1775" y="553" fill="#a9bdcf" font-size="13">Gun ammo / colored cells</text>
-<text data-layer="base" x="1775" y="579" fill="#eeeeee" font-size="16">BP / SP</text>
-<text data-layer="base" x="1775" y="596" fill="#a9bdcf" font-size="13">Backpack / Serious power</text>
-<text data-layer="base" x="1775" y="622" fill="#4be3df" font-size="16">P1-4 / R / X</text>
-<text data-layer="base" x="1775" y="639" fill="#a9bdcf" font-size="13">Start / Pickup respawn / Exit</text>
-<text data-layer="base" x="1775" y="665" fill="#ff7bd5" font-size="16">D / B / S</text>
-<text data-layer="base" x="1775" y="682" fill="#a9bdcf" font-size="13">Door / Switch / Secret</text>
-<text data-layer="base" x="1775" y="735" fill="#dfe7f2" font-size="16">Original ROM sprites; * = scripted only</text>
-<text data-layer="base" x="1775" y="760" fill="#dfe7f2" font-size="16">R = rotating multiplayer pickup site</text>
-<text data-layer="base" x="1775" y="785" fill="#f0a1a6" font-size="16">Red floor: lethal floor / pit</text>
-<text data-layer="base" x="1775" y="828" fill="#ffffff" font-size="22">DOORS &amp; LIFTS</text>
-<text data-layer="base" x="1775" y="1190" fill="#ffffff" font-size="20">SECRETS / COVERAGE</text>
-<text data-layer="base" x="1775" y="1220" fill="#c4d2df" font-size="15">Multiplayer arena. Respawn markers show</text>
-<text data-layer="base" x="1775" y="1241" fill="#c4d2df" font-size="15">all scheduled pickup locations; secret</text>
-<text data-layer="base" x="1775" y="1262" fill="#c4d2df" font-size="15">status is unclassified.</text>
 <text data-layer="base" x="60" y="1795" fill="#dfe7f2" font-size="18">113 lines  /  25 sectors  /  19 map objects  /  0 scripted placements</text>
 <text data-layer="base" x="60" y="1830" fill="#a1b5c9" font-size="18">All rooms are revealed. Use index.html to zoom, filter layers, inspect items and trace door scripts.</text>
 <text data-layer="base" x="60" y="1865" fill="#a1b5c9" font-size="16">Secret labels use cited guides + ROM positions, not an invented secret flag. Full evidence and sources are included.</text>

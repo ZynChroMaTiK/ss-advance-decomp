@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "checks": {
-    "html_links_and_inline_scripts": 396,
+    "html_links_and_inline_scripts": 399,
     "viewer_javascript": "syntax and DOM bindings",
     "geometry_helpers": "executed against all exported levels",
     "css": "parsed",
