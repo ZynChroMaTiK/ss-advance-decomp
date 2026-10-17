@@ -2,7 +2,8 @@
 @media(min-width:1700px){.hero{min-height:660px}.hero-art{height:500px}}@media(max-width:1100px){.brand span{display:none}.site-header{gap:15px}.site-header nav{gap:20px}.hero{gap:28px}.hero-art{height:390px}.metrics>div{padding:0 15px;gap:10px}.metrics strong{font-size:27px}.metrics span{font-size:9px}.tool-actions{gap:7px}.tool-heading{padding:22px}.explorer-layout{grid-template-columns:minmax(0,1fr) 255px}.inspector{padding:23px 17px}.view-caption{flex-direction:column;gap:5px}.feature{padding:22px}.feature h3{font-size:20px}}@media(max-width:760px){.site-header{height:auto;min-height:111px;flex-wrap:wrap;padding:10px 5% 0;gap:0}.brand img{width:120px;height:40px}.repo-link{margin-left:auto;order:1}.site-header nav{order:2;width:100%;height:48px;justify-content:space-between;gap:12px}.site-header nav a{font-size:12px}.hero{grid-template-columns:1fr;padding:42px 0;gap:30px}.hero h1{font-size:52px}.hero-art{height:340px;transform:none}.intro{font-size:14px}.metrics{grid-template-columns:1fr 1fr;gap:24px}.metrics>div{padding:0;border:0}.metrics strong{font-size:29px}.feature-grid,.development-grid{grid-template-columns:1fr}.section-heading{margin-top:45px;display:block}.section-heading>p{margin-top:14px}.section-heading h2{font-size:29px}.project-note{flex-wrap:wrap;align-items:start}.project-note p{flex:1}.project-note a{margin-left:24px}footer{flex-wrap:wrap;padding:22px 5%}.tool-heading{align-items:start;flex-direction:column;padding:22px 16px;gap:18px}.tool-actions{flex-wrap:wrap;width:100%}.tool-actions label{width:100%}.level-select{flex:1;max-width:none}.tool-heading h1{font-size:30px}#atlas-frame{height:1100px;min-height:0}.explorer-layout{height:auto;display:block;min-height:0}.viewport{height:65dvh;min-height:430px}.view-toolbar{left:10px;top:10px;right:10px}.view-toolbar button{font-size:10px;padding:8px 9px}.inspector{border-left:0;border-top:1px solid var(--border);overflow:visible;padding:25px}.view-options{grid-template-columns:1fr 1fr;gap:17px 10px}.content-page{padding-top:40px}.content-page h1{font-size:40px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 .native-art{transform:none;display:flex;align-items:flex-start;background:#111b12;height:440px}.native-art img{height:100%;object-fit:contain;object-position:center top;image-rendering:pixelated;opacity:1}.native-art:after{background:linear-gradient(0deg,#080f09 0%,#080f09e8 15%,transparent 38%)}.mode-switch{display:flex;border:1px solid var(--border);border-radius:6px;padding:3px;gap:3px;white-space:nowrap}.mode-switch button{border:0;background:transparent;font-size:12px;padding:9px 12px}.mode-switch button[aria-pressed=true]{background:var(--lime);color:#18230e}.tool-heading .fine{margin:10px 0 0;max-width:490px;font-size:10px}.tool-actions{flex-wrap:wrap;justify-content:flex-end}.tool-heading{min-height:120px}#atlas-frame,.explorer-layout{height:calc(100dvh - 208px)}.text-link{font-size:12px;color:var(--lime)}.status-pill{border:1px solid #526d39;background:#23301c;color:var(--lime);padding:8px 12px;border-radius:20px;font:11px monospace}.controls-strip{margin-top:30px;padding:30px;border:1px solid var(--border);border-radius:8px;background:#121c14}.controls-strip h2{font-size:27px}.controls-strip .eyebrow{margin-bottom:10px}.controls-strip dl{display:flex;flex-wrap:wrap;gap:25px 40px;margin:25px 0 0}.controls-strip dd{margin:12px 0 0;color:var(--muted);font-size:12px}kbd{display:inline-block;padding:7px 10px;border:1px solid #506248;border-bottom:3px solid #506248;border-radius:5px;font:12px Consolas,monospace;background:#1c281c}.roadmap{border-top:1px solid var(--border);margin-bottom:30px}.roadmap article{display:flex;gap:30px;padding:30px 0;border-bottom:1px solid var(--border)}.roadmap-step{font:22px monospace;color:var(--lime);padding-top:18px}.roadmap h3{font-size:26px;margin:13px 0}.roadmap p{color:var(--muted);font-size:14px;max-width:850px;margin:0}.roadmap .tag{margin:0}.build-steps{padding-left:20px;color:var(--muted);font-size:13px;line-height:1.7}.build-steps li{margin:18px 0}.build-steps pre{padding:13px;background:#0b130d;border:1px solid var(--border);border-radius:4px;white-space:pre-wrap;overflow-wrap:anywhere;color:#d8ebca;font-size:11px}.build-steps code{overflow-wrap:anywhere}.development-grid strong{color:var(--ink)}@media(max-width:1100px){.site-header nav{gap:16px}.tool-heading{align-items:flex-start}.tool-actions{max-width:490px}.native-art{height:390px}}@media(max-width:760px){.site-header nav a{font-size:11px}.site-header nav{gap:7px}.native-art{height:340px}.tool-actions{justify-content:flex-start;max-width:none}#atlas-frame{height:1100px}.explorer-layout{height:auto}.controls-strip{padding:22px}.controls-strip dl{gap:25px}.roadmap article{gap:18px}}
 
-/* Original menu artwork: fixed grid over a slowly scrolling stone texture. */
+/* Original BG0 tilemap phases: +64px every eight GBA VBlanks (1862C).
+   64 * 280896 / 16777216 seconds per eight-phase cycle; BG1 stays fixed. */
 body{isolation:isolate}
 body::before{
  content:"";
@@ -11,14 +12,17 @@ body::before{
  z-index:-1;
  pointer-events:none;
  background-image:url('assets/theme/grid.png'),url('assets/theme/stone.png');
- background-size:32px 32px,512px 512px;
+ background-size:8px 8px,512px 512px;
  background-repeat:repeat;
+ background-position:0 0,-64px 0;
+ image-rendering:crisp-edges;
+ image-rendering:pixelated;
  opacity:.12;
- animation:advance-background-drift 96s linear infinite;
+ animation:advance-background-frames 1.071533203125s steps(8,end) infinite;
 }
 .tool-page{background:#0c120dd9}
-@keyframes advance-background-drift{
- from{background-position:0 0,0 0}
- to{background-position:0 0,512px 512px}
+@keyframes advance-background-frames{
+ from{background-position:0 0,-64px 0}
+ to{background-position:0 0,-576px 0}
 }
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
