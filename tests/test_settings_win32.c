@@ -16,6 +16,43 @@ static void game_h(App *a){
     SendMessageW(a->window,WM_KEYDOWN,'H',0);SendMessageW(a->window,WM_KEYUP,'H',0);
     a->captured=captured;a->menu_active=menu;CHECK(game_tick(a)==1);
 }
+static void scores_checks(App *a){
+    SsaMenu *saved=malloc(sizeof(*saved));unsigned language,mode,page_index;
+    unsigned original=a->original_renderer,counter=a->game->frame_game.counter;
+    CHECK(saved);*saved=*a->menu;
+    a->bitmap.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);a->bitmap.bmiHeader.biPlanes=1;
+    a->bitmap.bmiHeader.biBitCount=32;a->bitmap.bmiHeader.biCompression=BI_RGB;
+    for(mode=0;mode<2;++mode)for(language=0;language<3;++language){
+        RECT client;int left,top,width,height;LPARAM point;
+        a->original_renderer=mode;memset(a->menu,0,sizeof(*a->menu));
+        CHECK(ssa_menu_init(a->menu,a->rom,a->rom_size,1)==1);
+        a->menu->language=language;a->menu->page=a->menu->draw_page=SSA_MENU_MAIN;
+        a->menu->selection=3;a->menu->offset=0;a->menu->marker=0;
+        a->menu->fading=a->menu->fade_volume=0;a->menu->logo_y=8;
+        key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SCORES && !a->menu->unsupported);
+        for(page_index=0;page_index<3;++page_index){wchar_t path[128];
+            while(a->menu->score_speed)CHECK(ssa_menu_step(a->menu,0)==1);
+            CHECK(a->menu->score_y==(16-(int)page_index*176)*65536);
+            CHECK(render(a) && !IsWindowVisible(a->window));
+            CHECK(swprintf(path,128,L"build/audio-settings/scores-%u-%u-%u.bmp",mode,language,page_index)>0);
+            CHECK(snapshot(a,path));
+            if(page_index<2)key(a,VK_DOWN);
+        }
+        /* Actual letterboxed mouse input on the original upper-page arrow. */
+        CHECK(GetClientRect(a->window,&client));
+        CHECK(ssa_ui_viewport(client.right,client.bottom,240,160,&left,&top,&width,&height));
+        point=MAKELPARAM(left+232*width/240,top+8*height/160);
+        SendMessageW(a->window,WM_MOUSEMOVE,0,point);
+        SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,point);SendMessageW(a->window,WM_LBUTTONUP,0,point);
+        CHECK(ssa_menu_step(a->menu,a->menu_pressed)==1);a->menu_pressed=0;
+        CHECK(a->menu->score_speed==-2*65536);
+        while(a->menu->score_speed)CHECK(ssa_menu_step(a->menu,0)==1);
+        CHECK(a->menu->score_y==-160*65536);
+        key(a,VK_ESCAPE);CHECK(a->menu->page==SSA_MENU_MAIN && !a->menu->done);
+        CHECK(a->game->frame_game.counter==counter && !a->game->error_line);
+    }
+    *a->menu=*saved;free(saved);a->original_renderer=original;
+}
 static void midi_checks(App *a,const wchar_t *font_path){
     SsaWin32Midi *m=a->audio.midi;SsaAudio *mix=&a->audio.mixer;
     SsaAudioSynth synth=ssa_win32_midi_synth(m);SsaAudioTrack track={0};SsaAudioVoice voice={0};
@@ -115,6 +152,7 @@ int wmain(int argc,wchar_t **argv){
     CHECK(RegisterClassW(&wc));
     a->window=CreateWindowW(wc.lpszClassName,L"",WS_OVERLAPPEDWINDOW,80,80,720,480,NULL,NULL,wc.hInstance,a);CHECK(a->window);
     if(midi_only)goto midi_validation;
+    scores_checks(a);
     CHECK(game_tick(a)==1); /* Populate sprite cache/OAM before a world render. */
     key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
     {RECT windowed,full,restored,client;MONITORINFO info={0};LONG_PTR style;int left,top,width,height;LPARAM point;
@@ -155,6 +193,8 @@ int wmain(int argc,wchar_t **argv){
     a->render_width=854;a->render_height=480;a->menu_active=0;
     CHECK(render(a) && a->bitmap.bmiHeader.biWidth==854 && a->bitmap.bmiHeader.biHeight==-480);a->menu_active=1;
     key(a,VK_ESCAPE);key(a,VK_DOWN);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_EXTRA);
+    CHECK(!a->settings.jump_enabled);
+    key(a,VK_RIGHT);CHECK(a->settings.jump_enabled);
     key(a,VK_LEFT);CHECK(!a->settings.jump_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.jump_enabled && !loaded.renderer);
     ssa_pc_input_runtime_focus(&a->game->input_runtime,1);ssa_pc_input_runtime_enable(&a->game->input_runtime,1);
@@ -243,5 +283,5 @@ midi_validation:
     midi_checks(a,argv[2]);
     ssa_win32_audio_close(&a->audio);DestroyWindow(a->window);UnregisterClassW(wc.lpszClassName,wc.hInstance);
     ssa_pc_renderer_free(&a->renderer);ssa_native_game_free(a->game);free(a->game);free(a->menu);free(a->rom);free(a);
-    printf("{\"result\":\"pass\",\"checks\":%u,\"midi_only\":%s,\"hidden_window\":true,\"output_muted\":true,\"midi_device\":\"Microsoft GS Wavetable Synth\",\"midi_sequences\":26}\n",checks,midi_only?"true":"false");return 0;
+    printf("{\"result\":\"pass\",\"checks\":%u,\"score_paths\":%u,\"midi_only\":%s,\"hidden_window\":true,\"output_muted\":true,\"midi_device\":\"Microsoft GS Wavetable Synth\",\"midi_sequences\":26}\n",checks,midi_only?0:6,midi_only?"true":"false");return 0;
 }

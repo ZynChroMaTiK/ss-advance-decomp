@@ -206,6 +206,32 @@ int main(int argc,char **argv)
         step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->quit_requested && !m->done && !m->leaving && !m->clear_requested);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==0);
     }
+    /* Scores is a real Main destination. Pointer arrows page the original
+     * three groups, ordinary clicks leave, and every re-entry resets motion. */
+    for(language=0;language<3;++language){
+        memset(m,0,sizeof(*m));CHECK(ssa_menu_init(m,rom,0x800000,1)==1);
+        m->language=language;m->page=m->draw_page=SSA_MENU_MAIN;m->offset=0;
+        m->fading=m->fade_volume=0;m->marker=0;m->logo_y=8;
+        CHECK(ssa_menu_pointer(m,120,130,1)==SSA_MENU_CONFIRM && m->selection==3);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_SCORES && !m->unsupported);
+        for(i=0;i<72;++i)step(m,0,pixels);
+        CHECK(m->score_y==16*65536 && !m->score_speed);
+        CHECK(ssa_menu_pointer(m,232,150,1)==SSA_MENU_DOWN);
+        step(m,SSA_MENU_DOWN,pixels);
+        for(i=1;i<88;++i)step(m,0,pixels);
+        CHECK(m->score_y==-160*65536 && !m->score_speed);
+        step(m,SSA_MENU_DOWN,pixels);
+        for(i=1;i<88;++i)step(m,0,pixels);
+        CHECK(m->score_y==-336*65536 && !m->score_speed);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(!m->score_speed);
+        CHECK(ssa_menu_pointer(m,232,8,1)==SSA_MENU_UP);
+        step(m,SSA_MENU_UP,pixels);
+        for(i=1;i<88;++i)step(m,0,pixels);
+        CHECK(m->score_y==-160*65536 && !m->score_speed);
+        CHECK(ssa_menu_pointer(m,120,80,1)==SSA_MENU_CONFIRM);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->score_leaving);
+        step(m,0,pixels);CHECK(m->page==SSA_MENU_MAIN && !m->done);
+    }
     {int x,y,ox,oy,ow,oh;
         CHECK(ssa_ui_viewport(1000,1000,240,160,&ox,&oy,&ow,&oh)==1 && ox==0 && oy==167 && ow==1000 && oh==666);
         CHECK(ssa_ui_pointer(1000,1000,240,160,500,500,&x,&y)==1 && x==120 && y==80);

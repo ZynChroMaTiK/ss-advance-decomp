@@ -59,7 +59,14 @@ def hook(u,pc,size,ctx):
         mode=u.reg_read(UC_ARM_REG_R2);unit=4 if pc==0x080c5320 or mode&(1<<26) else 2;count=mode&0x1fffff
         u.mem_write(v,bytes(u.mem_read(a,unit))*count if mode&(1<<24) else bytes(u.mem_read(a,unit*count)))
     elif pc==0x080c5764:u.mem_write(a,cstring(v)+b'\0')
-    elif pc==0x080c56c8:u.mem_write(a,cstring(u.reg_read(UC_ARM_REG_R2))+b': '+cstring(u.reg_read(UC_ARM_REG_R3))+b'\0')
+    elif pc==0x080c56c8:
+        if v in (0x080cc2dc,0x080cc32c):
+            count=3 if v==0x080cc2dc else 18
+            args=[u.reg_read(UC_ARM_REG_R2),u.reg_read(UC_ARM_REG_R3)]
+            args+=list(struct.unpack('<'+str(count-2)+'I',u.mem_read(u.reg_read(UC_ARM_REG_SP),4*(count-2))))
+            values=tuple(cstring(x) if count==3 else x if x<0x80000000 else x-0x100000000 for x in args)
+            u.mem_write(a,cstring(v)%values+b'\0')
+        else:u.mem_write(a,cstring(u.reg_read(UC_ARM_REG_R2))+b': '+cstring(u.reg_read(UC_ARM_REG_R3))+b'\0')
     elif pc in (0x08008eb0,0x08008e74):events.append((pc,a))
     u.reg_write(UC_ARM_REG_PC,u.reg_read(UC_ARM_REG_LR))
 def dma(u,access,address,size,value,ctx):

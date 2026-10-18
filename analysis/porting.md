@@ -29,11 +29,10 @@ The controller passes135,104 ROM comparisons, native integration passes13,650
 checks, and normal-input level1 still completes in5,110frames. See
 [hud-notices.md](hud-notices.md). The timed completion tally's active notice
 service is available; its outer screen/digits/audio/record integration remains.
-The requested Rome laurel artwork replaces only the ankh pixels in campaign
-maps6..11/14..15, using original dimensions/origins and ankh palette indices. Both full
-20x34 and distant10x17 images are compiled into the native frontend; Egypt's
-images remain unchanged. The original ROM and pickup behavior are
-unchanged. See [artwork/importer](../assets/rome-laurel/README.md).
+Rome maps now retain the original golden ankh, including the full20x34 and
+distant10x17 images decoded from the ROM. The former laurel override is no
+longer applied or linked into the frontend. Its artwork is retained as
+[historical material](../assets/rome-laurel/README.md).
 Advancement now recovers original player construction and weapon restoration:
 100 health, zero protection, earned weapons/ammo and score. R retains the exact
 level-entry snapshot. See [campaign-entry.md](campaign-entry.md) for 8,192

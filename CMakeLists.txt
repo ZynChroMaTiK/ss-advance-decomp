@@ -146,7 +146,7 @@ target_link_libraries(ssa_hud_notice PUBLIC ssa_hud_sprites ssa_weapon_animation
 target_link_libraries(ssa_display PUBLIC ssa_sprite_oam)
 target_link_libraries(ssa_hud_scene PUBLIC ssa_hud_notice ssa_hud_sprites ssa_sprite_cache ssa_display
     ssa_weapon_loadout ssa_weapon_controller)
-add_library(ssa_native_game_core STATIC src/native_game.c src/native_pickup_art.c)
+add_library(ssa_native_game_core STATIC src/native_game.c)
 target_include_directories(ssa_native_game_core PUBLIC include)
 target_compile_features(ssa_native_game_core PUBLIC c_std_11)
 if(MSVC)

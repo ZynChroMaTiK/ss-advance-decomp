@@ -1,0 +1,52 @@
+{
+    "result":  "pass",
+    "scope":  "Original golden ankh restored by removing the post-decode override and its frontend linkage. Rome launch sanity in both renderers; no campaign playthrough.",
+    "rome_launches":  [
+                          {
+                              "frontend":  {
+                                               "result":  "pass",
+                                               "frames":  5,
+                                               "health":  100,
+                                               "entities":  22,
+                                               "score":  0,
+                                               "hidden_window":  true,
+                                               "render_width":  480,
+                                               "render_height":  320,
+                                               "world_rays":  480,
+                                               "initial_width":  480,
+                                               "initial_height":  320,
+                                               "pitch":  0,
+                                               "buffered_presents":  1,
+                                               "presentation_samples":  0
+                                           },
+                              "level":  6,
+                              "renderer":  "software"
+                          },
+                          {
+                              "frontend":  {
+                                               "result":  "pass",
+                                               "frames":  5,
+                                               "health":  100,
+                                               "entities":  22,
+                                               "score":  0,
+                                               "hidden_window":  true,
+                                               "render_width":  240,
+                                               "render_height":  160,
+                                               "world_rays":  0,
+                                               "initial_width":  240,
+                                               "initial_height":  160,
+                                               "pitch":  0,
+                                               "buffered_presents":  1,
+                                               "presentation_samples":  0
+                                           },
+                              "level":  6,
+                              "renderer":  "gba"
+                          }
+                      ],
+    "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e",
+    "executable_sha256":  "d44b2300491e560012aae37bfa03257a0332571268e817b5cd0cf07e3041f227",
+    "source_sha256":  {
+                          "src/native_game.c":  "77c5a224633bc423c3f49d86afdf151a9b93f6ac354265b325b46107e4138abb",
+                          "CMakeLists.txt":  "1f6aa7acfe60f709ade36c7ef08b59e8f73191d59c4c114c1bdd7b9cf3e8b3e3"
+                      }
+}

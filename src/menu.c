@@ -136,6 +136,10 @@ unsigned ssa_menu_pointer(SsaMenu *m,int x,int y,unsigned click)
     case SSA_MENU_LANGUAGE:count=3;top=64;for(i=0;i<count;++i)indices[i]=237+i;break;
     case SSA_MENU_DIFFICULTY:count=3;top=82;for(i=0;i<count;++i)indices[i]=243+i;break;
     case SSA_MENU_TITLE:return click?SSA_MENU_START:0;
+    case SSA_MENU_SCORES:
+        if(click && y<24)return SSA_MENU_UP;
+        if(click && y>=136)return SSA_MENU_DOWN;
+        return click?SSA_MENU_CONFIRM:0;
     case SSA_MENU_PASSWORD:case SSA_MENU_CREDITS:return click?SSA_MENU_CONFIRM:0;
     default:return 0;
     }
@@ -202,6 +206,24 @@ const char *ssa_menu_password(const SsaMenu *m,unsigned index)
 }
 static void start(SsaMenu *m)
 {m->leaving=1;m->fade_volume=0;m->fade_step=64;m->fading=1;m->fade_audio=m->music_enabled;}
+/* Original1737C: two-pixel entrance and page scrolling, with
+ * three six-name groups at16,-160,-336 pixels. No gameplay is advanced. */
+static void scores_step(SsaMenu *m,unsigned input)
+{
+    if(m->marker==65535){
+        m->marker=0;m->score_y=160*65536;m->score_speed=2*65536;
+        m->score_ticks=m->score_leaving=0;
+    }
+    ++m->score_ticks;
+    if(m->score_leaving){page(m,SSA_MENU_MAIN);return;}
+    if(!m->score_speed){
+        if((input&SSA_MENU_UP) && m->score_y!=16*65536)m->score_speed=-2*65536;
+        else if((input&SSA_MENU_DOWN) && m->score_y!=-336*65536)m->score_speed=2*65536;
+    }
+    if(input&(SSA_MENU_CONFIRM|SSA_MENU_BACK)){command(m,16);m->score_leaving=1;}
+    m->score_y-=m->score_speed;
+    if(m->score_y==16*65536 || m->score_y==-160*65536 || m->score_y==-336*65536)m->score_speed=0;
+}
 static int password_equal(const SsaMenu *m,const char *expected)
 {
     size_t n,length;
@@ -266,7 +288,7 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
     p=m->page;
     if(p==12 || p==13 || p==SSA_MENU_LEVEL_SELECT || p==SSA_MENU_SETTINGS || p==SSA_MENU_EXTRA){if(m->logo_y>-64)--m->logo_y;}
     else if(p!=10 && m->logo_y<8)++m->logo_y;
-    if(m->marker==65535){m->marker=0;if(p==0){m->offset=240;command(m,8);}
+    if(m->marker==65535 && p!=SSA_MENU_SCORES){m->marker=0;if(p==0){m->offset=240;command(m,8);}
         else if(p==SSA_MENU_TITLE && !m->counter)command(m,8);}
     if(p==0 && m->offset)m->offset-=16;
     if(!m->leaving)switch(p){
@@ -282,6 +304,7 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
         if(input&SSA_MENU_CONFIRM){command(m,13);
             if(!m->selection)page(m,1);
             else if(m->selection==2)page(m,4);
+            else if(m->selection==3)page(m,SSA_MENU_SCORES);
             else if(m->selection==4){page(m,SSA_MENU_QUIT);m->selection=1;}
             else m->unsupported=m->selection==1?3:13;
         }
@@ -388,6 +411,7 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
         }
         break;
     case SSA_MENU_CREDITS:credits_step(m,input,held);break;
+    case SSA_MENU_SCORES:scores_step(m,input);break;
     case SSA_MENU_PASSWORD:if(password_step(m,input,held)!=1)return -1;break;
     default:return -1;
     }
@@ -423,6 +447,36 @@ static int credits_draw(SsaMenu *m)
         y=ssa_map_view_text_centered(&m->canvas,line,y,0,m->selection==selection?3:4,0);
         if(at==m->credits_end)break;
         ++at;
+    }
+    return 1;
+}
+static int scores_draw(SsaMenu *m)
+{
+    unsigned group,row;int top=m->score_y/65536;
+    if(m->score_leaving)return 1;
+    if(m->score_y<0 && m->score_y%65536)--top;
+    /* Preserve original column submission order and trailing header space. */
+    for(group=0;group<3;++group){int y=top+(int)group*176;char title[64];
+        const char *heading=ssa_map_view_text(&m->canvas,247+group);
+        if(!heading || *heading!='*' || strlen(heading)>=sizeof(title)-1)return -1;
+        snprintf(title,sizeof(title),"%s ",heading+1);
+        if(y>=-15 && y<160)(void)ssa_map_view_text_centered(&m->canvas,title,y,0,3,0);
+    }
+    for(group=0;group<3;++group)for(row=0;row<6;++row){char name[13];
+        unsigned at=0xcc00c+(group*6+row)*16;int y=top+(int)group*176+32+(int)row*16;
+        if(y<-15 || y>=160)continue;
+        memcpy(name,m->canvas.rom+at+4,12);name[12]=0;
+        (void)ssa_map_view_text_line(&m->canvas,name,12,y,0,4);
+    }
+    for(group=0;group<3;++group)for(row=0;row<6;++row){char score[16];
+        unsigned at=0xcc00c+(group*6+row)*16;int y=top+(int)group*176+32+(int)row*16;
+        if(y<-15 || y>=160)continue;
+        snprintf(score,sizeof(score),"%d",(int32_t)u32(m->canvas.rom+at));
+        (void)ssa_map_view_text_line(&m->canvas,score,228-(int)ssa_map_view_text_width(&m->canvas,score,0),y,0,4);
+    }
+    if(!m->score_speed && (m->score_ticks&32)){
+        if(m->score_y!=16*65536)(void)ssa_map_view_text_line(&m->canvas,"^",236-(int)ssa_map_view_text_width(&m->canvas,"^",0),4,0,3);
+        if(m->score_y!=-336*65536)(void)ssa_map_view_text_line(&m->canvas,"V",236-(int)ssa_map_view_text_width(&m->canvas,"V",0),142,0,3);
     }
     return 1;
 }
@@ -463,6 +517,7 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
             bottom=ssa_map_view_text_centered(&m->canvas,s,bottom,0,m->selection==id?3:4,0);}
         break;
     case SSA_MENU_SETTINGS:break; /* Labels are composed in small batches below. */
+    case SSA_MENU_SCORES:if(scores_draw(m)!=1)return -1;break;
     case SSA_MENU_EXTRA:{
         static const char *labels[3][6]={{"Extras","Jump","Third-person","In-game NETRICSA","Alternate weapons","Back"},
             {"Extras","Springen","Dritte Person","NETRICSA im Spiel","Alternative Waffen","Zurueck"},

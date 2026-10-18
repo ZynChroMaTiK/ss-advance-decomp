@@ -6,7 +6,7 @@ enum { SSA_MENU_UP=1,SSA_MENU_DOWN=2,SSA_MENU_CONFIRM=4,SSA_MENU_BACK=8,
        SSA_MENU_START=16,SSA_MENU_LEFT=32,SSA_MENU_RIGHT=64 };
 enum { SSA_MENU_LANGUAGE=10,SSA_MENU_TITLE=11,SSA_MENU_MAIN=0,
        SSA_MENU_SINGLE=1,SSA_MENU_OPTIONS=4,SSA_MENU_PASSWORD=8,SSA_MENU_DIFFICULTY=9,SSA_MENU_CREDITS=12,
-       SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15,SSA_MENU_SETTINGS=16,SSA_MENU_EXTRA=17,
+       SSA_MENU_SCORES=13,SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15,SSA_MENU_SETTINGS=16,SSA_MENU_EXTRA=17,
        SSA_MENU_QUIT=18 };
 enum { SSA_MENU_UNAVAILABLE_LEVEL=100 };
 enum { SSA_MENU_LEVELS_PER_CHAPTER=6 };
@@ -33,6 +33,8 @@ typedef struct SsaMenu {
     SsaSettings settings;
     unsigned soundfont_available,midi_available,settings_unavailable;
     unsigned quit_requested; /* PC Main-menu Quit; never a new-game result. */
+    int32_t score_y,score_speed;
+    unsigned score_ticks,score_leaving;
 } SsaMenu;
 /* Starts at Title in English. Options cycles Language in place (Left backwards,
  * Right/Confirm forwards), using original language names and localized labels.

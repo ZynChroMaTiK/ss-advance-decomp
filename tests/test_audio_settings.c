@@ -104,14 +104,14 @@ int main(int argc,char **argv){
     CHECK(!ssa_soundfont_load("invalid",7,48000));
     hybrid_checks(rom,rom_size,sf,sf_size,&synth);
     CHECK(ssa_settings_encode(&prefs,encoded,sizeof encoded)==1);
-    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && decoded.music_volume==100 && decoded.sound_volume==100 && !decoded.music_style && decoded.renderer==SSA_RENDER_SOFTWARE && decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled && decoded.display_mode==SSA_DISPLAY_FULLSCREEN && !decoded.alternate_weapons);
+    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && decoded.music_volume==100 && decoded.sound_volume==100 && !decoded.music_style && decoded.renderer==SSA_RENDER_SOFTWARE && !decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled && decoded.display_mode==SSA_DISPLAY_FULLSCREEN && !decoded.alternate_weapons);
     prefs.alternate_weapons=1;
     CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && encoded[8]==6 && (encoded[9]&128));
     CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && decoded.alternate_weapons);
     prefs.alternate_weapons=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
     prefs.alternate_weapons=0;
     {static const uint8_t legacy[16]={0x53,0x53,0x41,0x2d,0x4f,0x50,0x54,0x00,0x01,0x02,0x46,0x50,0xb7,0x85,0xad,0xe1};
-        CHECK(ssa_settings_decode(&decoded,legacy,16)==1 && decoded.music_style==SSA_MUSIC_MIDI && decoded.music_volume==70 && decoded.sound_volume==80 && !decoded.renderer && decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled);
+        CHECK(ssa_settings_decode(&decoded,legacy,16)==1 && decoded.music_style==SSA_MUSIC_MIDI && decoded.music_volume==70 && decoded.sound_volume==80 && !decoded.renderer && !decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled);
     }
     {static const uint8_t legacy[16]={0x53,0x53,0x41,0x2d,0x4f,0x50,0x54,0x00,0x02,0x06,0x46,0x50,0x85,0x82,0x11,0xf4};
         CHECK(ssa_settings_decode(&decoded,legacy,16)==1 && decoded.music_style==SSA_MUSIC_MIDI && decoded.music_volume==70 && decoded.sound_volume==80 && decoded.renderer==SSA_RENDER_GBA && !decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled);
@@ -179,9 +179,10 @@ int main(int argc,char **argv){
         CHECK(ssa_menu_step(m,0)==1);
         CHECK(ssa_menu_pointer(m,120,98,1)==SSA_MENU_CONFIRM && m->selection==5);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->page==SSA_MENU_EXTRA && !m->selection);
-        CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && !m->settings.jump_enabled);
+        CHECK(!m->settings.jump_enabled);
+        CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && m->settings.jump_enabled);
         CHECK(ssa_menu_pointer(m,120,60,1)==SSA_MENU_CONFIRM && !m->selection);
-        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.jump_enabled);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.jump_enabled);
         CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==1);
         CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && !m->settings.thirdperson_enabled);
         CHECK(ssa_menu_pointer(m,120,72,1)==SSA_MENU_CONFIRM && m->selection==1);

@@ -4749,3 +4749,10 @@ not a campaign replay). All121Windows libraries/frontend rebuilt. Current
 timing/Windows/game-runtime source hashes verified. No ROM edits/new byte match.
 Current exeSHA256:
 0885db97fba00bda451097a4997942c00fb2b0add03c44eb9ec57da3752d3a4f.
+
+Latest artwork direction: restore the original golden ankh on Rome maps. The
+native_game post-decode laurel override and its CMake linkage are removed; full
+and distant ROM sprites remain unchanged for both renderers. Laurel source/art
+files and their old report are historical only. Windows rebuild (121 libraries)
+and hidden Rome map6 launches in software/GBA modes pass. ROM SHA1 unchanged.
+See analysis/rome-ankh-restoration-validation.json. No campaign replay.

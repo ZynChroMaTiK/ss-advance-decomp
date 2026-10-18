@@ -1,0 +1,16 @@
+{
+  "result": "pass",
+  "score_rom_frames": 1545,
+  "composed_rom_pixels": 2534400,
+  "languages": 3,
+  "entries": 18,
+  "scope": "Original1737C seeded Scores viewer state, commands, glyphs and pixels. New record entry/persistence are not implemented.",
+  "test_only_arm_execution": true,
+  "source_sha256": {
+    "src/menu.c": "d8ec86e234568c0cc9d346b758eeb742cdbdea876f0540bd9e7134ae31264c32",
+    "include/ssa/menu.h": "1bca232b2dc1c6d6051827ab657b4b65065e119cb3bcd8fa99d27647c5433e3b",
+    "tests/test_map_view_rom.py": "38da9a77865740279ea481212f69fa87843c100130041a32f9a44793647bdf9b",
+    "tests/test_menu_rom.py": "723c65c9e66e0294a11168bf6c1c5863501b95ba47d30bce5a459bcc94d0678f",
+    "tests/test_scores_rom.py": "a6f6494d4ef01cbbc6f672bf2629539b140e27b2864823a0c92b8b265f6a8158"
+  }
+}

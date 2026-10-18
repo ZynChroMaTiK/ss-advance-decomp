@@ -71,7 +71,7 @@ that work on your computer. See the
 [SoundFont setup guide](soundfonts/README.md) if you want to try it.
 
 Under **Options → Extras**, you can turn jumping, third-person view and in-game
-NETRICSA on or off. **Alternate weapons** is off by default. Turn it on to use
+NETRICSA on or off. **Jump** and **Alternate weapons** are off by default. Turn Alternate weapons on to use
 single/dual Colts with reloads and a different double-shotgun spread. Once you
 have both Colts, press **2** again to switch between one and two guns.
 

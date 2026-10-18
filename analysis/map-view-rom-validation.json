@@ -9,6 +9,6 @@
     "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
     "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
     "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
-    "tests/test_map_view_rom.py": "4b906800c02a4f383f1f712410177bced6aeed55a83aa01fe4eee3c407519f4b"
+    "tests/test_map_view_rom.py": "38da9a77865740279ea481212f69fa87843c100130041a32f9a44793647bdf9b"
   }
 }

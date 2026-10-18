@@ -1,5 +1,4 @@
 #include "ssa/native_game.h"
-#include "ssa/native_pickup_art.h"
 #include "ssa/weapon_progress.h"
 #include <stdio.h>
 #include <string.h>
@@ -469,7 +468,6 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_sky_assets_load(&g->sky,rom,size)==1);INIT(ssa_visibility_tables_load(&g->visibility_tables,rom,size)==1);
     INIT(ssa_wall_render_tables_load(&g->wall_tables,rom,size)==1);INIT(ssa_spawn_definitions_load(&g->definitions,rom,size));
     INIT(ssa_actor_animations_load(&g->actor_animations,rom,size)==1);INIT(ssa_actor_assets_load(&g->actor_assets,rom,size)==1);
-    INIT(ssa_native_pickup_art_apply(&g->actor_assets,level)>=0);
     INIT(ssa_inventory_rules_load(&g->inventory_rules,rom,size)==0);INIT(ssa_weapon_rules_load(&g->weapon_rules,rom,size)==1);
     INIT(ssa_weapon_animations_load(&g->weapon_animations,rom,size)==1);INIT(ssa_weapon_loadouts_load(&g->loadouts,rom,size)==1);
     INIT(ssa_pickup_respawn_data_load(&g->pickup_data,rom,size)==1);INIT(ssa_particle_rules_load(&g->particle_rules,rom,size)==1);

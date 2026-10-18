@@ -18,11 +18,11 @@ class Menu(C.Structure):
  ('level',C.c_uint),('loadout',C.c_uint),('level_limit',C.c_uint),('password',C.c_char*9),
  ('password_cursor',C.c_uint8),('password_up',C.c_uint8),('password_down',C.c_uint8),('password_typed',C.c_uint8),('grid',C.c_uint8*64),
  ('completed_levels',C.c_uint16),('level_scroll',C.c_uint),('selecting_level',C.c_uint),('clear_requested',C.c_uint),
- ('settings',C.c_uint*9),('soundfont_available',C.c_uint),('midi_available',C.c_uint),('settings_unavailable',C.c_uint),('quit_requested',C.c_uint)]
+ ('settings',C.c_uint*9),('soundfont_available',C.c_uint),('midi_available',C.c_uint),('settings_unavailable',C.c_uint),('quit_requested',C.c_uint),('score_y',C.c_int32),('score_speed',C.c_int32),('score_ticks',C.c_uint),('score_leaving',C.c_uint)]
 lib=C.CDLL(str(b/'libssa_menu.so'));lib.ssa_menu_init.argtypes=[C.POINTER(Menu),C.c_void_p,C.c_size_t,C.c_uint]
 lib.ssa_menu_step.argtypes=[C.POINTER(Menu),C.c_uint];lib.ssa_menu_draw.argtypes=[C.POINTER(Menu),C.POINTER(C.c_uint16),C.c_size_t]
 lib.ssa_menu_step_input.argtypes=[C.POINTER(Menu),C.c_uint,C.c_uint]
-out=(C.c_uint16*38400)();cases=pixels=credits_frames=credits_finishes=password_frames=password_starts=0
+out=(C.c_uint16*38400)();cases=pixels=credits_frames=credits_finishes=password_frames=password_starts=score_frames=0
 def setup():
  o['setup'](0,0,1)
  uc.mem_write(0x02000004,struct.pack('<H',10));uc.mem_write(0x02000008,b'\xff\xff')
@@ -37,7 +37,7 @@ def setup():
  assert bytes(m.grid)==bytes(uc.mem_read(0x06008000,64))
  return m
 def compare(m,input,visual=False,held=None):
- global cases,pixels,credits_frames,password_frames
+ global cases,pixels,credits_frames,password_frames,score_frames
  if held is None:held=input
  # Reproduce the outer1862C loop up to and through its menu callback.
  call(0x08015698)
@@ -81,6 +81,10 @@ def compare(m,input,visual=False,held=None):
   assert (m.credits_y&0xffffffff,m.credits_offset+0x08000000,m.credits_done,m.credits_lines,m.credits_speed)==(
    original_scroll,original_pointer,original_done,original_lines,original_speed),('credits state',input,held)
   credits_frames+=1
+ if page==13:
+  data=bytes(uc.mem_read(word(0x03006dd0),52))
+  assert (m.score_y,m.score_speed,m.score_ticks,m.score_leaving)==(struct.unpack_from('<i',data,4)[0],struct.unpack_from('<i',data,24)[0],struct.unpack_from('<I',data,44)[0],struct.unpack_from('<H',data,20)[0]),('scores state',input,data.hex(),m.score_y,m.score_speed,m.score_ticks,m.score_leaving)
+  score_frames+=1
  if page==8 or m.page==8:
   assert C.string_at(C.addressof(m)+Menu.password.offset,9)==state[28:37]
   assert (m.password_cursor,m.password_up,m.password_down)==(state[37],state[42],state[43])
@@ -137,70 +141,84 @@ def compare(m,input,visual=False,held=None):
   c=struct.unpack_from('<H',state,12)[0];uc.mem_write(0x0200000c,struct.pack('<H',(c+1)&65535))
  assert m.counter==struct.unpack('<H',uc.mem_read(0x0200000c,2))[0]
  cases+=1
-for language in range(3):
- m=setup()
- for tick in range(3):compare(m,2 if tick<language else 0)
- compare(m,4)
- for tick in range(100):compare(m,16 if tick in (20,95) else 0,tick in (0,32,64,94))
- for tick in range(20):compare(m,0,tick in (0,15))
- compare(m,4);compare(m,0,True);compare(m,4);compare(m,2);compare(m,0,True);compare(m,4)
- while not m.done:compare(m,0,m.fade_volume in (0,1024,2048))
 def fixture(page,language=0,selection=0):
  m=setup();m.page=m.draw_page=page;m.language=language;m.selection=2 if page==1 and selection==1 else selection;m.counter=200
  m.fade_volume=0;m.fading=0
  uc.mem_write(0x02000000,struct.pack('<H',language));uc.mem_write(0x02000004,struct.pack('<HH',page,selection))
  uc.mem_write(0x0200000c,struct.pack('<H',200));uc.mem_write(0x03005724,bytes(2));uc.mem_write(0x03005728,bytes(2))
  return m
-for language in range(3):
- m=fixture(4,language)
- for key in (1,32,64,4,2,1,1,8,0):compare(m,key,True)
- m=fixture(1,language)
- for key in (1,2,2,1,8,0):compare(m,key,True)
- for difficulty in range(3):
-  m=fixture(9,language,difficulty);compare(m,4,True)
+if __name__=='__main__':
+ for language in range(3):
+  m=setup()
+  for tick in range(3):compare(m,2 if tick<language else 0)
+  compare(m,4)
+  for tick in range(100):compare(m,16 if tick in (20,95) else 0,tick in (0,32,64,94))
+  for tick in range(20):compare(m,0,tick in (0,15))
+  compare(m,4);compare(m,0,True);compare(m,4);compare(m,2);compare(m,0,True);compare(m,4)
+  while not m.done:compare(m,0,m.fade_volume in (0,1024,2048))
+ for language in range(3):
+  m=fixture(4,language)
+  for key in (1,32,64,4,2,1,1,8,0):compare(m,key,True)
+  m=fixture(1,language)
+  for key in (1,2,2,1,8,0):compare(m,key,True)
+  for difficulty in range(3):
+   m=fixture(9,language,difficulty);compare(m,4,True)
+   while not m.done:compare(m,4,m.fade_volume in (0,2048))
+   assert m.difficulty==difficulty
+  # Fully settled native preview, generated directly from the ROM-backed renderer.
+  m=fixture(0,language);m.logo_y=8;m.offset=0;m.marker=0
+  assert lib.ssa_menu_draw(C.byref(m),out,38400)==1
+  rgb=bytes(c for pixel in out for c in ((pixel&31)*255//31,((pixel>>5)&31)*255//31,((pixel>>10)&31)*255//31))
+  (b/f'menu-{language}.ppm').write_bytes(b'P6\n240 160\n255\n'+rgb)
+  # Enter via Options, pause (including both directions held), accelerate and
+  # release. Confirm/B exit suppresses text now and returns on the NEXT tick.
+  for exit_key in (4,8):
+   m=fixture(4,language,1);compare(m,4,True)
+   for tick in range(40):compare(m,0,tick in (0,20,39),held=0)
+   for held in (1,3,1,2,2,0,0):compare(m,0,True,held=held)
+   compare(m,exit_key,True,held=0);assert m.page==12 and m.credits_done==1
+   compare(m,0,True);assert m.page==4 and m.marker==65535
+   compare(m,0,True)
+  # Full text, original blank lines, headings and automatic return. Re-entry
+  # resets the scroll; fast-forward is the original held Down behavior.
+  m=fixture(12,language)
+  for tick in range(2000):
+   compare(m,0,tick%150==0,held=2)
+   if m.page==4:break
+  else:raise AssertionError('Credits failed to end')
+  assert m.credits_done==1 and m.credits_lines==88
+  credits_finishes+=1;compare(m,0,True)
+  # Original eight-character editor, cursor wrap and hold repeat (including
+  # byte overflow from255 back to32); Down has priority when both repeat.
+  m=fixture(1,language,1);compare(m,4,True);assert m.page==8
+  for key in (32,64,64,1,2,3,96,4,0,8,0):compare(m,key,True)
+  m=fixture(1,language,1);compare(m,4)
+  for held in (1,2,3):
+   for tick in range(280):compare(m,held if tick==0 else 0,tick in (30,31,254,255,279),held=held)
+  compare(m,0,True,held=0);compare(m,8,True)
+ for index in range(36):
+  m=fixture(1,index%3,1);compare(m,4)
+  address=struct.unpack_from('<I',rom,0x44c1d4+index*4)[0]-0x08000000
+  password=rom[address:rom.index(0,address)]
+  m.password=password;uc.mem_write(0x0200001c,password+b'\0'*(9-len(password)))
+  compare(m,4,True);assert (m.level,m.difficulty,m.loadout)==(index%12,index//12,index+1)
   while not m.done:compare(m,4,m.fade_volume in (0,2048))
-  assert m.difficulty==difficulty
- # Fully settled native preview, generated directly from the ROM-backed renderer.
- m=fixture(0,language);m.logo_y=8;m.offset=0;m.marker=0
- assert lib.ssa_menu_draw(C.byref(m),out,38400)==1
- rgb=bytes(c for pixel in out for c in ((pixel&31)*255//31,((pixel>>5)&31)*255//31,((pixel>>10)&31)*255//31))
- (b/f'menu-{language}.ppm').write_bytes(b'P6\n240 160\n255\n'+rgb)
- # Enter via Options, pause (including both directions held), accelerate and
- # release. Confirm/B exit suppresses text now and returns on the NEXT tick.
- for exit_key in (4,8):
-  m=fixture(4,language,1);compare(m,4,True)
-  for tick in range(40):compare(m,0,tick in (0,20,39),held=0)
-  for held in (1,3,1,2,2,0,0):compare(m,0,True,held=held)
-  compare(m,exit_key,True,held=0);assert m.page==12 and m.credits_done==1
-  compare(m,0,True);assert m.page==4 and m.marker==65535
-  compare(m,0,True)
- # Full text, original blank lines, headings and automatic return. Re-entry
- # resets the scroll; fast-forward is the original held Down behavior.
- m=fixture(12,language)
- for tick in range(2000):
-  compare(m,0,tick%150==0,held=2)
-  if m.page==4:break
- else:raise AssertionError('Credits failed to end')
- assert m.credits_done==1 and m.credits_lines==88
- credits_finishes+=1;compare(m,0,True)
- # Original eight-character editor, cursor wrap and hold repeat (including
- # byte overflow from255 back to32); Down has priority when both repeat.
- m=fixture(1,language,1);compare(m,4,True);assert m.page==8
- for key in (32,64,64,1,2,3,96,4,0,8,0):compare(m,key,True)
- m=fixture(1,language,1);compare(m,4)
- for held in (1,2,3):
-  for tick in range(280):compare(m,held if tick==0 else 0,tick in (30,31,254,255,279),held=held)
- compare(m,0,True,held=0);compare(m,8,True)
-for index in range(36):
- m=fixture(1,index%3,1);compare(m,4)
- address=struct.unpack_from('<I',rom,0x44c1d4+index*4)[0]-0x08000000
- password=rom[address:rom.index(0,address)]
- m.password=password;uc.mem_write(0x0200001c,password+b'\0'*(9-len(password)))
- compare(m,4,True);assert (m.level,m.difficulty,m.loadout)==(index%12,index//12,index+1)
- while not m.done:compare(m,4,m.fade_volume in (0,2048))
- password_starts+=1
-report={'result':'pass','rom_frames':cases,'composed_rom_pixels':pixels,'test_only_arm_execution':True,
- 'credits_frames':credits_frames,'credits_complete_scrolls':credits_finishes,
- 'password_frames':password_frames,'password_starts':password_starts,
- 'source_sha256':{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (r/'src/menu.c',r/'include/ssa/menu.h',r/'src/map_view.c',r/'include/ssa/map_view.h',Path(__file__))}}
-(r/'analysis/menu-rom-validation.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
+  password_starts+=1
+ for language in range(3):
+  m=fixture(13,language)
+  uc.mem_write(0x02000040,rom[0xcc00c:0xcc00c+18*16])
+  for tick in range(288):compare(m,0,tick in (31,100,200,287))
+  assert m.score_y==16*65536 and not m.score_speed
+  for key in (1,2,2,1,1,2):
+   compare(m,key,True)
+   for tick in range(352):
+    if not m.score_speed:break
+    compare(m,0,tick%80==0)
+   assert not m.score_speed
+  compare(m,8,True);compare(m,0,True);assert m.page==0
+ report={'result':'pass','rom_frames':cases,'composed_rom_pixels':pixels,'test_only_arm_execution':True,
+  'score_frames':score_frames,
+  'credits_frames':credits_frames,'credits_complete_scrolls':credits_finishes,
+  'password_frames':password_frames,'password_starts':password_starts,
+  'source_sha256':{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (r/'src/menu.c',r/'include/ssa/menu.h',r/'src/map_view.c',r/'include/ssa/map_view.h',Path(__file__))}}
+ (r/'analysis/menu-rom-validation.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
