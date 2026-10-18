@@ -36,12 +36,12 @@ events.message({origin:location.origin,source:frame.contentWindow,data:{type:'ss
 frame.listeners.load();assert.equal(frame.messages.at(-1).message.level,5);
 // A late viewer initialization must not reactivate a hidden page.
 modes[1].onclick();const pending=app.render();location.hash='#features';await app.render();resolveViewer(viewer);await pending;assert.equal(active,false);assert.equal(loads.length,0);
-location.hash='#explorer/11';await app.render();assert.equal(location.hash,'#levels/11/3d');assert.equal(active,true);assert.deepEqual(loads.at(-1),[10,10]);assert.equal(elements.get('atlas-panel').hidden,true);assert.equal(modes[1].attrs['aria-pressed'],'true');assert.match(elements.get('level-status').textContent,supported>10?/supported by/:/still in development/);
+location.hash='#explorer/11';await app.render();assert.equal(location.hash,'#levels/11/3d');assert.equal(active,true);assert.deepEqual(loads.at(-1),[10,10]);assert.equal(elements.get('atlas-panel').hidden,true);assert.equal(modes[1].attrs['aria-pressed'],'true');assert.match(elements.get('level-status').textContent,supported>10?/available in the PC game/:/not yet playable/);
 events.message({origin:location.origin,source:frame.contentWindow,data:{type:'ssa:level',level:1}});assert.equal(selects[0].value,10);
 modes[0].onclick();await app.render();assert.equal(active,false);assert.equal(location.hash,'#levels/11/2d');assert.equal(frame.messages.at(-1).message.level,10);
 location.hash='#levels/999/3d';await app.render();assert.equal(selects[0].value,10);assert.equal(location.hash,'#levels/11/3d');
 location.hash='#development';await app.render();assert.equal(pages[3].hidden,false);assert.equal(active,false);
-assert.equal(document.title,'Build & Development — Serious Sam Advance');
+assert.equal(document.title,'Download & Help — Serious Sam Advance');
 location.hash='#wiki/weapon-pistol';const pendingWiki=app.render();location.hash='#project';await app.render();resolveWiki({open:id=>openedWiki.push(id)});await pendingWiki;assert.equal(openedWiki.length,0);
 location.hash='#wiki/weapon-pistol';await app.render();assert.equal(pages[4].hidden,false);assert.equal(pages[0].hidden,true);assert.equal(openedWiki.at(-1),'weapon-pistol');assert.equal(active,false);
 location.hash='#wiki';await app.render();assert.equal(openedWiki.at(-1),'field-guide');assert.equal(links[4].attrs['aria-current'],'page');
@@ -53,6 +53,6 @@ location.hash='#wiki/weapon-pistol';await missing.render();assert.equal(openedWi
 location.hash='#levels/8/3d';await missing.render();assert.match(elements.get('view-message').textContent,/could not load/);assert.equal(selects[0].disabled,true);
 location.hash='#levels/8/2d';await missing.render();assert.equal(frame.src,'atlas/index.html#level-8');
 assert.throws(()=>missing.setCatalog([]),/Invalid level catalog/);await missing.setCatalog(catalog);assert.equal(selects[0].disabled,false);assert.equal(selects[0].children.length,16);
-location.hash=`#levels/${supported}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,/supported by/);
-location.hash=`#levels/${supported+1}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,supported<12?/still in development/:/Multiplayer arena.*unfinished/);
+location.hash=`#levels/${supported}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,/available in the PC game/);
+location.hash=`#levels/${supported+1}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,supported<12?/not yet playable/:/Multiplayer map.*not playable yet/);
 console.log(JSON.stringify({status:'PASS',level_options:16,checks:'unified modes, legacy links, shared selection, async guards, iframe bridge, route focus, skip link, catalog failure/recovery, homepage support boundary'}));

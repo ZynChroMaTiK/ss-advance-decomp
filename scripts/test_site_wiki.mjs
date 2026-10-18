@@ -7,7 +7,7 @@ const {entries}=JSON.parse(readFileSync(new URL('data/wiki.json',site)));
 const campaignLimit=Number(readFileSync(new URL('../include/ssa/native_game.h',import.meta.url),'utf8').match(/SSA_NATIVE_CAMPAIGN_LEVELS=(\d+)/)[1]);
 assert(readFileSync(new URL('index.html',site),'utf8').includes(`<strong>${campaignLimit}<span>/12</span>`),'homepage native level count');
 for(const entry of entries.filter(e=>e.category==='levels')){
- const availability=entry.sections.find(s=>s.title==='Native port availability').text;
+ const availability=entry.sections.find(s=>s.title==='Can I play it?').text;
  assert.equal(availability.startsWith('Playable in'),entry.level<campaignLimit,`native availability: ${entry.title}`);
 }
 const ids=new Set(entries.map(e=>e.id));assert.equal(ids.size,entries.length);assert.equal(entries.length,54);

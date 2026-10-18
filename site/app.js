@@ -48,8 +48,8 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     $('atlas-panel').hidden = mode !== '2d';
     $('explorer-panel').hidden = mode !== '3d';
-    $('level-status').textContent = catalogError || (!catalog.length ? 'Loading level catalog…' : level < supportedLevels ? 'Campaign · supported by the native prototype' : level < 12 ? 'Campaign · native progression still in development' : 'Multiplayer arena · exploration available; multiplayer integration remains unfinished');
-    document.title = `${{project:'Native PC Port', features:'Features & Roadmap', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Build & Development'}[route]} — Serious Sam Advance`;
+    $('level-status').textContent = catalogError || (!catalog.length ? 'Loading the level list…' : level < supportedLevels ? 'Campaign level · available in the PC game' : level < 12 ? 'Campaign level · not yet playable' : 'Multiplayer map · explore here; multiplayer is not playable yet');
+    document.title = `${{project:'Native PC Port', features:'Features & Roadmap', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Download & Help'}[route]} — Serious Sam Advance`;
     if (route === 'levels' && mode === '2d') {
       if (!atlasReady) { $('atlas-frame').src = `atlas/index.html#level-${level + 1}`; atlasReady = true; }
       else $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin);
@@ -58,7 +58,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     viewer?.setActive(active3d);
     if (route === 'levels' && mode === '3d' && !catalog.length) {
       $('view-message').hidden = false;
-      $('view-message').textContent = catalogError || 'Loading level catalog…';
+      $('view-message').textContent = catalogError || 'Loading the level list…';
     }
     if (route === 'wiki') {
       try {
@@ -85,7 +85,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
         viewerPromise = null;
         if (ticket !== revision) return;
         $('view-message').hidden = false;
-        $('view-message').textContent = `3D could not start: ${error.message}. Switch to 2D Atlas to explore this level.`;
+        $('view-message').textContent = `3D could not start: ${error.message}. Switch to the 2D map to explore this level.`;
       }
     }
   }

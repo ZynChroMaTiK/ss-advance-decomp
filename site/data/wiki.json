@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "description": "Project-authored field guide with original NETRICSA artwork and recovered map evidence.",
+  "description": "A guide to the game, with original NETRICSA artwork and maps.",
   "entries": [
     {
       "id": "field-guide",
       "title": "Your portable field guide",
       "category": "systems",
-      "summary": "The worlds, creatures and equipment of Serious Sam Advance, brought together in a growing NETRICSA-style reference.",
+      "summary": "Meet the enemies, get to know your weapons and explore the worlds of Serious Sam Advance.",
       "sections": [
         {
           "title": "Start with a subject",
-          "text": "Search for a name, choose a category, or follow a related record. Every level links directly to its 2D atlas and 3D world view. Weapons and enemies list maps where placement records identify them."
+          "text": "Search for a name or choose a category. Each level links to its 2D map and 3D view. Weapon and enemy pages also show where you can find them."
         },
         {
-          "title": "Original intel, recovered behavior",
-          "text": "Weapon and enemy illustrations come from the original NETRICSA archive. Descriptions are short project summaries, with original lore kept separate from verified native behavior. Expand Sources & coverage for the underlying evidence."
+          "title": "About this guide",
+          "text": "The illustrations come from the original game. We wrote these descriptions to help you play. Open Sources & notes if you want to see the research behind an entry."
         }
       ],
       "related": [
@@ -35,7 +35,7 @@
       "title": "Temple Of Herkat Upper",
       "category": "levels",
       "level": 0,
-      "summary": "Egypt campaign level 1. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 1. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 1",
@@ -47,30 +47,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           63
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           31
         ],
         [
-          "Scripts",
+          "Events",
           5
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Methug Soldier (6), Beheaded Kamikaze (11), Sirian Werebull (2). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Methug Soldier (6), Beheaded Kamikaze (11), Sirian Werebull (2). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 6 sector movers and 0 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 6 doors or lifts and 0 switches. We have marked 1 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -86,18 +86,18 @@
           "href": "data/level-01.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-2",
       "title": "Temple Of Herkat Lower",
       "category": "levels",
       "level": 1,
-      "summary": "Egypt campaign level 2. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 2. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 2",
@@ -109,30 +109,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           112
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           91
         ],
         [
-          "Scripts",
+          "Events",
           12
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Methug Soldier (13), Aludran Arachnoid (3), Methug Commander (2), Beheaded Kamikaze (22), Cyclops (2), Hermit Crabuloid (12). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Methug Soldier (13), Aludran Arachnoid (3), Methug Commander (2), Beheaded Kamikaze (22), Cyclops (2), Hermit Crabuloid (12). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 15 sector movers and 1 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 15 doors or lifts and 1 switches. We have marked 1 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -151,18 +151,18 @@
           "href": "data/level-02.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-3",
       "title": "Amon Thule",
       "category": "levels",
       "level": 2,
-      "summary": "Egypt campaign level 3. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 3. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 3",
@@ -174,30 +174,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           85
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           125
         ],
         [
-          "Scripts",
+          "Events",
           10
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Methug Commander (11), Cyclops (13), Beheaded Kamikaze (32), Methug Soldier (9), Sirian Werebull (2), Aludran Arachnoid (6). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Methug Commander (11), Cyclops (13), Beheaded Kamikaze (32), Methug Soldier (9), Sirian Werebull (2), Aludran Arachnoid (6). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 10 sector movers and 2 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 10 doors or lifts and 2 switches. We have marked 1 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -216,18 +216,18 @@
           "href": "data/level-03.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-4",
       "title": "Slave Compound",
       "category": "levels",
       "level": 3,
-      "summary": "Egypt campaign level 4. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 4. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 4",
@@ -239,30 +239,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           93
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           147
         ],
         [
-          "Scripts",
+          "Events",
           11
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Aludran Arachnoid (3), Hermit Crabuloid (9), Cyclops (21), Methug Commander (8), Beheaded Kamikaze (48), Aludran Reptiloid (2), Sirian Werebull (2), Methug Soldier (8), Bladder Beast (3). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Aludran Arachnoid (3), Hermit Crabuloid (9), Cyclops (21), Methug Commander (8), Beheaded Kamikaze (48), Aludran Reptiloid (2), Sirian Werebull (2), Methug Soldier (8), Bladder Beast (3). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 11 sector movers and 3 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 11 doors or lifts and 3 switches. We have marked 1 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -284,18 +284,18 @@
           "href": "data/level-04.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-5",
       "title": "Pyramid Entrance",
       "category": "levels",
       "level": 4,
-      "summary": "Egypt campaign level 5. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 5. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 5",
@@ -307,30 +307,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           109
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           171
         ],
         [
-          "Scripts",
+          "Events",
           10
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Cyclops (16), Beheaded Kamikaze (61), Sirian Werebull (2), Methug Soldier (15), Methug Commander (12), Aludran Arachnoid (5), Hermit Crabuloid (8). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Cyclops (16), Beheaded Kamikaze (61), Sirian Werebull (2), Methug Soldier (15), Methug Commander (12), Aludran Arachnoid (5), Hermit Crabuloid (8). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 16 sector movers and 0 switches. 1 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 16 doors or lifts and 0 switches. We have marked 1 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -350,18 +350,18 @@
           "href": "data/level-05.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-6",
       "title": "Tomb Of Ramses",
       "category": "levels",
       "level": 5,
-      "summary": "Egypt campaign level 6. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Egypt campaign level 6. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Egypt",
         "map 6",
@@ -373,30 +373,30 @@
           "Egypt"
         ],
         [
-          "Sectors",
+          "Room sections",
           51
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           165
         ],
         [
-          "Scripts",
+          "Events",
           13
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Sirian Werebull (2), Beheaded Kamikaze (81), Bladder Beast (2), Cyclops (35), Methug Soldier (11), Methug Commander (3), Aludran Arachnoid (5), Hermit Crabuloid (8), Sirian Sphinx (1). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Sirian Werebull (2), Beheaded Kamikaze (81), Bladder Beast (2), Cyclops (35), Methug Soldier (11), Methug Commander (3), Aludran Arachnoid (5), Hermit Crabuloid (8), Sirian Sphinx (1). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 12 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 12 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -418,18 +418,18 @@
           "href": "data/level-06.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-7",
       "title": "The Forum Of Mars",
       "category": "levels",
       "level": 6,
-      "summary": "Rome campaign level 7. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 7. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 7",
@@ -441,30 +441,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           46
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           138
         ],
         [
-          "Scripts",
+          "Events",
           10
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Beheaded Kamikaze (58), Aludran Arachnoid (8), Bladder Beast (22), Aludran Reptiloid (11), Sirian Werebull (13). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Beheaded Kamikaze (58), Aludran Arachnoid (8), Bladder Beast (22), Aludran Reptiloid (11), Sirian Werebull (13). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 9 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 9 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -482,18 +482,18 @@
           "href": "data/level-07.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-8",
       "title": "Slave Quarters",
       "category": "levels",
       "level": 7,
-      "summary": "Rome campaign level 8. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 8. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 8",
@@ -505,30 +505,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           77
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           137
         ],
         [
-          "Scripts",
+          "Events",
           15
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Aludran Arachnoid (16), Hermit Crabuloid (19), Gunrilla (24), Beheaded Kamikaze (37), Bladder Beast (6). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Aludran Arachnoid (16), Hermit Crabuloid (19), Gunrilla (24), Beheaded Kamikaze (37), Bladder Beast (6). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 11 sector movers and 2 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 11 doors or lifts and 2 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -546,18 +546,18 @@
           "href": "data/level-08.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-9",
       "title": "Gladiator School",
       "category": "levels",
       "level": 8,
-      "summary": "Rome campaign level 9. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 9. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 9",
@@ -569,30 +569,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           33
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           128
         ],
         [
-          "Scripts",
+          "Events",
           9
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Hermit Crabuloid (5), Gunrilla (24), Aludran Arachnoid (7), Sirian Werebull (5), Beheaded Kamikaze (52), Methug Commander (2), Methug Soldier (3), Bladder Beast (8). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Hermit Crabuloid (5), Gunrilla (24), Aludran Arachnoid (7), Sirian Werebull (5), Beheaded Kamikaze (52), Methug Commander (2), Methug Soldier (3), Bladder Beast (8). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 12 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 12 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -613,18 +613,18 @@
           "href": "data/level-09.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-10",
       "title": "Baths Of Diocletian",
       "category": "levels",
       "level": 9,
-      "summary": "Rome campaign level 10. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 10. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 10",
@@ -636,30 +636,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           30
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           63
         ],
         [
-          "Scripts",
+          "Events",
           3
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Aludran Arachnoid (9), Beheaded Kamikaze (22), Gunrilla (14), Aludran Reptiloid (5). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Aludran Arachnoid (9), Beheaded Kamikaze (22), Gunrilla (14), Aludran Reptiloid (5). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 2 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 2 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -676,18 +676,18 @@
           "href": "data/level-10.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-11",
       "title": "Praetorian Fort",
       "category": "levels",
       "level": 10,
-      "summary": "Rome campaign level 11. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 11. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 11",
@@ -699,30 +699,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           97
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           120
         ],
         [
-          "Scripts",
+          "Events",
           7
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Bladder Beast (13), Beheaded Kamikaze (23), Gunrilla (41), Cyclops (4), Aludran Arachnoid (14), Aludran Reptiloid (4). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Bladder Beast (13), Beheaded Kamikaze (23), Gunrilla (41), Cyclops (4), Aludran Arachnoid (14), Aludran Reptiloid (4). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 15 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 15 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -741,18 +741,18 @@
           "href": "data/level-11.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-12",
       "title": "Caesar'S Palace",
       "category": "levels",
       "level": 11,
-      "summary": "Rome campaign level 12. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Rome campaign level 12. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Rome",
         "map 12",
@@ -764,30 +764,30 @@
           "Rome"
         ],
         [
-          "Sectors",
+          "Room sections",
           77
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           137
         ],
         [
-          "Scripts",
+          "Events",
           11
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Playable in the current native Windows prototype."
+          "title": "Can I play it?",
+          "text": "Playable in the current Windows release."
         },
         {
-          "title": "Encounter records",
-          "text": "Aludran Arachnoid (14), Beheaded Kamikaze (68), Hermit Crabuloid (5), Gunrilla (24), Bladder Beast (12), Wolfiator (1), Methug Soldier (2). Counts include scripted placement records, which need not be active together."
+          "title": "Enemies you will find",
+          "text": "Aludran Arachnoid (14), Beheaded Kamikaze (68), Hermit Crabuloid (5), Gunrilla (24), Bladder Beast (12), Wolfiator (1), Methug Soldier (2). Some appear later, so these enemies will not all be present at once."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 11 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 11 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -807,18 +807,18 @@
           "href": "data/level-12.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-13",
       "title": "Egypt Multiplayer 1",
       "category": "levels",
       "level": 12,
-      "summary": "Multiplayer arena 1. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Multiplayer arena 1. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Multiplayer",
         "map 13",
@@ -830,30 +830,30 @@
           "Multiplayer"
         ],
         [
-          "Sectors",
+          "Room sections",
           22
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           27
         ],
         [
-          "Scripts",
+          "Events",
           0
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+          "title": "Can I play it?",
+          "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Encounter records",
-          "text": "No enemy placement records are present in this export."
+          "title": "Enemies you will find",
+          "text": "No enemy locations are listed for this map."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 0 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -866,18 +866,18 @@
           "href": "data/level-13.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-14",
       "title": "Egypt Multiplayer 2",
       "category": "levels",
       "level": 13,
-      "summary": "Multiplayer arena 2. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Multiplayer arena 2. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Multiplayer",
         "map 14",
@@ -889,30 +889,30 @@
           "Multiplayer"
         ],
         [
-          "Sectors",
+          "Room sections",
           9
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           21
         ],
         [
-          "Scripts",
+          "Events",
           0
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+          "title": "Can I play it?",
+          "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Encounter records",
-          "text": "No enemy placement records are present in this export."
+          "title": "Enemies you will find",
+          "text": "No enemy locations are listed for this map."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 0 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -925,18 +925,18 @@
           "href": "data/level-14.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-15",
       "title": "Rome Multiplayer 1",
       "category": "levels",
       "level": 14,
-      "summary": "Multiplayer arena 3. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Multiplayer arena 3. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Multiplayer",
         "map 15",
@@ -948,30 +948,30 @@
           "Multiplayer"
         ],
         [
-          "Sectors",
+          "Room sections",
           25
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           19
         ],
         [
-          "Scripts",
+          "Events",
           0
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+          "title": "Can I play it?",
+          "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Encounter records",
-          "text": "No enemy placement records are present in this export."
+          "title": "Enemies you will find",
+          "text": "No enemy locations are listed for this map."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 0 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -984,18 +984,18 @@
           "href": "data/level-15.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "level-16",
       "title": "Rome Multiplayer 2",
       "category": "levels",
       "level": 15,
-      "summary": "Multiplayer arena 4. Explore its recovered architecture, original placements and scripted encounters.",
+      "summary": "Multiplayer arena 4. Explore its rooms, find pickups and see where enemies appear.",
       "aliases": [
         "Multiplayer",
         "map 16",
@@ -1007,30 +1007,30 @@
           "Multiplayer"
         ],
         [
-          "Sectors",
+          "Room sections",
           13
         ],
         [
-          "Placements",
+          "Enemy and item locations",
           21
         ],
         [
-          "Scripts",
+          "Events",
           0
         ]
       ],
       "sections": [
         {
-          "title": "Native port availability",
-          "text": "Available for exploration. The native project contains multiplayer components, but playable multiplayer integration remains unfinished."
+          "title": "Can I play it?",
+          "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Encounter records",
-          "text": "No enemy placement records are present in this export."
+          "title": "Enemies you will find",
+          "text": "No enemy locations are listed for this map."
         },
         {
           "title": "Doors, switches and secrets",
-          "text": "The map export records 0 sector movers and 0 switches. 0 secret locations are documented here. The secret catalogue is incomplete; absence of a pin does not mean absence of a secret."
+          "text": "This map has 0 doors or lifts and 0 switches. We have marked 0 secrets so far. There may be more to find."
         }
       ],
       "related": [
@@ -1043,11 +1043,11 @@
           "href": "data/level-16.json"
         },
         {
-          "title": "Map recovery",
+          "title": "Developer notes: maps",
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "Counts describe extracted records, not a live playthrough. The level browser shows original placements and static geometry; it does not simulate gameplay."
+      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
     },
     {
       "id": "weapon-chainsaw",
@@ -1060,24 +1060,24 @@
       ],
       "image": "assets/netricsa/netricsa-00.png",
       "original_text_id": 84,
-      "summary": "Sam's close-range cutting tool. Hold fire to keep attacking without spending ammunition.",
+      "summary": "Sam’s close-range weapon. Keep cutting without using any ammo.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original NETRICSA entry describes a forestry tool repurposed for fighting monsters. Its short reach makes positioning essential."
         },
         {
-          "title": "In the PC port",
-          "text": "Hold fire to keep cutting without consuming ammunition. The PC port doubles the original reach to 192 map units. Its running and stopping sounds follow the actual attack state."
+          "title": "Playing tips",
+          "text": "Get close and hold fire. The PC port gives the chainsaw twice its original reach."
         }
       ],
       "sources": [
         {
-          "title": "weapon controller",
+          "title": "Developer notes: weapon controller",
           "href": "docs/weapon-controller.html"
         },
         {
-          "title": "weapon fixes",
+          "title": "Developer notes: weapon fixes",
           "href": "docs/weapon-fixes.html"
         }
       ],
@@ -1087,11 +1087,11 @@
           "1"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           0
         ]
       ],
-      "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach.",
+      "coverage": "You start with the chainsaw, so it has no pickup locations. Its longer reach is a PC addition.",
       "appearances": [],
       "related": []
     },
@@ -1110,24 +1110,24 @@
       ],
       "image": "assets/netricsa/netricsa-02.png",
       "original_text_id": 86,
-      "summary": "A slow-firing shotgun built for close encounters.",
+      "summary": "A powerful close-range shotgun with a pause between blasts.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original briefing emphasizes the coach gun's short-range power. Its firing cycle leaves a pause between blasts."
         },
         {
-          "title": "In the PC port",
-          "text": "A blast checks a central hit and two offset hits. It fires both cartridges when available, with a separate firing animation when only one cartridge remains."
+          "title": "Playing tips",
+          "text": "Fires both shells when you have them, or a single shot when only one remains. The Alternate weapons option changes its spread."
         }
       ],
       "sources": [
         {
-          "title": "weapon controller",
+          "title": "Developer notes: weapon controller",
           "href": "docs/weapon-controller.html"
         },
         {
-          "title": "weapon hit",
+          "title": "Developer notes: weapon hit",
           "href": "docs/weapon-hit.html"
         }
       ],
@@ -1137,7 +1137,7 @@
           "3"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           2
         ]
       ],
@@ -1169,24 +1169,24 @@
       ],
       "image": "assets/netricsa/netricsa-04.png",
       "original_text_id": 88,
-      "summary": "A rotary gun that trades ammunition for sustained firepower.",
+      "summary": "A fast-firing gun that gets through enemies—and your ammo—quickly.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original tips call attention to its heavy ammunition use. It is introduced early in the Pyramid Entrance Maze."
         },
         {
-          "title": "In the PC port",
-          "text": "Holding fire produces a continuous stream of immediate hits. The firing loop and the wind-down sound follow different stages of the weapon cycle."
+          "title": "Playing tips",
+          "text": "Hold fire for a steady stream of bullets. The barrels wind down when you stop."
         }
       ],
       "sources": [
         {
-          "title": "weapon controller",
+          "title": "Developer notes: weapon controller",
           "href": "docs/weapon-controller.html"
         },
         {
-          "title": "weapon fixes",
+          "title": "Developer notes: weapon fixes",
           "href": "docs/weapon-fixes.html"
         }
       ],
@@ -1196,7 +1196,7 @@
           "5"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1223,24 +1223,24 @@
       ],
       "image": "assets/netricsa/netricsa-05.png",
       "original_text_id": 89,
-      "summary": "Launches explosive projectiles with area damage.",
+      "summary": "Fires rockets that hurt enemies near the blast as well as the target.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original description combines direct projectile damage with an explosion around the impact. Reloading separates each launch."
         },
         {
-          "title": "PC behavior",
-          "text": "Player rockets travel independently after launch. Their trajectory follows the launch aim, including vertical mouse aim, rather than continuing to move with later changes to the player's view."
+          "title": "Playing tips",
+          "text": "Aim with the mouse, including up and down. Once fired, a rocket keeps going in that direction."
         }
       ],
       "sources": [
         {
-          "title": "projectile controller",
+          "title": "Developer notes: projectile controller",
           "href": "docs/projectile-controller.html"
         },
         {
-          "title": "weapon fixes",
+          "title": "Developer notes: weapon fixes",
           "href": "docs/weapon-fixes.html"
         }
       ],
@@ -1250,7 +1250,7 @@
           "6"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           2
         ]
       ],
@@ -1283,24 +1283,24 @@
       ],
       "image": "assets/netricsa/netricsa-06.png",
       "original_text_id": 90,
-      "summary": "Turns eligible enemies against other enemies while their health drains away.",
+      "summary": "Makes affected enemies attack nearby targets while their health drains away.",
       "sections": [
         {
           "title": "In the field",
-          "text": "NETRICSA describes the weapon as disrupting Mental's control over his troops. The recovered effect changes target selection and applies periodic health drain; it is not a freeze weapon."
+          "text": "NETRICSA describes this weapon as breaking Mental’s control over his troops. The effect also slowly drains the affected enemy’s health."
         },
         {
-          "title": "PC behavior",
-          "text": "Shots leave along the sight line and continue independently. Converted living regular enemies receive the requested double-speed behavior and animation updates. Their projectiles and other actors retain their normal clocks."
+          "title": "Playing tips",
+          "text": "Affected enemies move and act twice as fast in the PC port. They can turn on other enemies, but Sam can still become their target."
         }
       ],
       "sources": [
         {
-          "title": "projectile conversion",
+          "title": "Developer notes: projectile conversion",
           "href": "docs/projectile-conversion.html"
         },
         {
-          "title": "weapon fixes",
+          "title": "Developer notes: weapon fixes",
           "href": "docs/weapon-fixes.html"
         }
       ],
@@ -1310,7 +1310,7 @@
           "7"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1338,24 +1338,24 @@
       ],
       "image": "assets/netricsa/netricsa-09.png",
       "original_text_id": 93,
-      "summary": "Fires a large cannonball that can bounce off walls and pass through enemies.",
+      "summary": "Fires a cannonball that can bounce off walls and plough through enemies.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original NETRICSA entry highlights the cannonball's ricochets and ability to plow through a group."
         },
         {
-          "title": "In the PC port",
-          "text": "Cannonballs can reflect from walls, penetrate targets and eventually explode. Hits retain credit for the player who fired the shot."
+          "title": "Playing tips",
+          "text": "A cannonball can hit several enemies before it finally explodes."
         }
       ],
       "sources": [
         {
-          "title": "projectile bounce",
+          "title": "Developer notes: projectile bounce",
           "href": "docs/projectile-bounce.html"
         },
         {
-          "title": "projectile runtime",
+          "title": "Developer notes: projectile runtime",
           "href": "docs/projectile-runtime.html"
         }
       ],
@@ -1365,7 +1365,7 @@
           "10"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1392,28 +1392,28 @@
       ],
       "image": "assets/netricsa/netricsa-01.png",
       "original_text_id": 85,
-      "summary": "A reliable revolver and the first firearm introduced in the campaign.",
+      "summary": "A dependable revolver and the first firearm you find in the campaign.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA presents the Schofield as Sam's dependable old-fashioned sidearm. A pistol pickup is available in the Upper Temple of Herkat."
         },
         {
-          "title": "In the PC port",
-          "text": "Each shot hits immediately along the aim line. The pistol finishes its firing animation before returning to its ready pose."
+          "title": "Playing tips",
+          "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you have both, press 2 again to switch between one and two."
         }
       ],
       "sources": [
         {
-          "title": "weapon controller",
+          "title": "Developer notes: weapon controller",
           "href": "docs/weapon-controller.html"
         },
         {
-          "title": "weapon hit",
+          "title": "Developer notes: weapon hit",
           "href": "docs/weapon-hit.html"
         },
         {
-          "title": "weapon selection",
+          "title": "Developer notes: weapon selection",
           "href": "docs/weapon-selection.html"
         }
       ],
@@ -1423,7 +1423,7 @@
           "2"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1452,24 +1452,24 @@
       ],
       "image": "assets/netricsa/netricsa-03.png",
       "original_text_id": 87,
-      "summary": "An automatic weapon for sustained fire against groups of enemies.",
+      "summary": "An automatic weapon for keeping groups of enemies under fire.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA describes the Thompson as a classic trench sweeper suited to nearby and medium-range threats."
         },
         {
-          "title": "In the PC port",
-          "text": "Holding fire produces repeated immediate hits while ammunition remains. Its firing sound stops when the attack ends, including after switching weapons or pausing."
+          "title": "Playing tips",
+          "text": "Hold fire to keep shooting while you have ammo. Let go to stop."
         }
       ],
       "sources": [
         {
-          "title": "weapon controller",
+          "title": "Developer notes: weapon controller",
           "href": "docs/weapon-controller.html"
         },
         {
-          "title": "weapon fixes",
+          "title": "Developer notes: weapon fixes",
           "href": "docs/weapon-fixes.html"
         }
       ],
@@ -1479,7 +1479,7 @@
           "4"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           2
         ]
       ],
@@ -1512,20 +1512,20 @@
       ],
       "image": "assets/netricsa/netricsa-08.png",
       "original_text_id": 92,
-      "summary": "Marks an enemy's position for a falling object from another time.",
+      "summary": "Drops a heavy object onto an enemy’s position.",
       "sections": [
         {
           "title": "In the field",
-          "text": "NETRICSA's explanation involves scientists sending heavy everyday objects back to Sam's recorded target coordinates. The effect captures a position rather than following the target indefinitely."
+          "text": "Scientists send heavy objects back through time to the spot Sam aims at."
         },
         {
-          "title": "PC behavior",
-          "text": "The falling effect lands, then explodes on its next update. The PC targeting policy requires an eligible living enemy; an invalid attempt completes the weapon gesture without spending ammunition. Tougher enemies can survive its original damage."
+          "title": "Playing tips",
+          "text": "Aim at a living enemy. A successful shot marks its position, so a moving enemy can get away. An attempt with no valid target uses no ammo; tougher enemies may survive a hit."
         }
       ],
       "sources": [
         {
-          "title": "special weapons",
+          "title": "Developer notes: special weapons",
           "href": "docs/special-weapons.html"
         }
       ],
@@ -1535,7 +1535,7 @@
           "9"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1563,24 +1563,24 @@
       ],
       "image": "assets/netricsa/netricsa-07.png",
       "original_text_id": 91,
-      "summary": "A special blast weapon with a palette flash and a cooldown between attacks.",
+      "summary": "A heavy blast weapon with a bright flash and a pause between attacks.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original fiction describes a repurposed communications device that heats its targets. Its familiar pickup label is U.M.T."
         },
         {
-          "title": "In the PC port",
-          "text": "The attack uses the original sector-based targeting checks and deals heavy damage to eligible regular enemies. It has a cooldown and excludes players and both bosses."
+          "title": "Playing tips",
+          "text": "Deals heavy damage to regular enemies it can target. It does not hurt players or either boss."
         }
       ],
       "sources": [
         {
-          "title": "special weapons",
+          "title": "Developer notes: special weapons",
           "href": "docs/special-weapons.html"
         },
         {
-          "title": "combat explosion",
+          "title": "Developer notes: combat explosion",
           "href": "docs/combat-explosion.html"
         }
       ],
@@ -1590,7 +1590,7 @@
           "8"
         ],
         [
-          "Maps with pickup records",
+          "Maps with this pickup",
           1
         ]
       ],
@@ -1618,24 +1618,24 @@
       "image": "assets/netricsa/netricsa-16.png",
       "original_text_id": 122,
       "health": 100,
-      "summary": "A scorpion-like ranged enemy that can threaten Sam before he reaches it.",
+      "summary": "A scorpion-like enemy that opens fire from a distance.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original dossier describes an armed, many-legged hybrid that prefers to open fire from a distance."
         },
         {
-          "title": "In the PC port",
-          "text": "Can launch projectiles from a distance and hurt Sam on contact. Movement, attacks and death behavior are implemented natively."
+          "title": "Playing tips",
+          "text": "Watch for incoming shots before moving closer. Contact with it also hurts."
         }
       ],
       "sources": [
         {
-          "title": "enemy ranged",
+          "title": "Developer notes: enemy ranged",
           "href": "docs/enemy-ranged.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -1645,7 +1645,7 @@
           "100"
         ],
         [
-          "Recorded levels",
+          "Found in",
           11
         ]
       ],
@@ -1723,24 +1723,24 @@
       "image": "assets/netricsa/netricsa-17.png",
       "original_text_id": 123,
       "health": 130,
-      "summary": "A tough projectile attacker often encountered as a distant sentry.",
+      "summary": "A tough enemy that often attacks from far away.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original briefing describes rapid acid-missile attacks and recommends heavy weapons against this durable enemy."
         },
         {
-          "title": "In the PC port",
-          "text": "Its attack animation triggers a projectile launch. When sufficiently high above Sam, it uses a different aiming behavior rather than its ordinary approach."
+          "title": "Playing tips",
+          "text": "Bring a heavy weapon and keep an eye on higher ledges. It can aim down at Sam from above."
         }
       ],
       "sources": [
         {
-          "title": "enemy ranged",
+          "title": "Developer notes: enemy ranged",
           "href": "docs/enemy-ranged.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -1750,7 +1750,7 @@
           "130"
         ],
         [
-          "Recorded levels",
+          "Found in",
           4
         ]
       ],
@@ -1794,24 +1794,24 @@
       "image": "assets/netricsa/netricsa-10.png",
       "original_text_id": 116,
       "health": 30,
-      "summary": "An explosive pursuer that becomes dangerous when it closes the distance.",
+      "summary": "Runs straight at you with bombs in hand.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original intel describes a reanimated attacker carrying bombs. Its cry provides an audible warning of the approaching threat."
         },
         {
-          "title": "In the PC port",
-          "text": "Runs toward its target and detonates at close range. Its explosion damages nearby actors; defeating it also contributes to its scripted encounter group."
+          "title": "Playing tips",
+          "text": "Listen for its scream and keep your distance. It explodes when it gets close enough, hurting anyone nearby."
         }
       ],
       "sources": [
         {
-          "title": "enemy cd",
+          "title": "Developer notes: enemy cd",
           "href": "docs/enemy-cd.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -1821,7 +1821,7 @@
           "30"
         ],
         [
-          "Recorded levels",
+          "Found in",
           12
         ]
       ],
@@ -1905,24 +1905,24 @@
       "image": "assets/netricsa/netricsa-15.png",
       "original_text_id": 121,
       "health": 80,
-      "summary": "A swollen Methug relative that threatens Sam with spit and close contact.",
+      "summary": "A swollen Methug relative that attacks with spit.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA attributes its unusual movement to inflatable body sacs and describes a corrosive ranged attack."
         },
         {
-          "title": "In the PC port",
-          "text": "Moves toward a target and can attack both on contact and with a projectile."
+          "title": "Playing tips",
+          "text": "Avoid its shots and keep clear of its body, which can also hurt Sam."
         }
       ],
       "sources": [
         {
-          "title": "enemy control",
+          "title": "Developer notes: enemy control",
           "href": "docs/enemy-control.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -1932,7 +1932,7 @@
           "80"
         ],
         [
-          "Recorded levels",
+          "Found in",
           7
         ]
       ],
@@ -1990,24 +1990,24 @@
       "image": "assets/netricsa/netricsa-14.png",
       "original_text_id": 120,
       "health": 100,
-      "summary": "A mutated cyclopean attacker with prominent club-like arms.",
+      "summary": "A fast-moving, one-eyed enemy with club-like arms.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original intel emphasizes the danger of letting this fast-moving creature reach Sam."
         },
         {
-          "title": "In the PC port",
-          "text": "Approaches its target, hurts Sam on contact and can fire a projectile. Its starting health is 100."
+          "title": "Playing tips",
+          "text": "It can shoot as well as hurt Sam up close. Keep moving and watch the distance between you."
         }
       ],
       "sources": [
         {
-          "title": "enemy control",
+          "title": "Developer notes: enemy control",
           "href": "docs/enemy-control.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2017,7 +2017,7 @@
           "100"
         ],
         [
-          "Recorded levels",
+          "Found in",
           6
         ]
       ],
@@ -2070,28 +2070,28 @@
       "image": "assets/netricsa/netricsa-19.png",
       "original_text_id": 125,
       "health": 150,
-      "summary": "A heavily armed gorilla mutant with a large projectile weapon grafted onto its body.",
+      "summary": "A heavily armed gorilla mutant with a cannon built into its body.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original description portrays a slow, heavily armed opponent that is dangerous both at range and up close."
         },
         {
-          "title": "In the PC port",
-          "text": "Fires cannonball projectiles and has a strong close-range attack. Its starting health is 150."
+          "title": "Playing tips",
+          "text": "Dodge its cannonballs and avoid its strong close-range attack."
         }
       ],
       "sources": [
         {
-          "title": "enemy ranged",
+          "title": "Developer notes: enemy ranged",
           "href": "docs/enemy-ranged.html"
         },
         {
-          "title": "enemy control",
+          "title": "Developer notes: enemy control",
           "href": "docs/enemy-control.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2101,7 +2101,7 @@
           "150"
         ],
         [
-          "Recorded levels",
+          "Found in",
           5
         ]
       ],
@@ -2150,24 +2150,24 @@
       "image": "assets/netricsa/netricsa-18.png",
       "original_text_id": 124,
       "health": 60,
-      "summary": "A shelled enemy that alternates between exposed movement and hiding.",
+      "summary": "A shelled enemy that hides, emerges and attacks.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA describes the shell as protection and directs attention to the vulnerable body revealed while the creature is active."
         },
         {
-          "title": "In the PC port",
-          "text": "Burrows, hides and emerges again according to its distance from the target. It can also jump during a close approach."
+          "title": "Playing tips",
+          "text": "Watch for it to come out of hiding. It can jump as it gets close."
         }
       ],
       "sources": [
         {
-          "title": "enemy ranged",
+          "title": "Developer notes: enemy ranged",
           "href": "docs/enemy-ranged.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2177,7 +2177,7 @@
           "60"
         ],
         [
-          "Recorded levels",
+          "Found in",
           7
         ]
       ],
@@ -2235,24 +2235,24 @@
       "image": "assets/netricsa/netricsa-13.png",
       "original_text_id": 119,
       "health": 40,
-      "summary": "A compact hovering Methug variant with a dangerous contact attack.",
+      "summary": "A small hovering Methug with a dangerous touch.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA describes a commander associated with other Methugs. Its eye and suspended body distinguish it from the soldier."
         },
         {
-          "title": "In the PC port",
-          "text": "Attacks by contact. The recovered behavior contains no ranged attack, although the original NETRICSA description mentions a bolt fired from its eye."
+          "title": "Playing tips",
+          "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it does not fire an eye bolt in the game."
         }
       ],
       "sources": [
         {
-          "title": "enemy control",
+          "title": "Developer notes: enemy control",
           "href": "docs/enemy-control.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2262,7 +2262,7 @@
           "40"
         ],
         [
-          "Recorded levels",
+          "Found in",
           6
         ]
       ],
@@ -2315,24 +2315,24 @@
       "image": "assets/netricsa/netricsa-12.png",
       "original_text_id": 118,
       "health": 50,
-      "summary": "A floating soldier with a ranged bolt attack and harmful close contact.",
+      "summary": "A floating soldier that fires bolts and hurts Sam on contact.",
       "sections": [
         {
           "title": "In the field",
           "text": "The original intel describes its useless trailing legs and the bolt fired from its body. It is among the first enemies encountered in the campaign."
         },
         {
-          "title": "In the PC port",
-          "text": "Bobs above the floor as it moves. It can hurt Sam on contact and attack with a projectile; attack and death animations run natively."
+          "title": "Playing tips",
+          "text": "Watch for its shots and avoid letting it float into you."
         }
       ],
       "sources": [
         {
-          "title": "enemy control",
+          "title": "Developer notes: enemy control",
           "href": "docs/enemy-control.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2342,7 +2342,7 @@
           "50"
         ],
         [
-          "Recorded levels",
+          "Found in",
           8
         ]
       ],
@@ -2407,28 +2407,28 @@
       "image": "assets/netricsa/netricsa-20.png",
       "original_text_id": 126,
       "health": 3000,
-      "summary": "The Egyptian chapter's boss, combining projectile volleys with scripted reinforcements.",
+      "summary": "The boss waiting at the end of the Egyptian chapter.",
       "sections": [
         {
           "title": "Encounter",
-          "text": "The Sphinx has its own health gauge, battle music and scripted encounter. Its controller alternates attack cycles with reinforcement phases."
+          "text": "The Sphinx has its own health bar and battle music. Be ready to deal with the enemies it summons."
         },
         {
-          "title": "PC port coverage",
-          "text": "The sixth campaign level has a normal-input completion with earned inventory and native boss combat. Summoning phases also have separate controller and integration tests."
+          "title": "Playing tips",
+          "text": "Fight it in the sixth campaign level. It alternates between firing volleys and calling in reinforcements."
         }
       ],
       "sources": [
         {
-          "title": "enemy boss",
+          "title": "Developer notes: enemy boss",
           "href": "docs/enemy-boss.html"
         },
         {
-          "title": "native game",
+          "title": "Developer notes: native game",
           "href": "docs/native-game.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2438,7 +2438,7 @@
           "3000"
         ],
         [
-          "Recorded levels",
+          "Found in",
           1
         ]
       ],
@@ -2467,24 +2467,24 @@
       "image": "assets/netricsa/netricsa-11.png",
       "original_text_id": 117,
       "health": 100,
-      "summary": "A charging beast whose close-range contact can knock Sam back.",
+      "summary": "A charging beast that can knock Sam back.",
       "sections": [
         {
           "title": "In the field",
           "text": "NETRICSA recommends dodging the charge and taking advantage of the time it needs to turn for another approach."
         },
         {
-          "title": "In the PC port",
-          "text": "Its close attack deals damage and pushes the target in the direction of impact. The charging sound warns of its approach."
+          "title": "Playing tips",
+          "text": "Dodge the charge, then use the time it takes to turn around to attack."
         }
       ],
       "sources": [
         {
-          "title": "enemy ranged",
+          "title": "Developer notes: enemy ranged",
           "href": "docs/enemy-ranged.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2494,7 +2494,7 @@
           "100"
         ],
         [
-          "Recorded levels",
+          "Found in",
           7
         ]
       ],
@@ -2553,28 +2553,28 @@
       "image": "assets/netricsa/netricsa-21.png",
       "original_text_id": 127,
       "health": 3000,
-      "summary": "An armored wolf-like boss commanding the final Roman encounter.",
+      "summary": "The armoured boss at the end of the Roman chapter.",
       "sections": [
         {
           "title": "Encounter",
-          "text": "The original intel describes a towering enemy with a plumed helmet and summoned minions. Its recovered controller combines five-shot volleys with alternating scripted reinforcement phases."
+          "text": "A towering enemy in a plumed helmet, backed by summoned minions."
         },
         {
-          "title": "PC port coverage",
-          "text": "The boss controller and its native integration are implemented and tested. Natural progression through the final campaign level remains to be validated; those tests do not yet establish a complete playable final encounter."
+          "title": "Playing tips",
+          "text": "Fight it in Caesar’s Palace, the final campaign level. Expect five-shot volleys and waves of reinforcements. The full campaign is still being playtested."
         }
       ],
       "sources": [
         {
-          "title": "enemy boss",
+          "title": "Developer notes: enemy boss",
           "href": "docs/enemy-boss.html"
         },
         {
-          "title": "native game",
+          "title": "Developer notes: native game",
           "href": "docs/native-game.html"
         },
         {
-          "title": "enemy activation",
+          "title": "Developer notes: enemy activation",
           "href": "docs/enemy-activation.html"
         }
       ],
@@ -2584,7 +2584,7 @@
           "3000"
         ],
         [
-          "Recorded levels",
+          "Found in",
           1
         ]
       ],
@@ -2601,7 +2601,7 @@
       "id": "items-ammo",
       "title": "Ammunition",
       "category": "items",
-      "summary": "Keep the original weapon set supplied.",
+      "summary": "Keep your weapons supplied.",
       "image": "atlas/icons/p0-r053.png",
       "aliases": [
         "Cannon balls",
@@ -2614,21 +2614,21 @@
       ],
       "facts": [
         [
-          "Recorded variants",
+          "Different types",
           7
         ],
         [
-          "Placement records",
+          "Locations",
           159
         ]
       ],
       "sections": [
         {
           "title": "How they work",
-          "text": "Ammo records include bullets, shotgun cartridges, rockets, cannon balls and colored energy cells. In single player, pickup acceptance depends on owning the corresponding weapon and available capacity."
+          "text": "Look for bullets, shells, rockets, cannonballs and coloured energy cells. You need the matching weapon and room for more ammo to pick them up."
         },
         {
-          "title": "Atlas labels",
+          "title": "Names on the map",
           "text": "Cannon balls, Minigun ammo, Prion red cell, Rockets, Shotgun cartridges, Timestrike blue cell, Tommygun ammo."
         }
       ],
@@ -2638,7 +2638,7 @@
       ],
       "sources": [
         {
-          "title": "Recovered behavior",
+          "title": "Developer notes",
           "href": "docs/pickups.html"
         },
         {
@@ -2649,30 +2649,30 @@
     },
     {
       "id": "items-exits",
-      "title": "Ankhs and trigger pickups",
+      "title": "Ankhs and special pickups",
       "category": "items",
-      "summary": "Pickups can participate in level scripts.",
+      "summary": "Some pickups also make something happen in the level.",
       "image": "atlas/icons/p0-r063.png",
       "aliases": [
         "Level exit / ankh trigger"
       ],
       "facts": [
         [
-          "Recorded variants",
+          "Different types",
           1
         ],
         [
-          "Placement records",
+          "Locations",
           11
         ]
       ],
       "sections": [
         {
           "title": "How they work",
-          "text": "A pickup can carry a script trigger. The recovered handler may dispatch that trigger before deciding whether the inventory accepts the item. Consult the map’s script and exit records to understand its role."
+          "text": "Touching certain pickups can start an event, even when you cannot collect the item itself. Select one on the map to see what it does."
         },
         {
-          "title": "Atlas labels",
+          "title": "Names on the map",
           "text": "Level exit / ankh trigger."
         }
       ],
@@ -2682,7 +2682,7 @@
       ],
       "sources": [
         {
-          "title": "Recovered behavior",
+          "title": "Developer notes",
           "href": "docs/level-script.html"
         },
         {
@@ -2695,7 +2695,7 @@
       "id": "items-armor",
       "title": "Armor and shields",
       "category": "items",
-      "summary": "Protection pickups in several sizes.",
+      "summary": "Help Sam take more hits.",
       "image": "atlas/icons/p0-r045.png",
       "aliases": [
         "100 armor",
@@ -2704,21 +2704,21 @@
       ],
       "facts": [
         [
-          "Recorded variants",
+          "Different types",
           3
         ],
         [
-          "Placement records",
+          "Locations",
           63
         ]
       ],
       "sections": [
         {
           "title": "How they work",
-          "text": "The atlas identifies separate shield and armor families in 25-, 50- and 100-point variants. The recovered inventory helpers gate protection pickups at 100; damage resolves through the original ordered protection fields."
+          "text": "Armor and shields come in 25-, 50- and 100-point sizes. You can collect them while the matching protection value is below 100."
         },
         {
-          "title": "Atlas labels",
+          "title": "Names on the map",
           "text": "100 armor, 25 armor, 50 armor."
         }
       ],
@@ -2728,7 +2728,7 @@
       ],
       "sources": [
         {
-          "title": "Recovered behavior",
+          "title": "Developer notes",
           "href": "docs/combat-damage.html"
         },
         {
@@ -2741,7 +2741,7 @@
       "id": "items-items",
       "title": "Backpacks and power-ups",
       "category": "items",
-      "summary": "Other inventory and power-up records.",
+      "summary": "Extra supplies and temporary help.",
       "image": "atlas/icons/p0-r051.png",
       "aliases": [
         "Backpack",
@@ -2749,21 +2749,21 @@
       ],
       "facts": [
         [
-          "Recorded variants",
+          "Different types",
           2
         ],
         [
-          "Placement records",
+          "Locations",
           24
         ]
       ],
       "sections": [
         {
           "title": "How they work",
-          "text": "Backpacks and Serious power appear in the extracted placements. Item effects and eligibility follow the recovered pickup dispatch; the atlas separates these from health, protection and ammunition."
+          "text": "Look for backpacks and Serious power among the map’s other items. Use the map filters to find them separately from health, armor and ammo."
         },
         {
-          "title": "Atlas labels",
+          "title": "Names on the map",
           "text": "Backpack, Serious power."
         }
       ],
@@ -2773,7 +2773,7 @@
       ],
       "sources": [
         {
-          "title": "Recovered behavior",
+          "title": "Developer notes",
           "href": "docs/pickups.html"
         },
         {
@@ -2795,21 +2795,21 @@
       ],
       "facts": [
         [
-          "Recorded variants",
+          "Different types",
           3
         ],
         [
-          "Placement records",
+          "Locations",
           61
         ]
       ],
       "sections": [
         {
           "title": "How they work",
-          "text": "The export records +25, +50 and +100 health pickups. Smaller pickups use a 100-health eligibility gate. The +100 pickup is collectible below 200 health, then adds 100 without capping the result: 199 becomes 299."
+          "text": "Health pickups add 25, 50 or 100 points. You can collect the smaller ones when health is below 100. The +100 pickup works below 200 and adds the full amount: 199 becomes 299."
         },
         {
-          "title": "Atlas labels",
+          "title": "Names on the map",
           "text": "100 health (collect below 200), 25 health, 50 health."
         }
       ],
@@ -2819,7 +2819,7 @@
       ],
       "sources": [
         {
-          "title": "Recovered behavior",
+          "title": "Developer notes",
           "href": "docs/inventory.html"
         },
         {
@@ -2836,11 +2836,11 @@
       "sections": [
         {
           "title": "A connected world",
-          "text": "Switches and trigger regions activate scripts. Scripts can request moving sectors, spawn groups of enemies and advance level progression. Defeating an encounter group can unlock a later scripted event."
+          "text": "Using a switch or entering an area can open a door, move a lift or bring in more enemies. Sometimes you need to defeat a group before you can move on."
         },
         {
           "title": "Reading the atlas",
-          "text": "The atlas exposes doors, lifts, switches, trigger regions and script records. The 3D open-door preview shows a static alternate ceiling height; it does not play the script or move a lift."
+          "text": "Select a door, switch or green event area to see what happens there. In 3D, Show doors open lets you look through doorways. The viewer does not run the level’s events."
         }
       ],
       "related": [
@@ -2855,46 +2855,18 @@
       ]
     },
     {
-      "id": "inventory-and-loadouts",
-      "title": "Inventory and loadouts",
-      "category": "systems",
-      "summary": "Weapons, ammunition and carried progress belong to the campaign.",
-      "sections": [
-        {
-          "title": "Starting a level",
-          "text": "Standalone and password starts use the original level-start weapons and ammunition. Advancing from an earlier level carries the earned inventory and score; restarting restores the level-entry state."
-        },
-        {
-          "title": "Picking things up",
-          "text": "Weapon pickups queue acquisition, while ammunition checks ownership and capacity. Health and protection pickups have their own eligibility and caps."
-        }
-      ],
-      "related": [
-        "items-health",
-        "items-armor",
-        "items-ammo",
-        "saving-and-passwords"
-      ],
-      "sources": [
-        {
-          "title": "Project reference",
-          "href": "docs/weapon-loadout.html"
-        }
-      ]
-    },
-    {
       "id": "saving-and-passwords",
       "title": "Progress and passwords",
       "category": "systems",
-      "summary": "Return to completed campaign levels from the native menu.",
+      "summary": "Pick up your campaign progress from the main menu.",
       "sections": [
         {
           "title": "Campaign progress",
-          "text": "The prototype saves beaten levels and language preferences in save.dat. Finishing a level unlocks its successor. All twelve campaign maps are enabled, including Caesar’s Palace; full campaign validation is manual."
+          "text": "Beating a level unlocks the next one in Select Level. Keep save.dat when updating to retain your unlocks. All twelve campaign levels are available, including Caesar’s Palace. There are no mid-level saves."
         },
         {
           "title": "Original password starts",
-          "text": "The Password menu accepts the original case-insensitive codes and restores starting weapons, ammunition and difficulty for supported maps. Select Level also uses original starting loadouts."
+          "text": "Enter an original game password to start with that level’s weapons, ammo and difficulty. Uppercase and lowercase both work. Select Level also gives you the original starting supplies."
         }
       ],
       "related": [
@@ -2912,15 +2884,15 @@
       "id": "secrets-and-exploration",
       "title": "Reading the hidden world",
       "category": "systems",
-      "summary": "The atlas exposes every decoded room, while secret identifications remain a work in progress.",
+      "summary": "Look around every map and discover some of its hidden places.",
       "sections": [
         {
           "title": "Documented locations",
-          "text": "Five secret locations are documented across the first five campaign maps. Their entries retain the existing guide evidence and recovered map details. This does not establish that every secret has been found."
+          "text": "Five secrets are marked across the first five campaign levels, with links to walkthroughs. The list is still growing, so an unmarked map may have secrets too."
         },
         {
           "title": "Two views, one level",
-          "text": "Use 2D for labels and original sprite markers. Use 3D for room heights and spatial relationships. Surfaces render from the front side only; sky boundaries are omitted. Hide indoor ceilings for an unobstructed overhead view."
+          "text": "Use the 2D map to find labelled items and enemies. Switch to 3D to look around rooms and see their heights. Hide ceilings for a clearer view from above."
         }
       ],
       "related": [
@@ -2941,15 +2913,15 @@
       "id": "pc-controls",
       "title": "Sam on PC",
       "category": "systems",
-      "summary": "Keyboard and mouse controls, with deliberate additions to the handheld original.",
+      "summary": "Play with a keyboard and mouse, plus optional jumping and third-person view.",
       "sections": [
         {
           "title": "Movement and view",
-          "text": "WASD moves, the mouse looks, Space jumps, and H switches between first- and third-person views. Jump and the third-person toggle are PC additions. The camera checks nearby geometry."
+          "text": "WASD moves, the mouse looks, Space jumps, and H switches between first- and third-person views. Jump and the third-person toggle are PC additions. The camera moves closer when walls get in the way."
         },
         {
           "title": "Combat and interaction",
-          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA overlay when enabled."
+          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
         }
       ],
       "related": [
@@ -2960,6 +2932,34 @@
         {
           "title": "Project reference",
           "href": "docs/README.html"
+        }
+      ]
+    },
+    {
+      "id": "inventory-and-loadouts",
+      "title": "Weapons and supplies",
+      "category": "systems",
+      "summary": "What you carry, and what changes when you start a level.",
+      "sections": [
+        {
+          "title": "Starting a level",
+          "text": "Select Level and passwords give you the original starting weapons and ammo for that level. Finishing the previous level carries your supplies and score forward. Restarting puts you back with what you had when you entered."
+        },
+        {
+          "title": "Picking things up",
+          "text": "Walk over pickups to collect them. Ammo needs a matching weapon and space to carry more. Health, armor and shields have their own limits."
+        }
+      ],
+      "related": [
+        "items-health",
+        "items-armor",
+        "items-ammo",
+        "saving-and-passwords"
+      ],
+      "sources": [
+        {
+          "title": "Project reference",
+          "href": "docs/weapon-loadout.html"
         }
       ]
     },
@@ -3003,7 +3003,7 @@
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
-      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+      "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
     },
     {
       "id": "secret-2-s1",
@@ -3045,7 +3045,7 @@
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
-      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+      "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
     },
     {
       "id": "secret-3-s1",
@@ -3087,7 +3087,7 @@
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
-      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+      "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
     },
     {
       "id": "secret-4-s1",
@@ -3129,7 +3129,7 @@
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
-      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+      "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
     },
     {
       "id": "secret-5-s1",
@@ -3171,7 +3171,7 @@
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
-      "coverage": "A documented secret location from the existing atlas research. Secret identification is not exhaustive."
+      "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
     }
   ]
 }

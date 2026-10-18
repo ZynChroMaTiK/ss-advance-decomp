@@ -1,12 +1,7 @@
 # TinySoundFont
 
-Unmodified `tsf.h` and MIT license from
-https://github.com/schellingb/TinySoundFont at commit
-`853a0a171759f1ddba0de1442133a75912bbeffa`.
+TinySoundFont plays the optional SoundFont instruments used by the PC port. It is built into the game, so it needs no separate program or internet connection while playing.
 
-The port's adapter is `src/audio/soundfont.c`. This library is compiled locally;
-no DLL, external synthesizer process, MIDI device, or runtime network is needed.
-Its sample renderer does not implement all SoundFont modulators, reverb or chorus.
-The adapter serializes use with the existing audio mutex and preallocates voices
-and channels. Scene resets clear voices immediately using this pinned version's
-voice state, leaving channels allocated for the audio worker.
+The unmodified `tsf.h` and [MIT license](LICENSE) come from [TinySoundFont](https://github.com/schellingb/TinySoundFont), commit `853a0a171759f1ddba0de1442133a75912bbeffa`.
+
+See [the SoundFont guide](../../soundfonts/README.md) to choose an instrument pack. Contributors can find the game’s integration in `src/audio/soundfont.c` and [the audio notes](../../analysis/audio-settings.md). This library does not support every SoundFont feature, including reverb and chorus.

@@ -10,24 +10,24 @@
     ],
     "image": "netricsa-00.png",
     "original_text_id": 84,
-    "summary": "Sam's close-range cutting tool. Hold fire to keep attacking without spending ammunition.",
+    "summary": "Sam’s close-range weapon. Keep cutting without using any ammo.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original NETRICSA entry describes a forestry tool repurposed for fighting monsters. Its short reach makes positioning essential."
       },
       {
-        "title": "In the PC port",
-        "text": "Hold fire to keep cutting without consuming ammunition. The PC port doubles the original reach to 192 map units. Its running and stopping sounds follow the actual attack state."
+        "title": "Playing tips",
+        "text": "Get close and hold fire. The PC port gives the chainsaw twice its original reach."
       }
     ],
     "sources": [
       {
-        "title": "weapon controller",
+        "title": "Developer notes: weapon controller",
         "href": "docs/weapon-controller.html"
       },
       {
-        "title": "weapon fixes",
+        "title": "Developer notes: weapon fixes",
         "href": "docs/weapon-fixes.html"
       }
     ],
@@ -37,7 +37,7 @@
         "1"
       ]
     ],
-    "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach."
+    "coverage": "You start with the chainsaw, so it has no pickup locations. Its longer reach is a PC addition."
   },
   {
     "id": "weapon-pistol",
@@ -52,28 +52,28 @@
     ],
     "image": "netricsa-01.png",
     "original_text_id": 85,
-    "summary": "A reliable revolver and the first firearm introduced in the campaign.",
+    "summary": "A dependable revolver and the first firearm you find in the campaign.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA presents the Schofield as Sam's dependable old-fashioned sidearm. A pistol pickup is available in the Upper Temple of Herkat."
       },
       {
-        "title": "In the PC port",
-        "text": "Each shot hits immediately along the aim line. The pistol finishes its firing animation before returning to its ready pose."
+        "title": "Playing tips",
+        "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you have both, press 2 again to switch between one and two."
       }
     ],
     "sources": [
       {
-        "title": "weapon controller",
+        "title": "Developer notes: weapon controller",
         "href": "docs/weapon-controller.html"
       },
       {
-        "title": "weapon hit",
+        "title": "Developer notes: weapon hit",
         "href": "docs/weapon-hit.html"
       },
       {
-        "title": "weapon selection",
+        "title": "Developer notes: weapon selection",
         "href": "docs/weapon-selection.html"
       }
     ],
@@ -98,24 +98,24 @@
     ],
     "image": "netricsa-02.png",
     "original_text_id": 86,
-    "summary": "A slow-firing shotgun built for close encounters.",
+    "summary": "A powerful close-range shotgun with a pause between blasts.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original briefing emphasizes the coach gun's short-range power. Its firing cycle leaves a pause between blasts."
       },
       {
-        "title": "In the PC port",
-        "text": "A blast checks a central hit and two offset hits. It fires both cartridges when available, with a separate firing animation when only one cartridge remains."
+        "title": "Playing tips",
+        "text": "Fires both shells when you have them, or a single shot when only one remains. The Alternate weapons option changes its spread."
       }
     ],
     "sources": [
       {
-        "title": "weapon controller",
+        "title": "Developer notes: weapon controller",
         "href": "docs/weapon-controller.html"
       },
       {
-        "title": "weapon hit",
+        "title": "Developer notes: weapon hit",
         "href": "docs/weapon-hit.html"
       }
     ],
@@ -141,24 +141,24 @@
     ],
     "image": "netricsa-03.png",
     "original_text_id": 87,
-    "summary": "An automatic weapon for sustained fire against groups of enemies.",
+    "summary": "An automatic weapon for keeping groups of enemies under fire.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA describes the Thompson as a classic trench sweeper suited to nearby and medium-range threats."
       },
       {
-        "title": "In the PC port",
-        "text": "Holding fire produces repeated immediate hits while ammunition remains. Its firing sound stops when the attack ends, including after switching weapons or pausing."
+        "title": "Playing tips",
+        "text": "Hold fire to keep shooting while you have ammo. Let go to stop."
       }
     ],
     "sources": [
       {
-        "title": "weapon controller",
+        "title": "Developer notes: weapon controller",
         "href": "docs/weapon-controller.html"
       },
       {
-        "title": "weapon fixes",
+        "title": "Developer notes: weapon fixes",
         "href": "docs/weapon-fixes.html"
       }
     ],
@@ -182,24 +182,24 @@
     ],
     "image": "netricsa-04.png",
     "original_text_id": 88,
-    "summary": "A rotary gun that trades ammunition for sustained firepower.",
+    "summary": "A fast-firing gun that gets through enemies—and your ammo—quickly.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original tips call attention to its heavy ammunition use. It is introduced early in the Pyramid Entrance Maze."
       },
       {
-        "title": "In the PC port",
-        "text": "Holding fire produces a continuous stream of immediate hits. The firing loop and the wind-down sound follow different stages of the weapon cycle."
+        "title": "Playing tips",
+        "text": "Hold fire for a steady stream of bullets. The barrels wind down when you stop."
       }
     ],
     "sources": [
       {
-        "title": "weapon controller",
+        "title": "Developer notes: weapon controller",
         "href": "docs/weapon-controller.html"
       },
       {
-        "title": "weapon fixes",
+        "title": "Developer notes: weapon fixes",
         "href": "docs/weapon-fixes.html"
       }
     ],
@@ -223,24 +223,24 @@
     ],
     "image": "netricsa-05.png",
     "original_text_id": 89,
-    "summary": "Launches explosive projectiles with area damage.",
+    "summary": "Fires rockets that hurt enemies near the blast as well as the target.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original description combines direct projectile damage with an explosion around the impact. Reloading separates each launch."
       },
       {
-        "title": "PC behavior",
-        "text": "Player rockets travel independently after launch. Their trajectory follows the launch aim, including vertical mouse aim, rather than continuing to move with later changes to the player's view."
+        "title": "Playing tips",
+        "text": "Aim with the mouse, including up and down. Once fired, a rocket keeps going in that direction."
       }
     ],
     "sources": [
       {
-        "title": "projectile controller",
+        "title": "Developer notes: projectile controller",
         "href": "docs/projectile-controller.html"
       },
       {
-        "title": "weapon fixes",
+        "title": "Developer notes: weapon fixes",
         "href": "docs/weapon-fixes.html"
       }
     ],
@@ -265,24 +265,24 @@
     ],
     "image": "netricsa-06.png",
     "original_text_id": 90,
-    "summary": "Turns eligible enemies against other enemies while their health drains away.",
+    "summary": "Makes affected enemies attack nearby targets while their health drains away.",
     "sections": [
       {
         "title": "In the field",
-        "text": "NETRICSA describes the weapon as disrupting Mental's control over his troops. The recovered effect changes target selection and applies periodic health drain; it is not a freeze weapon."
+        "text": "NETRICSA describes this weapon as breaking Mental’s control over his troops. The effect also slowly drains the affected enemy’s health."
       },
       {
-        "title": "PC behavior",
-        "text": "Shots leave along the sight line and continue independently. Converted living regular enemies receive the requested double-speed behavior and animation updates. Their projectiles and other actors retain their normal clocks."
+        "title": "Playing tips",
+        "text": "Affected enemies move and act twice as fast in the PC port. They can turn on other enemies, but Sam can still become their target."
       }
     ],
     "sources": [
       {
-        "title": "projectile conversion",
+        "title": "Developer notes: projectile conversion",
         "href": "docs/projectile-conversion.html"
       },
       {
-        "title": "weapon fixes",
+        "title": "Developer notes: weapon fixes",
         "href": "docs/weapon-fixes.html"
       }
     ],
@@ -307,24 +307,24 @@
     ],
     "image": "netricsa-07.png",
     "original_text_id": 91,
-    "summary": "A special blast weapon with a palette flash and a cooldown between attacks.",
+    "summary": "A heavy blast weapon with a bright flash and a pause between attacks.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original fiction describes a repurposed communications device that heats its targets. Its familiar pickup label is U.M.T."
       },
       {
-        "title": "In the PC port",
-        "text": "The attack uses the original sector-based targeting checks and deals heavy damage to eligible regular enemies. It has a cooldown and excludes players and both bosses."
+        "title": "Playing tips",
+        "text": "Deals heavy damage to regular enemies it can target. It does not hurt players or either boss."
       }
     ],
     "sources": [
       {
-        "title": "special weapons",
+        "title": "Developer notes: special weapons",
         "href": "docs/special-weapons.html"
       },
       {
-        "title": "combat explosion",
+        "title": "Developer notes: combat explosion",
         "href": "docs/combat-explosion.html"
       }
     ],
@@ -349,20 +349,20 @@
     ],
     "image": "netricsa-08.png",
     "original_text_id": 92,
-    "summary": "Marks an enemy's position for a falling object from another time.",
+    "summary": "Drops a heavy object onto an enemy’s position.",
     "sections": [
       {
         "title": "In the field",
-        "text": "NETRICSA's explanation involves scientists sending heavy everyday objects back to Sam's recorded target coordinates. The effect captures a position rather than following the target indefinitely."
+        "text": "Scientists send heavy objects back through time to the spot Sam aims at."
       },
       {
-        "title": "PC behavior",
-        "text": "The falling effect lands, then explodes on its next update. The PC targeting policy requires an eligible living enemy; an invalid attempt completes the weapon gesture without spending ammunition. Tougher enemies can survive its original damage."
+        "title": "Playing tips",
+        "text": "Aim at a living enemy. A successful shot marks its position, so a moving enemy can get away. An attempt with no valid target uses no ammo; tougher enemies may survive a hit."
       }
     ],
     "sources": [
       {
-        "title": "special weapons",
+        "title": "Developer notes: special weapons",
         "href": "docs/special-weapons.html"
       }
     ],
@@ -387,24 +387,24 @@
     ],
     "image": "netricsa-09.png",
     "original_text_id": 93,
-    "summary": "Fires a large cannonball that can bounce off walls and pass through enemies.",
+    "summary": "Fires a cannonball that can bounce off walls and plough through enemies.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original NETRICSA entry highlights the cannonball's ricochets and ability to plow through a group."
       },
       {
-        "title": "In the PC port",
-        "text": "Cannonballs can reflect from walls, penetrate targets and eventually explode. Hits retain credit for the player who fired the shot."
+        "title": "Playing tips",
+        "text": "A cannonball can hit several enemies before it finally explodes."
       }
     ],
     "sources": [
       {
-        "title": "projectile bounce",
+        "title": "Developer notes: projectile bounce",
         "href": "docs/projectile-bounce.html"
       },
       {
-        "title": "projectile runtime",
+        "title": "Developer notes: projectile runtime",
         "href": "docs/projectile-runtime.html"
       }
     ],
@@ -430,24 +430,24 @@
     "image": "netricsa-10.png",
     "original_text_id": 116,
     "health": 30,
-    "summary": "An explosive pursuer that becomes dangerous when it closes the distance.",
+    "summary": "Runs straight at you with bombs in hand.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original intel describes a reanimated attacker carrying bombs. Its cry provides an audible warning of the approaching threat."
       },
       {
-        "title": "In the PC port",
-        "text": "Runs toward its target and detonates at close range. Its explosion damages nearby actors; defeating it also contributes to its scripted encounter group."
+        "title": "Playing tips",
+        "text": "Listen for its scream and keep your distance. It explodes when it gets close enough, hurting anyone nearby."
       }
     ],
     "sources": [
       {
-        "title": "enemy cd",
+        "title": "Developer notes: enemy cd",
         "href": "docs/enemy-cd.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -473,24 +473,24 @@
     "image": "netricsa-11.png",
     "original_text_id": 117,
     "health": 100,
-    "summary": "A charging beast whose close-range contact can knock Sam back.",
+    "summary": "A charging beast that can knock Sam back.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA recommends dodging the charge and taking advantage of the time it needs to turn for another approach."
       },
       {
-        "title": "In the PC port",
-        "text": "Its close attack deals damage and pushes the target in the direction of impact. The charging sound warns of its approach."
+        "title": "Playing tips",
+        "text": "Dodge the charge, then use the time it takes to turn around to attack."
       }
     ],
     "sources": [
       {
-        "title": "enemy ranged",
+        "title": "Developer notes: enemy ranged",
         "href": "docs/enemy-ranged.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -515,24 +515,24 @@
     "image": "netricsa-12.png",
     "original_text_id": 118,
     "health": 50,
-    "summary": "A floating soldier with a ranged bolt attack and harmful close contact.",
+    "summary": "A floating soldier that fires bolts and hurts Sam on contact.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original intel describes its useless trailing legs and the bolt fired from its body. It is among the first enemies encountered in the campaign."
       },
       {
-        "title": "In the PC port",
-        "text": "Bobs above the floor as it moves. It can hurt Sam on contact and attack with a projectile; attack and death animations run natively."
+        "title": "Playing tips",
+        "text": "Watch for its shots and avoid letting it float into you."
       }
     ],
     "sources": [
       {
-        "title": "enemy control",
+        "title": "Developer notes: enemy control",
         "href": "docs/enemy-control.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -557,24 +557,24 @@
     "image": "netricsa-13.png",
     "original_text_id": 119,
     "health": 40,
-    "summary": "A compact hovering Methug variant with a dangerous contact attack.",
+    "summary": "A small hovering Methug with a dangerous touch.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA describes a commander associated with other Methugs. Its eye and suspended body distinguish it from the soldier."
       },
       {
-        "title": "In the PC port",
-        "text": "Attacks by contact. The recovered behavior contains no ranged attack, although the original NETRICSA description mentions a bolt fired from its eye."
+        "title": "Playing tips",
+        "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it does not fire an eye bolt in the game."
       }
     ],
     "sources": [
       {
-        "title": "enemy control",
+        "title": "Developer notes: enemy control",
         "href": "docs/enemy-control.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -599,24 +599,24 @@
     "image": "netricsa-14.png",
     "original_text_id": 120,
     "health": 100,
-    "summary": "A mutated cyclopean attacker with prominent club-like arms.",
+    "summary": "A fast-moving, one-eyed enemy with club-like arms.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original intel emphasizes the danger of letting this fast-moving creature reach Sam."
       },
       {
-        "title": "In the PC port",
-        "text": "Approaches its target, hurts Sam on contact and can fire a projectile. Its starting health is 100."
+        "title": "Playing tips",
+        "text": "It can shoot as well as hurt Sam up close. Keep moving and watch the distance between you."
       }
     ],
     "sources": [
       {
-        "title": "enemy control",
+        "title": "Developer notes: enemy control",
         "href": "docs/enemy-control.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -642,24 +642,24 @@
     "image": "netricsa-15.png",
     "original_text_id": 121,
     "health": 80,
-    "summary": "A swollen Methug relative that threatens Sam with spit and close contact.",
+    "summary": "A swollen Methug relative that attacks with spit.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA attributes its unusual movement to inflatable body sacs and describes a corrosive ranged attack."
       },
       {
-        "title": "In the PC port",
-        "text": "Moves toward a target and can attack both on contact and with a projectile."
+        "title": "Playing tips",
+        "text": "Avoid its shots and keep clear of its body, which can also hurt Sam."
       }
     ],
     "sources": [
       {
-        "title": "enemy control",
+        "title": "Developer notes: enemy control",
         "href": "docs/enemy-control.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -684,24 +684,24 @@
     "image": "netricsa-16.png",
     "original_text_id": 122,
     "health": 100,
-    "summary": "A scorpion-like ranged enemy that can threaten Sam before he reaches it.",
+    "summary": "A scorpion-like enemy that opens fire from a distance.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original dossier describes an armed, many-legged hybrid that prefers to open fire from a distance."
       },
       {
-        "title": "In the PC port",
-        "text": "Can launch projectiles from a distance and hurt Sam on contact. Movement, attacks and death behavior are implemented natively."
+        "title": "Playing tips",
+        "text": "Watch for incoming shots before moving closer. Contact with it also hurts."
       }
     ],
     "sources": [
       {
-        "title": "enemy ranged",
+        "title": "Developer notes: enemy ranged",
         "href": "docs/enemy-ranged.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -726,24 +726,24 @@
     "image": "netricsa-17.png",
     "original_text_id": 123,
     "health": 130,
-    "summary": "A tough projectile attacker often encountered as a distant sentry.",
+    "summary": "A tough enemy that often attacks from far away.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original briefing describes rapid acid-missile attacks and recommends heavy weapons against this durable enemy."
       },
       {
-        "title": "In the PC port",
-        "text": "Its attack animation triggers a projectile launch. When sufficiently high above Sam, it uses a different aiming behavior rather than its ordinary approach."
+        "title": "Playing tips",
+        "text": "Bring a heavy weapon and keep an eye on higher ledges. It can aim down at Sam from above."
       }
     ],
     "sources": [
       {
-        "title": "enemy ranged",
+        "title": "Developer notes: enemy ranged",
         "href": "docs/enemy-ranged.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -769,24 +769,24 @@
     "image": "netricsa-18.png",
     "original_text_id": 124,
     "health": 60,
-    "summary": "A shelled enemy that alternates between exposed movement and hiding.",
+    "summary": "A shelled enemy that hides, emerges and attacks.",
     "sections": [
       {
         "title": "In the field",
         "text": "NETRICSA describes the shell as protection and directs attention to the vulnerable body revealed while the creature is active."
       },
       {
-        "title": "In the PC port",
-        "text": "Burrows, hides and emerges again according to its distance from the target. It can also jump during a close approach."
+        "title": "Playing tips",
+        "text": "Watch for it to come out of hiding. It can jump as it gets close."
       }
     ],
     "sources": [
       {
-        "title": "enemy ranged",
+        "title": "Developer notes: enemy ranged",
         "href": "docs/enemy-ranged.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -811,28 +811,28 @@
     "image": "netricsa-19.png",
     "original_text_id": 125,
     "health": 150,
-    "summary": "A heavily armed gorilla mutant with a large projectile weapon grafted onto its body.",
+    "summary": "A heavily armed gorilla mutant with a cannon built into its body.",
     "sections": [
       {
         "title": "In the field",
         "text": "The original description portrays a slow, heavily armed opponent that is dangerous both at range and up close."
       },
       {
-        "title": "In the PC port",
-        "text": "Fires cannonball projectiles and has a strong close-range attack. Its starting health is 150."
+        "title": "Playing tips",
+        "text": "Dodge its cannonballs and avoid its strong close-range attack."
       }
     ],
     "sources": [
       {
-        "title": "enemy ranged",
+        "title": "Developer notes: enemy ranged",
         "href": "docs/enemy-ranged.html"
       },
       {
-        "title": "enemy control",
+        "title": "Developer notes: enemy control",
         "href": "docs/enemy-control.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -859,28 +859,28 @@
     "image": "netricsa-20.png",
     "original_text_id": 126,
     "health": 3000,
-    "summary": "The Egyptian chapter's boss, combining projectile volleys with scripted reinforcements.",
+    "summary": "The boss waiting at the end of the Egyptian chapter.",
     "sections": [
       {
         "title": "Encounter",
-        "text": "The Sphinx has its own health gauge, battle music and scripted encounter. Its controller alternates attack cycles with reinforcement phases."
+        "text": "The Sphinx has its own health bar and battle music. Be ready to deal with the enemies it summons."
       },
       {
-        "title": "PC port coverage",
-        "text": "The sixth campaign level has a normal-input completion with earned inventory and native boss combat. Summoning phases also have separate controller and integration tests."
+        "title": "Playing tips",
+        "text": "Fight it in the sixth campaign level. It alternates between firing volleys and calling in reinforcements."
       }
     ],
     "sources": [
       {
-        "title": "enemy boss",
+        "title": "Developer notes: enemy boss",
         "href": "docs/enemy-boss.html"
       },
       {
-        "title": "native game",
+        "title": "Developer notes: native game",
         "href": "docs/native-game.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],
@@ -906,28 +906,28 @@
     "image": "netricsa-21.png",
     "original_text_id": 127,
     "health": 3000,
-    "summary": "An armored wolf-like boss commanding the final Roman encounter.",
+    "summary": "The armoured boss at the end of the Roman chapter.",
     "sections": [
       {
         "title": "Encounter",
-        "text": "The original intel describes a towering enemy with a plumed helmet and summoned minions. Its recovered controller combines five-shot volleys with alternating scripted reinforcement phases."
+        "text": "A towering enemy in a plumed helmet, backed by summoned minions."
       },
       {
-        "title": "PC port coverage",
-        "text": "The boss controller and its native integration are implemented and tested. Natural progression through the final campaign level remains to be validated; those tests do not yet establish a complete playable final encounter."
+        "title": "Playing tips",
+        "text": "Fight it in Caesar’s Palace, the final campaign level. Expect five-shot volleys and waves of reinforcements. The full campaign is still being playtested."
       }
     ],
     "sources": [
       {
-        "title": "enemy boss",
+        "title": "Developer notes: enemy boss",
         "href": "docs/enemy-boss.html"
       },
       {
-        "title": "native game",
+        "title": "Developer notes: native game",
         "href": "docs/native-game.html"
       },
       {
-        "title": "enemy activation",
+        "title": "Developer notes: enemy activation",
         "href": "docs/enemy-activation.html"
       }
     ],

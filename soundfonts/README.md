@@ -1,32 +1,39 @@
-# External SoundFonts
+# Optional SoundFont music
 
-The default SoundFont is `SC-55.sf2` in this directory. Install the requested
-[SC-55 from Musical Artifacts 1228](https://musical-artifacts.com/artifacts/1228/SC-55.sf2):
+A SoundFont is an instrument file that gives some of the music a different
+sound. You can skip this entirely and use **Original** music instead.
+
+## Set it up
+
+From the main game folder, run this in PowerShell:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-soundfont.ps1
 ```
 
-If the site requires a browser challenge, download the linked file manually to
-`soundfonts/SC-55.sf2`, then run the script to verify it. Restart the game after
-replacing the file so it loads the new bank.
+This downloads the optional **SC-55** instrument file. If the download does not
+work, [download it in your browser](https://musical-artifacts.com/artifacts/1228/SC-55.sf2)
+and save it as `soundfonts/SC-55.sf2`. Run the script again to check the file.
 
-Then choose **Options > Settings > Music style > SoundFont**. Original remains
-the default. Other GM SoundFonts can be supplied with
-`play-native.cmd --soundfont "C:\Music\my-bank.sf2"`; the bank must include
-melodic presets and a standard drum kit (bank128, program0). Files larger than
-64 MiB are rejected. The path is a launch option; style and volumes are saved.
+Restart the game, then choose **Options → Settings → Music style → SoundFont**.
+The choice only appears if the file loads successfully.
 
-The port supplies its own instrument arrangement; it is not an SC-55 hardware
-emulation. Only PSG music uses SoundFont instruments; all ROM sampled music
-instruments remain native, including sampled drums. SoundFont music does not
-inherit Original-mode fixed volume boosts/cuts. Its synth layer has a 15 dB trim
-calibrated against retained ROM samples for this bank. A shared +3 dB music gain
-then raises both layers together. Final output gains raise both music modes to
-full peaks (Original +9.54 dB, SoundFont +6.02 dB) with stereo-linked peak
-protection. SoundFont binaries stay local
-and are excluded from Git.
+## Use another instrument file
 
-Expected SHA-256:
+You can try another General MIDI SoundFont with:
+
+```bat
+play-native.cmd --soundfont "C:\Music\my-bank.sf2"
+```
+
+The file must be no larger than 64 MiB and include instruments and a standard drum
+kit. The game remembers your music choice and volume, but you need to supply
+this path again when using a custom file.
+
+The original recorded instruments and drums remain part of the music. SoundFont
+changes the synthesized instruments. For the detailed mixing settings, see
+[audio notes](../analysis/audio-settings.md).
+
+The SC-55 file is not bundled with the game. Its expected SHA-256 fingerprint is
 `ae2e56711dc40835d3f97d975d80eadb2abdc76dc9da8b055f7a3c18dab20974`
-(47,324,042 bytes; verified against the user's manually downloaded file).
+(47,324,042 bytes), if you need to verify your download.

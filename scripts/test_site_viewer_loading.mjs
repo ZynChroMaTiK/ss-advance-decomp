@@ -38,7 +38,7 @@ get('show-triggers').checked=false;get('show-triggers').onchange();assert(!trigg
 get('show-triggers').checked=true;get('show-triggers').onchange();assert(triggers.visible);
 get('show-floors').checked=false;get('show-floors').onchange();assert(triggers.visible,'trigger visibility is independent of floors');
 get('object-kind').value='triggers';get('object-kind').listeners.change[0]();assert.equal(get('object-results').children.length,1);
-get('object-inspect').onclick();assert.match(get('selection').children[0].textContent,/Entry trigger.*script/);
+get('object-inspect').onclick();assert.match(get('selection').children[0].textContent,/Event area.*event/);
 get('object-kind').value='all';get('object-kind').listeners.change[0]();
 const firstRoom=get('object-results').children.find(o=>o.value==='sector:0');
 get('object-results').value=firstRoom.value;const before=camera.position.clone();

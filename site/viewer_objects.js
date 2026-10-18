@@ -1,9 +1,9 @@
 export function triggerRecord(s) {
-  return {id:'trigger:'+s.id,kind:'triggers',label:`Entry trigger / sector ${s.id} / script ${s.flags&255}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Script:s.flags&255,Floor:s.initial_floor},note:'Entering this sector activates its original level script. The green volume shows the sector from floor to ceiling; scripts are not simulated in this viewer.'};
+  return {id:'trigger:'+s.id,kind:'triggers',label:`Event area / room section ${s.id} / event ${s.flags&255}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Script:s.flags&255,Floor:s.initial_floor},note:'Walking into this green area starts an event in the game. This map shows where it happens, but does not play the event.'};
 }
 export function objectRecords(data, opened = false) {
-  const records = data.markers.map(m => ({id:'marker:'+m.id, kind:m.group.includes('enemies')?'enemies':'items', label:`${m.id} / ${m.name}${m.origin==='script'?' / scripted':''}`, point:[m.x,m.y,m.initial_floor], fields:{ID:m.id,Sector:m.sector,Placement:m.origin,Group:m.group}, marker:m}));
-  for (const s of data.sectors) records.push({id:'sector:'+s.id,kind:'rooms',label:`Room / sector ${s.id}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Floor:s.initial_floor,Ceiling:opened?s.open_ceiling:s.initial_ceiling,Flags:s.flags}});
+  const records = data.markers.map(m => ({id:'marker:'+m.id, kind:m.group.includes('enemies')?'enemies':'items', label:`${m.id} / ${m.name}${m.origin==='script'?' / appears later':''}`, point:[m.x,m.y,m.initial_floor], fields:{ID:m.id,Sector:m.sector,Placement:m.origin,Group:m.group}, marker:m}));
+  for (const s of data.sectors) records.push({id:'sector:'+s.id,kind:'rooms',label:`Room section ${s.id}`,point:[...s.center,s.initial_floor],fields:{Sector:s.id,Floor:s.initial_floor,Ceiling:opened?s.open_ceiling:s.initial_ceiling,Flags:s.flags}});
   const seen = new Set();
   for (const s of data.sectors) if(s.flags&256) records.push(triggerRecord(s));
   for (const f of data.walls[opened?'open':'initial']) {

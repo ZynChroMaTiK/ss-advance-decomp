@@ -11,7 +11,7 @@ ATLAS=ROOT/'build/exports/ssa-topmaps'
 
 def document(path):
     from site_documents import render_document
-    available={'README.md'}|{'analysis/'+p.name for p in (ROOT/'analysis').glob('*.md')}
+    available={'README.md','DEVELOPMENT.md'}|{'analysis/'+p.name for p in (ROOT/'analysis').glob('*.md')}
     return render_document(path.read_text(encoding='utf8'),path.relative_to(ROOT).as_posix(),available)
 
 
@@ -40,7 +40,7 @@ def main():
     manifest=json.loads((SITE/'assets/textures/manifest.json').read_text())
     (SITE/'data/export-validation.json').write_text(json.dumps(manifest['validation'],indent=2)+'\n')
     (SITE/'docs').mkdir(exist_ok=True)
-    for path in [ROOT/'README.md',*sorted((ROOT/'analysis').glob('*.md'))]:
+    for path in [ROOT/'README.md',ROOT/'DEVELOPMENT.md',*sorted((ROOT/'analysis').glob('*.md'))]:
         (SITE/'docs'/f'{path.stem}.html').write_text(document(path),encoding='utf8')
         shutil.copy2(path,SITE/'docs'/path.name)
     from build_wiki import main as build_wiki

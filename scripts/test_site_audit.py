@@ -35,13 +35,15 @@ assert pages[SITE/'docs/README.html'].tables>0,'Markdown tables must stay struct
 readme=(SITE/'docs/README.html').read_text()
 assert 'https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/recovered/snapshot/README.md' in readme
 index=(SITE/'index.html').read_text(encoding='utf8');limit=int(re.search(r'data-native-campaign-levels="(\d+)"',index)[1])
+for name,text in [('homepage',index),('player guide',readme),('ROM instructions',(ROOT/'orig/README.md').read_text(encoding='utf8'))]:
+    assert 'European' in text and 'ROM' in text,f'{name} must explain the required ROM region'
 assert f'<strong>{limit}<span>/12</span>' in index
 entries=json.loads((SITE/'data/wiki.json').read_text())['entries']
 for entry in entries:
     if entry['category']=='levels':
-        availability=next(s['text'] for s in entry['sections'] if s['title']=='Native port availability')
+        availability=next(s['text'] for s in entry['sections'] if s['title']=='Can I play it?')
         assert availability.startswith('Playable in')==(entry['level']<limit),entry['id']
-    if entry['category']=='weapons':assert any(f[0]=='Maps with pickup records' for f in entry['facts'])
+    if entry['category']=='weapons':assert any(f[0]=='Maps with this pickup' for f in entry['facts'])
 health=next(e for e in entries if e['id']=='items-health')
 assert any('199 becomes 299' in s['text'] for s in health['sections'])
 for folder in ['data','atlas/data']:

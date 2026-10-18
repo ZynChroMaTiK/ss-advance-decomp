@@ -8,7 +8,7 @@ REPO='https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/'
 
 def group_history(body, source_path):
     ranges={
-        'README.md':[('verified-progress','use-the-existing-workspace-from-powershell','Subsystem evidence and recovery history')],
+        'DEVELOPMENT.md':[('verified-progress','use-the-existing-workspace-from-powershell','Subsystem evidence and recovery history')],
         'analysis/porting.md':[
             ('next-work-required-for-the-requested-playable-port','playable-level-one-checkpoint-2026-10-15','Earlier recovery plan and subsystem checkpoints'),
             ('playable-level-one-checkpoint-2026-10-15','native-weapon-corrections-2026-10-16','Historical checkpoint: first playable level — 15 October 2026'),
@@ -24,7 +24,7 @@ def group_history(body, source_path):
         if boundary:
             wrapper=body.rfind('<details class="recovery-history">',first,last)
             if wrapper>=first:last=wrapper
-        note='<p>These notes retain the scope and limitations of their original checkpoints. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for current playability and controls.</p>'
+        note='<p>These are older development notes. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for what you can play today.</p>'
         body=body[:first]+f'<details class="recovery-history"><summary>{html.escape(label)}</summary>'+note+body[first:last]+'</details>'+body[last:]
         changed=True
     return body,changed
@@ -57,4 +57,4 @@ def render_document(text, source_path, available):
     body=parser.renderer.render(tokens,parser.options,{})
     body,history=group_history(body,source_path)
     if history:body+='<script type="module" src="../reference.js"></script>'
-    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="{PurePosixPath(source_path).stem}.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p>{body}</main></body></html>'''
+    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="{PurePosixPath(source_path).stem}.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Looking for setup and controls? Read the <a href="README.html">player guide</a>. Developer notes below may describe earlier versions; see <a href="../#features">what is available now</a>.</p>{body}</main></body></html>'''
