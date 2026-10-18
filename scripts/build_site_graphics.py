@@ -34,6 +34,34 @@ def main():
         wiki = json.loads((ROOT/'scripts/wiki_entities.json').read_text(encoding='utf8'))
         portraits = {Path(e['image']).name: e['title'] for e in wiki}
         portraits['netricsa-22.png'] = 'NETRICSA'
+        # Confirmed by weapon_animation.c, weapon_controller.c and hud_sprites.c.
+        animations = json.loads(archive.read('animations/sprites.json'))
+        sprite_names = {}
+        def name_sequence(sequence, title, collection, collection_title, aliases=''):
+            for word in animations[sequence]['words']:
+                if word >= 0xfffa: continue
+                frame = word & 0x3fff
+                record = sprite_names.setdefault(frame, {'title': title, 'collection': collection,
+                    'collectionTitle': collection_title, 'tags': ''})
+                record['tags'] += ' '+title+' '+aliases
+        for weapon in (e for e in wiki if e['category'] == 'weapons'):
+            n = weapon['weapon_id']; title = weapon['title']; aliases = ' '.join(weapon.get('aliases', []))
+            if n == 2: aliases += ' Colt Colts dual colts revolver pistol'
+            if n == 3: aliases += ' shotgun double shotgun double-barrel coach gun'
+            key = f'weapon-{n}'
+            for sequence in [n-1, n+9, *([20,21] if n == 1 else [22] if n == 3 else [])]:
+                name_sequence(sequence, title+' · weapon frame', key, title, aliases)
+            name_sequence(0x41+n, title+' · HUD icon', key, title, aliases)
+            name_sequence(0xde+n, title+' · ammo icon', key, title, aliases)
+        for digit in range(10):
+            name_sequence(0x24+digit, f'Health digit {digit}', 'hud-digits', 'Health numbers')
+        for char in range(33, 161):
+            label = chr(char) if char < 127 else str(char)
+            name_sequence(char+59, 'HUD character '+label, 'hud-letters', 'HUD letters and numbers')
+        for sequence,title in {0x54:'Health and armour bar outline',0x55:'Health and armour bar fill',
+                0x56:'Health icon',0x57:'Armour icon',0x59:'Egypt boss icon',0x5a:'Rome boss icon',
+                0xd9:'Crosshair',0xda:'Crosshair on target'}.items():
+            name_sequence(sequence,title,'hud-indicators','Health bars and aiming')
 
         def image(path):
             assert path in source_pngs and path not in used, path
@@ -45,7 +73,8 @@ def main():
             width, height = struct.unpack('>II', raw[16:24])
             name = digest + '.png'
             if name not in files:
-                (destination/name).write_bytes(raw)
+                target = destination/name
+                if not target.exists() or target.read_bytes() != raw: target.write_bytes(raw)
                 files[name] = {'sha256': digest, 'bytes': len(raw), 'width': width, 'height': height}
             return {'path': 'assets/graphics/'+name, 'source': path, 'width': width, 'height': height}
 
@@ -57,15 +86,21 @@ def main():
                     'title': f'{label} · frame {frame["index"]}', 'group': group,
                     'groupLabel': f'{group:03} · {label}', 'frame': frame['index'],
                     'tags': ' '.join(aliases), 'origin': [frame['origin_x'], frame['origin_y']],
+                    'collection': f'actor-{group:03}', 'collectionTitle': label,
                     'images': [dict(image(p), label=label) for p,label in zip(frame['png'], ['Egypt colours', 'Rome colours'])]})
         for texture in manifest['textures']:
             family = ['Egypt', 'Rome'][texture['family']]
             entries.append({'id': f'texture-{texture["family"]}-{texture["mip"]}-{texture["index"]:03}',
                 'title': texture['name'], 'category': 'textures', 'family': family,
                 'resolution': texture['mip'], 'tags': f'{family} resolution {texture["mip"]}',
+                'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
+                'collectionTitle': f'{texture["name"]} · {family}',
                 'images': [dict(image(texture['png']), label=f'{family} · resolution {texture["mip"] + 1} of 3')]})
         for sprite in manifest['sprites']:
-            entries.append({'id': f'sprite-{sprite["id"]:03}', 'title': f'Sprite {sprite["id"]:03}',
+            label = sprite_names.get(sprite['id'], {'title':'Screen artwork', 'tags':'',
+                'collection':'screen-other','collectionTitle':'Other screen artwork'})
+            entries.append({'id': f'sprite-{sprite["id"]:03}', **label,
+                'title': f'{label["title"]} · {sprite["id"]:03}',
                 'category': 'sprites', 'origin': [sprite['min_x'], sprite['min_y']],
                 'images': [dict(image(sprite['png']), label='Original colours')]})
         for path in sorted(source_pngs-used):
@@ -89,6 +124,8 @@ def main():
             if 'hidden-photo' in path: note = 'One of the hidden pictures stored in the game.'
             entries.append({'id': re.sub(r'[^a-zA-Z0-9-]', '-', path.removesuffix('.png')),
                 'title': title, 'category': category, 'tags': tags, 'note': note,
+                'collection': f'fonts-{parts[1]}' if category == 'fonts' else 'palettes' if category == 'palettes' else path,
+                'collectionTitle': f'{parts[1]} lettering' if category == 'fonts' else 'Colour palettes' if category == 'palettes' else title,
                 'images': [dict(image(path), label='Original colours')]})
         assert used == source_pngs
         assert len({e['id'] for e in entries}) == len(entries)

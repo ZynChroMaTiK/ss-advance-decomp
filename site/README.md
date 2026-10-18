@@ -1,6 +1,6 @@
 # Project website
 
-This folder is the [project website](https://zynchromatik.github.io/ss-advance-decomp/): downloads, setup help, maps, the graphics gallery and the NETRICSA guide.
+This folder is the [project website](https://zynchromatik.github.io/ss-advance-decomp/): downloads, setup help, maps and the graphics gallery.
 
 You can browse the site without a ROM. **To play, you’ll need your own European version of the Serious Sam Advance ROM.** The ROM is not included.
 
@@ -21,6 +21,7 @@ Open <http://localhost:8080/site/>. Use this local server rather than opening `i
 - `app.js`, `viewer3d.js` and `wiki.js`: navigation, 3D maps and game guide.
 - `graphics.js` and `graphics.css`: the graphics gallery and its controls.
 - `../scripts/build_site_graphics.py`: builds the gallery from the original graphics export.
+- `../scripts/build_site_sources.py`: turns the secret-source records into a readable page.
 - `../scripts/wiki_entities.json`: weapon and enemy descriptions.
 - `../scripts/build_wiki.py`: level, item and gameplay descriptions.
 - `../scripts/topmap_viewer.html` and `topmap_viewer.js`: 2D map text and controls.
@@ -48,7 +49,9 @@ python scripts/test_site_http.py
 
 These commands reuse the maps and artwork already in the repo, so you won’t need a ROM. GitHub Actions runs the website checks and publishes `site/` when changes reach `main`.
 
-To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. This copies the original PNGs unchanged, checks their hashes and stores shared images once. The gallery includes both world palettes, smaller texture sizes, individual font characters and contact sheets. The source archive stays out of the website; visitors only load the pictures they browse.
+To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. This copies the original PNGs unchanged, checks their hashes and stores shared images once. Weapon and HUD names come from the original animation tables and their native controllers. Related frames open as groups; Every frame shows the full list. Links ending in `/rome` retain the Rome colours. The source archive stays out of the website; visitors only load the pictures they browse.
+
+Run `python scripts/build_site_sources.py` to refresh the readable secret-source page from the existing map records. Website instructions should describe the download; label newer work as development progress until a release includes it.
 
 For more on exporting artwork, changing the viewers and checking your work, see [the development notes](DEVELOPMENT.md).
 

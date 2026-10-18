@@ -18,6 +18,7 @@ assert set(counts) == {'actors','textures','sprites','menus','netricsa','story',
 sources = {}; delivered = set()
 for entry in entries:
     assert entry['title'] and entry['images']
+    assert entry['collection'] and entry['collectionTitle']
     assert len(entry['images']) == (2 if entry['category'] == 'actors' else 1)
     for image in entry['images']:
         assert image['source'] not in sources, image['source']

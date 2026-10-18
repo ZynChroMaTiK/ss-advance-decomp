@@ -84,7 +84,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
         const gallery = await graphicsPromise;
         if (ticket !== revision) return;
         const id = parts[1] || '';
-        gallery.open(id, {focus:!!id && renderedGraphicId !== id});
+        gallery.open(id, {focus:!!id && renderedGraphicId !== id, palette:parts[2] === 'rome' ? 1 : 0});
         renderedGraphicId = id;
         $('graphics-status').hidden = true;
       } catch (error) {

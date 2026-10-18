@@ -27,11 +27,15 @@ button:disabled,select:disabled{opacity:.5;cursor:default}
  .site-header{height:auto;flex-wrap:wrap;padding:10px 5% 0;gap:0}
  .brand img{width:120px;height:40px}
  .repo-link{margin-left:auto;order:1}
- .site-header nav{order:2;width:100%;height:48px;overflow-x:auto;justify-content:flex-start;gap:20px}
+ .site-header nav{order:2;width:100%;height:auto;min-height:48px;flex-wrap:wrap;overflow:visible;justify-content:flex-start;gap:4px 18px;padding-block:8px}
+ .site-header nav a{min-height:40px;font-size:13px}
  .wiki-article{max-height:none;overflow:visible}
  .tool-actions label{min-width:0}
  .level-select{min-width:0;width:100%}
 }
+.player-help{margin:32px 0;padding:28px;border:1px solid var(--border);border-radius:8px;background:var(--panel)}
+.player-help h2{font-size:28px}.player-help details{padding:16px 0;border-top:1px solid var(--border)}
+.player-help summary{cursor:pointer;font-size:16px;color:var(--lime)}.player-help p{font-size:15px;max-width:800px;color:var(--muted);margin-top:16px}.player-help code{color:var(--ink)}
 @media(max-width:400px){
  .actions>.button{width:100%}
  .wiki-library nav{grid-template-columns:1fr}

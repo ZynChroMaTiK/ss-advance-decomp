@@ -49,6 +49,8 @@ def main():
     refresh_atlas_ui()
     from build_site_graphics import main as build_graphics
     build_graphics()
+    from build_site_sources import main as build_sources
+    build_sources()
     (SITE/'.nojekyll').touch()
     print('Site assembled:',len(list(SITE.rglob('*'))),'paths')
 

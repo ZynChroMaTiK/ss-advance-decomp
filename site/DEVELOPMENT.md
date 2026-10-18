@@ -3,12 +3,17 @@
 These are detailed notes for contributors. Start with [the website README](README.md) for everyday editing and previewing.
 
 
-A buildless, static frontend with PC Port, Features & Roadmap, Levels, NETRICSA,
-and Build & Source sections. Levels combines the 2D atlas and 3D world viewer with
+A buildless, static frontend with PC Port, About the game, Levels, Graphics,
+and Download & Help sections. Levels combines the 2D atlas and 3D world viewer with
 one selection and shareable `#levels/1/2d` or `#levels/1/3d` URLs. Legacy
 `#atlas/1` and `#explorer/1` URLs redirect to the corresponding view.
 
-NETRICSA is a searchable field guide with 54 entries: 16 levels, 10 weapons,
+The Graphics gallery groups related frames, with an Every frame view for the
+complete export. Weapon and HUD labels follow the original animation tables.
+Picture URLs can end in `/rome` to preserve the selected sprite palette. The
+Back to pictures control restores focus and scroll position after inspection.
+
+Existing NETRICSA bookmarks still open the searchable field guide with 54 entries: 16 levels, 10 weapons,
 12 enemies, 5 item families, 6 game-system guides and 5 documented secrets.
 Entries have shareable URLs such as `#wiki/weapon-pistol`. Original NETRICSA
 illustrations accompany project-authored summaries; source and coverage links
