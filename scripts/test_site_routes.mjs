@@ -10,11 +10,11 @@ class Element {
  toggleAttribute(k,v){if(v)this.attrs[k]='';else delete this.attrs[k]}
  addEventListener(k,f){this.listeners[k]=f}
 }
-const pages=['project','features','levels','development','wiki'].map(id=>new Element(id));
+const pages=['project','features','levels','development','wiki','graphics'].map(id=>new Element(id));
 const links=pages.map(p=>{const e=new Element();e.dataset.route=p.id;return e});
 const selects=[new Element()], modes=['2d','3d'].map(mode=>{const e=new Element();e.dataset.mode=mode;return e});
 const elements=new Map(pages.map(p=>[p.id,p]));
-for(const id of ['atlas-frame','atlas-panel','explorer-panel','view-message','level-status','wiki-article','main','skip-content'])elements.set(id,new Element(id));
+for(const id of ['atlas-frame','atlas-panel','explorer-panel','view-message','level-status','wiki-article','main','skip-content','graphics-status','graphics-status-text','graphics-retry'])elements.set(id,new Element(id));
 const supported=Number(readFileSync(new URL('../site/index.html',import.meta.url),'utf8').match(/data-native-campaign-levels="(\d+)"/)[1]);
 pages[0].dataset.nativeCampaignLevels=String(supported);
 let hash='#project';globalThis.location={get hash(){return hash},set hash(v){hash=v.startsWith('#')?v:'#'+v},origin:'https://example.test'};
@@ -24,7 +24,8 @@ const events={};globalThis.window={addEventListener:(name,fn)=>events[name]=fn};
 const catalog=JSON.parse(readFileSync(new URL('../site/data/catalog.json',import.meta.url)));
 let loads=[],active=false,resolveViewer;const viewer={setActive:v=>active=v,load:async(n,e)=>loads.push([n,e.level])};
 let resolveWiki,openedWiki=[];
-const app=createApp(catalog,()=>new Promise(resolve=>resolveViewer=resolve),()=>new Promise(resolve=>resolveWiki=resolve));
+let resolveGraphics,openedGraphics=[];
+const app=createApp(catalog,()=>new Promise(resolve=>resolveViewer=resolve),()=>new Promise(resolve=>resolveWiki=resolve),()=>new Promise(resolve=>resolveGraphics=resolve));
 assert.equal(selects[0].children.length,16);assert.equal(pages[0].hidden,false);
 location.hash='#atlas/16';await app.render();assert.equal(location.hash,'#levels/16/2d');assert.equal(elements.get('atlas-frame').src,'atlas/index.html#level-16');assert.match(elements.get('level-status').textContent,/Multiplayer/);
 selects[0].value='2';selects[0].onchange();await app.render();assert.equal(location.hash,'#levels/3/2d');
@@ -46,6 +47,13 @@ location.hash='#wiki/weapon-pistol';const pendingWiki=app.render();location.hash
 location.hash='#wiki/weapon-pistol';await app.render();assert.equal(pages[4].hidden,false);assert.equal(pages[0].hidden,true);assert.equal(openedWiki.at(-1),'weapon-pistol');assert.equal(active,false);
 location.hash='#wiki';await app.render();assert.equal(openedWiki.at(-1),'field-guide');assert.equal(links[4].attrs['aria-current'],'page');
 assert.equal(pages[4].heading.focused,true,'route change moves focus into the new page');
+location.hash='#graphics/actor-063-001';const pendingGraphics=app.render();location.hash='#project';await app.render();
+resolveGraphics({open:(id,options)=>openedGraphics.push({id,options})});await pendingGraphics;assert.equal(openedGraphics.length,0);
+location.hash='#graphics/actor-063-001';await app.render();assert.equal(pages[5].hidden,false);assert.equal(active,false);
+assert.equal(openedGraphics.at(-1).id,'actor-063-001');assert(openedGraphics.at(-1).options.focus);
+assert.equal(links[5].attrs['aria-current'],'page');assert(elements.get('graphics-status').hidden);
+location.hash='#graphics';await app.render();assert.equal(openedGraphics.at(-1).id,'');
+location.hash='#wiki';await app.render();
 let prevented=false;elements.get('skip-content').onclick({preventDefault:()=>prevented=true});assert(prevented);assert.equal(location.hash,'#wiki');assert.equal(elements.get('main').focused,true,'skip must not route back home');
 const missing=createApp([],()=>Promise.reject(Error('must not load viewer without catalog')),async()=>({open:id=>openedWiki.push(id)}));
 await missing.catalogFailed();location.hash='#features';await missing.render();assert.equal(pages[1].hidden,false);
@@ -55,4 +63,12 @@ location.hash='#levels/8/2d';await missing.render();assert.equal(frame.src,'atla
 assert.throws(()=>missing.setCatalog([]),/Invalid level catalog/);await missing.setCatalog(catalog);assert.equal(selects[0].disabled,false);assert.equal(selects[0].children.length,16);
 location.hash=`#levels/${supported}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,/available in the PC game/);
 location.hash=`#levels/${supported+1}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,supported<12?/not yet playable/:/Multiplayer map.*not playable yet/);
+let graphicsAttempts=0;
+const recovery=createApp(catalog,async()=>viewer,async()=>({open(){}}),async()=>{
+ if(++graphicsAttempts===1)throw Error('offline');return {open:id=>openedGraphics.push({id})};
+});
+location.hash='#graphics/sprite-000';await recovery.render();assert.equal(elements.get('graphics-retry').hidden,false);
+assert.match(elements.get('graphics-status-text').textContent,/try again/);
+await elements.get('graphics-retry').onclick();assert.equal(graphicsAttempts,2);assert(elements.get('graphics-status').hidden);
+assert.equal(openedGraphics.at(-1).id,'sprite-000');
 console.log(JSON.stringify({status:'PASS',level_options:16,checks:'unified modes, legacy links, shared selection, async guards, iframe bridge, route focus, skip link, catalog failure/recovery, homepage support boundary'}));

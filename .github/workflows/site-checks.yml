@@ -25,6 +25,10 @@ jobs:
         run: node scripts/test_site_explorer_controls.mjs
       - name: Verify NETRICSA entries, search, links and artwork
         run: node scripts/test_site_wiki.mjs
+      - name: Verify graphics browsing, palettes and downloads
+        run: node scripts/test_site_graphics.mjs
+      - name: Verify every original graphics file
+        run: python3 scripts/test_site_graphics.py
       - name: Verify resources below the Pages project prefix
         run: python3 scripts/test_site_http.py
       - name: Verify reference links, content and offline maps

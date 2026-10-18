@@ -47,6 +47,8 @@ def main():
     build_wiki()
     from refresh_atlas_ui import main as refresh_atlas_ui
     refresh_atlas_ui()
+    from build_site_graphics import main as build_graphics
+    build_graphics()
     (SITE/'.nojekyll').touch()
     print('Site assembled:',len(list(SITE.rglob('*'))),'paths')
 

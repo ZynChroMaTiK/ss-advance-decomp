@@ -15,6 +15,12 @@ with http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler) as server:
         paths += [str(p.relative_to(SITE)) for p in (SITE/'assets/textures').rglob('*.png')]
         paths += [str(p.relative_to(SITE)) for p in (SITE/'atlas/icons').glob('*.png')]
         paths += ['wiki.js','wiki.css','data/wiki.json']
+        paths += ['graphics.js','graphics.css','data/graphics.json','assets/graphics/manifest.json']
+        graphics=json.loads((SITE/'data/graphics.json').read_text(encoding='utf8'))
+        paths += list(dict.fromkeys(e['images'][0]['path'] for e in graphics['entries'] if e['category']!='actors'))[:30]
+        for category in graphics['categories']:
+            entry = next(e for e in graphics['entries'] if e['category']==category['id'])
+            paths += [image['path'] for image in entry['images']]
         paths += ['flight_controls.js','viewer_objects.js','reference.js','atlas/loader.js','atlas/viewer.js','atlas/viewer.css']
         paths += [f'atlas/{folder}/level-{i:02}.{suffix}' for folder,suffix in [('views','svg'),('data','json')] for i in range(1,17)]
         paths += ['gba-font.css','accessibility.css','reference.css','assets/fonts/serious-advance-white.woff','assets/fonts/serious-advance-green.woff']

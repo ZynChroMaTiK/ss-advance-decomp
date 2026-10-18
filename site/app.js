@@ -1,7 +1,8 @@
-export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js').then(m => m.createViewer()), loadWiki = () => import('./wiki.js').then(m => m.createWiki())) {
+export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js').then(m => m.createViewer()), loadWiki = () => import('./wiki.js').then(m => m.createWiki()), loadGraphics = () => import('./graphics.js').then(m => m.createGraphics())) {
   const $ = id => document.getElementById(id);
   let level = 0, route = 'project', mode = '2d', viewer, viewerPromise, atlasReady = false, revision = 0;
   let wikiPromise, catalogError = '', renderedRoute, renderedWikiId;
+  let graphicsPromise, renderedGraphicId;
   const supportedLevels = Number($('project').dataset.nativeCampaignLevels);
   function focusContent(element) {
     element.tabIndex = -1;
@@ -30,7 +31,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     const ticket = ++revision;
     const parts = location.hash.slice(1).split('/');
     const legacy = ['atlas', 'explorer'].includes(parts[0]);
-    route = legacy ? 'levels' : ['project', 'features', 'levels', 'wiki', 'development'].includes(parts[0]) ? parts[0] : 'project';
+    route = legacy ? 'levels' : ['project', 'features', 'levels', 'wiki', 'graphics', 'development'].includes(parts[0]) ? parts[0] : 'project';
     const n = Number(parts[1]);
     if (route === 'levels' && Number.isInteger(n) && n >= 1 && n <= (catalog.length || 16)) level = n - 1;
     if (legacy) mode = parts[0] === 'atlas' ? '2d' : '3d';
@@ -49,7 +50,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     $('atlas-panel').hidden = mode !== '2d';
     $('explorer-panel').hidden = mode !== '3d';
     $('level-status').textContent = catalogError || (!catalog.length ? 'Loading the level list…' : level < supportedLevels ? 'Campaign level · available in the PC game' : level < 12 ? 'Campaign level · not yet playable' : 'Multiplayer map · explore here; multiplayer is not playable yet');
-    document.title = `${{project:'PC port', features:'About the game', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Download & Help'}[route]} — Serious Sam Advance`;
+    document.title = `${{project:'PC port', features:'About the game', levels:'Level Browser', wiki:'NETRICSA Field Guide', graphics:'Graphics', development:'Download & Help'}[route]} — Serious Sam Advance`;
     if (route === 'levels' && mode === '2d') {
       if (!atlasReady) { $('atlas-frame').src = `atlas/index.html#level-${level + 1}`; atlasReady = true; }
       else $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin);
@@ -74,6 +75,26 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
         $('wiki-article').textContent = `The field guide could not load: ${error.message}. Reload the page to retry.`;
       }
     }
+    if (route === 'graphics') {
+      $('graphics-status').hidden = false;
+      $('graphics-status-text').textContent = 'Loading the pictures…';
+      $('graphics-retry').hidden = true;
+      try {
+        graphicsPromise ??= loadGraphics();
+        const gallery = await graphicsPromise;
+        if (ticket !== revision) return;
+        const id = parts[1] || '';
+        gallery.open(id, {focus:!!id && renderedGraphicId !== id});
+        renderedGraphicId = id;
+        $('graphics-status').hidden = true;
+      } catch (error) {
+        graphicsPromise = null;
+        if (ticket !== revision) return;
+        $('graphics-status').hidden = false;
+        $('graphics-status-text').textContent = 'The pictures couldn’t load. Check your connection and try again.';
+        $('graphics-retry').hidden = false;
+      }
+    }
     if (active3d) {
       try {
         viewerPromise ??= loadViewer();
@@ -90,6 +111,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     }
   }
   $('atlas-frame').addEventListener('load', () => $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin));
+  $('graphics-retry').onclick = () => render();
   window.addEventListener('hashchange', render);
   window.addEventListener('message', e => {
     if (e.origin === location.origin && e.source === $('atlas-frame').contentWindow && e.data?.type === 'ssa:level' && Number.isInteger(e.data.level) && e.data.level >= 0 && e.data.level < catalog.length && route === 'levels' && mode === '2d' && e.data.level !== level) {

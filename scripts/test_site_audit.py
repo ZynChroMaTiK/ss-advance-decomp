@@ -25,7 +25,7 @@ for path,page in pages.items():
         target=(path.parent/unquote(url.path)).resolve() if url.path else path
         assert target.exists(),f'Missing resource: {path}: {ref}'
         if url.fragment and target in pages:
-            route=target==SITE/'index.html' and url.fragment.split('/')[0] in ('project','features','levels','wiki','development')
+            route=target==SITE/'index.html' and url.fragment.split('/')[0] in ('project','features','levels','wiki','graphics','development')
             atlas=target==SITE/'atlas/index.html' and re.fullmatch(r'level-\d+',url.fragment)
             assert route or atlas or unquote(url.fragment) in pages[target].ids,f'Missing anchor: {path}: {ref}'
         checked+=1
