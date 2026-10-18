@@ -6,6 +6,14 @@ export function filterGraphics(entries, query = '', category = 'all', group = 'a
     && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 export function imageFor(entry, palette = 0) { return entry.images[palette] || entry.images[0]; }
+export function uniqueGraphics(entries, palette = 0, preferred = null) {
+  const pictures = new Map();
+  for (const entry of entries) {
+    const key = imageFor(entry, palette).path;
+    if (!pictures.has(key) || entry === preferred) pictures.set(key, entry);
+  }
+  return [...pictures.values()];
+}
 export function groupGraphics(entries) {
   const groups = new Map();
   for (const entry of entries) {
@@ -31,17 +39,18 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   let grouped = true, collection = null, returnSpot = null, cards = new Map();
   let filtered = data.entries;
   const byId = new Map(data.entries.map(e => [e.id, e]));
+  for (const [alias, id] of Object.entries(data.aliases || {})) byId.set(alias, byId.get(id));
   const categories = new Map(data.categories.map(e => [e.id, e.title]));
   for (const c of [{id:'all', title:'Everything'}, ...data.categories]) {
     const option = make('option', c.title); option.value = c.id; $('graphics-category').append(option);
   }
   const groups = new Map(data.entries.filter(e => e.category === 'actors').map(e => [e.group, e.groupLabel]));
   const all = make('option', 'All sprite groups'); all.value = 'all'; $('graphics-group').append(all);
-  for (const [id, label] of groups) { const option = make('option', label); option.value = String(id); $('graphics-group').append(option); }
-  $('graphics-total').textContent = `Browse ${data.entryCount.toLocaleString()} pictures and frames, including Egypt and Rome colour variants.`;
+  for (const [id, label] of [...groups].sort((a,b) => a[1].localeCompare(b[1]))) { const option = make('option', label); option.value = String(id); $('graphics-group').append(option); }
+  $('graphics-total').textContent = `Browse ${data.uniqueFiles.toLocaleString()} unique pictures, including different sizes and Egypt and Rome colours. Repeated images appear once; contact sheets are left out.`;
   $('graphics-controls').hidden = false; $('graphics-status').hidden = true;
-  const frames = () => collection ? filtered.filter(e => (e.collection || e.id) === collection) : filtered;
-  const items = () => grouped && !collection ? groupGraphics(filtered)
+  const frames = () => uniqueGraphics(collection ? filtered.filter(e => (e.collection || e.id) === collection) : filtered, palette, selected);
+  const items = () => grouped && !collection ? groupGraphics(uniqueGraphics(filtered, palette, selected))
     : frames().map(e => ({key:e.id, title:e.title, entries:[e]}));
   const route = (id = '', replace = false) => navigate(graphicsUrl(id, palette), {replace});
   function renderGrid() {
@@ -130,7 +139,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     else button?.scrollIntoView({block:'nearest'});
     returnSpot = null;
   };
-  $('graphics-palette').onchange = () => { palette = Number($('graphics-palette').value); route(selected?.id || '', true); renderGrid(); updateImage(); };
+  $('graphics-palette').onchange = () => { palette = Number($('graphics-palette').value); page = 0; route(selected?.id || '', true); renderGrid(); renderSelection(); };
   $('graphics-background').onchange = () => { $('graphics-preview-area').dataset.background = $('graphics-background').value; };
   $('graphics-zoom').onchange = updateImage;
   function turnPage(amount) { page += amount; renderGrid(); $('graphics-count').focus(); }

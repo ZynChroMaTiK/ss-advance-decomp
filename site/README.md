@@ -49,7 +49,9 @@ python scripts/test_site_http.py
 
 These commands reuse the maps and artwork already in the repo, so you won’t need a ROM. GitHub Actions runs the website checks and publishes `site/` when changes reach `main`.
 
-To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. This copies the original PNGs unchanged, checks their hashes and stores shared images once. Weapon and HUD names come from the original animation tables and their native controllers. Related frames open as groups; Every frame shows the full list. Links ending in `/rome` retain the Rome colours. The source archive stays out of the website; visitors only load the pictures they browse.
+To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. It keeps the original PNGs unchanged and compares their visible pixels to remove duplicates. Generated contact sheets and tile overviews are left out; different sizes and colours stay available. The source archive is unchanged and stays out of the website.
+
+Groups follow what the pictures show. `scripts/graphics_content.py` holds the checked labels: shared pickup and prop tables need labels for each picture, while enemy animation sets belong together. Weapon frames, HUD icons and interface pieces have separate groups. Use Individual pictures to browse without groups. Old picture links still work, and links ending in `/rome` keep the Rome colours.
 
 Run `python scripts/build_site_sources.py` to refresh the readable secret-source page from the existing map records. Website instructions should describe the download; label newer work as development progress until a release includes it.
 

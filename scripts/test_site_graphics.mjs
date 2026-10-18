@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createGraphicsView,filterGraphics,imageFor,groupGraphics,graphicsUrl,PAGE_SIZE,createGraphics} from '../site/graphics.js';
+import {createGraphicsView,filterGraphics,imageFor,groupGraphics,uniqueGraphics,graphicsUrl,PAGE_SIZE,createGraphics} from '../site/graphics.js';
 const data=JSON.parse(readFileSync(new URL('../site/data/graphics.json',import.meta.url)));
 const html=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 class Element {
@@ -40,7 +40,7 @@ $('graphics-view').value='frames';$('graphics-view').onchange();
 for(const category of data.categories){
  $('graphics-category').value=category.id;$('graphics-category').onchange();
  assert.equal(filterGraphics(data.entries,'',category.id).length,category.count);
- assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,category.count));
+ assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,uniqueGraphics(filterGraphics(data.entries,'',category.id)).length));
  assert.equal($('graphics-group-label').hidden,category.id!=='actors');
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
@@ -78,13 +78,27 @@ actorButton.onclick();follow(links.at(-1));$('graphics-back-pictures').onclick()
 assert($('graphics-detail').hidden);assert.equal(window.restoredY,850);
 assert($('graphics-grid').children.some(b=>b.focused),'back restores the selected thumbnail focus');
 delete globalThis.window;
-const last=data.entries.at(-1);gallery.open(last.id);
+const last=uniqueGraphics(data.entries).at(-1);gallery.open(last.id);
 assert($('graphics-next-page').disabled);assert($('graphics-next-image').disabled);
 assert($('graphics-grid').children.length<=PAGE_SIZE);
 assert.equal(imageFor(last,1),last.images[0]);
 $('graphics-grid').children.at(-1).onclick();assert.equal(links.at(-1),`#graphics/${last.id}`);
 gallery.open('does-not-exist');assert.equal($('graphics-not-found').hidden,false);assert($('graphics-detail').hidden);
 gallery.open();assert($('graphics-not-found').hidden);
+for(const palette of [0,1]) {
+ const unique=uniqueGraphics(data.entries,palette);
+ const paths=unique.map(e=>imageFor(e,palette).path);
+ assert.equal(new Set(paths).size,paths.length,'one thumbnail per visible image');
+ assert.deepEqual(new Set(paths),new Set(data.entries.map(e=>imageFor(e,palette).path)),'all different images remain reachable');
+ for(const group of groupGraphics(unique)) assert.equal(new Set(group.entries.map(e=>imageFor(e,palette).path)).size,group.entries.length);
+}
+const duplicate={id:'test-duplicate',images:data.entries[0].images};
+assert.deepEqual(uniqueGraphics([data.entries[0],duplicate],0,duplicate),[duplicate],'keep a directly linked picture selected when its pixels are shared');
+const alias='actor-033-001';gallery.open(alias,{palette:1});
+const canonical=data.entries.find(e=>e.id===data.aliases[alias]);
+assert(canonical && canonical.collection==='pickup-01','the old shotgun-table link now identifies the pistol it actually shows');
+assert.equal($('graphics-preview').src,imageFor(canonical,1).path);
+assert.equal($('graphics-not-found').hidden,true,'old duplicate links resolve');
 const texture=data.entries.find(e=>e.category==='textures');
 assert(filterGraphics(data.entries,texture.title.toUpperCase(),'textures').some(e=>e.id===texture.id));
 assert.equal(filterGraphics(data.entries,'<script>not markup</script>').length,0);

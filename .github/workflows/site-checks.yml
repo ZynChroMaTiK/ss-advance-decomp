@@ -2,7 +2,7 @@ name: Check project website
 on:
   workflow_call:
   pull_request:
-    paths: ['site/**', 'scripts/test_site*', '.github/workflows/site-checks.yml']
+    paths: ['site/**', 'scripts/test_site*', 'scripts/build_site_graphics.py', 'scripts/graphics_content.py', '.github/workflows/site-checks.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -27,7 +27,7 @@ jobs:
         run: node scripts/test_site_wiki.mjs
       - name: Verify graphics browsing, palettes and downloads
         run: node scripts/test_site_graphics.mjs
-      - name: Verify every original graphics file
+      - name: Verify unique graphics, content groups and original PNGs
         run: python3 scripts/test_site_graphics.py
       - name: Verify resources below the Pages project prefix
         run: python3 scripts/test_site_http.py
