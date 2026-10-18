@@ -3,6 +3,7 @@ from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
 from graphics_content import pixel_digest, is_sheet
+from graphics_usage import selected_actor_frames, SECTIONS
 from export_graphics_archive import png
 
 # Same visible picture, different unused/transparent palette colours.
@@ -84,12 +85,43 @@ assert by_id['sprite-142']['collection'] == 'button-prompts'
 assert by_id['sprite-235']['collection'] == 'character-shapes'
 assert by_id['sprite-304']['collection'] == 'screen-effects'
 assert all(not e['collectionTitle'].startswith(('Resource ','Shared item')) for e in entries)
+assert {s['id'] for s in catalog['usageSections']} == set(SECTIONS)
+usage_sources=set()
+for entry in entries:
+    assert entry['uses'] and len({u['id'] for u in entry['uses']}) == len(entry['uses'])
+    for usage in entry['uses']:
+        assert usage['section'] in SECTIONS and usage['title'] and usage['source']
+        if usage['section'] != 'unconfirmed':
+            usage_sources.update(usage['source'].split('; '))
+assert all((ROOT/p).is_file() for p in usage_sources)
+def uses(id): return [u['title'] for u in by_id[id]['uses']]
+assert uses('actor-032-001') == ['Pistol']
+assert uses('actor-033-002') == ['Shotgun']
+assert uses('actor-096-001') == ['Time Strike · Falling piano']
+assert uses('actor-096-003') == ['Time Strike · Falling safe']
+assert 'Pistol muzzle flash' in uses('actor-126-001')
+assert any('Methug soldier · Attacking' in uses(e['id']) and 'Methug soldier · Taking damage' in uses(e['id']) for e in entries)
+assert 'Sirian Sphinx projectile · In flight' in uses('actor-131-001')
+assert 'Sirian Sphinx projectile impact' in uses('actor-131-005')
+assert 'Sirian Sphinx projectile · In flight' not in uses('actor-131-005')
+assert 'HUD · Player 1' in uses('sprite-279')
+assert 'Egypt chapter' in uses('story-story-02')
+assert 'Rome chapter' in uses('story-story-03')
+assert 'Ending' in uses('story-story-04')
 archive_path = ROOT/'build/exports/ssa-graphics.zip'
 verified_originals = False
 if archive_path.exists():
     with zipfile.ZipFile(archive_path) as archive:
         assert set(sources)|set(manifest['excluded']) == {p for p in archive.namelist() if p.endswith('.png')}
         assert hashlib.sha256(archive.read('manifest.json')).hexdigest() == manifest['source_manifest_sha256']
+        original=json.loads(archive.read('manifest.json'))
+        sequences=json.loads(archive.read('animations/actors.json'))
+        assert selected_actor_frames(original['actor_resources'][32],sequences[32]['words']) == {1,29}
+        assert selected_actor_frames(original['actor_resources'][33],sequences[33]['words']) == {2,30}
+        # The rocket sequence selects only five of the seven stored images.
+        assert selected_actor_frames(original['actor_resources'][15],sequences[15]['words']) == set(range(1,6))
+        assert selected_actor_frames(original['actor_resources'][131],sequences[131]['words']) == {1,2,3,4}
+        assert selected_actor_frames(original['actor_resources'][132],sequences[132]['words']) == set(range(5,12))
         for name, info in manifest['files'].items():
             assert archive.read(info['source']) == original_bytes[name], info['source']
         for source, name in sources.items():

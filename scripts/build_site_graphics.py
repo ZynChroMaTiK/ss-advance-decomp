@@ -1,4 +1,4 @@
-"""Build a content-grouped catalog of unique original game pictures.
+"""Build a usage-grouped catalog of unique original game pictures.
 
 Keep original PNG bytes, merge visually identical pictures, and omit export
 contact sheets. The manifest retains provenance for all included source PNGs.
@@ -8,6 +8,7 @@ from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
 from graphics_content import actor_content, screen_content, pixel_digest, is_sheet
+from graphics_usage import SECTIONS, actor_uses, screen_uses, other_uses, texture_uses, merge_uses, finalize_uses
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = {
@@ -33,6 +34,9 @@ def main():
         portraits['netricsa-22.png'] = 'NETRICSA'
         # Confirmed by weapon_animation.c, weapon_controller.c and hud_sprites.c.
         animations = json.loads(archive.read('animations/sprites.json'))
+        actor_usage = actor_uses(manifest,json.loads(archive.read('animations/actors.json')))
+        screen_usage = screen_uses(animations,wiki)
+        texture_usage = texture_uses(ROOT)
         sprite_names = {}
         def name_sequence(sequence, title, collection, collection_title, aliases='', override=False):
             for word in animations[sequence]['words']:
@@ -99,6 +103,7 @@ def main():
                     'groupLabel': label, 'frame': frame['index'],
                     'tags': label, 'origin': [frame['origin_x'], frame['origin_y']],
                     'collection': collection, 'collectionTitle': label,
+                    'uses': actor_usage[group,frame['index']],
                     'images': [dict(image(p), label=label) for p,label in zip(frame['png'], ['Egypt colours', 'Rome colours'])]})
         for texture in manifest['textures']:
             family = ['Egypt', 'Rome'][texture['family']]
@@ -107,6 +112,7 @@ def main():
                 'resolution': texture['mip'], 'tags': f'{family} resolution {texture["mip"]}',
                 'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
                 'collectionTitle': f'{texture["name"]} · {family}',
+                'uses': texture_usage.get((texture['family'],texture['index']),[]),
                 'images': [dict(image(texture['png']), label=f'{family} · resolution {texture["mip"] + 1} of 3')]})
         for sprite in manifest['sprites']:
             label = sprite_names.get(sprite['id'])
@@ -116,6 +122,7 @@ def main():
             entries.append({'id': f'sprite-{sprite["id"]:03}', **label,
                 'title': f'{label["title"]} · {sprite["id"]:03}',
                 'category': 'sprites', 'origin': [sprite['min_x'], sprite['min_y']],
+                'uses': screen_usage[sprite['id']],
                 'images': [dict(image(sprite['png']), label='Original colours')]})
         for path in sorted(source_pngs-used-excluded):
             parts = Path(path).parts; category = parts[0]
@@ -142,6 +149,8 @@ def main():
                 'collectionTitle': f'{parts[1]} lettering' if category == 'fonts' else 'Colour palettes' if category == 'palettes' else title,
                 'images': [dict(image(path), label='Original colours')]})
         assert used == source_pngs-excluded
+        for entry in entries:
+            if 'uses' not in entry: entry['uses'] = other_uses(entry)
         assert len({e['id'] for e in entries}) == len(entries)
         # Shared tables, repeated animation poses and identical colour variants
         # must not create repeated gallery entries. Old entry URLs still resolve.
@@ -152,13 +161,16 @@ def main():
                 first = unique[key]
                 url_aliases[entry['id']] = first['id']
                 first['tags'] = ' '.join(dict.fromkeys((first['tags']+' '+entry['tags']+' '+entry['collectionTitle']).split()))
+                first['uses'] = merge_uses(first['uses'],entry['uses'])
             else:
                 unique[key] = entry
         entries = list(unique.values())
+        finalize_uses(entries)
         order = {c:i for i,c in enumerate(CATEGORIES)}
         entries.sort(key=lambda e: (order[e['category']], e.get('group', ''), e.get('frame', 0), e['id']))
         counts = Counter(e['category'] for e in entries)
         catalog = {'version': 1, 'categories': [{'id': c, 'title': title, 'count': counts[c]} for c,title in CATEGORIES.items()],
+            'usageSections': [{'id':key,'title':title} for key,title in SECTIONS.items()],
             'entryCount': len(entries), 'imageCount': len(used), 'uniqueFiles': len(files), 'entries': entries, 'aliases': url_aliases}
         (ROOT/'site/data/graphics.json').write_text(json.dumps(catalog,ensure_ascii=False,separators=(',', ':'))+'\n',encoding='utf8')
         report = {'rom_sha1': manifest['rom_sha1'], 'source_pngs': len(used), 'sources': sources, 'excluded': sorted(excluded),

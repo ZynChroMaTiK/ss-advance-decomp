@@ -1,9 +1,8 @@
 export const PAGE_SIZE = 60;
 export function filterGraphics(entries, query = '', category = 'all', group = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  return entries.filter(e => (category === 'all' || e.category === category)
-    && (category !== 'actors' || group === 'all' || String(e.group) === group)
-    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
+  return entries.filter(e => e.uses.some(u => (category === 'all' || u.section === category) && (group === 'all' || u.id === group))
+    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 export function imageFor(entry, palette = 0) { return entry.images[palette] || entry.images[0]; }
 export function uniqueGraphics(entries, palette = 0, preferred = null) {
@@ -14,14 +13,17 @@ export function uniqueGraphics(entries, palette = 0, preferred = null) {
   }
   return [...pictures.values()];
 }
-export function groupGraphics(entries) {
+export function groupGraphics(entries, palette = 0, preferred = null, section = 'all', usage = 'all') {
   const groups = new Map();
   for (const entry of entries) {
-    const key = entry.collection || entry.id;
-    if (!groups.has(key)) groups.set(key, {key, title:entry.collectionTitle || entry.title, entries:[]});
-    groups.get(key).entries.push(entry);
+    for (const use of entry.uses) {
+      if ((section !== 'all' && use.section !== section) || (usage !== 'all' && use.id !== usage)) continue;
+      if (!groups.has(use.id)) groups.set(use.id, {key:use.id, title:use.title, section:use.section, entries:[]});
+      groups.get(use.id).entries.push(entry);
+    }
   }
-  return [...groups.values()];
+  return [...groups.values()].map(g => ({...g, entries:uniqueGraphics(g.entries,palette,preferred)}))
+    .sort((a,b) => a.title.localeCompare(b.title));
 }
 export function graphicsUrl(id = '', palette = 0) {
   return `#graphics${id || palette ? '/'+id : ''}${palette ? '/rome' : ''}`;
@@ -41,16 +43,23 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   const byId = new Map(data.entries.map(e => [e.id, e]));
   for (const [alias, id] of Object.entries(data.aliases || {})) byId.set(alias, byId.get(id));
   const categories = new Map(data.categories.map(e => [e.id, e.title]));
-  for (const c of [{id:'all', title:'Everything'}, ...data.categories]) {
+  const uses = new Map(data.entries.flatMap(e => e.uses.map(u => [u.id,u])));
+  for (const c of [{id:'all', title:'Everywhere'}, ...data.usageSections]) {
     const option = make('option', c.title); option.value = c.id; $('graphics-category').append(option);
   }
-  const groups = new Map(data.entries.filter(e => e.category === 'actors').map(e => [e.group, e.groupLabel]));
-  const all = make('option', 'All sprite groups'); all.value = 'all'; $('graphics-group').append(all);
-  for (const [id, label] of [...groups].sort((a,b) => a[1].localeCompare(b[1]))) { const option = make('option', label); option.value = String(id); $('graphics-group').append(option); }
-  $('graphics-total').textContent = `Browse ${data.uniqueFiles.toLocaleString()} unique pictures, including different sizes and Egypt and Rome colours. Repeated images appear once; contact sheets are left out.`;
+  function updateUses() {
+    $('graphics-group').replaceChildren();
+    const all = make('option', 'Every use'); all.value = 'all'; $('graphics-group').append(all);
+    for (const use of [...uses.values()].filter(u => category === 'all' || u.section === category).sort((a,b) => a.title.localeCompare(b.title))) {
+      const option = make('option', use.title); option.value = use.id; $('graphics-group').append(option);
+    }
+    $('graphics-group').value = group;
+  }
+  updateUses();
+  $('graphics-total').textContent = `Browse ${data.uniqueFiles.toLocaleString()} unique pictures by their role in the game, including different sizes and Egypt and Rome colours.`;
   $('graphics-controls').hidden = false; $('graphics-status').hidden = true;
-  const frames = () => uniqueGraphics(collection ? filtered.filter(e => (e.collection || e.id) === collection) : filtered, palette, selected);
-  const items = () => grouped && !collection ? groupGraphics(uniqueGraphics(filtered, palette, selected))
+  const frames = () => uniqueGraphics(collection ? filtered.filter(e => e.uses.some(u => u.id === collection)) : filtered, palette, selected);
+  const items = () => grouped && !collection ? groupGraphics(filtered, palette, selected, category, group)
     : frames().map(e => ({key:e.id, title:e.title, entries:[e]}));
   const route = (id = '', replace = false) => navigate(graphicsUrl(id, palette), {replace});
   function renderGrid() {
@@ -62,8 +71,8 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-page').textContent = `Page ${page+1} of ${Math.max(1, Math.ceil(list.length/PAGE_SIZE))}`;
     $('graphics-previous-page').disabled = page === 0; $('graphics-next-page').disabled = end >= list.length;
     $('graphics-back-group').hidden = !collection;
-    $('graphics-collection').textContent = collection ? frames()[0]?.collectionTitle || '' : '';
-    $('graphics-group-label').hidden = category !== 'actors';
+    $('graphics-collection').textContent = uses.get(collection)?.title || '';
+    $('graphics-group-label').hidden = false;
     $('graphics-palette-label').hidden = !(selected?.category === 'actors' || frames().some(e => e.category === 'actors'));
     cards = new Map(); $('graphics-grid').replaceChildren();
     for (const item of list.slice(start, end)) {
@@ -79,7 +88,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
         if (isGroup) {
           collection = item.key; page = 0; selected = null; returnSpot = null; route('', true);
           renderGrid(); renderSelection(); $('graphics-count').focus();
-        } else { returnSpot = {id:entry.id, y:globalThis.window?.scrollY}; route(entry.id); }
+        } else { returnSpot = {id:entry.id, usage:grouped && !collection ? item.key : collection, y:globalThis.window?.scrollY}; route(entry.id); }
       };
       cards.set(item.key, button); $('graphics-grid').append(button);
     }
@@ -102,10 +111,11 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     if (!selected) { doc.title = 'Graphics — Serious Sam Advance'; return; }
     $('graphics-title').textContent = selected.title;
     $('graphics-detail-category').textContent = categories.get(selected.category);
+    $('graphics-usage').textContent = 'Used for: '+selected.uses.map(u => u.title).join('; ')+'.';
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
       ? 'An original sprite frame. Use Sprite colours to see its Egypt and Rome versions.'
       : selected.category === 'sprites' ? 'Original weapon or on-screen artwork. Some images are pieces the game draws together.'
-      : selected.category === 'textures' ? 'An original texture. Its group includes the other sizes used by the game.'
+      : selected.category === 'textures' ? 'An original texture. Uses are matched to the walls and doors in the exported levels.'
       : 'Original artwork. Zoom in to see the pixels.');
     $('graphics-origin').textContent = selected.origin ? `Drawing offset: ${selected.origin.join(', ')} pixels` : '';
     const sequence = frames(), index = sequence.indexOf(selected);
@@ -118,12 +128,12 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     if (selected && !filtered.includes(selected)) { selected = null; returnSpot = null; route('', true); }
     $('graphics-not-found').hidden = true; renderGrid(); renderSelection();
   }
-  $('graphics-category').onchange = () => { category = $('graphics-category').value; group = 'all'; $('graphics-group').value = group; filter(); };
+  $('graphics-category').onchange = () => { category = $('graphics-category').value; group = 'all'; updateUses(); filter(); };
   $('graphics-group').onchange = () => { group = $('graphics-group').value; filter(); };
   $('graphics-search').oninput = () => { query = $('graphics-search').value; filter(); };
   $('graphics-clear').onclick = () => {
     category = group = 'all'; query = ''; $('graphics-category').value = category; $('graphics-group').value = group; $('graphics-search').value = query;
-    filter(); $('graphics-search').focus();
+    updateUses(); filter(); $('graphics-search').focus();
   };
   $('graphics-view').onchange = () => { grouped = $('graphics-view').value !== 'frames'; page = 0; collection = null; renderGrid(); renderSelection(); };
   $('graphics-back-group').onclick = () => {
@@ -133,7 +143,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   };
   $('graphics-back-pictures').onclick = () => {
     const id = selected?.id; selected = null; route('', true); renderGrid(); renderSelection();
-    const button = cards.get(id) || cards.get(byId.get(id)?.collection);
+    const button = cards.get(id) || cards.get(collection) || cards.get(returnSpot?.usage) || byId.get(id)?.uses.map(u => cards.get(u.id)).find(Boolean);
     button?.focus({preventScroll:true});
     if (returnSpot?.id === id && Number.isFinite(returnSpot.y)) globalThis.window?.scrollTo({top:returnSpot.y, behavior:'instant'});
     else button?.scrollIntoView({block:'nearest'});
@@ -155,15 +165,19 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-not-found').hidden = !id || !!selected;
     if (selected) {
       if (!filtered.includes(selected)) {
-        category = selected.category; group = 'all'; query = '';
+        category = selected.uses[0].section; group = 'all'; query = '';
         $('graphics-category').value = category; $('graphics-group').value = group; $('graphics-search').value = query;
+        updateUses();
         filtered = filterGraphics(data.entries, query, category, group);
       }
       if (grouped) {
-        const key = selected.collection || selected.id;
-        collection = filtered.filter(e => (e.collection || e.id) === key).length > 1 ? key : null;
+        const context = returnSpot?.id === selected.id ? returnSpot.usage : collection;
+        const key = selected.uses.some(u => u.id === context) ? context
+          : selected.uses.find(u => (category === 'all' || u.section === category) && (group === 'all' || u.id === group))?.id;
+        collection = key && uniqueGraphics(filtered.filter(e => e.uses.some(u => u.id === key)),palette,selected).length > 1 ? key : null;
       }
-      page = Math.floor(items().findIndex(e => e.entries.includes(selected))/PAGE_SIZE);
+      const list = items(), fromUse = !collection && returnSpot?.id === selected.id ? list.findIndex(e => e.key === returnSpot.usage) : -1;
+      page = Math.floor((fromUse >= 0 ? fromUse : list.findIndex(e => e.entries.includes(selected)))/PAGE_SIZE);
     }
     renderGrid(); renderSelection();
     if ((focus || changed) && selected) { $('graphics-title').focus({preventScroll:true}); $('graphics-detail').scrollIntoView({block:'nearest'}); }

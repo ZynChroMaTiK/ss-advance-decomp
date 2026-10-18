@@ -51,7 +51,9 @@ These commands reuse the maps and artwork already in the repo, so you won’t ne
 
 To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. It keeps the original PNGs unchanged and compares their visible pixels to remove duplicates. Generated contact sheets and tile overviews are left out; different sizes and colours stay available. The source archive is unchanged and stays out of the website.
 
-Groups follow what the pictures show. `scripts/graphics_content.py` holds the checked labels: shared pickup and prop tables need labels for each picture, while enemy animation sets belong together. Weapon frames, HUD icons and interface pieces have separate groups. Use Individual pictures to browse without groups. Old picture links still work, and links ending in `/rome` keep the Rome colours.
+Groups follow how the game uses each picture. `scripts/graphics_usage.py` maps animation sequences to their callers, expands the selected frames across viewing directions and sizes, and reads wall/door uses from the exported levels. This separates walking from dying, weapon-ready frames from firing, muzzle flashes from projectiles, and HUD roles from pickup artwork. `scripts/graphics_content.py` still supplies picture descriptions.
+
+Shared pictures keep every confirmed use, with one copy per group. Individual pictures shows the images without repeats. Pictures without a confirmed use remain under Other stored graphics. Old picture links still work, and links ending in `/rome` keep the Rome colours. The gallery does not claim that every stored animation is reached in a playthrough.
 
 Run `python scripts/build_site_sources.py` to refresh the readable secret-source page from the existing map records. Website instructions should describe the download; label newer work as development progress until a release includes it.
 

@@ -2,7 +2,7 @@ name: Check project website
 on:
   workflow_call:
   pull_request:
-    paths: ['site/**', 'scripts/test_site*', 'scripts/build_site_graphics.py', 'scripts/graphics_content.py', '.github/workflows/site-checks.yml']
+    paths: ['site/**', 'scripts/test_site*', 'scripts/build_site_graphics.py', 'scripts/graphics_content.py', 'scripts/graphics_usage.py', '.github/workflows/site-checks.yml']
   workflow_dispatch:
 permissions:
   contents: read

@@ -63,7 +63,7 @@ ACTOR_GROUPS = [
     ('Green splatter', [29]), ('Blue energy effects', [89,92,93,94,131,132]),
     ('Cannonball', [90]), ('Red spark', [95]), ('Fireballs and flames', list(range(126,131))),
     ('Green energy effects', [133,134,135,136]),
-    ('Unused white marker', [11]), ('Question mark', [91]),
+    ('White marker', [11]), ('Question mark', [91]),
 ]
 ACTORS = {r:(f'actor-{resources[0]:03}',title) for title,resources in ACTOR_GROUPS for r in resources}
 PICKUPS = [
