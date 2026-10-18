@@ -3,6 +3,9 @@
 A SoundFont is an instrument file that gives some of the music a different
 sound. You can skip this entirely and use **Original** music instead.
 
+**Playing requires your own European version of the Serious Sam Advance ROM**, saved
+as `orig/SSA.gba`. Other regional versions are not supported. No ROM is included.
+
 ## Set it up
 
 From the main game folder, run this in PowerShell:

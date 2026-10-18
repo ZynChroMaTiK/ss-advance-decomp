@@ -2,6 +2,8 @@
 
 This folder keeps the code and research recovered from the original game. It helps contributors understand how the game works; you do not need it to play.
 
+**Playing the PC game requires your own European version of the Serious Sam Advance ROM** at `orig/SSA.gba`. Other regional versions are not supported. No ROM is included.
+
 - `exact/src/` contains C code verified to compile to the same bytes as the original routines.
 - `exact/include/` and the build files support that recovered code.
 - `research.json` keeps the wider research, including attempts that are not exact matches.
