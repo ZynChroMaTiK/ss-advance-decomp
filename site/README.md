@@ -1,10 +1,10 @@
 # Project website
 
-The [website](https://zynchromatik.github.io/ss-advance-decomp/) introduces the PC port, explains how to play, and lets visitors explore the original maps and game guide.
+This folder is the [project website](https://zynchromatik.github.io/ss-advance-decomp/): downloads, setup help, maps and the NETRICSA guide.
 
-You can browse the site without a ROM. **Playing the PC game requires your own European version of the Serious Sam Advance ROM.** The ROM is not included.
+You can browse the site without a ROM. **To play, you’ll need your own European version of the Serious Sam Advance ROM.** The ROM is not included.
 
-## Preview it locally
+## Try it on your computer
 
 From the repository root, run:
 
@@ -24,7 +24,7 @@ Open <http://localhost:8080/site/>. Use this local server rather than opening `i
 - `../scripts/topmap_viewer.html` and `topmap_viewer.js`: 2D map text and controls.
 - `../README.md` and `../analysis/`: the source for the published help and developer notes.
 
-Edit the source files before refreshing generated pages so your wording survives future updates.
+Change these source files, then run the refresh commands below. Editing a generated page directly means your changes will be lost the next time it’s rebuilt.
 
 ## Refresh and check
 
@@ -42,8 +42,8 @@ python scripts/test_site_audit.py
 python scripts/test_site_http.py
 ```
 
-These refresh commands use the existing map exports and artwork; they do not need a ROM. GitHub Actions runs the website checks and publishes `site/` when changes reach `main`.
+These commands reuse the maps and artwork already in the repo, so you won’t need a ROM. GitHub Actions runs the website checks and publishes `site/` when changes reach `main`.
 
-For asset exports, viewer details and the full check list, see [the development notes](DEVELOPMENT.md).
+For more on exporting artwork, changing the viewers and checking your work, see [the development notes](DEVELOPMENT.md).
 
-Original game artwork belongs to its respective owners. This is an unofficial fan project. Three.js is included under its [MIT license](vendor/LICENSE).
+Serious Sam and its artwork belong to their original owners. This is an unofficial fan project. Three.js is included under its [MIT license](vendor/LICENSE).

@@ -4,12 +4,12 @@
   "entries": [
     {
       "id": "field-guide",
-      "title": "Your portable field guide",
+      "title": "About this guide",
       "category": "systems",
-      "summary": "Meet the enemies, get to know your weapons and explore the worlds of Serious Sam Advance.",
+      "summary": "Stuck on an enemy or wondering what a weapon does? Start here.",
       "sections": [
         {
-          "title": "Start with a subject",
+          "title": "Finding something",
           "text": "Search for a name or choose a category. Each level links to its 2D map and 3D view. Weapon and enemy pages also show where you can find them."
         },
         {
@@ -24,7 +24,7 @@
       ],
       "sources": [
         {
-          "title": "Project reference",
+          "title": "More notes",
           "href": "docs/README.html"
         }
       ],
@@ -65,7 +65,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Methug Soldier (6), Beheaded Kamikaze (11), Sirian Werebull (2). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -82,7 +82,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-01.json"
         },
         {
@@ -90,7 +90,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-2",
@@ -127,7 +127,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Methug Soldier (13), Aludran Arachnoid (3), Methug Commander (2), Beheaded Kamikaze (22), Cyclops (2), Hermit Crabuloid (12). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -147,7 +147,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-02.json"
         },
         {
@@ -155,7 +155,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-3",
@@ -192,7 +192,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Methug Commander (11), Cyclops (13), Beheaded Kamikaze (32), Methug Soldier (9), Sirian Werebull (2), Aludran Arachnoid (6). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -212,7 +212,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-03.json"
         },
         {
@@ -220,7 +220,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-4",
@@ -257,7 +257,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Aludran Arachnoid (3), Hermit Crabuloid (9), Cyclops (21), Methug Commander (8), Beheaded Kamikaze (48), Aludran Reptiloid (2), Sirian Werebull (2), Methug Soldier (8), Bladder Beast (3). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -280,7 +280,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-04.json"
         },
         {
@@ -288,7 +288,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-5",
@@ -325,7 +325,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Cyclops (16), Beheaded Kamikaze (61), Sirian Werebull (2), Methug Soldier (15), Methug Commander (12), Aludran Arachnoid (5), Hermit Crabuloid (8). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -346,7 +346,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-05.json"
         },
         {
@@ -354,7 +354,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-6",
@@ -391,7 +391,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Sirian Werebull (2), Beheaded Kamikaze (81), Bladder Beast (2), Cyclops (35), Methug Soldier (11), Methug Commander (3), Aludran Arachnoid (5), Hermit Crabuloid (8), Sirian Sphinx (1). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -414,7 +414,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-06.json"
         },
         {
@@ -422,7 +422,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-7",
@@ -459,7 +459,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Beheaded Kamikaze (58), Aludran Arachnoid (8), Bladder Beast (22), Aludran Reptiloid (11), Sirian Werebull (13). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -478,7 +478,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-07.json"
         },
         {
@@ -486,7 +486,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-8",
@@ -523,7 +523,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Aludran Arachnoid (16), Hermit Crabuloid (19), Gunrilla (24), Beheaded Kamikaze (37), Bladder Beast (6). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -542,7 +542,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-08.json"
         },
         {
@@ -550,7 +550,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-9",
@@ -587,7 +587,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Hermit Crabuloid (5), Gunrilla (24), Aludran Arachnoid (7), Sirian Werebull (5), Beheaded Kamikaze (52), Methug Commander (2), Methug Soldier (3), Bladder Beast (8). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -609,7 +609,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-09.json"
         },
         {
@@ -617,7 +617,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-10",
@@ -654,7 +654,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Aludran Arachnoid (9), Beheaded Kamikaze (22), Gunrilla (14), Aludran Reptiloid (5). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -672,7 +672,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-10.json"
         },
         {
@@ -680,7 +680,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-11",
@@ -717,7 +717,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Bladder Beast (13), Beheaded Kamikaze (23), Gunrilla (41), Cyclops (4), Aludran Arachnoid (14), Aludran Reptiloid (4). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -737,7 +737,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-11.json"
         },
         {
@@ -745,7 +745,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-12",
@@ -782,7 +782,7 @@
           "text": "Playable in the current Windows release."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "Aludran Arachnoid (14), Beheaded Kamikaze (68), Hermit Crabuloid (5), Gunrilla (24), Bladder Beast (12), Wolfiator (1), Methug Soldier (2). Some appear later, so these enemies will not all be present at once."
         },
         {
@@ -803,7 +803,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-12.json"
         },
         {
@@ -811,7 +811,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-13",
@@ -848,7 +848,7 @@
           "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "No enemy locations are listed for this map."
         },
         {
@@ -862,7 +862,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-13.json"
         },
         {
@@ -870,7 +870,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-14",
@@ -907,7 +907,7 @@
           "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "No enemy locations are listed for this map."
         },
         {
@@ -921,7 +921,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-14.json"
         },
         {
@@ -929,7 +929,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-15",
@@ -966,7 +966,7 @@
           "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "No enemy locations are listed for this map."
         },
         {
@@ -980,7 +980,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-15.json"
         },
         {
@@ -988,7 +988,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "level-16",
@@ -1025,7 +1025,7 @@
           "text": "You can explore this map here. Multiplayer is not yet playable."
         },
         {
-          "title": "Enemies you will find",
+          "title": "Enemies here",
           "text": "No enemy locations are listed for this map."
         },
         {
@@ -1039,7 +1039,7 @@
       ],
       "sources": [
         {
-          "title": "Exported level data",
+          "title": "Map data",
           "href": "data/level-16.json"
         },
         {
@@ -1047,7 +1047,7 @@
           "href": "docs/map-assets.html"
         }
       ],
-      "coverage": "The map shows locations from the original game. It is a guide you can explore, not a running game."
+      "coverage": "The map shows locations from the original game. Enemies and doors stay still here, so you can take your time looking around."
     },
     {
       "id": "weapon-chainsaw",
@@ -1063,8 +1063,8 @@
       "summary": "Sam’s close-range weapon. Keep cutting without using any ammo.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original NETRICSA entry describes a forestry tool repurposed for fighting monsters. Its short reach makes positioning essential."
+          "title": "About it",
+          "text": "A forestry tool put to a very different use. You’ll need to get close to make it count."
         },
         {
           "title": "Playing tips",
@@ -1113,12 +1113,12 @@
       "summary": "A powerful close-range shotgun with a pause between blasts.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original briefing emphasizes the coach gun's short-range power. Its firing cycle leaves a pause between blasts."
+          "title": "About it",
+          "text": "Best used up close. Give yourself room to move while you wait for the next blast."
         },
         {
           "title": "Playing tips",
-          "text": "Fires both shells when you have them, or a single shot when only one remains. The Alternate weapons option changes its spread."
+          "text": "Fires both shells when you’ve got them, or a single shot when only one remains. The Alternate weapons option changes its spread."
         }
       ],
       "sources": [
@@ -1172,8 +1172,8 @@
       "summary": "A fast-firing gun that gets through enemies—and your ammo—quickly.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original tips call attention to its heavy ammunition use. It is introduced early in the Pyramid Entrance Maze."
+          "title": "About it",
+          "text": "You’ll find one early in the Pyramid Entrance Maze. Keep an eye on your ammo."
         },
         {
           "title": "Playing tips",
@@ -1226,8 +1226,8 @@
       "summary": "Fires rockets that hurt enemies near the blast as well as the target.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original description combines direct projectile damage with an explosion around the impact. Reloading separates each launch."
+          "title": "About it",
+          "text": "The rocket hurts what it hits, and the explosion catches nearby enemies too."
         },
         {
           "title": "Playing tips",
@@ -1286,8 +1286,8 @@
       "summary": "Makes affected enemies attack nearby targets while their health drains away.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA describes this weapon as breaking Mental’s control over his troops. The effect also slowly drains the affected enemy’s health."
+          "title": "About it",
+          "text": "This weapon breaks Mental’s hold over his troops. It also slowly drains their health."
         },
         {
           "title": "Playing tips",
@@ -1341,8 +1341,8 @@
       "summary": "Fires a cannonball that can bounce off walls and plough through enemies.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original NETRICSA entry highlights the cannonball's ricochets and ability to plow through a group."
+          "title": "About it",
+          "text": "A bouncing cannonball can tear through a whole group. Watch where it goes."
         },
         {
           "title": "Playing tips",
@@ -1395,12 +1395,12 @@
       "summary": "A dependable revolver and the first firearm you find in the campaign.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA presents the Schofield as Sam's dependable old-fashioned sidearm. A pistol pickup is available in the Upper Temple of Herkat."
+          "title": "About it",
+          "text": "Sam’s old-fashioned sidearm. You can find a pistol in the Upper Temple of Herkat."
         },
         {
           "title": "Playing tips",
-          "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you have both, press 2 again to switch between one and two."
+          "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you’ve got both, press 2 again to switch between one and two."
         }
       ],
       "sources": [
@@ -1455,12 +1455,12 @@
       "summary": "An automatic weapon for keeping groups of enemies under fire.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA describes the Thompson as a classic trench sweeper suited to nearby and medium-range threats."
+          "title": "About it",
+          "text": "The Thompson works well against enemies at short and medium range."
         },
         {
           "title": "Playing tips",
-          "text": "Hold fire to keep shooting while you have ammo. Let go to stop."
+          "text": "Hold fire to keep shooting while you’ve got ammo. Let go to stop."
         }
       ],
       "sources": [
@@ -1515,7 +1515,7 @@
       "summary": "Drops a heavy object onto an enemy’s position.",
       "sections": [
         {
-          "title": "In the field",
+          "title": "About it",
           "text": "Scientists send heavy objects back through time to the spot Sam aims at."
         },
         {
@@ -1566,12 +1566,12 @@
       "summary": "A heavy blast weapon with a bright flash and a pause between attacks.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original fiction describes a repurposed communications device that heats its targets. Its familiar pickup label is U.M.T."
+          "title": "About it",
+          "text": "A communications device turned into a weapon that heats its targets. Look for U.M.T. on the map."
         },
         {
           "title": "Playing tips",
-          "text": "Deals heavy damage to regular enemies it can target. It does not hurt players or either boss."
+          "text": "Deals heavy damage to regular enemies it can target. It doesn’t hurt players or either boss."
         }
       ],
       "sources": [
@@ -1621,8 +1621,8 @@
       "summary": "A scorpion-like enemy that opens fire from a distance.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original dossier describes an armed, many-legged hybrid that prefers to open fire from a distance."
+          "title": "About it",
+          "text": "An armed, many-legged hybrid that likes to fire from a distance."
         },
         {
           "title": "Playing tips",
@@ -1726,8 +1726,8 @@
       "summary": "A tough enemy that often attacks from far away.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original briefing describes rapid acid-missile attacks and recommends heavy weapons against this durable enemy."
+          "title": "About it",
+          "text": "Its acid missiles come quickly, and it takes a fair bit of punishment. Heavy weapons help."
         },
         {
           "title": "Playing tips",
@@ -1797,8 +1797,8 @@
       "summary": "Runs straight at you with bombs in hand.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original intel describes a reanimated attacker carrying bombs. Its cry provides an audible warning of the approaching threat."
+          "title": "About it",
+          "text": "A reanimated attacker carrying bombs. Its scream usually gives it away before it reaches you."
         },
         {
           "title": "Playing tips",
@@ -1908,8 +1908,8 @@
       "summary": "A swollen Methug relative that attacks with spit.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA attributes its unusual movement to inflatable body sacs and describes a corrosive ranged attack."
+          "title": "About it",
+          "text": "Its inflatable body sacs help it move around. Watch out for the corrosive spit."
         },
         {
           "title": "Playing tips",
@@ -1993,8 +1993,8 @@
       "summary": "A fast-moving, one-eyed enemy with club-like arms.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original intel emphasizes the danger of letting this fast-moving creature reach Sam."
+          "title": "About it",
+          "text": "Don’t let its speed catch you out. It closes the gap quickly."
         },
         {
           "title": "Playing tips",
@@ -2073,8 +2073,8 @@
       "summary": "A heavily armed gorilla mutant with a cannon built into its body.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original description portrays a slow, heavily armed opponent that is dangerous both at range and up close."
+          "title": "About it",
+          "text": "Slow-moving, but dangerous both up close and at a distance."
         },
         {
           "title": "Playing tips",
@@ -2153,8 +2153,8 @@
       "summary": "A shelled enemy that hides, emerges and attacks.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA describes the shell as protection and directs attention to the vulnerable body revealed while the creature is active."
+          "title": "About it",
+          "text": "The shell protects it while it hides. Watch for the body to come back out."
         },
         {
           "title": "Playing tips",
@@ -2238,12 +2238,12 @@
       "summary": "A small hovering Methug with a dangerous touch.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA describes a commander associated with other Methugs. Its eye and suspended body distinguish it from the soldier."
+          "title": "About it",
+          "text": "You can tell it apart from the soldier by its eye and hanging body."
         },
         {
           "title": "Playing tips",
-          "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it does not fire an eye bolt in the game."
+          "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it doesn’t fire an eye bolt in the game."
         }
       ],
       "sources": [
@@ -2318,8 +2318,8 @@
       "summary": "A floating soldier that fires bolts and hurts Sam on contact.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "The original intel describes its useless trailing legs and the bolt fired from its body. It is among the first enemies encountered in the campaign."
+          "title": "About it",
+          "text": "One of the first enemies you’ll meet. It floats along with its legs trailing behind it."
         },
         {
           "title": "Playing tips",
@@ -2410,8 +2410,8 @@
       "summary": "The boss waiting at the end of the Egyptian chapter.",
       "sections": [
         {
-          "title": "Encounter",
-          "text": "The Sphinx has its own health bar and battle music. Be ready to deal with the enemies it summons."
+          "title": "About it",
+          "text": "The Sphinx has its own health bar and battle music. Be ready for the enemies it summons."
         },
         {
           "title": "Playing tips",
@@ -2470,8 +2470,8 @@
       "summary": "A charging beast that can knock Sam back.",
       "sections": [
         {
-          "title": "In the field",
-          "text": "NETRICSA recommends dodging the charge and taking advantage of the time it needs to turn for another approach."
+          "title": "About it",
+          "text": "Sidestep the charge, then attack while it turns around for another go."
         },
         {
           "title": "Playing tips",
@@ -2556,8 +2556,8 @@
       "summary": "The armoured boss at the end of the Roman chapter.",
       "sections": [
         {
-          "title": "Encounter",
-          "text": "A towering enemy in a plumed helmet, backed by summoned minions."
+          "title": "About it",
+          "text": "A towering wolf in a plumed helmet, with minions to back it up."
         },
         {
           "title": "Playing tips",
@@ -2835,7 +2835,7 @@
       "summary": "The map can change as you move through it.",
       "sections": [
         {
-          "title": "A connected world",
+          "title": "Doors and enemy waves",
           "text": "Using a switch or entering an area can open a door, move a lift or bring in more enemies. Sometimes you need to defeat a group before you can move on."
         },
         {
@@ -2849,49 +2849,23 @@
       ],
       "sources": [
         {
-          "title": "Project reference",
+          "title": "More notes",
           "href": "docs/level-script.html"
         }
       ]
     },
     {
-      "id": "saving-and-passwords",
-      "title": "Progress and passwords",
-      "category": "systems",
-      "summary": "Pick up your campaign progress from the main menu.",
-      "sections": [
-        {
-          "title": "Campaign progress",
-          "text": "Beating a level unlocks the next one in Select Level. Keep save.dat when updating to retain your unlocks. All twelve campaign levels are available, including Caesar’s Palace. There are no mid-level saves."
-        },
-        {
-          "title": "Original password starts",
-          "text": "Enter an original game password to start with that level’s weapons, ammo and difficulty. Uppercase and lowercase both work. Select Level also gives you the original starting supplies."
-        }
-      ],
-      "related": [
-        "inventory-and-loadouts",
-        "pc-controls"
-      ],
-      "sources": [
-        {
-          "title": "Project reference",
-          "href": "docs/profile.html"
-        }
-      ]
-    },
-    {
       "id": "secrets-and-exploration",
-      "title": "Reading the hidden world",
+      "title": "Finding secrets",
       "category": "systems",
       "summary": "Look around every map and discover some of its hidden places.",
       "sections": [
         {
-          "title": "Documented locations",
+          "title": "Secrets marked so far",
           "text": "Five secrets are marked across the first five campaign levels, with links to walkthroughs. The list is still growing, so an unmarked map may have secrets too."
         },
         {
-          "title": "Two views, one level",
+          "title": "Using the maps",
           "text": "Use the 2D map to find labelled items and enemies. Switch to 3D to look around rooms and see their heights. Hide ceilings for a clearer view from above."
         }
       ],
@@ -2904,8 +2878,34 @@
       ],
       "sources": [
         {
-          "title": "Project reference",
+          "title": "More notes",
           "href": "docs/map-assets.html"
+        }
+      ]
+    },
+    {
+      "id": "saving-and-passwords",
+      "title": "Progress and passwords",
+      "category": "systems",
+      "summary": "Pick up your campaign progress from the main menu.",
+      "sections": [
+        {
+          "title": "Campaign progress",
+          "text": "Beating a level unlocks the next one in Select Level. Keep save.dat when updating to keep your unlocks. All twelve campaign levels are available, including Caesar’s Palace. There are no mid-level saves."
+        },
+        {
+          "title": "Using a password",
+          "text": "Enter an original game password to start with that level’s weapons, ammo and difficulty. Uppercase and lowercase both work. Select Level also gives you the original starting supplies."
+        }
+      ],
+      "related": [
+        "inventory-and-loadouts",
+        "pc-controls"
+      ],
+      "sources": [
+        {
+          "title": "More notes",
+          "href": "docs/profile.html"
         }
       ]
     },
@@ -2916,12 +2916,12 @@
       "summary": "Play with a keyboard and mouse, plus optional jumping and third-person view.",
       "sections": [
         {
-          "title": "Movement and view",
+          "title": "Moving around",
           "text": "WASD moves, the mouse looks, Space jumps, and H switches between first- and third-person views. Jump and the third-person toggle are PC additions. The camera moves closer when walls get in the way."
         },
         {
-          "title": "Combat and interaction",
-          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
+          "title": "Fighting and using things",
+          "text": "Left-click fires. E uses doors and switches. Number keys 1–0 and the mouse wheel select weapons; Q goes back to the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
         }
       ],
       "related": [
@@ -2930,7 +2930,7 @@
       ],
       "sources": [
         {
-          "title": "Project reference",
+          "title": "More notes",
           "href": "docs/README.html"
         }
       ]
@@ -2958,7 +2958,7 @@
       ],
       "sources": [
         {
-          "title": "Project reference",
+          "title": "More notes",
           "href": "docs/weapon-loadout.html"
         }
       ]
@@ -2981,11 +2981,11 @@
       ],
       "sections": [
         {
-          "title": "Finding the location",
+          "title": "Where to look",
           "text": "Hidden shotgun. Exact position matches the only shotgun in this ROM map; identified as secret in the TAS notes."
         },
         {
-          "title": "Evidence",
+          "title": "How we found it",
           "text": "Guide identification + exact ROM pickup"
         }
       ],
@@ -2995,11 +2995,11 @@
       ],
       "sources": [
         {
-          "title": "Original guide evidence",
+          "title": "Walkthrough",
           "href": "https://tasvideos.org/10399S"
         },
         {
-          "title": "Secret coverage and source links",
+          "title": "Secret notes and sources",
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
@@ -3023,11 +3023,11 @@
       ],
       "sections": [
         {
-          "title": "Finding the location",
+          "title": "Where to look",
           "text": "Hidden Tommygun. Exact position is the only Tommygun pickup in this ROM map; the weapon guide identifies this early pickup as a secret."
         },
         {
-          "title": "Evidence",
+          "title": "How we found it",
           "text": "Guide identification + exact ROM pickup"
         }
       ],
@@ -3037,11 +3037,11 @@
       ],
       "sources": [
         {
-          "title": "Original guide evidence",
+          "title": "Walkthrough",
           "href": "https://serioussam.fandom.com/wiki/Thompson_submachine_gun"
         },
         {
-          "title": "Secret coverage and source links",
+          "title": "Secret notes and sources",
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
@@ -3065,11 +3065,11 @@
       ],
       "sections": [
         {
-          "title": "Finding the location",
+          "title": "Where to look",
           "text": "Hidden rocket launcher. After the arena stairs, approach the central part of the right wall with flower decorations."
         },
         {
-          "title": "Evidence",
+          "title": "How we found it",
           "text": "Guide identification + exact ROM pickup"
         }
       ],
@@ -3079,11 +3079,11 @@
       ],
       "sources": [
         {
-          "title": "Original guide evidence",
+          "title": "Walkthrough",
           "href": "https://serioussam.fandom.com/wiki/Amon_Thule%2C_Subterranean_Palace_of_the_Pharaohs"
         },
         {
-          "title": "Secret coverage and source links",
+          "title": "Secret notes and sources",
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
@@ -3107,11 +3107,11 @@
       ],
       "sections": [
         {
-          "title": "Finding the location",
+          "title": "Where to look",
           "text": "Elevated health. Use switch B3 (S1 access); ROM script 7 unlocks and opens D9 beside the ledge. Return to collect the health. The guide describes the switch through an opening after the corridor stairs."
         },
         {
-          "title": "Evidence",
+          "title": "How we found it",
           "text": "Guide identification + exact ROM pickup"
         }
       ],
@@ -3121,11 +3121,11 @@
       ],
       "sources": [
         {
-          "title": "Original guide evidence",
+          "title": "Walkthrough",
           "href": "https://serioussam.fandom.com/wiki/Slave_Compound"
         },
         {
-          "title": "Secret coverage and source links",
+          "title": "Secret notes and sources",
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],
@@ -3149,11 +3149,11 @@
       ],
       "sections": [
         {
-          "title": "Finding the location",
+          "title": "Where to look",
           "text": "Enter the marked S1 access area on the right-hand route. Script 8 opens D16 and spawns an Arachnoid inside. The reward is 25 armor in this ROM; the guide calls it Medium Armor."
         },
         {
-          "title": "Evidence",
+          "title": "How we found it",
           "text": "Guide description corroborated by room, item, guardian and opening script"
         }
       ],
@@ -3163,11 +3163,11 @@
       ],
       "sources": [
         {
-          "title": "Original guide evidence",
+          "title": "Walkthrough",
           "href": "https://serioussam.fandom.com/wiki/Pyramid_Entrance_Maze"
         },
         {
-          "title": "Secret coverage and source links",
+          "title": "Secret notes and sources",
           "href": "atlas/sources-and-secret-coverage.json"
         }
       ],

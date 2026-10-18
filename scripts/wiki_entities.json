@@ -13,8 +13,8 @@
     "summary": "Sam’s close-range weapon. Keep cutting without using any ammo.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original NETRICSA entry describes a forestry tool repurposed for fighting monsters. Its short reach makes positioning essential."
+        "title": "About it",
+        "text": "A forestry tool put to a very different use. You’ll need to get close to make it count."
       },
       {
         "title": "Playing tips",
@@ -55,12 +55,12 @@
     "summary": "A dependable revolver and the first firearm you find in the campaign.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA presents the Schofield as Sam's dependable old-fashioned sidearm. A pistol pickup is available in the Upper Temple of Herkat."
+        "title": "About it",
+        "text": "Sam’s old-fashioned sidearm. You can find a pistol in the Upper Temple of Herkat."
       },
       {
         "title": "Playing tips",
-        "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you have both, press 2 again to switch between one and two."
+        "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you’ve got both, press 2 again to switch between one and two."
       }
     ],
     "sources": [
@@ -101,12 +101,12 @@
     "summary": "A powerful close-range shotgun with a pause between blasts.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original briefing emphasizes the coach gun's short-range power. Its firing cycle leaves a pause between blasts."
+        "title": "About it",
+        "text": "Best used up close. Give yourself room to move while you wait for the next blast."
       },
       {
         "title": "Playing tips",
-        "text": "Fires both shells when you have them, or a single shot when only one remains. The Alternate weapons option changes its spread."
+        "text": "Fires both shells when you’ve got them, or a single shot when only one remains. The Alternate weapons option changes its spread."
       }
     ],
     "sources": [
@@ -144,12 +144,12 @@
     "summary": "An automatic weapon for keeping groups of enemies under fire.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA describes the Thompson as a classic trench sweeper suited to nearby and medium-range threats."
+        "title": "About it",
+        "text": "The Thompson works well against enemies at short and medium range."
       },
       {
         "title": "Playing tips",
-        "text": "Hold fire to keep shooting while you have ammo. Let go to stop."
+        "text": "Hold fire to keep shooting while you’ve got ammo. Let go to stop."
       }
     ],
     "sources": [
@@ -185,8 +185,8 @@
     "summary": "A fast-firing gun that gets through enemies—and your ammo—quickly.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original tips call attention to its heavy ammunition use. It is introduced early in the Pyramid Entrance Maze."
+        "title": "About it",
+        "text": "You’ll find one early in the Pyramid Entrance Maze. Keep an eye on your ammo."
       },
       {
         "title": "Playing tips",
@@ -226,8 +226,8 @@
     "summary": "Fires rockets that hurt enemies near the blast as well as the target.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original description combines direct projectile damage with an explosion around the impact. Reloading separates each launch."
+        "title": "About it",
+        "text": "The rocket hurts what it hits, and the explosion catches nearby enemies too."
       },
       {
         "title": "Playing tips",
@@ -268,8 +268,8 @@
     "summary": "Makes affected enemies attack nearby targets while their health drains away.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA describes this weapon as breaking Mental’s control over his troops. The effect also slowly drains the affected enemy’s health."
+        "title": "About it",
+        "text": "This weapon breaks Mental’s hold over his troops. It also slowly drains their health."
       },
       {
         "title": "Playing tips",
@@ -310,12 +310,12 @@
     "summary": "A heavy blast weapon with a bright flash and a pause between attacks.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original fiction describes a repurposed communications device that heats its targets. Its familiar pickup label is U.M.T."
+        "title": "About it",
+        "text": "A communications device turned into a weapon that heats its targets. Look for U.M.T. on the map."
       },
       {
         "title": "Playing tips",
-        "text": "Deals heavy damage to regular enemies it can target. It does not hurt players or either boss."
+        "text": "Deals heavy damage to regular enemies it can target. It doesn’t hurt players or either boss."
       }
     ],
     "sources": [
@@ -352,7 +352,7 @@
     "summary": "Drops a heavy object onto an enemy’s position.",
     "sections": [
       {
-        "title": "In the field",
+        "title": "About it",
         "text": "Scientists send heavy objects back through time to the spot Sam aims at."
       },
       {
@@ -390,8 +390,8 @@
     "summary": "Fires a cannonball that can bounce off walls and plough through enemies.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original NETRICSA entry highlights the cannonball's ricochets and ability to plow through a group."
+        "title": "About it",
+        "text": "A bouncing cannonball can tear through a whole group. Watch where it goes."
       },
       {
         "title": "Playing tips",
@@ -433,8 +433,8 @@
     "summary": "Runs straight at you with bombs in hand.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original intel describes a reanimated attacker carrying bombs. Its cry provides an audible warning of the approaching threat."
+        "title": "About it",
+        "text": "A reanimated attacker carrying bombs. Its scream usually gives it away before it reaches you."
       },
       {
         "title": "Playing tips",
@@ -476,8 +476,8 @@
     "summary": "A charging beast that can knock Sam back.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA recommends dodging the charge and taking advantage of the time it needs to turn for another approach."
+        "title": "About it",
+        "text": "Sidestep the charge, then attack while it turns around for another go."
       },
       {
         "title": "Playing tips",
@@ -518,8 +518,8 @@
     "summary": "A floating soldier that fires bolts and hurts Sam on contact.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original intel describes its useless trailing legs and the bolt fired from its body. It is among the first enemies encountered in the campaign."
+        "title": "About it",
+        "text": "One of the first enemies you’ll meet. It floats along with its legs trailing behind it."
       },
       {
         "title": "Playing tips",
@@ -560,12 +560,12 @@
     "summary": "A small hovering Methug with a dangerous touch.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA describes a commander associated with other Methugs. Its eye and suspended body distinguish it from the soldier."
+        "title": "About it",
+        "text": "You can tell it apart from the soldier by its eye and hanging body."
       },
       {
         "title": "Playing tips",
-        "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it does not fire an eye bolt in the game."
+        "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it doesn’t fire an eye bolt in the game."
       }
     ],
     "sources": [
@@ -602,8 +602,8 @@
     "summary": "A fast-moving, one-eyed enemy with club-like arms.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original intel emphasizes the danger of letting this fast-moving creature reach Sam."
+        "title": "About it",
+        "text": "Don’t let its speed catch you out. It closes the gap quickly."
       },
       {
         "title": "Playing tips",
@@ -645,8 +645,8 @@
     "summary": "A swollen Methug relative that attacks with spit.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA attributes its unusual movement to inflatable body sacs and describes a corrosive ranged attack."
+        "title": "About it",
+        "text": "Its inflatable body sacs help it move around. Watch out for the corrosive spit."
       },
       {
         "title": "Playing tips",
@@ -687,8 +687,8 @@
     "summary": "A scorpion-like enemy that opens fire from a distance.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original dossier describes an armed, many-legged hybrid that prefers to open fire from a distance."
+        "title": "About it",
+        "text": "An armed, many-legged hybrid that likes to fire from a distance."
       },
       {
         "title": "Playing tips",
@@ -729,8 +729,8 @@
     "summary": "A tough enemy that often attacks from far away.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original briefing describes rapid acid-missile attacks and recommends heavy weapons against this durable enemy."
+        "title": "About it",
+        "text": "Its acid missiles come quickly, and it takes a fair bit of punishment. Heavy weapons help."
       },
       {
         "title": "Playing tips",
@@ -772,8 +772,8 @@
     "summary": "A shelled enemy that hides, emerges and attacks.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "NETRICSA describes the shell as protection and directs attention to the vulnerable body revealed while the creature is active."
+        "title": "About it",
+        "text": "The shell protects it while it hides. Watch for the body to come back out."
       },
       {
         "title": "Playing tips",
@@ -814,8 +814,8 @@
     "summary": "A heavily armed gorilla mutant with a cannon built into its body.",
     "sections": [
       {
-        "title": "In the field",
-        "text": "The original description portrays a slow, heavily armed opponent that is dangerous both at range and up close."
+        "title": "About it",
+        "text": "Slow-moving, but dangerous both up close and at a distance."
       },
       {
         "title": "Playing tips",
@@ -862,8 +862,8 @@
     "summary": "The boss waiting at the end of the Egyptian chapter.",
     "sections": [
       {
-        "title": "Encounter",
-        "text": "The Sphinx has its own health bar and battle music. Be ready to deal with the enemies it summons."
+        "title": "About it",
+        "text": "The Sphinx has its own health bar and battle music. Be ready for the enemies it summons."
       },
       {
         "title": "Playing tips",
@@ -909,8 +909,8 @@
     "summary": "The armoured boss at the end of the Roman chapter.",
     "sections": [
       {
-        "title": "Encounter",
-        "text": "A towering enemy in a plumed helmet, backed by summoned minions."
+        "title": "About it",
+        "text": "A towering wolf in a plumed helmet, with minions to back it up."
       },
       {
         "title": "Playing tips",

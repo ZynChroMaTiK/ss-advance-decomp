@@ -1,10 +1,10 @@
 # Optional SoundFont music
 
-A SoundFont is an instrument file that gives some of the music a different
-sound. You can skip this entirely and use **Original** music instead.
+Want to try a different sound for the music? A SoundFont supplies a different
+set of instruments. It’s optional—**Original** music works without one.
 
-**Playing requires your own European version of the Serious Sam Advance ROM**, saved
-as `orig/SSA.gba`. Other regional versions are not supported. No ROM is included.
+**To play, you’ll need your own European version of the Serious Sam Advance ROM**, saved
+as `orig/SSA.gba`. Other regional versions won’t work. No ROM is included.
 
 ## Set it up
 
@@ -14,12 +14,11 @@ From the main game folder, run this in PowerShell:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-soundfont.ps1
 ```
 
-This downloads the optional **SC-55** instrument file. If the download does not
-work, [download it in your browser](https://musical-artifacts.com/artifacts/1228/SC-55.sf2)
+This downloads the optional **SC-55** instrument file. If the download fails, [download it in your browser](https://musical-artifacts.com/artifacts/1228/SC-55.sf2)
 and save it as `soundfonts/SC-55.sf2`. Run the script again to check the file.
 
 Restart the game, then choose **Options → Settings → Music style → SoundFont**.
-The choice only appears if the file loads successfully.
+SoundFont will appear in the menu once the game can load the file.
 
 ## Use another instrument file
 
@@ -29,12 +28,11 @@ You can try another General MIDI SoundFont with:
 play-native.cmd --soundfont "C:\Music\my-bank.sf2"
 ```
 
-The file must be no larger than 64 MiB and include instruments and a standard drum
-kit. The game remembers your music choice and volume, but you need to supply
-this path again when using a custom file.
+Choose a file no larger than 64 MiB with instruments and a standard drum kit. The game remembers your music choice and volume, but you’ll need to use
+this command each time you launch with a custom file.
 
 The original recorded instruments and drums remain part of the music. SoundFont
-changes the synthesized instruments. For the detailed mixing settings, see
+changes the synthesized instruments. If you’re curious about how the two are mixed, see
 [audio notes](../analysis/audio-settings.md).
 
 The SC-55 file is not bundled with the game. Its expected SHA-256 fingerprint is

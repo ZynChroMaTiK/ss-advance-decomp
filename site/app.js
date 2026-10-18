@@ -49,7 +49,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     $('atlas-panel').hidden = mode !== '2d';
     $('explorer-panel').hidden = mode !== '3d';
     $('level-status').textContent = catalogError || (!catalog.length ? 'Loading the level list…' : level < supportedLevels ? 'Campaign level · available in the PC game' : level < 12 ? 'Campaign level · not yet playable' : 'Multiplayer map · explore here; multiplayer is not playable yet');
-    document.title = `${{project:'Native PC Port', features:'Features & Roadmap', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Download & Help'}[route]} — Serious Sam Advance`;
+    document.title = `${{project:'PC port', features:'About the game', levels:'Level Browser', wiki:'NETRICSA Field Guide', development:'Download & Help'}[route]} — Serious Sam Advance`;
     if (route === 'levels' && mode === '2d') {
       if (!atlasReady) { $('atlas-frame').src = `atlas/index.html#level-${level + 1}`; atlasReady = true; }
       else $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin);
@@ -101,7 +101,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     if (!Array.isArray(entries) || entries.length !== 16 || entries.some((entry, i) => entry.level !== i || !entry.path || !entry.bounds)) throw Error('Invalid level catalog');
     catalog = entries; catalogError = ''; fillCatalog(); return render();
   }, catalogFailed() {
-    catalogError = 'The level catalog could not load. Reload to retry, or use the 2D atlas and its own level controls.';
+    catalogError = 'The level list could not load. Try reloading the page, or choose a level inside the 2D map.';
     return render();
   }};
 }

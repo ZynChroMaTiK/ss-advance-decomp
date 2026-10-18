@@ -24,7 +24,7 @@ def group_history(body, source_path):
         if boundary:
             wrapper=body.rfind('<details class="recovery-history">',first,last)
             if wrapper>=first:last=wrapper
-        note='<p>These are older development notes. See <a href="README.html#current-prototype">Current prototype</a> and <a href="native-game.html">Playable build details</a> for what you can play today.</p>'
+        note='<p>These are older development notes. See <a href="README.html#current-prototype">What you can play</a> and <a href="native-game.html">Playable build details</a> for what you can play today.</p>'
         body=body[:first]+f'<details class="recovery-history"><summary>{html.escape(label)}</summary>'+note+body[first:last]+'</details>'+body[last:]
         changed=True
     return body,changed
@@ -42,6 +42,8 @@ def render_document(text, source_path, available):
                 else:title=label;has_title=True
             heading_tag='h'+str(min(6,int(token.tag[1])+shift));token.tag=heading_tag
             slug=re.sub(r'[^\w\- ]','',label.lower()).replace(' ','-')
+            if source_path=='README.md':
+                slug={'what-you-can-play':'current-prototype','settings-and-extras':'make-it-yours','saves-and-problems':'progress-and-troubleshooting','building-it-yourself':'build-from-a-fresh-checkout'}.get(slug,slug)
             duplicate=seen.get(slug,0);seen[slug]=duplicate+1
             token.attrSet('id',slug+(f'-{duplicate}' if duplicate else ''))
         elif token.type=='heading_close':token.tag=heading_tag
@@ -57,4 +59,4 @@ def render_document(text, source_path, available):
     body=parser.renderer.render(tokens,parser.options,{})
     body,history=group_history(body,source_path)
     if history:body+='<script type="module" src="../reference.js"></script>'
-    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="{PurePosixPath(source_path).stem}.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Looking for setup and controls? Read the <a href="README.html">player guide</a>. Developer notes below may describe earlier versions; see <a href="../#features">what is available now</a>.</p>{body}</main></body></html>'''
+    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="{PurePosixPath(source_path).stem}.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p>{body}</main></body></html>'''

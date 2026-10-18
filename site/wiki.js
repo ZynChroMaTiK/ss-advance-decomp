@@ -9,7 +9,7 @@ export function createWikiView(entries, doc = document) {
   const link = (text, href, className) => { const el = node('a', text, className); el.href = href; return el; };
   let category = 'all', current = '';
   const categories = ['all', 'levels', 'weapons', 'enemies', 'items', 'systems', 'secrets'];
-  const names = {all:'All entries',levels:'Levels',weapons:'Weapons',enemies:'Enemies',items:'Items',systems:'Field manual',secrets:'Secrets'};
+  const names = {all:'All entries',levels:'Levels',weapons:'Weapons',enemies:'Enemies',items:'Items',systems:'Playing tips',secrets:'Secrets'};
   function renderList() {
     const results = searchEntries(entries, $('wiki-search').value, category);
     $('wiki-count').textContent = `${results.length} of ${entries.length} entries`;
@@ -36,7 +36,7 @@ export function createWikiView(entries, doc = document) {
     const article = $('wiki-article'); article.replaceChildren();
     const entry = entries.find(e => e.id === id);
     if (!entry) {
-      current = ''; article.append(node('p', 'ENTRY NOT FOUND', 'eyebrow'), node('h2', 'That entry is unavailable.'), link('Return to the field guide →', '#wiki/field-guide', 'text-link')); doc.title = 'Entry not found — NETRICSA — Serious Sam Advance'; renderList(); if (focus) article.focus(); return;
+      current = ''; article.append(node('p', 'ENTRY NOT FOUND', 'eyebrow'), node('h2', 'We couldn’t find that entry.'), link('Return to the field guide →', '#wiki/field-guide', 'text-link')); doc.title = 'Entry not found — NETRICSA — Serious Sam Advance'; renderList(); if (focus) article.focus(); return;
     }
     current = entry.id;
     if (!searchEntries(entries, $('wiki-search').value, category).includes(entry)) { category = 'all'; $('wiki-search').value = ''; }
@@ -48,12 +48,12 @@ export function createWikiView(entries, doc = document) {
     for (const section of entry.sections) { const block = node('section'); block.append(node('h3', section.title), node('p', section.text)); article.append(block); }
     if (entry.level !== undefined) { const actions = node('div', '', 'actions'); actions.append(link('Open 2D map ↗', `#levels/${entry.level + 1}/2d`, 'button primary'), link('Explore in 3D ↗', `#levels/${entry.level + 1}/3d`, 'button')); article.append(actions); }
     if (entry.appearances?.length) {
-      const block = node('section'); block.append(node('h3', 'Find it in the levels'), node('p', 'These are the places where it appears. Some enemies and items arrive later, so they will not all be there at once.', 'fine'));
+      const block = node('section'); block.append(node('h3', 'Where to find it'), node('p', 'Here’s where it appears. Some enemies and items arrive later, so they won’t all be there at once.', 'fine'));
       const links = node('div', '', 'wiki-related'); for (const item of entry.appearances) links.append(link(`${String(item.level + 1).padStart(2, '0')} / ${item.title} · ${item.count}`, `#wiki/level-${item.level + 1}`)); block.append(links); article.append(block);
     }
     if (entry.related?.length) { const block = node('section'); block.append(node('h3', 'Related entries')); const links = node('div', '', 'wiki-related'); for (const id of entry.related) { const related = entries.find(e => e.id === id); if (related) links.append(link(related.title, `#wiki/${id}`)); } block.append(links); article.append(block); }
     const evidence = node('details', '', 'wiki-evidence'); evidence.append(node('summary', 'Sources & notes'));
-    evidence.append(node('p', entry.coverage || 'Written for this project using the original game and our research. The artwork is original; the descriptions are our own.'));
+    evidence.append(node('p', entry.coverage || 'These notes come from playing and studying the original game. The pictures are from the GBA game; the descriptions were written for this guide.'));
     if (Number.isInteger(entry.original_text_id)) evidence.append(node('p', `Original English NETRICSA entry ${entry.original_text_id}. The illustration is original game artwork; the description above was written for this guide.`));
     for (const source of entry.sources) evidence.append(link(source.title + ' ↗', source.href, 'text-link'));
     article.append(evidence, link('Link to this entry ↗', `#wiki/${entry.id}`, 'wiki-permalink text-link'));

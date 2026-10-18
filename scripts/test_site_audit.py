@@ -70,7 +70,7 @@ assert (SITE/'atlas/index.html').stat().st_size<12000,'Online shell must not emb
 assert (SITE/'atlas/loader.js').read_bytes()==(ROOT/'scripts/topmap_loader.mjs').read_bytes()
 secrets=[e for e in entries if e['category']=='secrets']
 assert len(secrets)==5
-assert all(any(s['title']=='Original guide evidence' and s['href'].startswith('https://') for s in e['sources']) for e in secrets)
+assert all(any(s['title']=='Walkthrough' and s['href'].startswith('https://') for s in e['sources']) for e in secrets)
 for name,info in json.loads((SITE/'assets/fonts/manifest.json').read_text())['files'].items():
     assert hashlib.sha256((SITE/'assets/fonts'/name).read_bytes()).hexdigest()==info['sha256']
 print(json.dumps({'status':'PASS','html_pages':len(pages),'local_links_and_fragments':checked,'references':sum(p.parent==SITE/'docs' for p in pages),'tables':sum(p.tables for p in pages.values()),'native_support_boundary':limit,'wiki_entries':len(entries),'offline_atlas':'CRC, hashes and all 48 map files agree','font_hashes':'PASS'}))

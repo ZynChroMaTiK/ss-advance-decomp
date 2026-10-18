@@ -1,28 +1,29 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Serious Sam Advance for PC — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="README.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Looking for setup and controls? Read the <a href="README.html">player guide</a>. Developer notes below may describe earlier versions; see <a href="../#features">what is available now</a>.</p><h1 id="serious-sam-advance-for-pc">Serious Sam Advance for PC</h1>
-<p>Play the original GBA game on Windows with keyboard and mouse controls, a sharper
-picture and a few optional extras. All twelve campaign levels are available.</p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Serious Sam Advance for PC — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="README.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="serious-sam-advance-for-pc">Serious Sam Advance for PC</h1>
+<p>This is a fan-made Windows port of the GBA game. It keeps the original levels,
+weapons, enemies and music, with keyboard and mouse controls and a few optional
+extras. You can play all twelve campaign levels.</p>
 <p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.1">Download v0.8.0 Alpha 1</a></strong>
-· <a href="https://zynchromatik.github.io/ss-advance-decomp/">Website and roadmap</a>
+· <a href="https://zynchromatik.github.io/ss-advance-decomp/">Website</a>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/#levels/1/2d">Explore the maps</a></p>
-<p>This is an unofficial fan project and an early release. Expect bugs and some
-unfinished features. It runs directly on Windows; you do not need an emulator.</p>
+<p>It’s still an alpha, so you’ll find bugs and unfinished bits. The game runs
+directly on Windows—there’s no emulator to set up.</p>
 <h2 id="download-and-play">Download and play</h2>
-<p><strong>You need your own ROM of the European version of Serious Sam Advance.</strong>
-A ROM is a file containing the original GBA game. Other regional versions are
-not supported, and no ROM is included in the download.</p>
+<p><strong>You’ll need your own ROM of the European version of Serious Sam Advance.</strong>
+A ROM is a file containing the original GBA game. Other regional versions
+won’t work. The download doesn’t include a ROM.</p>
 <ol>
 <li>Download the <strong>Windows x64 ZIP</strong> from the release page.</li>
 <li>Extract it to a folder where you can save files, such as your Games folder.</li>
 <li>Name your European ROM <strong><code>SSA.gba</code></strong> and put it in the <strong><code>orig</code></strong> folder.</li>
 <li>Double-click <strong><code>play-native.cmd</code></strong>.</li>
 </ol>
-<p>You do not need to install build tools. SoundFont music is optional; the original
-music works without any extra downloads. If you are updating, keep your
-<code>save.dat</code> and <code>settings.dat</code> files to retain level unlocks and preferences.</p>
+<p>The download is ready to run once you add your ROM. Extra SoundFont music is
+optional; you can stick with the original music. If you’re updating, keep
+<code>save.dat</code> and <code>settings.dat</code> so you don’t lose your unlocks or settings.</p>
 <p>If the game cannot load your ROM, check its region and filename. The supported
 European ROM has SHA-1 <code>4ff48d8c18b70a5184758f1917343ae85a70858e</code>.
 This fingerprint is only needed if you want to check the file you have.</p>
-<h2 id="current-prototype">Current prototype</h2>
+<h2 id="current-prototype">What you can play</h2>
 <ul>
 <li>All twelve campaign levels, from Egypt to Caesar's Palace.</li>
 <li>Original enemies, weapons, pickups, music and sound effects.</li>
@@ -33,9 +34,9 @@ This fingerprint is only needed if you want to check the file you have.</p>
 <li>English, German and French menus.</li>
 <li>Optional dual Colts and alternate double-shotgun behavior.</li>
 </ul>
-<p>High-score lists, name entry and multiplayer are still unfinished. We are also
-working on bugs and differences from the original game. All levels are open for
-testing, but that does not mean the whole campaign is bug-free.</p>
+<p>High-score lists, name entry and multiplayer aren’t ready yet. There are also
+bugs and differences from the GBA game to work through. All levels are open for
+playtesting, so please report anything that goes wrong.</p>
 <h2 id="controls">Controls</h2>
 <table>
 <thead>
@@ -87,43 +88,43 @@ testing, but that does not mean the whole campaign is bug-free.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="make-it-yours">Make it yours</h2>
+<h2 id="make-it-yours">Settings and extras</h2>
 <p>Open <strong>Options → Settings</strong> to choose fullscreen or windowed play, change the
 graphics mode, and adjust music and sound volume. Set a volume to 0% to mute it.</p>
 <p>Music choices are <strong>Original</strong>, <strong>SoundFont</strong> and <strong>MIDI</strong>. SoundFont uses an
-optional instrument file; MIDI uses the Windows GS synthesizer. A choice appears
-only when it is available on your computer. See the
+optional instrument file; MIDI uses the Windows GS synthesizer. You’ll only see choices
+that work on your computer. See the
 <a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/soundfonts/README.md">SoundFont setup guide</a> if you want to try it.</p>
 <p>Under <strong>Options → Extras</strong>, you can turn jumping, third-person view and in-game
 NETRICSA on or off. <strong>Alternate weapons</strong> is off by default. Turn it on to use
 single/dual Colts with reloads and a different double-shotgun spread. Once you
 have both Colts, press <strong>2</strong> again to switch between one and two guns.</p>
-<h2 id="progress-and-troubleshooting">Progress and troubleshooting</h2>
+<h2 id="progress-and-troubleshooting">Saves and problems</h2>
 <p>Beating a level unlocks the next one in <strong>Select Level</strong>. New Game keeps your
 unlocks. Passwords start you with the original weapons, ammo and difficulty for
-that level. Saves track unlocks and preferences; they are not mid-level saves.</p>
+that level. The game saves your unlocks and settings, but not your place halfway through a level.</p>
 <p>If the game closes with an error, the launcher shows it and saves a log in
-<code>build/logs/</code>. When reporting a problem, include the level, what happened, your
-graphics/music settings and that log if available.</p>
+<code>build/logs/</code>. If you report a problem, please include the level, what happened, your
+graphics/music settings and the log if you have it.</p>
 <p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/issues">Report a problem</a></strong>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/#features">See what is planned</a></p>
-<h2 id="build-from-a-fresh-checkout">Build from a fresh checkout</h2>
-<p>This is only needed if you want to compile the game yourself.</p>
+<h2 id="build-from-a-fresh-checkout">Building it yourself</h2>
+<p>Want to work on the code? Here’s how to build it.</p>
 <p>Install Git and Visual Studio 2022 Build Tools with the <strong>C++ desktop workload</strong>
 and <strong>CMake tools</strong>. Clone this repository, open PowerShell in its folder and run:</p>
 <pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 </code></pre>
 <p>You can build without a ROM. To play afterwards, put your own <strong>European ROM</strong> at
 <code>orig/SSA.gba</code> and run <code>play-native.cmd</code>.</p>
-<h2 id="for-contributors">For contributors</h2>
+<h2 id="looking-through-the-code">Looking through the code</h2>
 <p>The game source is in <code>src/</code>, <code>include/ssa/</code> and <code>platform/</code>. The website is in
 <code>site/</code>. Tests and research notes explain how the port compares with the original.</p>
 <ul>
-<li><a href="DEVELOPMENT.html">Development setup and research archive</a></li>
+<li><a href="DEVELOPMENT.html">Build setup and earlier development notes</a></li>
 <li><a href="porting.html">Current porting notes</a></li>
-<li><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/recovered/snapshot/README.md">Recovered source archive</a></li>
+<li><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/recovered/snapshot/README.md">Code recovered from the GBA game</a></li>
 <li><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/site/README.md">Website editing guide</a></li>
 </ul>
-<p>The original game's artwork belongs to its respective owners. ROMs, personal
+<p>Serious Sam and its artwork belong to their original owners. ROMs, personal
 saves and SoundFont files are not included in this repository.</p>
 </main></body></html>
