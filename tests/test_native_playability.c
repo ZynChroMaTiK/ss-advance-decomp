@@ -12,7 +12,10 @@ static SsaMapCollision collision;
 static SsaMapAssets planner;
 static SsaWeaponAim sight;
 static unsigned route_avoid_hazards;
+static int32_t route_clearance;
 static int route_step=64;
+static int route_goal_gap;
+static unsigned route_allow_jump;
 static int route_floor_safe(const SsaMapAssets *map,int32_t x,int32_t y,int floor){
  int sector;unsigned texture;
  if(!route_avoid_hazards)return 1;
@@ -29,7 +32,8 @@ static int route_body_supported(const SsaMapAssets *map,const SsaBody *body,int 
  return escaping && sector>=0 && body->floor>s16(map->data+map->sectors+(unsigned)sector*20);
 }
 static uint8_t *route_edges;static size_t route_cells;static uint64_t route_signature;
-static void route_graph_free(void){free(route_edges);route_edges=NULL;route_cells=0;route_signature=0;}
+static int route_tree_start=-1,route_tree_count;
+static void route_graph_free(void){free(route_edges);route_edges=NULL;route_cells=0;route_signature=0;route_tree_start=-1;route_tree_count=0;}
 /* Check a grid edge with short moves and floor updates, as the walking
  * player would traverse it. Keep this planning state separate from gameplay. */
 static int walk_edge_in(SsaMapCollision *query,SsaBody body,int32_t radius,int32_t x,int32_t y){
@@ -38,7 +42,15 @@ static int walk_edge_in(SsaMapCollision *query,SsaBody body,int32_t radius,int32
  int64_t length=llabs(dx)>llabs(dy)?llabs(dx):llabs(dy);unsigned n=(unsigned)((length+8*65536-1)/(8*65536)),k;
  if(!n)n=1;
  for(k=1;k<=n;++k){
-  if(ssa_map_try_move(query,&body,radius,sx+(int32_t)(dx*k/n),sy+(int32_t)(dy*k/n))!=1)return 0;
+  if(ssa_map_try_move(query,&body,radius,sx+(int32_t)(dx*k/n),sy+(int32_t)(dy*k/n))!=1){
+   int rise=query->floor-body.floor;
+   /* Plan a real PC jump over a low step. This changes only the copied body;
+    * the input driver must deliver Space before the actual player can cross. */
+   if(!route_allow_jump || query->blocking_line>=0 || rise<=48 || rise>96 ||
+      query->ceiling-query->floor<body.height/65536)return 0;
+   body.z=query->floor*65536;
+   if(ssa_map_try_move(query,&body,radius,sx+(int32_t)(dx*k/n),sy+(int32_t)(dy*k/n))!=1)return 0;
+  }
   if(!route_body_supported(query->map,&body,escaping))return 0;
   body.z=(int32_t)body.floor*65536;
  }
@@ -59,18 +71,19 @@ static int clear_node(SsaBody body,int32_t radius,int32_t x,int32_t y){
 static int cell(int x,int y){int bx=(x-ox+route_step/2)/route_step,by=(y-oy+route_step/2)/route_step;return bx>=0&&by>=0&&bx<(int)width&&by<(int)height?by*(int)width+bx:-1;}
 static int route(SsaNativeGame *g,int tx,int ty,int *outx,int *outy){
  int explore=tx==INT_MAX,start=cell(g->players[0].entity.body.x/65536,g->players[0].entity.body.y/65536),goal=explore?-2:cell(tx,ty),head=0,tail=0,found=-1,best=INT_MAX,reached=0;
- unsigned i;int32_t radius=g->players[0].entity.radius+(g->level>=10?65536:g->level>=3?4*65536:0);static const int dx[]={1,0,-1,0},dy[]={0,1,0,-1};
+ unsigned i;int32_t radius=g->players[0].entity.radius+(g->level>=10?route_clearance:g->level>=3?4*65536:0);static const int dx[]={1,0,-1,0},dy[]={0,1,0,-1};
+ route_goal_gap=INT_MAX;
  if(start<0 || (!explore && goal<0))return 0;
  memcpy(planner.data,g->map.data,g->map.size);
  for(i=0;i<g->level_runtime.movers.count;++i){uint8_t *r=g->level_runtime.movers.records[i];unsigned flags=(uint16_t)s16(r+14),sector=(uint16_t)s16(r);
   if(!(flags&(4|256))){uint8_t *sec=planner.data+planner.sectors+sector*20;unsigned top=(unsigned)(s16(sec)+224);sec[2]=(uint8_t)top;sec[3]=(uint8_t)(top>>8);}}
  {uint64_t signature=14695981039346656037ull;size_t cells=(size_t)width*height;SsaEntity *player=&g->players[0].entity;
-  uint32_t values[]={g->level,width,height,(uint32_t)ox,(uint32_t)oy,(uint32_t)radius,(uint32_t)route_step,route_avoid_hazards,
+  uint32_t values[]={g->level,width,height,(uint32_t)ox,(uint32_t)oy,(uint32_t)radius,(uint32_t)route_step,route_avoid_hazards,route_allow_jump,
    (uint32_t)player->body.height,player->body.flags&4u};unsigned j;
   for(j=0;j<sizeof(values)/sizeof(values[0]);++j){signature^=values[j];signature*=1099511628211ull;}
   for(j=0;j<planner.sector_count;++j)for(i=0;i<4;++i){signature^=planner.data[planner.sectors+j*20+i];signature*=1099511628211ull;}
   if(route_cells!=cells){route_graph_free();route_edges=calloc(cells,1);if(!route_edges)return 0;route_cells=cells;}
-  if(signature!=route_signature){memset(route_edges,0,cells);route_signature=signature;}
+  if(signature!=route_signature){memset(route_edges,0,cells);route_signature=signature;route_tree_start=-1;}
  }
  {int sx=start%(int)width,sy=start/(int)width,near=-1,bd=INT_MAX,xx,yy;
   for(yy=sy-1;yy<=sy+1;++yy)for(xx=sx-1;xx<=sx+1;++xx){SsaBody b=g->players[0].entity.body;int x=ox+xx*route_step,y=oy+yy*route_step,d=absn(x-b.x/65536)+absn(y-b.y/65536);
@@ -80,12 +93,15 @@ static int route(SsaNativeGame *g,int tx,int ty,int *outx,int *outy){
   if(near<0)return 0;
   start=near;
  }
+ if(g->level>=10 && route_tree_start==start){tail=route_tree_count;goto select_route;}
  for(i=0;i<width*height;++i)prev[i]=-1;
  prev[start]=start;queue[tail++]=start;
  while(head<tail){int n=queue[head++],x=ox+(n%(int)width)*route_step,y=oy+(n/(int)width)*route_step,dist=explore?INT_MAX:absn(x-tx)+absn(y-ty),sector=ssa_map_sector(&g->map,x*65536,y*65536);SsaBody b;
   if(sector<0)continue;
-  if(explore){unsigned flags=(uint16_t)s16(g->map.data+g->map.sectors+sector*20+16);if((flags&0x100) && !g->level_runtime.script.visited[sector]){found=n;best=0;reached=1;break;}}
-  else {if(dist<best){best=dist;found=n;}if(n==goal){if(g->level>=3)found=n;reached=1;break;}}
+  if(g->level<10){
+   if(explore){unsigned flags=(uint16_t)s16(g->map.data+g->map.sectors+sector*20+16);if((flags&0x100) && !g->level_runtime.script.visited[sector]){found=n;best=0;reached=1;break;}}
+   else {if(dist<best){best=dist;found=n;}if(n==goal){if(g->level>=3)found=n;reached=1;break;}}
+  }
   b=g->players[0].entity.body;b.x=x*65536;b.y=y*65536;
   b.floor=s16(planner.data+planner.sectors+sector*20);b.z=(int32_t)b.floor*65536;
   b.ceiling=s16(planner.data+planner.sectors+sector*20+2);
@@ -105,7 +121,23 @@ static int route(SsaNativeGame *g,int tx,int ty,int *outx,int *outy){
    if(route_edges[n]&(16u<<i)){prev[nn]=n;queue[tail++]=nn;}
   }
  }
+ if(g->level>=10){route_tree_start=start;route_tree_count=tail;}
+select_route:
+ /* A complete BFS tree can answer every goal from this start cell. Keep the
+  * original queue order and predecessor ties; only reuse it while geometry,
+  * clearance, body dimensions and the start cell still match. */
+ if(g->level>=10){
+  if(!explore && prev[goal]>=0){found=goal;best=0;reached=1;}
+  else for(head=0;head<tail;++head){int n=queue[head],x=ox+n%(int)width*route_step,y=oy+n/(int)width*route_step;
+   int sector=ssa_map_sector(&g->map,x*65536,y*65536),dist=explore?INT_MAX:absn(x-tx)+absn(y-ty);
+   if(sector<0)continue;
+   if(explore){unsigned flags=(uint16_t)s16(g->map.data+g->map.sectors+sector*20+16);
+    if((flags&0x100) && !g->level_runtime.script.visited[sector]){found=n;best=0;reached=1;break;}
+   }else if(dist<best){best=dist;found=n;}
+  }
+ }
  if(found<0)return 0;
+ route_goal_gap=best;
  if(absn(g->players[0].entity.body.x/65536-(ox+start%(int)width*route_step))+absn(g->players[0].entity.body.y/65536-(oy+start/(int)width*route_step))>route_step/2){found=start;}
  else if(found==start){
   if(g->level>=3 && reached){*outx=explore?ox+start%(int)width*route_step:tx;*outy=explore?oy+start/(int)width*route_step:ty;return 1;}

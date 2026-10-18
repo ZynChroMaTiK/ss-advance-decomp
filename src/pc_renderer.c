@@ -166,7 +166,8 @@ static void actor(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c,const 
     resource=&g->actor_assets.resources[s->animation];if(!resource->directions || !resource->mip_flags)return;
     dx=b->x/65536.0-c->x;dy=b->y/65536.0-c->y;
     d=dx*c->sine+dy*c->cosine;lateral=dx*c->cosine-dy*c->sine;
-    if(s->flags&0x2000){image=s->frame+1u;scale=(double)r->height/160;d=0.0001;x=r->width/2.0;y=r->height/2.0;}
+    if(s->flags&0x2000){image=s->frame+1u;scale=(double)r->height/160;d=0.0001;x=r->width/2.0;y=r->height/2.0;
+        flip=g->alternates.enabled && (s->flags&SSA_ACTOR_SCREEN_MIRROR)!=0;}
     else {
         if(d<=0.01)return;
         facing=(uint16_t)((unsigned)s->facing*256+((s->flags&16)?32768:0));

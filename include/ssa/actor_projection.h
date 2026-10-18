@@ -3,6 +3,8 @@
 #include "ssa/actor_assets.h"
 #include "ssa/actor_queue.h"
 #include "ssa/world.h"
+/* PC presentation-only flag on fixed-screen muzzle snapshots. */
+enum { SSA_ACTOR_SCREEN_MIRROR=0x1000 };
 
 /* Borrow stable world bodies and snapshot their render metadata. flags is
  * original entity+30; it is explicit so a native chase-view extension may
@@ -26,6 +28,9 @@ typedef struct SsaActorProjector {
  * Output reserved word remains untouched. Calls native1238 queue insertion.
  * All borrowed storage stays stable; no nested projection/queue update. */
 int ssa_actor_project(SsaActorProjector *,const SsaActorSource *,int fixed_screen);
+/* PC variant of collect_offsets: honor SCREEN_MIRROR on fixed-screen sources.
+ * The original project/collect entry points continue to ignore that flag. */
+int ssa_actor_collect_mirrored(SsaActorProjector *,const SsaWorld *,const SsaActorSource *,size_t,const int32_t *z_offsets);
 /* D2D0/D338: ascending visited sectors, then original sector-list order;
  * flag10 draws the second resource animation+5*(owner+1). Sources must cover
  * every encountered body exactly once. Unvisited bodies need no source.

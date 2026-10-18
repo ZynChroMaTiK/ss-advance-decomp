@@ -38,6 +38,9 @@ int ssa_weapon_object_init(SsaWeaponObject *);
 int ssa_weapon_animation_set(SsaWeaponObject *, uint16_t animation, uint16_t period);
 /* 116BC. Clear control flags1400 and set current-1, period3. Return1/0/-1. */
 int ssa_weapon_animation_idle(SsaWeaponObject *, SsaWeaponControl *);
+/* E410: resolve the current animation word without advancing its clock.
+ * FFFF disables both frame mirrors. Invalid data leaves object unchanged. */
+int ssa_weapon_animation_resolve(SsaWeaponObject *,const SsaWeaponAnimations *);
 /* One object's exact E460 update. game_flags is GAME+4 and ticks is GAME+7.
  * Paused type2 objects skip; flags10 use a single tick. FFFF loops and sets
  * done1; FFFE holds last frame with periodFF; FFFA..FFFD write marker byte to

@@ -1,4 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native projectile runtime — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="projectile-runtime.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="native-projectile-runtime">Native projectile runtime</h1>
+<p>Type67 cannonballs use their original no-gravity flight again, at the user's
+request. The temporary floor-rolling override has been removed; launch detachment
+and Gunrilla's self-collision fix remain. The PC adapter still enables
+<code>ceiling_impacts</code>: rockets65 explode and Prion69 stops at ceiling contact.
+Standalone recovery leaves that option off. See
+<a href="weapon-fixes.html#floating-cannon-flight-floor-rolling-and-ceiling-impacts">flight behavior and current checks</a>.</p>
 <h2 id="gunrilla-launch-collision-correction">Gunrilla launch collision correction</h2>
 <p>The native PC runtime now lets type67 cannonballs leave their typeD6 Gunrilla
 shooter. The original80-unit muzzle offset lies inside the combined90-unit
@@ -37,6 +43,13 @@ offset from live eye height along the aiming slope. It no longer follows later
 player yaw/position. Default recovered runtimes leave the option zero, and the
 original conversion/E2 logic remains unchanged. See weapon-fixes.md for launch
 alignment and trajectory tests.</p>
+<p>The playable composition also enables <code>ballistic_player_cannon</code>: player type67
+clears attachment4000 during weapon commit, preserving launch XYZ velocity and
+position instead of following later player view/translation. Original bounce,
+penetration, damage, source and owner exclusion stay unchanged. This option is
+default-off in the recovered runtime and does not apply to enemy cannonballs.
+Six player launch tests cover level/up/down aim in both views; Gunrilla's
+418-check regression also passes with the option explicitly enabled.</p>
 <p><code>projectile_runtime.c</code> connects weapon creation, projectile controllers and
 motion to the native world, shared entity pool and combat adapter. It contains
 no ROM instruction execution. Supported controller types are <code>65</code>, <code>66</code>, <code>67</code>,

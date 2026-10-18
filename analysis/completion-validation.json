@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Original02564 single-player tally loop, preserving real E914 notice writes.\n\nWorld capture, sprite animation/draw, VBlank, input and audio are controlled\nboundaries; post-tally screen teardown/commit is outside this comparison.\n",
+  "sanitizers": "UBSan",
+  "sequence_frames": 7370,
+  "sequences": 36,
+  "directed_frames": 4096,
+  "callback_reentry_guards": 865,
+  "guards": 13,
+  "callback_failures": 3,
+  "source_sha256": {
+    "tests/test_completion_rom.py": "98cde705c5efb466b64a07dc0644c4fd7d06d7e9be4c70bef40035210625db6c",
+    "src/completion.c": "180040ccd9d34f62a6859c45deb57788288319a654806692bf6b3e60f01f8063",
+    "include/ssa/completion.h": "510e5fa664314bc8b9734e4a2e05933f97e1ec733f462bb68e21ff2938ea1c14"
+  }
+}

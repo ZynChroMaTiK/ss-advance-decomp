@@ -84,7 +84,8 @@ static void effects_bus_fixture(const uint8_t *rom){
     uint8_t *copy=malloc(0x800000);SsaAudio a={0};unsigned c,player,type;int16_t out[2];
     CHECK(copy);memcpy(copy,rom,0x800000);memset(copy+0x7fdf00,64,4);memset(copy+0x7fdf20,15,16);
     /* Gameplay effects get50% more amplitude on every player and oscillator
-     * kind. Menu cues stay unchanged; every music oscillator is reduced50%. */
+     * kind. Menu cues stay unchanged; the music balance trim and new output
+     * lift combine to1.5x, preserving the PCM/PSG balance. */
     for(c=0;c<sizeof(cases)/sizeof(cases[0]);++c)for(player=0;player<SSA_AUDIO_PLAYERS;++player)
     for(type=0;type<=4;++type){SsaAudioVoice *v;SsaAudioPlayer *p;int left,right;
         memset(&a,0,sizeof(a));CHECK(ssa_audio_init(&a,copy,0x800000,24000)==1);p=&a.players[player];
@@ -95,7 +96,7 @@ static void effects_bus_fixture(const uint8_t *rom){
         v->stage=2;v->envelope_level=type?15:255;v->duty=2;v->lfsr=0x7fff;
         left=type?(type==3?-3840:3840):6912;right=type?left:6976;
         if(cases[c].boosted){left=left*3/2;right=right*3/2;}
-        if(cases[c].song>=0x6e){left/=2;right/=2;}
+        if(cases[c].song>=0x6e){left=left*3/2;right=right*3/2;}
         CHECK(ssa_audio_render(&a,out,1)==1 && out[0]==left && out[1]==right);
         CHECK(!a.clipped && !a.errors);++effects_scope_cases;
     }
@@ -112,10 +113,10 @@ static void effects_headroom_fixture(const uint8_t *rom){
             v->active=1;v->player=i;v->velocity=127;v->wave=0x7fdf00;v->length=4;
             v->looped=1;v->step=1;v->stage=2;v->envelope_level=255;
         }
-        /* Music3456/3488 plus three effects10368/10464 would overflow.
-         * The right side fixes a common FX gain29272/31392, preserving pan. */
+        /* Music10368/10464 plus three effects10368/10464 would overflow.
+         * The right side fixes a common FX gain22296/31392, preserving pan. */
         CHECK(ssa_audio_render(m,whole,1)==1 && whole[0]==32459 && whole[1]==32760);
-        CHECK(m->effects_headroom_gain>0.93 && m->effects_headroom_gain<0.94);
+        CHECK(m->effects_headroom_gain>0.71 && m->effects_headroom_gain<0.72);
         CHECK(!m->clipped && m->effects_limited_frames==1);
         for(i=1;i<SSA_AUDIO_VOICES;++i)m->voices[i].active=0;
     }
@@ -125,7 +126,7 @@ static void effects_headroom_fixture(const uint8_t *rom){
         CHECK(ssa_audio_render(&b,chunks+2*i,count)==1);i+=count;}
     CHECK(!memcmp(whole,chunks,sizeof(whole)) && a.effects_headroom_gain==b.effects_headroom_gain);
     /* Music is unaffected during both peak protection and recovery. */
-    for(i=0;i<400;++i)CHECK(whole[2*i]==3456 && whole[2*i+1]==3488);
+    for(i=0;i<400;++i)CHECK(whole[2*i]==10368 && whole[2*i+1]==10464);
     CHECK(a.effects_headroom_gain>held && a.effects_headroom_gain<1);
     a.muted=1;mix_frames(&a,48000);CHECK(a.effects_headroom_gain==1 && !a.clipped);
     ssa_audio_reset(&a);CHECK(a.effects_headroom_gain==1 && a.muted);
@@ -432,14 +433,31 @@ static void game_events(SsaAudio *a,const uint8_t *rom){
         CHECK(g->weapon_ops.event(g->weapon_ops.context,&g->weapon,&event)==0 && event.result>0 && play_events==before);}
     ssa_native_game_free(g);free(g);
 }
-typedef struct WalkingAudio {SsaNativeGame *game;SsaAudio *mixer;unsigned steps[2];} WalkingAudio;
-static void walking_play(void *p,unsigned id){WalkingAudio *w=p;
+static unsigned jump_events,landing_events;
+typedef struct WalkingAudio {SsaNativeGame *game;SsaAudio *mixer;unsigned steps[2],jumps,landings;} WalkingAudio;
+static void walking_event(WalkingAudio *w,unsigned id){
+    SsaNativeGame *g=w->game;const SsaBody *before=&g->audio_player_before,*body=&g->players[0].entity.body;
+    if(id==14 && !g->audio_jump_held && g->player.jump.was_down && body->z>before->z){
+        CHECK(g->players[0].inventory.health>0 && before->z==(int32_t)before->floor*65536 && body->z>(int32_t)body->floor*65536);
+        ++w->jumps;++jump_events;return;
+    }
     if(id==13 || id==14){SsaPlayerSpawn *player=&w->game->players[0];SsaBody *b=&player->entity.body;
         CHECK(b->z==(int32_t)b->floor*65536 && player->inventory.health>0);
-        CHECK(b->x!=w->game->footstep_x || b->y!=w->game->footstep_y);
-        ++w->steps[id-13];++walking_events;
+        if(before->z>(int32_t)before->floor*65536){
+            CHECK(id==13 && before->velocity_z<0);++w->landings;++landing_events;
+        }else{
+            CHECK(b->x!=w->game->footstep_x || b->y!=w->game->footstep_y);
+            ++w->steps[id-13];++walking_events;
+        }
     }
+}
+static void walking_play(void *p,unsigned id){WalkingAudio *w=p;walking_event(w,id);
     CHECK(ssa_audio_play(w->mixer,id)>=0);
+}
+static void walking_source(void *p,SsaAudioSourceCommand command,unsigned id,uint64_t source,const SsaAudioPoint *point){
+    WalkingAudio *w=p;
+    if(command==SSA_AUDIO_SOURCE_PLAY && source==1){CHECK(!point);walking_event(w,id);}
+    CHECK(ssa_audio_source(w->mixer,command,id,source,point)>=0);
 }
 static void walking_stop(void *p,unsigned id){WalkingAudio *w=p;CHECK(ssa_audio_stop(w->mixer,id)==1);}
 static void walking_tick(WalkingAudio *w){
@@ -454,7 +472,8 @@ static void walking_tick(WalkingAudio *w){
 static void footsteps(SsaAudio *a,const uint8_t *rom){
     static const int directions[]={'W','S','A','D'};unsigned mode,i;
     for(mode=0;mode<4;++mode){
-        SsaNativeGame *g=calloc(1,sizeof(*g));WalkingAudio w={g,a,{0,0}};SsaNativeAudioOps ops={walking_play,walking_stop,&w,NULL,NULL,NULL,NULL,NULL};unsigned before;
+        SsaNativeGame *g=calloc(1,sizeof(*g));WalkingAudio w={g,a,{0,0},0,0};SsaNativeAudioOps ops={walking_play,walking_stop,&w,NULL,NULL,NULL,NULL,NULL};unsigned before;
+        if(mode&2)ops.source=walking_source;
         CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);ssa_audio_reset(a);
         CHECK(ssa_audio_level_music(a,0)==1 && ssa_native_game_bind_audio(g,&ops)==1);
         ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
@@ -468,14 +487,25 @@ static void footsteps(SsaAudio *a,const uint8_t *rom){
         CHECK(g->player.view.third_person==(mode&1));
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',1,0)==1);
         for(i=0;i<60;++i)walking_tick(&w);
+        CHECK(w.jumps==1 && w.landings==1); /* Held Space does not retrigger. */
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',0,0)==1);
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,directions[mode],0,0)==1);before=walking_events;
         for(i=0;i<40;++i)walking_tick(&w);
         CHECK(walking_events==before);
+        /* No horizontal movement is required for takeoff/landing cues. A
+         * fresh airborne press must neither play another takeoff cue nor queue it. */
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',1,0)==1);walking_tick(&w);
+        CHECK(w.jumps==2 && w.landings==1);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',0,0)==1);walking_tick(&w);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',1,0)==1);
+        for(i=0;i<100;++i)walking_tick(&w);
+        CHECK(w.jumps==2 && w.landings==2 && walking_events==before);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',0,0)==1);walking_tick(&w);
         ssa_pc_input_runtime_enable(&g->input_runtime,0);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',1,0)==1);
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,directions[mode],1,0)==1);
         for(i=0;i<40;++i)walking_tick(&w);
-        CHECK(walking_events==before);
+        CHECK(walking_events==before && w.jumps==2 && w.landings==2);
         ssa_native_game_free(g);free(g);
     }
     CHECK(airborne_frames>40 && blocked_frames>120);
@@ -535,6 +565,14 @@ static void music_transitions(SsaAudio *a,const uint8_t *rom){
     CHECK(ssa_audio_level_music(a,0)==1 && ssa_native_game_bind_audio(g,&ops)==1 && !scene.music_events);
     CHECK(ssa_combat_runtime_damage(&g->combat,&g->players[0].entity,&g->players[0].entity,&g->players[0].entity,1000,&g->combat_ops)==0);
     CHECK(!g->players[0].inventory.health && ssa_native_game_tick(g)==1);
+    /* Death first runs the recovered notice/fall phase. The terminal music
+     * starts when its original lifecycle enters input state4, not on damage. */
+    for(i=0;i<320 && g->game.life_game.input_state!=4;++i){
+        CHECK(!scene.music_events && g->music_mode==2);
+        CHECK(ssa_native_game_tick(g)==1);mix_frames(a,400);
+    }
+    CHECK(i>0 && i<320 && g->game.life_game.input_state==4);
+    CHECK(ssa_native_game_tick(g)==1);
     CHECK(scene.music_events==1 && scene.last_music==10 && g->music_mode==10 && a->music.pending_song==0x81);
     mix_frames(a,400);CHECK(a->players[0].song==0x81);
     for(i=0;i<320;++i){CHECK(ssa_native_game_tick(g)==1);mix_frames(a,400);}
@@ -646,7 +684,7 @@ int main(int argc,char **argv){
     CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);
     CHECK(ssa_audio_init(a,rom,0x800000,24000)==1);
     audio_priority_fixture(rom);world_distance_fixture(rom);player_door_fixture(rom);source_fixture(rom);world_fixture(rom);concurrency_fixture(rom);pcm_bus_fixture(rom);effects_bus_fixture(rom);effects_headroom_fixture(rom);channel_fixture(rom);music_policy_fixture(rom);music_intros(a);echo_fixture(rom);catalog(a);semantics(a,rom);wave_fixture(rom);psg_fixture(rom);spatial_fixture(rom);game_events(a,rom);footsteps(a,rom);game_scene(a,rom);music_transitions(a,rom);
-    printf("{\"priority_cases\":%u,\"world_audio_cases\":%u,\"concurrency_cases\":%u,\"effect_instances\":%u,\"effect_voice_capacity\":%u,",priority_cases,world_audio_cases,concurrent_cases,SSA_AUDIO_EFFECT_PLAYERS,SSA_AUDIO_EFFECT_VOICES);
+    printf("{\"jump_events\":%u,\"landing_events\":%u,\"priority_cases\":%u,\"world_audio_cases\":%u,\"concurrency_cases\":%u,\"effect_instances\":%u,\"effect_voice_capacity\":%u,",jump_events,landing_events,priority_cases,world_audio_cases,concurrent_cases,SSA_AUDIO_EFFECT_PLAYERS,SSA_AUDIO_EFFECT_VOICES);
     printf("\"result\":\"pass\",\"checks\":%u,\"songs\":%u,\"audible_songs\":%u,\"catalog_frames\":%llu,\"catalog_peak\":%u,\"catalog_clipped_samples\":%llu,\"pcm_bus_gain\":2,\"effects_bus_gain\":1.5,\"music_bus_gain\":0.5,\"effects_scope_cases\":%u,\"max_pcm_voices\":%u,\"max_psg_voices\":%u,\"play_events\":%u,\"stop_events\":%u,\"walking_events\":%u,\"airborne_frames\":%u,\"blocked_or_idle_frames\":%u,\"intro_returns\":%u,\"decoder_errors\":%u}\n",
         checks,songs,audible,(unsigned long long)samples,catalog_peak,(unsigned long long)catalog_clipped,effects_scope_cases,max_pcm,max_psg,play_events,stop_events,walking_events,airborne_frames,blocked_frames,intro_returns,a->errors);
     free(a);free(rom);return 0;

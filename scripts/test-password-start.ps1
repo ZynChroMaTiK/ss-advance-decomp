@@ -14,7 +14,7 @@ $checker=Join-Path $projectRoot 'build/native-windows/Release/ssa_native_passwor
 $native=& $checker (Join-Path $projectRoot 'orig/SSA.gba') | ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or $native.result -ne 'pass'){throw 'Windows password loadout validation failed.'}
 $reference=Get-Content -LiteralPath (Join-Path $projectRoot 'analysis/password-start-validation.json') -Raw | ConvertFrom-Json
-foreach($field in @('result','checks','password_starts','frames','entry_restarts','level_starts','carry_starts','starter_restarts','levels','difficulties')){
+foreach($field in @('result','checks','password_starts','frames','entry_restarts','level_starts','carry_starts','starter_restarts','advancement_starts','progress_captures','levels','difficulties')){
     if($native.$field -ne $reference.$field){throw "MSVC/GCC password start differs: $field"}
 }
 $testRoot=Join-Path $projectRoot 'build/password-start';New-Item -ItemType Directory -Path $testRoot -Force | Out-Null

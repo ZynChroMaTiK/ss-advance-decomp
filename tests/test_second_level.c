@@ -4,11 +4,12 @@
 #include "ssa/pc_renderer.h"
 #include "ssa/actor_raster.h"
 #include <stdio.h>
-typedef struct CampaignAudio {SsaAudio *mixer;unsigned errors,boss_music,post_boss_music;uint64_t nonzero;} CampaignAudio;
-static void campaign_audio_play(void *p,unsigned id){CampaignAudio *a=p;if(ssa_audio_play(a->mixer,id)<0)++a->errors;}
+typedef struct CampaignAudio {SsaAudio *mixer;unsigned errors,boss_music,post_boss_music,boss_launches;uint64_t nonzero;} CampaignAudio;
+static void campaign_audio_play(void *p,unsigned id){CampaignAudio *a=p;if(id==0x60 || id==0x65)++a->boss_launches;if(ssa_audio_play(a->mixer,id)<0)++a->errors;}
 static void campaign_audio_stop(void *p,unsigned id){CampaignAudio *a=p;if(ssa_audio_stop(a->mixer,id)<0)++a->errors;}
 static void campaign_audio_source(void *p,SsaAudioSourceCommand command,unsigned id,uint64_t source,const SsaAudioPoint *point){
- CampaignAudio *a=p;if(ssa_audio_source(a->mixer,command,id,source,point)<0)++a->errors;
+ CampaignAudio *a=p;if(command==SSA_AUDIO_SOURCE_PLAY && (id==0x60 || id==0x65))++a->boss_launches;
+ if(ssa_audio_source(a->mixer,command,id,source,point)<0)++a->errors;
 }
 static void campaign_audio_music(void *p,unsigned command,unsigned level){CampaignAudio *a=p;
  if(command==19)++a->boss_music;
@@ -16,6 +17,7 @@ static void campaign_audio_music(void *p,unsigned command,unsigned level){Campai
  if(ssa_audio_music(a->mixer,command,level)<0)++a->errors;
 }
 static SsaNativeCarry earned;
+static unsigned campaign_frame_limit=30000;
 static int (*original_combat_event)(void *,const SsaCombatRuntime *,const SsaCombatDamageTarget *,SsaCombatDamageEvent,uint32_t,uint32_t);
 static int trace_combat(void *p,const SsaCombatRuntime *r,const SsaCombatDamageTarget *v,SsaCombatDamageEvent kind,uint32_t a,uint32_t b){
  SsaNativeGame *g=p;
@@ -25,7 +27,7 @@ static int trace_combat(void *p,const SsaCombatRuntime *r,const SsaCombatDamageT
  return original_combat_event(p,r,v,kind,a,b);
 }
 static void capture_end(SsaNativeGame *g){
-    if(g->finished)(void)ssa_native_game_carry_capture(&earned,g);
+    if(g->finished)(void)ssa_native_game_carry_next(&earned,g);
     ssa_native_game_free(g);
 }
 #define ssa_native_game_free capture_end
@@ -51,17 +53,38 @@ static int pitched_target(SsaNativeGame *g,SsaEntity *target,uint16_t heading,in
  }
  return 0;
 }
+/* Retain fractional position when steering into an exact-width grid edge.
+ * Integer coordinates can hide a small overlap with a wall's endpoint. */
+static uint16_t travel_heading(SsaNativeGame *g,int x,int y){
+ int64_t dx=(int64_t)x*65536-g->players[0].entity.body.x,dy=(int64_t)y*65536-g->players[0].entity.body.y;
+ while(llabs(dx)>32767 || llabs(dy)>32767){dx/=2;dy/=2;}
+ return ssa_direction(&g->math,(int16_t)dx,(int16_t)dy);
+}
+static int corner_waypoint(SsaNativeGame *g,int *x,int *y){
+ SsaEntity *p=&g->players[0].entity;int reach,dx,dy;
+ if(clear_node(p->body,p->radius+65536,*x*65536,*y*65536) &&
+    walk_edge(p->body,p->radius,*x*65536,*y*65536))return 0;
+ /* Use an actual walkable interior point near the planned node. This is
+  * input planning on a private map, never a position correction. */
+ for(reach=2;reach<=16;reach*=2)for(dy=-1;dy<=1;++dy)for(dx=-1;dx<=1;++dx){
+  int nx=*x+dx*reach,ny=*y+dy*reach;
+  if((dx || dy) && clear_node(p->body,p->radius+65536,nx*65536,ny*65536) &&
+     walk_edge(p->body,p->radius,nx*65536,ny*65536)){*x=nx;*y=ny;return 1;}
+ }
+ return 0;
+}
 static void evade(SsaNativeGame *g,SsaMapCollision *query,uint16_t heading,int *forward,int *back,int *strafe){
  SsaEntity *source=&g->players[0].entity;int32_t sine,cosine;int f,s,bf=0,bs=0;unsigned i;
+ int danger=g->level==8?1100:700;
  int64_t closest=INT64_MAX,best;
  for(i=0;i<100;++i){SsaScriptActor *a=&g->spawn.actors[i];int64_t dx,dy,d;int32_t pitch;
   if(!a->owned || a->entity.type<0xcd || a->entity.type>0xd8 || a->activation.health<=0 ||
      llabs((int64_t)a->entity.body.z-source->body.z)>64*65536)continue;
   dx=((int64_t)a->entity.body.x-source->body.x)/65536;dy=((int64_t)a->entity.body.y-source->body.y)/65536;d=dx*dx+dy*dy;
-  if(d<700*700 && pitched_target(g,&a->entity,ssa_direction(&g->math,(int16_t)dx,(int16_t)dy),&pitch)!=1)continue;
+  if(d<danger*danger && pitched_target(g,&a->entity,ssa_direction(&g->math,(int16_t)dx,(int16_t)dy),&pitch)!=1)continue;
   if(d<closest)closest=d;
  }
- if(closest>700*700){
+ if(closest>danger*danger){
   if(g->level>=8 && *strafe){
    int32_t x,y;int travel=*forward-*back;
    ssa_sincos(&g->math,heading,&sine,&cosine);
@@ -88,7 +111,7 @@ static void evade(SsaNativeGame *g,SsaMapCollision *query,uint16_t heading,int *
    if(!a->owned || a->entity.type<0xcd || a->entity.type>0xd8 || a->activation.health<=0 ||
       llabs((int64_t)a->entity.body.z-source->body.z)>64*65536)continue;
    dx=((int64_t)a->entity.body.x-x)/65536;dy=((int64_t)a->entity.body.y-y)/65536;d=dx*dx+dy*dy;
-   if(d<700*700 && pitched_target(g,&a->entity,ssa_direction(&g->math,(int16_t)(a->entity.body.x/65536-source->body.x/65536),(int16_t)(a->entity.body.y/65536-source->body.y/65536)),&pitch)!=1)continue;
+   if(d<danger*danger && pitched_target(g,&a->entity,ssa_direction(&g->math,(int16_t)(a->entity.body.x/65536-source->body.x/65536),(int16_t)(a->entity.body.y/65536-source->body.y/65536)),&pitch)!=1)continue;
    if(d<distance)distance=d;
   }
   if(distance>best){best=distance;bf=f;bs=s;}
@@ -167,6 +190,14 @@ static int jump_floor_safe(SsaNativeGame *g){
   if(!route_floor_safe(&g->map,p->body.x+dx*128*65536,p->body.y+dy*128*65536,INT16_MIN))return 0;
  return 1;
 }
+static int navigation_jump(SsaNativeGame *g,SsaMapCollision *query,uint16_t aim,int forward,int back,int strafe){
+ SsaEntity *p=&g->players[0].entity;SsaBody b=p->body;int32_t sine,cosine;int result,rise;
+ if(!route_allow_jump || (!forward && !back && !strafe) || !jump_floor_safe(g))return 0;
+ ssa_sincos(&g->math,aim,&sine,&cosine);
+ result=ssa_map_try_move(query,&b,p->radius,b.x+48*((forward-back)*sine+strafe*cosine),b.y+48*((forward-back)*cosine-strafe*sine));
+ rise=query->floor-p->body.z/65536;
+ return result==0 && query->blocking_line<0 && rise>48 && rise<=96 && query->ceiling-query->floor>=p->body.height/65536;
+}
 static void avoid_pit_input(SsaNativeGame *g,SsaMapCollision *query,uint16_t aim,int *forward,int *back,int *strafe){
  SsaEntity *p=&g->players[0].entity;int32_t sine,cosine;int f=*forward-*back,s=*strafe,df,ds,bf=0,bs=0,best=INT_MIN;
  if(!route_avoid_hazards || (!f && !s && route_floor_safe(&g->map,p->body.x,p->body.y,p->body.floor)))return;
@@ -237,13 +268,16 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
  int wx=0,wy=0,mode=0,ok,exit_x=0,exit_y=0;
  SsaEntity *navigation_goal=NULL,*combat_target=NULL;
  uint32_t progress_score=start->score;unsigned progress_pickups=0,quiet_frames=0,explore_ticks=0;
- int last_x=INT_MAX,last_y=INT_MAX;unsigned stalled=0,escape_ticks=0,escapes=0;uint16_t escape_heading=0;
+ int last_x=INT_MAX,last_y=INT_MAX;unsigned stalled=0,escape_ticks=0,escapes=0,precision_route=0;uint16_t escape_heading=0;
  unsigned boss_frames=0,boss_hud_frames=0,boss_projectile_frames=0,boss_hurt_frames=0,boss_wait_frames=0,boss_defeated=0;
  unsigned conversion_frames=0,door_wait_frames=0,falling_effect_frames=0;
+ unsigned committed_weapon=0,committed_shots=0;
  CampaignAudio audio={0};
  if(!g || ssa_native_game_init(g,rom,0x800000,level)!=1 || ssa_native_game_carry_apply(g,start)!=1)return 1;
  route_avoid_hazards=level>=10;
- route_step=level>=10?16:64;
+ route_allow_jump=level==10;
+ route_clearance=0;
+ route_step=level>=10?32:64;
  original_combat_event=g->combat_ops.event;g->combat_ops.event=trace_combat;
  if(memcmp(&g->players[0].inventory,&start->inventory,sizeof(SsaInventory)) || g->score!=start->score ||
     g->gameplay.weapon.current!=start->weapon || ssa_pc_renderer_resize(&renderer,640,480)!=1)return 1;
@@ -268,7 +302,7 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
  planner.data=malloc(g->map.size);memcpy(planner.data,g->map.data,g->map.size);ssa_map_collision_init(&collision,&planner);
  ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
  if(ssa_weapon_aim_init(&sight,&g->world,&g->math)<0 || ssa_pc_input_sensitivity(&g->input,1)<0)return 1;
- for(i=0;i<30000 && !g->finished;++i){
+ for(i=0;i<campaign_frame_limit && !g->finished;++i){
   SsaPlayerSpawn *p=&g->players[0];SsaEntity *enemy=NULL,*goal=NULL,*elevated=NULL;int best=INT_MAX,high_distance=INT_MAX,tx=exit_x,ty=exit_y;
   int px=p->entity.body.x/65536,py=p->entity.body.y/65536,fire=0,forward=0,back=0,strafe=0,button=0,ax=0,ay=0,retreat_supply=0;uint16_t aim;int32_t slope,aim_pitch=0;
   if(level>=5)for(j=0;j<100;++j){SsaScriptActor *a=&g->spawn.actors[j];
@@ -302,16 +336,20 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
   combat_target=enemy;
   {unsigned desired=2,k,cluster=0;
    for(k=3;k<=5;++k)if((p->inventory.weapons&(1u<<(k-1))) && p->inventory.ammo[k-1]>0)desired=k;
+   /* Once earned automatic ammunition is exhausted, use the cannon's real
+    * penetrating shot rather than spending shotgun shells at long range. */
+   if(level>=10 && enemy && desired<=3 && best>192 && (p->inventory.weapons&512) && p->inventory.ammo[9]>0)desired=10;
    /* Use an earned shotgun against nearby targets: a single blast kills a
     * charging CD, whereas even the faster minigun still needs two rounds. */
    if(level>=3 && level<6 && enemy && best<700 && (p->inventory.weapons&4) && p->inventory.ammo[2]>=2)desired=3;
+   if(level==11 && enemy && enemy->type==0xcd && (p->inventory.weapons&4) && p->inventory.ammo[2]>=2)desired=3;
    /* This planner does not predict a rocket's muzzle clearance during the
     * delayed weapon handoff. Use earned hitscan/special weapons instead of
     * firing rockets into a nearby wall after a target disappears. */
    if(level>=5 && enemy && (((p->inventory.weapons&128) && p->inventory.ammo[7]>0) || level>=10)){
     for(k=0;k<100;++k){SsaScriptActor *a=&g->spawn.actors[k];
      if(a->owned && a->entity.type>=0xcd && a->entity.type<=0xd8 && a->activation.health>0 &&
-       llabs((int64_t)a->entity.body.x-enemy->body.x)+llabs((int64_t)a->entity.body.y-enemy->body.y)<384*65536)++cluster;
+       llabs((int64_t)a->entity.body.x-enemy->body.x)+llabs((int64_t)a->entity.body.y-enemy->body.y)<(level==11?1200:384)*65536)++cluster;
     }
     if(cluster>=4 && best<1200 && (p->inventory.weapons&128) && p->inventory.ammo[7]>0)desired=8;
    }
@@ -320,7 +358,21 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
       (g->weapon_game.shots[6]<2 || (level>=8 && enemy->type==0xd6)) && best>300 && best<(level>=8?2400:1200))desired=7;
    if(level>=8 && enemy && enemy->type>=0xd0 && !(enemy->body.flags&0x800) &&
       best>400 && (p->inventory.weapons&256) && p->inventory.ammo[8]>0)desired=9;
-   if(g->gameplay.weapon.requested!=desired && ssa_native_game_select_weapon(g,desired)!=1){fprintf(stderr,"map%u select failure frame%u weapon%u ammo%d\n",level,i,desired,p->inventory.ammo[desired-1]);return 1;}
+   /* The original Serious bomb clears a packed encounter. Keep its deliberate
+    * use ahead of single-target special weapons in the final-map input test. */
+   if(level==11 && enemy && enemy->type==0xd6 && cluster>=3 && best<1500 &&
+      (p->inventory.weapons&128) && p->inventory.ammo[7]>0)desired=8;
+   /* Finish selecting a gun and let it make an actual shot. Brief visibility
+    * gaps must not keep cancelling lower/raise before it can fire. */
+   if(level==11){
+    if(committed_weapon && (!p->inventory.ammo[committed_weapon-1] || g->weapon_game.shots[committed_weapon-1]!=committed_shots))committed_weapon=0;
+    if(committed_weapon)desired=committed_weapon;
+    else if(!enemy && p->inventory.ammo[g->gameplay.weapon.requested-1])desired=g->gameplay.weapon.requested;
+   }
+   if(g->gameplay.weapon.requested!=desired){
+    if(ssa_native_game_select_weapon(g,desired)!=1){fprintf(stderr,"map%u select failure frame%u weapon%u ammo%d\n",level,i,desired,p->inventory.ammo[desired-1]);return 1;}
+    if(level==11){committed_weapon=desired;committed_shots=g->weapon_game.shots[desired-1];}
+   }
   }
   {int distance=INT_MAX;
    for(j=0;j<100;++j){SsaScriptActor *a=&g->spawn.actors[j];int d,rx,ry,gx,gy;
@@ -330,7 +382,8 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
        (level>=5 && a->animation==0x27 && !(p->inventory.weapons&128)) ||
        (level>=6 && a->animation==0x29 && !(p->inventory.weapons&64)) ||
        (((a->animation>=0x30 && a->animation<=0x32) || a->animation==0x37) && p->inventory.health<80) ||
-       (a->animation>=0x2d && a->animation<=0x2f && p->inventory.stat_c4<25)))continue;
+       (a->animation>=0x2d && a->animation<=0x2f && p->inventory.stat_c4<
+        (level==8 && !g->level_runtime.script.count && g->pickup.game.collected>=2?100:25))))continue;
     gx=a->entity.body.x/65536;gy=a->entity.body.y/65536;d=absn(gx-px)+absn(gy-py);
     if(level>=6 && p->inventory.health<50 && ((a->animation>=0x30 && a->animation<=0x32) || a->animation==0x37))d-=20000;
     if(d<distance && ((level<3 && d<128) || route(g,gx,gy,&rx,&ry)==1)){distance=d;goal=&a->entity;}
@@ -341,7 +394,11 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
     if(!a->owned || a->entity.type<0xcd || a->entity.type>0xd8 || a->activation.health<=0 ||
        (level>=8 && (a->entity.body.flags&0x400)))continue;
     gx=a->entity.body.x/65536;gy=a->entity.body.y/65536;d=absn(gx-px)+absn(gy-py);
-    if(d<distance && ((level<3 && d<128) || route(g,gx,gy,&rx,&ry)==1)){distance=d;goal=&a->entity;}
+    if(d<distance){int reachable=(level<3 && d<128)?1:route(g,gx,gy,&rx,&ry);
+     /* Fort sentries can stand against a shut door. Approach the reachable
+      * side of their cell to shoot rather than discarding that destination. */
+     if(reachable==1 || (level==10 && reachable==2 && route_goal_gap<=192)){distance=d;goal=&a->entity;}
+    }
    }
   }
   /* Nearest-enemy routing can alternate between two doors around one wall.
@@ -385,7 +442,8 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
    if((level<3?i%4==0:i%60==0 || absn(wx-px)+absn(wy-py)<12) || !mode || mode==1){int result=!goal && !button?route(g,INT_MAX,0,&wx,&wy):0;
     if(!result)result=route(g,tx,ty,&wx,&wy);
     if(!result){wx=tx;wy=ty;}mode=2;}
-   aim=ssa_direction(&g->math,(int16_t)(wx-px),(int16_t)(wy-py));forward=1;
+   if(precision_route)corner_waypoint(g,&wx,&wy);
+   aim=precision_route?travel_heading(g,wx,wy):ssa_direction(&g->math,(int16_t)(wx-px),(int16_t)(wy-py));forward=1;
    if(button && absn(tx-px)+absn(ty-py)<128){
     /* Finish the sub-cell approach, then face the wall inside E's64-unit
      * query. Stopping a grid step short can leave the use ray out of reach. */
@@ -419,6 +477,15 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
    * the body or change geometry to make a planned edge succeed. */
   if(level>=3 && !enemy && mode==2){
    if(i%120==0){stalled=last_x!=INT_MAX && absn(px-last_x)+absn(py-last_y)<96;last_x=px;last_y=py;}
+   if(level>=10 && stalled){
+    precision_route=1;
+    /* Praetorian Fort's first arena includes exact-width stair routes. Extra
+     * planning clearance is useful after leaving it for the southern rooms. */
+    if(level!=10 || p->entity.body.y<0)route_clearance=65536;
+   }
+   if(level>=10 && stalled && !escape_ticks && corner_waypoint(g,&wx,&wy)){
+    escape_heading=travel_heading(g,wx,wy);escape_ticks=2;stalled=0;++escapes;
+   }
    if(stalled && !escape_ticks){unsigned direction,reach;int distance=INT_MAX,found=0;
     for(reach=128;reach>=8 && !found;reach/=4)for(direction=0;direction<8;++direction){int32_t sine,cosine,x,y;int d;
      if(direction==0)continue;
@@ -445,8 +512,11 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
   ssa_pc_input_runtime_key(&g->input_runtime,'W',forward,0);ssa_pc_input_runtime_key(&g->input_runtime,'A',strafe<0,0);ssa_pc_input_runtime_key(&g->input_runtime,'D',strafe>0,0);
   ssa_pc_input_runtime_key(&g->input_runtime,'S',back,0);
   ssa_pc_input_runtime_key(&g->input_runtime,'E',i%30==0,0);ssa_pc_input_runtime_button(&g->input_runtime,1,fire);
-  ssa_pc_input_runtime_key(&g->input_runtime,' ',((enemy && best<1300 && jump_floor_safe(g) &&
-      (level<3 || (int64_t)enemy->body.z-p->entity.body.z<=48*65536))) && i%(level>=8?36:90)<4,0);
+  ssa_pc_input_runtime_key(&g->input_runtime,' ',
+      navigation_jump(g,&combat_route,aim,forward,back,strafe) ||
+      (route_allow_jump && (forward || back || strafe) && jump_floor_safe(g) && i%36<4) ||
+      ((enemy && best<1300 && jump_floor_safe(g) &&
+      (level<3 || (int64_t)enemy->body.z-p->entity.body.z<=48*65536)) && i%(level>=8?36:90)<4),0);
   if(level>=2)ssa_pc_input_runtime_key(&g->input_runtime,'H',i%720==120,0);
   if(ssa_native_game_tick(g)!=1){SsaEntity *target=g->error_slot<100?g->enemies.navigation[g->error_slot].target:NULL;
    fprintf(stderr,"second FAIL %u stage%x entry%x slot%u line%u target%p type%x owner%p active%u\n",i,g->error_stage,g->error_entry,g->error_slot,g->error_line,(void *)target,target?target->type:0,target?(void *)target->owner:NULL,g->spawn.pool.active_count);break;}
@@ -510,9 +580,14 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
  if(level==3 && activated<2)ok=0; /* The third switch is not required by the original exit. */
  if(level==5 && (!boss_frames || !boss_hud_frames || !boss_projectile_frames || !boss_hurt_frames || !boss_defeated))ok=0;
  if(level==5 && (!audio.boss_music || !audio.post_boss_music))ok=0;
+ if(level==11 && (!boss_frames || !boss_hud_frames || !boss_hurt_frames || !boss_defeated || !audio.boss_music || !audio.post_boss_music || !audio.boss_launches))ok=0;
  if(level==8 && (!g->weapon_game.shots[8] || !falling_effect_frames || !conversion_frames || !door_wait_frames))ok=0;
+ if(level==10 && (spawned!=99 || !g->weapon_game.shots[9] || !conversion_frames || !falling_effect_frames))ok=0;
  if(audio.mixer && (!audio.nonzero || audio.errors || audio.mixer->errors || audio.mixer->frames!=(uint64_t)i*800))ok=0;
  if(!ok && level>=3){SsaPlayerSpawn *p=&g->players[0];SsaMapCollision c={0};SsaBody b=p->entity.body;int r;
+  fprintf(stderr,"weapon diagnostic current%u requested%u flags%x y%x animation%u index%u done%u ammo",g->gameplay.weapon.current,g->gameplay.weapon.requested,g->gameplay.weapon.flags,(unsigned)g->weapon.object.y,g->weapon.object.animation,g->weapon.object.frame_index,g->weapon.object.done);
+  for(j=0;j<10;++j)fprintf(stderr," %d",p->inventory.ammo[j]);
+  fprintf(stderr," shots");for(j=0;j<10;++j)fprintf(stderr," %u",g->weapon_game.shots[j]);fprintf(stderr,"\n");
   if(ssa_map_collision_init(&c,&g->map)){
    r=ssa_map_try_move(&c,&b,p->entity.radius,p->entity.body.x+8*65536,p->entity.body.y);
    fprintf(stderr,"diagnostic east%d floor%d ceil%d low%d line%d radius%d height%d flags%x controls%x move%x velocity%d,%d heading%u\n",r,c.floor,c.ceiling,c.low_floor,c.blocking_line,p->entity.radius/65536,p->entity.body.height/65536,p->entity.body.flags,g->input_runtime.sample.keys,p->motion.movement.flags,p->entity.body.velocity_x,p->entity.body.velocity_y,p->motion.movement.heading);
@@ -524,8 +599,8 @@ static int campaign_level_run(const uint8_t *rom,unsigned level,const SsaNativeC
   }
   for(j=0;j<100;++j)if(g->spawn.actors[j].owned && ssa_entity_contact(&p->entity,&g->spawn.actors[j].entity,p->entity.body.x+8*65536,p->entity.body.y)==0)fprintf(stderr,"diagnostic entity blocker slot%u type%x\n",j,g->spawn.actors[j].entity.type);
  }
- if(ok && ssa_native_game_carry_capture(end,g)!=1)ok=0;
- printf("{\"result\":\"%s\",\"level\":%u,\"frames\":%u,\"finished\":%u,\"score\":%u,\"collected\":%u,\"spawned\":%u,\"health\":%d,\"rendered_views\":%u,\"carry_guards\":%u,\"airborne_frames\":%u,\"third_person_frames\":%u,\"pitched_frames\":%u,\"machinegun_shots\":%u,\"activated_switches\":%u,\"boss_frames\":%u,\"boss_hud_frames\":%u,\"boss_projectile_frames\":%u,\"boss_hurt_frames\":%u,\"boss_wait_frames\":%u,\"boss_defeated\":%u,\"boss_music\":%u,\"post_boss_music\":%u,\"mixed_frames\":%llu,\"audio_errors\":%u,\"owned_weapons\":%u,\"conversion_shots\":%u,\"conversion_frames\":%u,\"navigation_recoveries\":%u,\"closing_door_wait_frames\":%u,\"meteor_shots\":%u,\"falling_effect_frames\":%u}\n",ok?"pass":"fail",level,i,g->finished,g->score,g->pickup.game.collected,spawned,g->players[0].inventory.health,rendered,level==1?10u:0u,airborne,chase,pitched,g->weapon_game.shots[3],activated,boss_frames,boss_hud_frames,boss_projectile_frames,boss_hurt_frames,boss_wait_frames,boss_defeated,audio.boss_music,audio.post_boss_music,(unsigned long long)(audio.mixer?audio.mixer->frames:0),audio.errors+(audio.mixer?audio.mixer->errors:0),g->players[0].inventory.weapons,g->weapon_game.shots[6],conversion_frames,escapes,door_wait_frames,g->weapon_game.shots[8],falling_effect_frames);
+ if(ok && ssa_native_game_carry_next(end,g)!=1)ok=0;
+ printf("{\"result\":\"%s\",\"level\":%u,\"frames\":%u,\"finished\":%u,\"score\":%u,\"collected\":%u,\"spawned\":%u,\"health\":%d,\"rendered_views\":%u,\"carry_guards\":%u,\"airborne_frames\":%u,\"third_person_frames\":%u,\"pitched_frames\":%u,\"machinegun_shots\":%u,\"activated_switches\":%u,\"boss_frames\":%u,\"boss_hud_frames\":%u,\"boss_projectile_frames\":%u,\"boss_hurt_frames\":%u,\"boss_wait_frames\":%u,\"boss_defeated\":%u,\"boss_music\":%u,\"post_boss_music\":%u,\"mixed_frames\":%llu,\"audio_errors\":%u,\"owned_weapons\":%u,\"conversion_shots\":%u,\"conversion_frames\":%u,\"navigation_recoveries\":%u,\"closing_door_wait_frames\":%u,\"meteor_shots\":%u,\"falling_effect_frames\":%u,\"cannon_shots\":%u,\"boss_launches\":%u}\n",ok?"pass":"fail",level,i,g->finished,g->score,g->pickup.game.collected,spawned,g->players[0].inventory.health,rendered,level==1?10u:0u,airborne,chase,pitched,g->weapon_game.shots[3],activated,boss_frames,boss_hud_frames,boss_projectile_frames,boss_hurt_frames,boss_wait_frames,boss_defeated,audio.boss_music,audio.post_boss_music,(unsigned long long)(audio.mixer?audio.mixer->frames:0),audio.errors+(audio.mixer?audio.mixer->errors:0),g->players[0].inventory.weapons,g->weapon_game.shots[6],conversion_frames,escapes,door_wait_frames,g->weapon_game.shots[8],falling_effect_frames,g->weapon_game.shots[9],audio.boss_launches);
  if(level==5)fprintf(stderr,"boss evidence frames%u HUD%u projectiles%u hurt%u wait%u defeated%u music%u/%u\n",boss_frames,boss_hud_frames,boss_projectile_frames,boss_hurt_frames,boss_wait_frames,boss_defeated,audio.boss_music,audio.post_boss_music);
  fprintf(stderr,"map%u closing-door input waits%u\n",level,door_wait_frames);
  ssa_pc_renderer_free(&renderer);ssa_weapon_aim_free(&sight);ssa_map_collision_free(&combat_route);ssa_native_game_free(g);free(audio.mixer);ssa_map_collision_free(&collision);route_graph_free();free(planner.data);free(prev);free(queue);free(g);return ok?0:1;

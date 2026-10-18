@@ -1,0 +1,13 @@
+{
+  "result": "pass",
+  "rom_comparisons": 8192,
+  "scope": "Original021E4 single-player non-network pause control, ordered command/notice requests.",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "sanitizers": "UBSan",
+  "source_sha256": {
+    "src/pause.c": "d2e63a5ba09893e5875ccbe8bb800b618a35b494835c134660b420bb17495f50",
+    "src/mode_control.c": "897fecd6daee50cd0012e4a27ff43d4b02fc3b8c8c44ae0aab10cf3b9aa1d0b0",
+    "include/ssa/pause.h": "bc20a8ecb4394dfbcc4addf1bcd6703ec73beb78ea32d5d9ddaef652ebcb7884",
+    "tests/test_pause_rom.py": "c08705dfbd9ce8e2780e6bd7559982a58ee064645a4e267ba26477ae83575f5d"
+  }
+}

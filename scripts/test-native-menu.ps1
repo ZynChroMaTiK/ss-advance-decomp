@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild,[ValidateRange(0,8)][int[]]$Selections=(0..8))
 $ErrorActionPreference='Stop'
 $projectRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (-not $SkipBuild) { & (Join-Path $PSScriptRoot 'build-windows.ps1') }
@@ -18,7 +18,7 @@ $oldPause=$env:SSA_LAUNCH_NO_PAUSE; $oldLog=$env:SSA_LAUNCH_LOG
 $env:SSA_LAUNCH_NO_PAUSE='1';$env:SSA_LAUNCH_LOG=Join-Path $testRoot 'launch.log'
 $cases=@()
 try {
-    foreach ($selection in 0..8) {
+    foreach ($selection in $Selections) {
         $arguments=@('--startup-test','--menu-test',"$selection",'--mute')
         if ($selection%2) { $arguments+='--original-renderer' }
         if ($selection%3 -eq 0) { $arguments+='--no-music' }
@@ -26,9 +26,9 @@ try {
         $output | Set-Content -LiteralPath (Join-Path $testRoot ("case-$selection.json"))
         if ($launchExit -ne 0) { throw ('Menu startup failed for selection '+$selection) }
         $item=$output -join [Environment]::NewLine | ConvertFrom-Json
-        if ($item.result -ne 'pass' -or $item.menu_starts -ne 1 -or $item.menu_frozen_ticks -ne 288 -or $item.menu_credits_checks -ne 72 -or
+        if ($item.result -ne 'pass' -or $item.menu_starts -ne 1 -or $item.menu_frozen_ticks -ne 292 -or $item.menu_credits_checks -ne 72 -or
             $item.language -ne [Math]::Floor($selection/3) -or $item.difficulty -ne $selection%3 -or
-            $item.menu_music_toggles -ne 2 -or $item.menu_mouse_checks -ne 2 -or
+            $item.menu_music_toggles -ne 0 -or $item.menu_mouse_checks -ne 2 -or
             $item.menu_music_continuity -ne $(if($selection%3 -eq 0){0}else{2}) -or
             $item.restarts -ne 1 -or $item.audio_device -ne 1 -or $item.audio_errors -ne 0 -or
             $item.map_views -ne 2 -or $item.map_starts -ne 2 -or $item.map_frozen_ticks -ne 140 -or
@@ -45,4 +45,4 @@ foreach ($source in @('src/menu.c','include/ssa/menu.h','src/map_view.c','includ
     $report.source_sha256[$source]=(Get-FileHash -LiteralPath (Join-Path $projectRoot $source) -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 [IO.File]::WriteAllText((Join-Path $projectRoot 'analysis/windows-native-menu-validation.json'),($report | ConvertTo-Json -Depth 8)+[Environment]::NewLine)
-Write-Output 'Passed all nine language/difficulty combinations, credits controls, music options, both renderers and level-entry restart.'
+Write-Output ('Passed '+$cases.Count+' language/difficulty combinations, credits controls, Options and level-entry restart.')

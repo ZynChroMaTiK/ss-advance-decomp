@@ -1,4 +1,51 @@
-# Continuous weapon audio and ballistic PC rockets/Prion shots
+# Continuous weapon audio and ballistic PC rockets/Prion/cannon shots
+
+## Floating cannon flight, floor rolling and ceiling impacts
+
+Type67 cannonballs retain original no-gravity flight, including Gunrilla shots.
+The PC `rolling_cannonballs` option now changes only floor contact: after the
+original vertical step clamps a cannonball to a valid floor, clear downward Z
+velocity and report successful motion so it continues rolling horizontally.
+It does not add gravity, drag or alter airborne XYZ velocity. The option defaults
+off in recovery runtimes and is enabled by the playable composition. Original
+ceiling handling, wall reflection, damage, penetration and owner exclusion remain. The
+earlier launch-detachment fix remains: looking or moving after firing cannot
+steer the projectile. Level/up/down shots preserve their constructed XYZ velocity.
+
+`ceiling_impacts` makes rocket65 and Prion69 movement stop when the swept top of
+the projectile reaches the ceiling, including exact contact and larger timesteps.
+The adapter places it at the contact height and returns ordinary impact: rockets
+apply their existing explosion/damage/particle, while Prion shots are removed
+without converting an unrelated enemy or inventing blast damage. This option
+defaults off in standalone recovery runtimes; recovered physics/controllers are
+unchanged.
+
+The focused checks cover12 rocket/Prion ceiling contacts across both view modes
+(exact touch, overshoot and larger timestep), plus six launch cases per weapon.
+Cannon trajectories assert constant XYZ velocity and exact per-tick positions
+during large mouse turns, walking and jumps. The fixture checks requested view
+mode; actual camera retraction at nearby walls remains valid. Gunrilla cases
+check constant airborne height in eight headings and retain return/wall/player/
+enemy impacts. Twelve floor cases cover player/enemy ownership, both view modes,
+exact contact, overshoot and larger timesteps, then eight further rolling frames
+per case with unchanged XY velocity and no-gravity flags. GCC ASan/UBSan/leak
+and MSVC agree on128390 focused checks. The Windows Gunrilla fixture passes446
+checks with the new option enabled, preserving floating shots in eight headings
+and return/wall/player/enemy impacts. All121Windows libraries/frontend rebuild. Current hashes are in the
+reports below. No full campaign replay or new matching claim. ROM SHA-1 remains
+`4ff48d8c18b70a5184758f1917343ae85a70858e`.
+
+Commands: `tests/test_weapon_fixes.py`, `tests/test_gunrilla.py` and
+`tests/test_projectile_runtime.py` under WSL; Windows
+`scripts/test-native-weapon-fixes.ps1 -SkipBuild`,
+`ssa_native_gunrilla_check.exe orig/SSA.gba` and
+`scripts/test-native-startup.ps1 -SkipBuild`.
+Reports: `weapon-fixes-validation.json`, `windows-weapon-fixes-validation.json`,
+`gunrilla-validation.json`, `native-projectile-runtime-validation.json` and
+`windows-native-startup-validation.json`. Earlier counts below describe prior
+launch/audio fixes before these requested surface behaviors.
+
+## Earlier launch and audio corrections
 
 The native host now owns the local continuous weapon voice explicitly. Original
 minigun wind-down (sound 0x1A) stops firing loop 0x19 before playing its ending;
@@ -34,6 +81,14 @@ The recovered controller's target/slope selection is retained; this changes
 the native PC launch adapter, not the standalone recovered routines. Default
 recovery runtime options remain zero. No new speed or conversion rules are added.
 
+The PC composition now also enables `ballistic_player_cannon` for weapon10 /
+type67. Commit clears attachment flag4000 at launch, preserving the constructed
+position, XYZ velocity, source, owner exclusion and weapon credit. Subsequent
+mouse look, walking and jumping cannot steer or drag the fired cannonball.
+Its original bounce, penetration and damage paths are unchanged. This does not
+change the cannon muzzle offset or aiming selection. Enemy type67 shots never
+enter this player-only commit policy. The default recovery option remains zero.
+
 A changed rocket combat route exposed an existing reference-renderer boundary:
 a portal upper wall ending exactly at y=120 requested an offscreen row. The native
 column helper can now discard that single trailing row while retaining the full
@@ -52,9 +107,10 @@ powershell -ExecutionPolicy Bypass -File scripts/test-native-weapon-fixes.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test-native-campaign.ps1 -SkipBuild
 ```
 
-The focused GCC ASan/UBSan/leak and MSVC checks agree on127,090 assertions:
+The focused GCC ASan/UBSan/leak and MSVC checks agree on127,418 assertions:
 46 continuous-weapon cases using the real mixer, six actual rocket launches and
-six actual Prion launches, with36 trajectory frames for each weapon and rapid
+six actual Prion launches and six actual cannon launches, with36 trajectory
+frames for each weapon and rapid
 yaw/pitch, walking and jump input in both views. The Prion cases separately check
 zero lateral spawn error, the original192-unit forward offset projected along
 pitch, live eye height/aim slope and exact constant XYZ motion. Level aiming
@@ -71,6 +127,16 @@ Reports: `weapon-fixes-validation.json`, `windows-weapon-fixes-validation.json`.
 The rebuilt Windows game also passes180-frame hidden PC/reference smoke
 launches; see `windows-prion-smoke-validation.json`. Full campaign completions
 were not rerun for this launch correction.
+
+The cannon regression failed before the fix on the still-attached launch flag.
+After the fix, all six first/third-person and level/up/down shots retain their
+original XYZ velocities and exact per-tick positions during immediate, large
+mouse movements, walking and jumping. The default projectile runtime still
+passes37,132 assertions on16maps, including10bounces and2penetrations. Gunrilla's
+418-check /8-heading launch, return-hit, wall/player/enemy collision regression
+passes on GCC sanitizers and MSVC with the new PC option explicitly enabled.
+The rebuilt frontend passes normal PC/reference launcher/startup/restart checks.
+No full campaign replay was performed for this targeted cannon correction.
 
 Original raster comparisons still pass 67,678 whole ARM calls; wall-renderer
 comparisons pass 14,322 solid/portal cases on all 16 maps. The default projectile

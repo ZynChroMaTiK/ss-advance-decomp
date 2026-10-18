@@ -1,22 +1,92 @@
 # Native port findings
 
-Current milestone: the first ten levels are playable through `play-native.cmd`.
-Enter advances after the first nine exits with earned inventory and score; R restores
-the current level's entry state. The updated normal-input chain completes
-all ten in117,841frames with1,390,000score/33HP. It includes the latest collision,
-Prion2x and Time Strike changes; GCC ASan/UBSan/leaks and Windows MSVC agree on
-every result. A retained converted-enemy target pointer exposed
+Current milestone: all twelve campaign levels are enabled through `play-native.cmd`.
+Native NETRICSA now toggles during gameplay with Tab; N opens/closes and Esc returns.
+It also precedes every pre-level map view. In-game NETRICSA overlays a frozen
+full-resolution game frame; only pre-level NETRICSA uses the animated background.
+In-game fades take250ms; pre-level NETRICSA retains its original fade speed.
+The in-game blend removes HUD sprites except the weapon
+while darkening and tinting the frozen level green; closing reverses the blend.
+Original weapon/enemy illustrations, localized descriptions, two scrolling panels,
+strategic/tactical records and live/campaign-session statistics are connected.
+NETRICSA freezes gameplay and uses its original music cue. See [netricsa.md](netricsa.md).
+On2026-10-17 the user explicitly requested manual campaign validation rather
+than gating levels on automated playthroughs. The final map, Caesar's Palace,
+now participates in normal advancement, passwords and saved level selection.
+Existing saves remain compatible; beat map10 to unlock map11, or use
+`play-native.cmd --level 11` for a direct standalone start.
+The original campaign story controller19458/193D8/1965C and its native screen
+now connect Egypt/Rome/ending panels, artwork, text, music and fades to the
+frontend. The controller passes50,462 ROM comparisons; text adds1,018 original
+row comparisons, with87,854 native screen assertions and three Windows paths.
+The final completion tally leads into the ending and returns to Main. Esc/P now
+opens the native pause menu. The original time/ammo tally, bonus score carry and
+final Sam text/music hold are connected; high-score/name entry remains. See
+[completion.md](completion.md) and [campaign-story.md](campaign-story.md).
+Original localized HUD notices now connect pickup, boss and death callbacks
+to both renderers, including cache readiness, layout and shared lifecycle timers.
+The controller passes135,104 ROM comparisons, native integration passes13,650
+checks, and normal-input level1 still completes in5,110frames. See
+[hud-notices.md](hud-notices.md). The timed completion tally's active notice
+service is available; its outer screen/digits/audio/record integration remains.
+The requested Rome laurel artwork replaces only the ankh pixels in campaign
+maps6..11/14..15, using original dimensions/origins and ankh palette indices. Both full
+20x34 and distant10x17 images are compiled into the native frontend; Egypt's
+images remain unchanged. The original ROM and pickup behavior are
+unchanged. See [artwork/importer](../assets/rome-laurel/README.md).
+Advancement now recovers original player construction and weapon restoration:
+100 health, zero protection, earned weapons/ammo and score. R retains the exact
+level-entry snapshot. See [campaign-entry.md](campaign-entry.md) for 8,192
+original restore comparisons and 512 construction/restore sequences on 16 maps.
+Original completion capture `1231C` now runs natively too: another 4,096 ROM
+comparisons and 512 capture/restore compositions cover gear and per-weapon
+statistics rows. The original completion-statistics accumulator and checkpoint
+helpers are now native and byte-matched too. Their read-only native adapter
+exposes all live counters; campaign-session totals now feed the completion frontend; original high-score lists
+and name entry remain unfinished. See [statistics.md](statistics.md).
+The timed time/ammo bonus controller and final record pipeline are now recovered
+too: 11,466 original-loop frame comparisons and 410,217 native composition checks
+pass. The pause/completion frontend now connects original notices, digits,
+voice dismissal and campaign-session totals. Active E914/E9D4
+message sprites are now recovered and used during gameplay. See
+[completion.md](completion.md). The later frontend integration connects the timed tally and bonus-adjusted carry to
+the playable executable. The subsequent targeted cannon fix now detaches player cannonballs
+at launch, like rockets and Prion shots. Cannonballs retain original no-gravity
+flight and now continue rolling horizontally on floor contact, without adding
+airborne gravity. Rockets still explode and Prion shots stop at ceilings.
+Six launch/trajectory cases per weapon and12ceiling contacts validate these
+paths; current counts/hashes are in weapon-fixes-validation.json. The default
+projectile integration and enemy cannon regression also remain covered.
+The rebuilt launcher/startup/restart checks pass. Full campaign replays were
+not repeated for this correction. See [weapon-fixes.md](weapon-fixes.md).
+Prion-converted enemies now continually select the nearest living combatant,
+including Sam, other converted enemies and bosses, without player preference.
+Facing, ranged aim and enemy melee follow that selection. The focused test passes
+1,602 checks on GCC sanitizers and Windows across all ten convertible types;
+special weapons retain 32,318 checks and default entity runtime 85,982. The rebuilt
+Windows launcher/startup/restart checks pass. See
+[projectile-conversion.md](projectile-conversion.md#requested-pc-nearest-target-behavior).
+Campaign figures below are historical replays, before this targeting change.
+The corrected normal-input chain completes all eleven in 140,712 frames with
+1,544,000 score / 45 HP. It includes the latest collision, Prion2x and Time Strike
+changes. It supersedes the older 136,552-frame full-vitality-carry checkpoint.
+A retained converted-enemy target pointer exposed
 an overly strict projectile-adapter guard; cleared/reused stable slots now follow
 original1097C behavior, with16 native Gunrilla regressions and two directed ROM
 comparisons. Read
 [native-game.md](native-game.md) for the current composition, validation and limits.
 Earlier sections retain the recovery history and individual subsystem boundaries.
-The next-level probes found a Time Strike render failure: an animation change
+The eleventh-level probes found a Time Strike render failure: an animation change
 while frozen retained a frame from a longer sequence. The native view adapter
 now supplies a valid frame in its render snapshot, without advancing animation
 or changing gameplay. Both renderers and views pass the32318-check special-weapon
-suite on GCC sanitizers and MSVC. Level11 remains unavailable because its earned
-carry probe has not completed; see [special-weapons.md](special-weapons.md).
+suite on GCC sanitizers and MSVC. Praetorian Fort now completes through normal
+input with earned equipment and original next-level vitality. A separate Normal
+standalone test now completes the final map: D8 defeat, original music changes
+and the VM exit in 17,270 frames with 63 HP. GCC sanitizers and MSVC agree on
+every standalone field. The final earned-inventory probe dies before the boss,
+so that map remains unavailable. See [native-game.md](native-game.md#validation)
+and [special-weapons.md](special-weapons.md).
 Weapon7 Prion shots now launch independently on the sight line immediately,
 including level aim before any pitch input; the old sideways offset is removed.
 See [weapon-fixes.md](weapon-fixes.md).
@@ -57,7 +127,8 @@ to native gameplay and both renderers; see [special-weapons.md](special-weapons.
 See [enemy-boss.md](enemy-boss.md).
 Type-64 effects now use recovered wall/sector clipping and sector-only list
 updates; see [sector-clip.md](sector-clip.md). The validated playable campaign
-now includes ten maps. The seventh/eighth are in the second original resource
+historically covered eleven maps. Admission now includes all twelve by user request.
+The seventh/eighth are in the second original resource
 family; their real exits complete through native scripts without grants or shortcuts.
 
 ## Established input behavior
@@ -103,11 +174,16 @@ binary-compatible GBA RAM structure.
 
 ## Matching status and tool fixes
 
+Live matching is 78/526 functions and 2,816/87,648 catalogued bytes (3.21%),
+after 549 compiler attempts (live status checked 18 October 2026). Original statistics helpers `1CF4`, `1D9C` and
+`1E48` add 592 exactly matched bytes. Both export and independent rebuild
+preserve the original ROM byte for byte.
+
 The manual recorder candidate is 97.5% similar, with the remaining differences
 at the initial global-pointer/limit/load scheduling. It is not counted among
-the 74 exact matches. Its best source and notes are stored in decomp.wtf.
+the exact matches. Its best source and notes are stored in decomp.wtf.
 
-The matched catalogue contains 2,152 bytes of verified C out of 87,648 imported
+The matched catalogue contains 2,816 bytes of verified C out of 87,648 imported
 function bytes. This denominator excludes undiscovered code. The 8 MiB image
 size is mostly data and is not a useful code-completion denominator.
 

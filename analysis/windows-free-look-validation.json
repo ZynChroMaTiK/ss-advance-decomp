@@ -80,20 +80,63 @@
                                        "buffered_presents":  1,
                                        "presentation_samples":  0
                                    }
+                  },
+                  {
+                      "snapshot":  "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\native-game-smoke\\look-original-chase.bmp",
+                      "name":  "look-original-chase",
+                      "frontend":  {
+                                       "result":  "pass",
+                                       "frames":  120,
+                                       "health":  100,
+                                       "entities":  16,
+                                       "score":  0,
+                                       "hidden_window":  true,
+                                       "render_width":  240,
+                                       "render_height":  160,
+                                       "world_rays":  0,
+                                       "initial_width":  240,
+                                       "initial_height":  160,
+                                       "pitch":  0,
+                                       "buffered_presents":  1,
+                                       "presentation_samples":  0
+                                   }
                   }
               ],
+    "gba_aim":  {
+                    "result":  "pass",
+                    "checks":  1289,
+                    "projected_views":  9,
+                    "bob_views":  192,
+                    "maximum_error_pixels":  1.309705
+                },
+    "chase_aim":  {
+                      "result":  "pass",
+                      "checks":  9944,
+                      "aligned_views":  232,
+                      "third_person":  88,
+                      "collision_fallbacks":  0,
+                      "weapon_switch_frames":  144,
+                      "maximum_4k_error_pixels":  0.212615,
+                      "death_frames":  64,
+                      "death_directions":  5
+                  },
     "physical_devices_tested":  false,
-    "executable_sha256":  "41ac793e789d710ce567dd9001a2d77a80bf588a57a8cb9259fbf2150c0b9e76",
+    "executable_sha256":  "27eac2927922a476adc484f0ea85c8d8e71c575c7217799927e5db7ea13a8967",
     "source_sha256":  {
-                          "platform/win32/game.c":  "e0b461b0accc4269e0220f1e706d0bde4bfd3319985b9aa17ec1f2f8b014668e",
-                          "src/native_game.c":  "300e33660442d58a12c1d708b8191974af1fa1fd3bc7c8ef898d1aeba04615c0",
+                          "platform/win32/game.c":  "6c21faa4812b6e1b5a9d413018611a48047c1074967299663cbd5254b4f1f3a5",
+                          "src/native_game.c":  "b0c43734ed5f5e10fd4ee5aa9441c89195a8bd08e7a02242e5a93e36846d8d23",
                           "src/pc_input.c":  "f0c21aa6dd332ee362c63ab7b43ef146a0380e34a4ecd41776923b1ae325bba8",
-                          "src/pc_input_runtime.c":  "5209c87de7352a39ef85ed527d67397c9676800942b4cc12e27194fbea37f33e",
-                          "src/player_runtime.c":  "2d41e19982060115fd5561afbcd91dc5562e478fa951fd855464d907ccf11b2e",
-                          "src/pc_renderer.c":  "21dcda5ce3b0517af8998b92b3802a0b8ad9ee324340301addc39ed3a4646980",
+                          "src/pc_input_runtime.c":  "54329319d0e68eb543597a60d742b25ced49e4c6e4cee6f3846febcebb1e914a",
+                          "src/player_runtime.c":  "047bb4cbf25a2ecf2255187962707d3f26fc183044fe2b19ca4e42ad70a787c6",
+                          "src/pc_renderer.c":  "3632477d6f5d0c469ae0a945eeeb1e6b68f8f14726faf464e718b7d1bd66635f",
                           "src/pc_renderer_pitch.inc":  "c299beb83c9a23aa799028fd96466342fedc3b58237a9148e698f3bb52e8617c",
                           "src/weapon_hit.c":  "a4f21ace0e023e9f6d1eac78f06d4448a6edc4b20c9d208061144a0222692f37",
-                          "src/weapon_controller.c":  "3326a2a1416f6fdd578cc601efb9c98927b5cac0ad09b421b5143deaf7864172",
-                          "src/weapon_runtime.c":  "541efd64f5dc0fd4042de1d0626e4227a7f683ebe92d0e7dc3ca685e5c012afe"
+                          "src/weapon_controller.c":  "21ba8b4a5a438f15b3687411118afca09cee497876015c2e4a863a06078023f9",
+                          "src/weapon_runtime.c":  "eb742a0667bd1cbf49268bae47804e213418dbae87a2e9ac17c4f881125b194f",
+                          "src/view.c":  "cac771a6266378e03afc87939414028467c64a553b70e539cd19c6ede9a9b8e6",
+                          "include/ssa/view.h":  "c95dd02899f3c36e3f4c8ff8a8dc8c0049a2479a06ca5717855a28b7aec9a6f6",
+                          "include/ssa/native_game.h":  "bbbb87b2a2675f43e686004e15eaa4459bad0f8a3b4b3adacb5b90b3030c0c7b",
+                          "tests/test_gba_aim.c":  "bf9c972466204bfcd8406761d8f66e691eab1a29fbf54b0325a08af853892c54",
+                          "tests/test_chase_aim.c":  "a0c0bac1a39f760e1e719773340575dc3fa8d0747f4b6d7226765a5fe422f827"
                       }
 }

@@ -13,6 +13,12 @@ int main(int argc,char **argv){
   if(!argv[1][0] || *end || value<2 || value>11)return 2;
   last=(unsigned)value;
  }
+ if(resume || fresh){const char *limit=getenv("SSA_CAMPAIGN_PROBE_FRAMES");
+  if(limit){char *end;unsigned long value=strtoul(limit,&end,10);
+   if(!*limit || *end || value<100 || value>30000)return 2;
+   campaign_frame_limit=(unsigned)value;fprintf(stderr,"Development probe limit: %u frames.\n",campaign_frame_limit);
+  }
+ }
  if(resume){
   if(!(f=fopen(argv[2],"rb")))return 1;
   if(fread(&earned,1,sizeof earned,f)!=sizeof earned || fgetc(f)!=EOF){fclose(f);return 1;}

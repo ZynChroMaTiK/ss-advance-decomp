@@ -1,5 +1,12 @@
 # Native projectile runtime
 
+Type67 cannonballs use their original no-gravity flight again, at the user's
+request. The temporary floor-rolling override has been removed; launch detachment
+and Gunrilla's self-collision fix remain. The PC adapter still enables
+`ceiling_impacts`: rockets65 explode and Prion69 stops at ceiling contact.
+Standalone recovery leaves that option off. See
+[flight behavior and current checks](weapon-fixes.md#floating-cannon-flight-floor-rolling-and-ceiling-impacts).
+
 ## Gunrilla launch collision correction
 
 The native PC runtime now lets type67 cannonballs leave their typeD6 Gunrilla
@@ -44,6 +51,14 @@ offset from live eye height along the aiming slope. It no longer follows later
 player yaw/position. Default recovered runtimes leave the option zero, and the
 original conversion/E2 logic remains unchanged. See weapon-fixes.md for launch
 alignment and trajectory tests.
+
+The playable composition also enables `ballistic_player_cannon`: player type67
+clears attachment4000 during weapon commit, preserving launch XYZ velocity and
+position instead of following later player view/translation. Original bounce,
+penetration, damage, source and owner exclusion stay unchanged. This option is
+default-off in the recovered runtime and does not apply to enemy cannonballs.
+Six player launch tests cover level/up/down aim in both views; Gunrilla's
+418-check regression also passes with the option explicitly enabled.
 
 `projectile_runtime.c` connects weapon creation, projectile controllers and
 motion to the native world, shared entity pool and combat adapter. It contains

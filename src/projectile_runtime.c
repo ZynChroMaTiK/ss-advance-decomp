@@ -290,7 +290,8 @@ int ssa_projectile_runtime_weapon(SsaProjectileRuntime *r,SsaCombatScope *scope,
         p=&r->projectiles[i];p->speed=event->effect->travel;
         p->owner=event->effect->owner;p->weapon=event->effect->weapon;
         if(p->owner && ((r->ballistic_player_rockets && p->entity->type==0x65) ||
-                       (r->ballistic_player_prion && p->entity->type==0x69))){
+                       (r->ballistic_player_prion && p->entity->type==0x69) ||
+                       (r->ballistic_player_cannon && p->entity->type==0x67))){
             p->entity->body.flags&=UINT16_C(0xbfff);
             event->effect->flags=p->entity->body.flags;
         }
@@ -316,7 +317,21 @@ static int move(void *context,SsaProjectile *p,int32_t x,int32_t y) {
     return ssa_world_try_move(w,p->entity,x,y);
 }
 static int vertical(void *context,SsaProjectile *p) {
-    StepCall *c=context;return ssa_vertical_step(&p->entity->body,NULL,c->motion.ticks);
+    StepCall *c=context;SsaBody *b=&p->entity->body;int result;
+    if(c->r->ceiling_impacts && (p->entity->type==0x65 || p->entity->type==0x69) &&
+       (int64_t)b->z+(int64_t)b->velocity_z*c->motion.ticks+b->height>=(int64_t)b->ceiling*65536){
+        b->z=bits((uint32_t)((int32_t)b->ceiling*65536)-(uint32_t)b->height);
+        b->velocity_z=0;return 0;
+    }
+    result=ssa_vertical_step(b,NULL,c->motion.ticks);
+    if(c->r->rolling_cannonballs && p->entity->type==0x67 && !result &&
+       b->z==(int32_t)b->floor*65536 &&
+       (int64_t)b->z+b->height<=(int64_t)b->ceiling*65536){
+        /* A floor clamp is a rolling contact, not a failed movement/bounce.
+         * Preserve XY speed and the original no-gravity airborne flight. */
+        b->velocity_z=0;return 1;
+    }
+    return result;
 }
 static int blocker(void *context,SsaProjectile *p,SsaEntity **out) {
     StepCall *c=context;(void)p;*out=c->r->combat->spawn->world->blocking_entity;return 0;

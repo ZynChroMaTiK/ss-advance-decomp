@@ -1,11 +1,13 @@
 #ifndef SSA_MENU_H
 #define SSA_MENU_H
 #include "ssa/map_view.h"
+#include "ssa/settings.h"
 enum { SSA_MENU_UP=1,SSA_MENU_DOWN=2,SSA_MENU_CONFIRM=4,SSA_MENU_BACK=8,
        SSA_MENU_START=16,SSA_MENU_LEFT=32,SSA_MENU_RIGHT=64 };
 enum { SSA_MENU_LANGUAGE=10,SSA_MENU_TITLE=11,SSA_MENU_MAIN=0,
        SSA_MENU_SINGLE=1,SSA_MENU_OPTIONS=4,SSA_MENU_PASSWORD=8,SSA_MENU_DIFFICULTY=9,SSA_MENU_CREDITS=12,
-       SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15 };
+       SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15,SSA_MENU_SETTINGS=16,SSA_MENU_EXTRA=17,
+       SSA_MENU_QUIT=18 };
 enum { SSA_MENU_UNAVAILABLE_LEVEL=100 };
 enum { SSA_MENU_LEVELS_PER_CHAPTER=6 };
 typedef struct SsaMenu {
@@ -28,10 +30,16 @@ typedef struct SsaMenu {
     uint8_t grid[64]; /* Original BG1 tile080AAEEC, repeated over BG0. */
     uint16_t completed_levels;
     unsigned level_scroll,selecting_level,clear_requested; /* level_scroll: chapter start0/6. */
+    SsaSettings settings;
+    unsigned soundfont_available,midi_available,settings_unavailable;
+    unsigned quit_requested; /* PC Main-menu Quit; never a new-game result. */
 } SsaMenu;
 /* Starts at Title in English. Options cycles Language in place (Left backwards,
  * Right/Confirm forwards), using original language names and localized labels.
- * Original title/main/single-player/difficulty/music/credits pages. Other
+ * Options IDs1..5: Credits, Language, Clear Data, Settings, Extras. Music volume is
+ * controlled by Settings; Extras holds jump, third-person and in-game NETRICSA toggles.
+ * No separate music toggle. Original title/main/
+ * single-player/difficulty/credits pages. Other
  * menu destinations are explicit unsupported boundaries, not fake features. */
 int ssa_menu_init(SsaMenu *,const uint8_t *,size_t,unsigned music_enabled);
 int ssa_menu_step(SsaMenu *,unsigned pressed);

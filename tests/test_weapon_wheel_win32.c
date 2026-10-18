@@ -34,6 +34,8 @@ int main(int argc,char **argv)
     a.game->players[0].inventory.ammo[4]=0;a.game->players[0].inventory.ammo[9]=20;
     wheel(a.window,-120);requested(&a,1); /* Uncaptured wheels do nothing. */
     a.captured=1;
+    SendMessageW(a.window,WM_KEYDOWN,'R',0);SendMessageW(a.window,WM_KEYUP,'R',0);
+    CHECK(!a.reload && !a.advance); /* R is unbound during gameplay. */
     wheel(a.window,-60);requested(&a,1);CHECK(a.wheel_remainder==-60);
     wheel(a.window,-60);requested(&a,3);CHECK(!a.wheel_remainder);
     CHECK(a.game->gameplay.weapon.current==1); /* Still lowering: next event uses requested3. */
@@ -79,6 +81,19 @@ int main(int argc,char **argv)
     flags=a.game->gameplay.weapon.flags;a.game->game.updating=1;
     CHECK(ssa_native_game_cycle_weapon(a.game,1)==-1);requested(&a,3);CHECK(a.game->gameplay.weapon.flags==flags);
     a.game->game.updating=0;CHECK(ssa_native_game_cycle_weapon(NULL,1)==-1);
+    CHECK(ssa_native_game_alternate_weapons(a.game,1,1)==1);
+    a.game->alternates.dual_colts=1;a.game->pickup.repeat_weapon=0;
+    SendMessageW(a.window,WM_KEYDOWN,'2',0);SendMessageW(a.window,WM_KEYUP,'2',0);
+    requested(&a,2);CHECK(a.game->alternates.requested_variant==1);
+    SendMessageW(a.window,WM_KEYDOWN,'2',(LPARAM)1<<30); /* Repeat must not toggle. */
+    CHECK(a.game->alternates.requested_variant==1);
+    SendMessageW(a.window,WM_KEYDOWN,'2',0);SendMessageW(a.window,WM_KEYUP,'2',0);
+    CHECK(!a.game->alternates.requested_variant);
+    wheel(a.window,-120);requested(&a,2);CHECK(a.game->alternates.requested_variant==1);
+    wheel(a.window,-120);requested(&a,3);
+    wheel(a.window,120);requested(&a,2);CHECK(a.game->alternates.requested_variant==1);
+    wheel(a.window,120);requested(&a,2);CHECK(!a.game->alternates.requested_variant);
+    CHECK(ssa_native_game_alternate_weapons(a.game,0,0)==1);
     a.captured=0;DestroyWindow(a.window);CHECK(UnregisterClassW(wc.lpszClassName,wc.hInstance));
     ssa_native_game_free(a.game);free(a.game);free(a.rom);
     printf("{\"result\":\"pass\",\"checks\":%u,\"physical_input\":false,\"real_window_messages\":true}\n",wheel_checks);

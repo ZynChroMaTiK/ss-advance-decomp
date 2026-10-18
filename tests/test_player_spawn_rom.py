@@ -57,7 +57,9 @@ def hook(machine,address,size,user):
   assert control==0x05000100
   uc.mem_write(destination,bytes(uc.mem_read(source,4))*256); ret()
  elif address==0x0800d1b4: ret()
-for addr in (0x080033d8,0x080c5320,0x0800d1b4): uc.hook_add(UC_HOOK_CODE,hook,begin=addr,end=addr)
+ elif address==0x0800f9b4:
+  uc.reg_write(UC_ARM_REG_R0,0x02073000);ret()
+for addr in (0x080033d8,0x080c5320,0x0800d1b4,0x0800f9b4): uc.hook_add(UC_HOOK_CODE,hook,begin=addr,end=addr)
 def dma(machine,access,address,size,value,user):
  if address==0x040000dc:
   assert value==0x85000100
@@ -65,6 +67,9 @@ def dma(machine,access,address,size,value,user):
   uc.mem_write(destination,bytes(uc.mem_read(source,4))*256)
 uc.hook_add(UC_HOOK_MEM_WRITE,dma,begin=0x040000dc,end=0x040000df)
 report={'rom_sha1':hashlib.sha1(ROM).hexdigest(),'whole_initializer_comparisons':0,'player_records':0,'body_records':0,'grid_snapshots':0,'native_guards':0,'scope':'Entire 08005E4C including original scanner, allocator, player/body synchronization, animation setup and BSP/grid insertion. Heap allocation, BIOS/DMA zero-fill and D1B4 sector-pool allocation are explicit test platform boundaries. No weapon setup, respawn or player frame.'}
+report['construction_restore_comparisons']=0
+report['construction_restore_scope']='512 additional actual05E4C+1240C+123C4 compositions on all16maps; only sprite allocation/platform memory services controlled. New body health100, player protection/queue zero; saved weapons/ammo restored. Not the complete outer campaign dispatcher.'
+entry_rng=random.Random(0x123c4)
 rng=random.Random(0x5e4c)
 
 def compare(m,level,count,local,random_markers=False,missing_start=False):
@@ -123,6 +128,26 @@ def compare(m,level,count,local,random_markers=False,missing_start=False):
   report['player_records']+=1
  assert [index(w.cells[i]) for i in range(w.width*w.height)]==[romindex(x[0]) for x in struct.iter_unpack('<I',uc.mem_read(GRID,w.width*w.height*4))]
  report['grid_snapshots']+=1
+ if count==1 and players[0].active:
+  # Compose the actual original constructor,1240C and123C4. Only sprite
+  # allocation is controlled; no vitality write or restore instruction is hooked.
+  put(0x0300572c,'<I',SETTINGS);uc.mem_write(SETTINGS,bytes(64));uc.mem_write(0x02073000,bytes(48))
+  uc.reg_write(UC_ARM_REG_SP,0x03007e00);uc.reg_write(UC_ARM_REG_LR,STOP|1)
+  uc.emu_start(0x0801240d,STOP,count=100000);assert uc.reg_read(UC_ARM_REG_PC)==STOP
+  original_body=bytes(uc.mem_read(POOL,0x74))
+  for case in range(32):
+   saved=bytearray(entry_rng.randbytes(0x60));current=1+case%10
+   struct.pack_into('<I',saved,0,current);struct.pack_into('<H',saved,12,0x3ff)
+   ammo=[entry_rng.randrange(1000) for _ in range(10)];struct.pack_into('<10h',saved,14,*ammo)
+   uc.mem_write(0x03005680,bytes(saved));uc.reg_write(UC_ARM_REG_R0,PLAYERS+0x28)
+   uc.reg_write(UC_ARM_REG_SP,0x03007e00);uc.reg_write(UC_ARM_REG_LR,STOP|1)
+   uc.emu_start(0x080123c5,STOP,count=100000);assert uc.reg_read(UC_ARM_REG_PC)==STOP
+   assert bytes(uc.mem_read(POOL,0x74))==original_body and get(POOL+0x32,'<h')==100
+   assert get(PLAYERS+0xc4,'<H')==0 and get(PLAYERS+0xc6,'<H')==0
+   assert get(PLAYERS+0x7a,'<H')==0 and not any(uc.mem_read(PLAYERS+0x7c,40))
+   assert get(PLAYERS+0x28,'<I')==current and get(PLAYERS+0x78,'<H')==current
+   assert get(PLAYERS+0x34,'<H')==0x3ff and list(struct.unpack('<10h',uc.mem_read(PLAYERS+0x36,20)))==ammo
+   report['construction_restore_comparisons']+=1
  if w.entity_count:
   assert not lib.ssa_players_spawn(players,C.byref(w),C.byref(plan),count,local); report['native_guards']+=1
  lib.ssa_world_free(C.byref(w))
@@ -161,5 +186,6 @@ assert not any(q.entity.owner for q in players); report['native_guards']+=1
 m.sectors=saved; p.player_starts=savedptr; p.player_count=savedcount
 lib.ssa_world_free(C.byref(w)); lib.ssa_spawn_plan_free(C.byref(p)); lib.ssa_map_assets_free(C.byref(m))
 report['source_sha256']=hashlib.sha256((ROOT/'src/player_spawn.c').read_bytes()).hexdigest()
+report['test_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 (ROOT/'analysis/native-player-spawn-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))

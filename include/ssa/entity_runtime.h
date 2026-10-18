@@ -24,6 +24,7 @@ typedef struct SsaEntityRuntime {
     const SsaEnemyControlRuntimeOps *generic_ops;
     const int32_t *enemy_speeds; /* Optional12 original1288C type coefficients. */
     unsigned fast_converted; /* PC: two behavior updates for living Prion victims. */
+    unsigned nearest_converted; /* PC: nearest living combatant, refreshed each behavior pass. */
 } SsaEntityRuntime;
 typedef struct SsaEntityRuntimeFrame {
     SsaPlayerRuntimeInput players[4];

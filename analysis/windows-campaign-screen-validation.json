@@ -1,0 +1,62 @@
+{
+    "result":  "pass",
+    "scope":  "Native story presentation/Windows input, audio and exit destinations; no campaign playthrough.",
+    "native":  {
+                   "result":  "pass",
+                   "checks":  87854,
+                   "screens":  27,
+                   "frames":  43510,
+                   "commands":  9,
+                   "fades":  36
+               },
+    "windows_cases":  [
+                          {
+                              "result":  "pass",
+                              "story":  0,
+                              "story_ticks":  285,
+                              "frozen_game_counter":  0,
+                              "music_checks":  161,
+                              "audio_device":  1,
+                              "audio_errors":  0,
+                              "map_active":  0,
+                              "menu_active":  0,
+                              "briefing_active":  1
+                          },
+                          {
+                              "result":  "pass",
+                              "story":  6,
+                              "story_ticks":  285,
+                              "frozen_game_counter":  0,
+                              "music_checks":  161,
+                              "audio_device":  1,
+                              "audio_errors":  0,
+                              "map_active":  0,
+                              "menu_active":  0,
+                              "briefing_active":  1
+                          },
+                          {
+                              "result":  "pass",
+                              "story":  12,
+                              "story_ticks":  285,
+                              "frozen_game_counter":  0,
+                              "music_checks":  161,
+                              "audio_device":  1,
+                              "audio_errors":  0,
+                              "map_active":  0,
+                              "menu_active":  1,
+                              "briefing_active":  0
+                          }
+                      ],
+    "physical_devices_tested":  false,
+    "executable_sha256":  "8a97551c094b463c6822af9c784a4399b11a93c2456fcc3115ef0691768c6435",
+    "source_sha256":  {
+                          "src/campaign_screen.c":  "7565aecbc8a094909399eeeaee4ab571d38bdfe3125d50946fb7cd8c4d4fe145",
+                          "include/ssa/campaign_screen.h":  "a14575a2897e7533b280a69dcebce051dad61f6bb16cf934607ce4c9dce2db5b",
+                          "src/campaign_story.c":  "e3a7bcc8d5eae82c1e25ffa21a1608b380228dcf950564afcd2eb433cd0ba478",
+                          "platform/win32/game.c":  "8e9131af5baca2cee96c9bcce755778eef135ceaa384cb4ff98baedc045a8452",
+                          "platform/win32/audio_win32.c":  "d7fc14300786afdfcb60b19c4c3bde2d14f472624303466c86c3a06519a2ec26",
+                          "platform/win32/audio_win32.h":  "d3b31f8cd9f390dc9231d15bf89b560b81b8a192153e6e3a7d70f5c84f75497c",
+                          "tests/test_campaign_screen.c":  "cdfd18294f03d6ce34bce4afd6c31d97c4419245973331bf37d57acc86edc68f",
+                          "scripts/test-campaign-screen.ps1":  "8206303efdf47f17313e789288e0f9eb534e6dc936c1bc2f299926dca497b4fa"
+                      }
+}

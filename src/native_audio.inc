@@ -14,6 +14,28 @@ static int sound(SsaNativeGame *g,unsigned id){
     else if(g->audio_ops.play)g->audio_ops.play(g->audio_ops.context,id);
     g->last_sound=id;return (int)++g->sound_serial;
 }
+static void audio_player_begin(SsaNativeGame *g){
+    g->audio_player_before=g->players[0].entity.body;
+    g->audio_player_health=g->players[0].inventory.health;
+    g->audio_player_flags=g->players[0].motion.movement.flags;
+    g->audio_jump_held=g->player.jump.was_down;
+}
+static void audio_player_motion(SsaNativeGame *g){
+    const SsaBody *before=&g->audio_player_before,*body=&g->players[0].entity.body;
+    int32_t floor=(int32_t)body->floor*65536,old_floor=(int32_t)before->floor*65536;
+    if(g->audio_player_health<=0 || g->players[0].inventory.health<=0 ||
+       (g->audio_player_flags&SSA_PLAYER_CONTROL_LOCK) ||
+       (g->players[0].motion.movement.flags&SSA_PLAYER_CONTROL_LOCK) ||
+       (body->flags&SSA_BODY_NO_GRAVITY) || body->hover_offset)return;
+    /* Observe the native jump without changing original motion/physics.
+     * A consumed fresh edge must actually lift the body, including a short
+     * jump that immediately touches a low ceiling. A ledge drop is not a jump. */
+    if(!g->audio_jump_held && g->player.jump.was_down && before->z==old_floor &&
+       before->velocity_z<=0 && body->z>before->z && body->z>floor)
+        (void)sound(g,14); /* Non-vocal bootstep for takeoff, not a hurt grunt. */
+    if(before->z>old_floor && before->velocity_z<0 && body->z==floor && body->velocity_z<=0)
+        (void)sound(g,13); /* Local boot impact, also when landing stationary. */
+}
 static void stop_sound(SsaNativeGame *g,unsigned id){
     if(g->audio_ops.source)g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_STOP,id,1,NULL);
     else if(g->audio_ops.stop)g->audio_ops.stop(g->audio_ops.context,id);

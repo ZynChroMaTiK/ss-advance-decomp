@@ -3,6 +3,7 @@
 #include "audio_win32.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void ssa_win32_audio_quiesce(SsaWin32Audio *a)
 {
@@ -15,6 +16,10 @@ void ssa_win32_audio_close(SsaWin32Audio *a)
     unsigned i;
     if(!a)return;
     ssa_win32_audio_quiesce(a);
+    if(a->mixer.loaded)(void)ssa_audio_set_synth(&a->mixer,NULL);
+    ssa_soundfont_free(a->soundfont);a->soundfont=NULL;
+    free(a->soundfont_path);a->soundfont_path=NULL;
+    ssa_win32_midi_close(a->midi);a->midi=NULL;a->music_style=SSA_MUSIC_ORIGINAL;
     if(a->thread){CloseHandle(a->thread);a->thread=NULL;}
     if(a->stop_event){CloseHandle(a->stop_event);a->stop_event=NULL;}
     if(a->device)waveOutReset(a->device);
@@ -48,6 +53,57 @@ static int pump(SsaWin32Audio *a)
     }
     return 1;
 }
+int ssa_win32_audio_soundfont_available(const SsaWin32Audio *a)
+{
+    DWORD attributes;
+    if(!a || !a->soundfont || !a->soundfont_path)return 0;
+    attributes=GetFileAttributesW(a->soundfont_path);
+    return attributes!=INVALID_FILE_ATTRIBUTES && !(attributes&FILE_ATTRIBUTE_DIRECTORY);
+}
+int ssa_win32_audio_load_soundfont(SsaWin32Audio *a,const wchar_t *path)
+{
+    FILE *f=NULL;void *data;long size;SsaSoundFont *s;wchar_t *saved_path;
+    if(!a || !a->synchronized || !path || _wfopen_s(&f,path,L"rb") || !f)return 0;
+    if(fseek(f,0,SEEK_END) || (size=ftell(f))<12 || size>64*1024*1024){fclose(f);return 0;}
+    rewind(f);data=malloc((size_t)size);
+    if(!data){fclose(f);return 0;}
+    if(fread(data,1,(size_t)size,f)!=(size_t)size){free(data);fclose(f);return 0;}
+    fclose(f);s=ssa_soundfont_load(data,(size_t)size,a->mixer.sample_rate);free(data);
+    if(!s)return 0;
+    saved_path=_wcsdup(path);if(!saved_path){ssa_soundfont_free(s);return 0;}
+    EnterCriticalSection(&a->mutex);
+    if(a->music_style==SSA_MUSIC_SOUNDFONT){(void)ssa_audio_set_synth(&a->mixer,NULL);a->music_style=SSA_MUSIC_ORIGINAL;}
+    ssa_soundfont_free(a->soundfont);a->soundfont=s;
+    free(a->soundfont_path);a->soundfont_path=saved_path;
+    LeaveCriticalSection(&a->mutex);return 1;
+}
+int ssa_win32_audio_settings(SsaWin32Audio *a,const SsaSettings *settings)
+{
+    int result=1;SsaAudioSynth synth={0};
+    if(!a || !settings || settings->music_style>=SSA_MUSIC_STYLES || settings->music_volume>100 || settings->sound_volume>100)return 0;
+    if(!a->synchronized)return settings->music_style==0;
+    EnterCriticalSection(&a->mutex);
+    if((settings->music_style==SSA_MUSIC_SOUNDFONT && !ssa_win32_audio_soundfont_available(a)) ||
+       (settings->music_style==SSA_MUSIC_MIDI && (!a->midi || a->midi->error)))result=0;
+    else{
+        unsigned previous_music=a->mixer.music_volume,previous_sounds=a->mixer.sound_volume;
+        /* A newly attached MIDI backend may emit held notes immediately.
+         * Establish the requested volume before attachment, including zero. */
+        (void)ssa_audio_set_volume(&a->mixer,settings->music_volume,settings->sound_volume);
+        if(settings->music_style!=a->music_style){SsaAudioSynth previous=a->mixer.synth;
+            if(settings->music_style==SSA_MUSIC_SOUNDFONT)synth=ssa_soundfont_synth(a->soundfont);
+            else if(settings->music_style==SSA_MUSIC_MIDI)synth=ssa_win32_midi_synth(a->midi);
+            result=ssa_audio_set_synth(&a->mixer,settings->music_style?&synth:NULL)==1;
+            if(result)a->music_style=settings->music_style;
+            else{
+                (void)ssa_audio_set_volume(&a->mixer,previous_music,previous_sounds);
+                (void)ssa_audio_set_synth(&a->mixer,previous.context?&previous:NULL);
+            }
+        }
+        if(a->music_style==SSA_MUSIC_MIDI)ssa_win32_midi_volume(a->midi);
+    }
+    LeaveCriticalSection(&a->mutex);return result;
+}
 int ssa_win32_audio_pump(SsaWin32Audio *a)
 {
     int result;
@@ -80,6 +136,7 @@ int ssa_win32_audio_open(SsaWin32Audio *a,const uint8_t *rom,size_t size,unsigne
     result=waveOutOpen(&a->device,WAVE_MAPPER,&format,(DWORD_PTR)a->buffer_event,0,CALLBACK_EVENT);
     if(result!=MMSYSERR_NOERROR){a->last_error=result;a->device=NULL;ssa_win32_audio_close(a);return 0;}
     InitializeCriticalSection(&a->mutex);a->synchronized=1;
+    a->midi=ssa_win32_midi_open(&a->mixer);
     a->stop_event=CreateEventW(NULL,TRUE,FALSE,NULL);
     if(!a->stop_event){a->last_error=MMSYSERR_NOMEM;ssa_win32_audio_close(a);return 0;}
     for(i=0;i<SSA_AUDIO_BUFFERS;++i){
@@ -109,6 +166,10 @@ int ssa_win32_audio_restart(SsaWin32Audio *a,unsigned level)
 {return restart_music(a,level,3);}
 int ssa_win32_audio_begin_level(SsaWin32Audio *a,unsigned level)
 {return restart_music(a,level,2);}
+int ssa_win32_audio_begin_story(SsaWin32Audio *a,unsigned level)
+{return restart_music(a,level,11);}
+int ssa_win32_audio_screen(SsaWin32Audio *a,unsigned level,unsigned command)
+{return restart_music(a,level,command);}
 void ssa_win32_audio_map_skip(SsaWin32Audio *a)
 {
     if(!a || !a->synchronized)return;
@@ -196,5 +257,6 @@ void ssa_win32_audio_toggle_mute(SsaWin32Audio *a)
     if(!a)return;
     if(a->synchronized)EnterCriticalSection(&a->mutex);
     a->mixer.muted=!a->mixer.muted;
+    if(a->music_style==SSA_MUSIC_MIDI)ssa_win32_midi_volume(a->midi);
     if(a->synchronized)LeaveCriticalSection(&a->mutex);
 }

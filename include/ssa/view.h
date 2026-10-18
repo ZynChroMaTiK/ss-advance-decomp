@@ -27,6 +27,7 @@ void ssa_view_focus_lost(SsaView *view);
  * Uses original yaw convention: 0 faces +Y, 0x4000 faces +X.
  * Supply a DEDICATED collision workspace (its query results are overwritten).
  * NULL workspace safely yields eye view. No gameplay trigger events execute.
+ * Retracted chase distances below64 units fall back to first person.
  * Output target is ahead of the player's eye; gameplay aim stays with the
  * player, not the displaced camera. Never changes body, yaw or eye state.
  * Render the player body only when pose.third_person is true, and the first

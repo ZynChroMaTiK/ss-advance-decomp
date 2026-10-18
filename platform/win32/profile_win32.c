@@ -4,6 +4,31 @@
 #include <stdio.h>
 #include <string.h>
 #include "profile_win32.h"
+int ssa_win32_settings_read(SsaSettings *s,const wchar_t *path){
+ uint8_t b[SSA_SETTINGS_BYTES+1];DWORD n;HANDLE f;
+ if(!s || !path)return 0;
+ f=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_DELETE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+ if(f==INVALID_HANDLE_VALUE)return GetLastError()==ERROR_FILE_NOT_FOUND;
+ if(!ReadFile(f,b,sizeof b,&n,NULL)){CloseHandle(f);return 0;}
+ CloseHandle(f);return ssa_settings_decode(s,b,n)==1;
+}
+int ssa_win32_settings_write(const SsaSettings *s,const wchar_t *path){
+ wchar_t temp[32768];uint8_t b[SSA_SETTINGS_BYTES];HANDLE f=INVALID_HANDLE_VALUE;DWORD n;unsigned i;int count,ok;
+ if(!path || ssa_settings_encode(s,b,sizeof b)!=1)return 0;
+ for(i=0;i<32;++i){
+  count=_snwprintf(temp,32768,L"%ls.tmp-%lu-%u",path,(unsigned long)GetCurrentProcessId(),i);
+  if(count<0 || count>=32768)return 0;
+  f=CreateFileW(temp,GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
+  if(f!=INVALID_HANDLE_VALUE)break;
+  if(GetLastError()!=ERROR_FILE_EXISTS)return 0;
+ }
+ if(f==INVALID_HANDLE_VALUE)return 0;
+ ok=WriteFile(f,b,sizeof b,&n,NULL) && n==sizeof b && FlushFileBuffers(f);
+ CloseHandle(f);
+ if(ok)ok=MoveFileExW(temp,path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
+ if(!ok)DeleteFileW(temp);
+ return ok;
+}
 static int read_profile(const wchar_t *path,SsaProfile *p,unsigned *error){
  uint8_t b[SSA_PROFILE_BYTES+1];DWORD n;HANDLE f=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_DELETE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
  if(f==INVALID_HANDLE_VALUE){*error=GetLastError();return *error==ERROR_FILE_NOT_FOUND?0:-1;}

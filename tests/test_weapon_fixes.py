@@ -1,4 +1,4 @@
-"""Native weapon audio ownership and aim-aligned, launch-independent PC rockets/Prion shots."""
+"""Native weapon audio, independent launches, floating cannon flight with floor rolling and rocket/Prion ceiling impacts."""
 from pathlib import Path
 import hashlib,json,os,subprocess
 r=Path(__file__).resolve().parents[1];b=r/'build/native-tests';b.mkdir(parents=True,exist_ok=True)

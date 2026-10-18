@@ -65,6 +65,16 @@ int ssa_weapon_animation_idle(SsaWeaponObject *object, SsaWeaponControl *control
     return ssa_weapon_animation_set(object, (uint16_t)(control->current - 1u), 3);
 }
 
+int ssa_weapon_animation_resolve(SsaWeaponObject *object,const SsaWeaponAnimations *animations) {
+    unsigned start,length;
+    if(!object || !animations || animations->loaded!=1)return -1;
+    if(object->animation==0xffff){object->previous_frame|=0x3fff;object->frame|=0x3fff;return 1;}
+    if(object->animation>=SSA_WEAPON_ANIMATION_COUNT)return -1;
+    start=animations->offsets[object->animation];length=animations->lengths[object->animation];
+    if(object->frame_index>=length || start+object->frame_index>=SSA_WEAPON_ANIMATION_WORDS)return -1;
+    object->frame=(uint16_t)((object->frame&0xc000)|(animations->words[start+object->frame_index]&0x3fff));return 1;
+}
+
 int ssa_weapon_animation_step(SsaWeaponObject *object, const SsaWeaponAnimations *animations,
                               uint16_t game_flags, unsigned ticks) {
     SsaWeaponObject next;

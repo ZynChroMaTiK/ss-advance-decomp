@@ -44,4 +44,8 @@ typedef struct SsaPickupGame {
  * This does not implement scripts, sound, HUD, networking or entity allocation. */
 int ssa_pickup_touch(SsaPickupGame *, const SsaPickupPlayer *, SsaPickup *,
                      uint32_t override_item);
+/* PC variant acquisition: permit one already-owned weapon to queue again.
+ * repeat_weapon=0 retains original acceptance. Other pickup behavior is shared. */
+int ssa_pickup_touch_alternate(SsaPickupGame *,const SsaPickupPlayer *,SsaPickup *,
+                             uint32_t override_item,unsigned repeat_weapon);
 #endif

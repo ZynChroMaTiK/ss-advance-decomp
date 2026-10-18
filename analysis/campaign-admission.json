@@ -1,0 +1,27 @@
+{
+    "result":  "pass",
+    "enabled_campaign_levels":  12,
+    "final_level_index":  11,
+    "final_level_name":  "Caesar\u0027s Palace",
+    "validation_policy":  "User requested manual campaign playthrough validation; automated completion is not an admission gate.",
+    "scope":  "Windows build and final-map launch/init/render sanity only; no claim of campaign completion or original ending-screen parity.",
+    "library_count":  114,
+    "launch":  {
+                   "exit_code":  0,
+                   "entities":  8,
+                   "health":  100,
+                   "command":  "play-native.cmd --level 11 --smoke --smoke-frames 2 --resolution 640x480",
+                   "buffered_presents":  1,
+                   "frames":  2
+               },
+    "executable_sha256":  "f42373e9d83c7635a47c4c17db00ffff69e9500466ba5f853dd19bd46358cccf",
+    "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e",
+    "source_sha256":  {
+                          "include/ssa/native_game.h":  "34b429ac0367eef9bbcd4fba7280d565446351f44fa09c385aa551711621c99c",
+                          "src/native_game.c":  "5ddef5e03d2e53b706841ec1e6eb28594ff25e10a091e8b5e2f4aef942ca3c7a",
+                          "platform/win32/game.c":  "67c29462be1f20aec9950e9a371c0c78293bb241b936d446fd6d3a29db20bfcb",
+                          "src/campaign_story.c":  "e3a7bcc8d5eae82c1e25ffa21a1608b380228dcf950564afcd2eb433cd0ba478",
+                          "include/ssa/campaign_story.h":  "d8b325802141c75813715772b1ea106de76462c8553c8ad77d1c054bc945e33e",
+                          "CMakeLists.txt":  "45b52d9d9aee50f7539377089fa14ef1f77f0613baf9aedb135e4401b9a6e3d7"
+                      }
+}

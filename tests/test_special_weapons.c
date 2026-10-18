@@ -268,6 +268,7 @@ static void prion_speed_case(const uint8_t *rom,unsigned type)
     unsigned slot=100,second=100,i,mode;int16_t health;int32_t x,y;
     CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);
     CHECK(g->entities.fast_converted==1 && g->actor_runtime.fast_converted==1);
+    g->entities.nearest_converted=0; /* Isolate the behavior-clock regression. */
     for(i=0;i<100;++i)if(g->spawn.actors[i].owned && g->spawn.actors[i].entity.type>=0xcd && g->spawn.actors[i].entity.type<=0xd6){
         if(slot==100)slot=i;else{second=i;break;}
     }

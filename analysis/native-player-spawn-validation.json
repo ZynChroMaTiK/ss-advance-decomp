@@ -6,5 +6,8 @@
   "grid_snapshots": 688,
   "native_guards": 679,
   "scope": "Entire 08005E4C including original scanner, allocator, player/body synchronization, animation setup and BSP/grid insertion. Heap allocation, BIOS/DMA zero-fill and D1B4 sector-pool allocation are explicit test platform boundaries. No weapon setup, respawn or player frame.",
-  "source_sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f"
+  "construction_restore_comparisons": 512,
+  "construction_restore_scope": "512 additional actual05E4C+1240C+123C4 compositions on all16maps; only sprite allocation/platform memory services controlled. New body health100, player protection/queue zero; saved weapons/ammo restored. Not the complete outer campaign dispatcher.",
+  "source_sha256": "d3071a55331d6e5fd18153d9bd6addb809c32eff7cd4b9a15baad73e6d6ab11f",
+  "test_sha256": "eacb19770e8c5b22031e9c6df762dbc394acedbe2f7325f76a7b936ce22b6fdc"
 }

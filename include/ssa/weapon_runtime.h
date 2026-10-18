@@ -46,6 +46,11 @@ typedef struct SsaWeaponRuntime {
     unsigned finish_fire_before_switch,switch_wait;
     unsigned time_strike_requires_target; /* PC weapon9: valid living enemy or no shot. */
     unsigned time_strike_empty_pending; /* Buffered visual-only gesture until ready. */
+    unsigned fire_inhibited; /* PC variant handoff: finish the current shot, buffer new clicks. */
+    unsigned double_colt,switch_blocked; /* PC dual firing clock / independent hand recoil gate. */
+    unsigned colt_pair,colt_pair_pending; /* PC dual input queues two alternating starts. */
+    unsigned alternate_shotgun; /* PC fourteen-pellet pattern,5base damage each. */
+    unsigned shotgun_animating,shotgun_elapsed; /* Alternate cycle:105ticks/1.75s. */
 } SsaWeaponRuntime;
 typedef struct SsaWeaponRuntimeOps {
     const SsaCombatRuntimeOps *combat;

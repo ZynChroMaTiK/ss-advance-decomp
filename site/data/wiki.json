@@ -714,7 +714,7 @@
       "sections": [
         {
           "title": "Native port availability",
-          "text": "Decoded and available in the atlas and 3D viewer. Native campaign progression is still being validated; this map remains unavailable in the playable level selector."
+          "text": "Playable in the current native Windows prototype."
         },
         {
           "title": "Encounter records",
@@ -779,7 +779,7 @@
       "sections": [
         {
           "title": "Native port availability",
-          "text": "Decoded and available in the atlas and 3D viewer. Native campaign progression is still being validated; this map remains unavailable in the playable level selector."
+          "text": "Playable in the current native Windows prototype."
         },
         {
           "title": "Encounter records",
@@ -1091,9 +1091,9 @@
           0
         ]
       ],
+      "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach.",
       "appearances": [],
-      "related": [],
-      "coverage": "The chainsaw is starting equipment; zero pickup records does not mean it is unavailable. The PC port deliberately increases its reach."
+      "related": []
     },
     {
       "id": "weapon-shotgun",
@@ -2890,7 +2890,7 @@
       "sections": [
         {
           "title": "Campaign progress",
-          "text": "The prototype saves beaten levels and language preferences in save.dat. Finishing a level unlocks its successor; the last two campaign maps remain unavailable until supported."
+          "text": "The prototype saves beaten levels and language preferences in save.dat. Finishing a level unlocks its successor. All twelve campaign maps are enabled, including Caesar’s Palace; full campaign validation is manual."
         },
         {
           "title": "Original password starts",
@@ -2949,7 +2949,7 @@
         },
         {
           "title": "Combat and interaction",
-          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Escape releases the mouse."
+          "text": "Left-click fires. E interacts. Number keys 1–0 and the mouse wheel select weapons; Q recalls the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA overlay when enabled."
         }
       ],
       "related": [

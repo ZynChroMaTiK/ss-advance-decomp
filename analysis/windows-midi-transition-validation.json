@@ -1,0 +1,44 @@
+{
+    "result":  "pass",
+    "scope":  "Real Windows MIDI map/fade/level audio, Egypt and Rome. Native PCM music excluded from process-only loopback capture.",
+    "cases":  [
+                  {
+                      "level":  0,
+                      "map_peak":  0.19372582,
+                      "level_peak":  0.98504353,
+                      "map_energy":  322.72994551,
+                      "level_energy":  2926.36753756,
+                      "faded_expression":  0,
+                      "level_expression":  127,
+                      "notes":  65,
+                      "errors":  0
+                  },
+                  {
+                      "level":  6,
+                      "map_peak":  0.12591667,
+                      "level_peak":  0.06948003,
+                      "map_energy":  74.73211576,
+                      "level_energy":  33.33735754,
+                      "faded_expression":  0,
+                      "level_expression":  127,
+                      "notes":  147,
+                      "errors":  0
+                  }
+              ],
+    "microphone_used":  false,
+    "physical_listening_tested":  false,
+    "process_loopback_only":  true,
+    "executable_sha256":  "2f141c9afaaf4381f5ef296eab47f7d0fee14eba969231a26f2bf2ddbc1ff9a1",
+    "source_sha256":  {
+                          "src/audio.c":  "f0a492179f155387cad911d71c143d11f3074e2dd444b2daf21e653c0ee75893",
+                          "include/ssa/audio.h":  "ac206e701b9b4af0d109e4bafeeefa012304558d5ec675cffeba1babb6983ddd",
+                          "platform/win32/midi_win32.c":  "ad23849cad82e7f6508f07f865ee2634bb89b772d6b2053543192a70169e0449",
+                          "platform/win32/midi_win32.h":  "6d726ae0e7688fbb34478dfad1513005c4caf4d06ae19be99d18b9bfaf391f5d",
+                          "platform/win32/audio_win32.c":  "d7fc14300786afdfcb60b19c4c3bde2d14f472624303466c86c3a06519a2ec26",
+                          "platform/win32/audio_win32.h":  "d3b31f8cd9f390dc9231d15bf89b560b81b8a192153e6e3a7d70f5c84f75497c",
+                          "tests/test_midi_transition_win32.cpp":  "c0e6579211a4628f7a588667af9c2b1b206070158c353f3aa51d929d592a8377",
+                          "tests/test_midi_sync_win32.cpp":  "cc93f88716c047c007f7b68f8333521b64728dafd42a82d13213951c2e8bdd40",
+                          "CMakeLists.txt":  "445dd2ef4a6a86e99d634d5baab17c6dfe11793055c45dd5dcd824a2ca0ea4d9",
+                          "scripts/test-midi-transition.ps1":  "6ff66244f3d811ba750a850b953c5bbeb2ad2c8d191a504f596a76ba2fe65af1"
+                      }
+}

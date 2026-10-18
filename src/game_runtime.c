@@ -178,10 +178,15 @@ static int stage(void *context,SsaFrame *f,SsaFrameStage which) {
         }
     case SSA_FRAME_SPRITE_ANIMATION:
         for(i=0;i<r->sprites->active_count;++i) {
-            unsigned slot=r->sprites->active[i];
-            if(slot>=84 || !r->sprites->objects[slot] ||
-               ssa_weapon_animation_step(r->sprites->objects[slot],r->sprite_animations,
-                   f->game->flags,f->game->ticks)<0) return -1;
+            unsigned slot=r->sprites->active[i],player;
+            if(slot>=84 || !r->sprites->objects[slot])return -1;
+            for(player=0;player<combat->player_count;++player)
+                if(r->weapons[player] && r->weapons[player]->alternate_shotgun && r->weapons[player]->shotgun_animating &&
+                   r->sprites->objects[slot]==&r->weapons[player]->object)break;
+            if(player<combat->player_count){
+                if(ssa_weapon_runtime_animate(r->weapons[player],f->game->flags,f->game->ticks)<0)return -1;
+            }else if(ssa_weapon_animation_step(r->sprites->objects[slot],r->sprite_animations,
+                        f->game->flags,f->game->ticks)<0)return -1;
         }
         return 0;
     default:

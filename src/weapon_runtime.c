@@ -1,6 +1,7 @@
 #include "ssa/weapon_runtime.h"
 #include "combat_runtime_internal.h"
 #include "projectile_runtime_internal.h"
+#include <limits.h>
 #include <string.h>
 
 static int bound(const SsaWeaponRuntime *r) {
@@ -40,6 +41,8 @@ int ssa_weapon_runtime_respawn(SsaWeaponRuntime *r,uint16_t animation,uint16_t p
     r->automatic_phase=0;r->automatic_damage_phase=0;
     r->fire_pending_weapon=0;r->switch_wait=0;
     r->time_strike_empty_pending=0;
+    r->colt_pair_pending=0;
+    r->shotgun_animating=r->shotgun_elapsed=0;
     r->player->weapon_action=(uint32_t)r->object.y;return 0;
 }
 int ssa_weapon_runtime_init(SsaWeaponRuntime *r,SsaPlayerGameplay *p,SsaCombatRuntime *c,
@@ -123,7 +126,7 @@ int ssa_weapon_runtime_bind_projectiles(SsaWeaponRuntime *r,SsaProjectileRuntime
 typedef struct WeaponCall {
     SsaWeaponRuntime *runtime;SsaWeaponGame *game;const SsaWeaponRuntimeOps *ops;
     SsaCombatScope *scope;
-    unsigned clear_marker;
+    unsigned clear_marker,shotgun_done;
 } WeaponCall;
 static int32_t attack_range(const SsaWeaponRuntime *r,unsigned weapon,int32_t range) {
     if(weapon==1 && r->chainsaw_range && r->rules->range[0])
@@ -176,10 +179,73 @@ static int aim(void *context,const SsaWeaponController *s,uint16_t heading,int32
     }
     return aim_result(c,s,out);
 }
+static int shotgun(WeaponCall *c,const SsaWeaponController *s,const SsaWeaponEvent *e) {
+    /* Requested angles, rounded to one turn/65536. Positive vertical is up. */
+    static const int16_t pattern[14][2]={
+        {-936,470},{0,470},{936,470},
+        {-1245,157},{-313,157},{313,157},{1245,157},
+        {-936,-157},{0,-157},{936,-157},
+        {-1245,-470},{-313,-470},{313,-470},{1245,-470}};
+    struct {SsaEntity *entity;unsigned count;} targets[14]={{0}};
+    SsaWeaponRuntime *r=c->runtime;SsaPlayerRuntime *p=r->player->runtime;
+    SsaViewPose direction={0};unsigned i,j,count=0;uint16_t heading,ignored;
+    int32_t pitch,sy,cy,sp,cp,forward[3],right[3],up[3],z;
+    if(p->free_aim)pitch=p->pitch;
+    else{
+        direction.target_y=65536;direction.target_z=s->aim_slope;
+        if(!ssa_view_angles(&direction,r->trace.math,&ignored,&pitch))return -1;
+    }
+    ssa_sincos(r->trace.math,s->heading,&sy,&cy);
+    ssa_sincos(r->trace.math,(uint16_t)pitch,&sp,&cp);
+    forward[0]=(int32_t)((int64_t)sy*cp/65536);forward[1]=(int32_t)((int64_t)cy*cp/65536);forward[2]=sp;
+    right[0]=cy;right[1]=-sy;right[2]=0;
+    up[0]=(int32_t)(-(int64_t)sy*sp/65536);up[1]=(int32_t)(-(int64_t)cy*sp/65536);up[2]=cp;
+    z=p->free_aim?p->camera.eye_z-s->source->body.z:e->args[2];
+    for(i=0;i<14;++i){
+        int32_t sh,ch,sv,cv,weights[3],v[3],sine,cosine,slope;int64_t value;
+        SsaWeaponHit hit;int16_t health;
+        ssa_sincos(r->trace.math,(uint16_t)pattern[i][0],&sh,&ch);
+        ssa_sincos(r->trace.math,(uint16_t)pattern[i][1],&sv,&cv);
+        weights[0]=(int32_t)((int64_t)cv*ch/65536);weights[1]=(int32_t)((int64_t)cv*sh/65536);weights[2]=sv;
+        for(j=0;j<3;++j)v[j]=(int32_t)(((int64_t)forward[j]*weights[0]+(int64_t)right[j]*weights[1]+(int64_t)up[j]*weights[2])/65536);
+        direction=(SsaViewPose){0};direction.target_x=v[0];direction.target_y=v[1];direction.target_z=v[2];
+        if(!ssa_view_angles(&direction,r->trace.math,&heading,&pitch))return -1;
+        ssa_sincos(r->trace.math,(uint16_t)pitch,&sine,&cosine);
+        value=(int64_t)sine*65536/(cosine?cosine:1);
+        slope=value>INT32_MAX?INT32_MAX:value<INT32_MIN?INT32_MIN:(int32_t)value;
+        /* Explicit rays retain full yaw and vertical offsets in GBA mode too;
+         * its original three-ray path deliberately ignores event headings. */
+        if(ssa_weapon_hit_query_free(&r->trace,s->source,heading,z,e->args[4],slope,&hit)<0)return -1;
+        if(!hit.impact && r->unlimited_ranged &&
+           ssa_weapon_hit_query_unlimited(&r->trace,s->source,heading,z,slope,&hit,0)<0)return -1;
+        if(!hit.impact)continue;
+        if(hit.target){
+            if(ssa_combat_scope_health(c->scope,hit.target,&health)<0)return -1;
+            if(!health)continue;
+        }
+        if(c->ops->impact(c->ops->context,r,&hit)<0)return -1;
+        if(!hit.target)continue;
+        for(j=0;j<count && targets[j].entity!=hit.target;++j){}
+        if(j==count){targets[count].entity=hit.target;++count;}
+        ++targets[j].count;
+    }
+    /* Original flag1 prevents a second damage call to an enemy this frame.
+     * Aggregate per target so every pellet contributes, keeping per-pellet
+     * hit statistics and the original difficulty/reward/death pipeline. */
+    for(i=0;i<count;++i){
+        if(r->combat->damage->shot_hit_count)*r->combat->damage->shot_hit_count+=targets[i].count-1;
+        if(ssa_combat_scope_damage(c->scope,targets[i].entity,s->source,NULL,targets[i].count*5)<0)return -1;
+    }
+    return 0;
+}
 static int event(void *context,const SsaWeaponController *s,SsaWeaponEvent *e) {
     WeaponCall *c=context;SsaWeaponRuntime *r=c->runtime;
     if(c->clear_marker) {r->trace.marker=0;c->clear_marker=0;}
     sync(r);
+    if(r->alternate_shotgun && s->control->current==3 && e->kind==SSA_WEAPON_HITSCAN){
+        if(c->shotgun_done)return 0;
+        c->shotgun_done=1;return shotgun(c,s,e);
+    }
     if(r->projectiles && e->kind==SSA_WEAPON_PROJECTILE_CREATE){
         int prion=e->args[0]==0x69 && r->projectiles->ballistic_player_prion;
         if(prion){
@@ -285,6 +351,17 @@ static int run(void *context,SsaCombatScope *scope) {
     d->credited_kills=r->credited_kills;
     w->keys=p->motion.movement.flags;w->flags=p->motion.movement.weapon_flags;
     s->source_health=p->inventory.health;s->heading=p->motion.movement.heading;
+    if(r->shotgun_animating && (!r->alternate_shotgun || w->current!=3 || !s->source_health)){
+        if(w->current==3 && (r->object.animation==12 || r->object.animation==22))r->object.period=r->rules->period[2];
+        r->shotgun_animating=r->shotgun_elapsed=0;
+    }
+    if(r->alternate_shotgun && r->shotgun_animating && r->shotgun_elapsed==105 &&
+       r->object.done && (w->flags&0x1000)){
+        /* Consume completion before the controller, admitting the next shot
+         * exactly105ticks after start rather than adding an idle update. */
+        if(ssa_weapon_animation_idle(&r->object,w)<0)goto done;
+        r->shotgun_animating=0;
+    }
     c->game->local_flags=r->combat->players[d->local_player]->player->motion.movement.flags;
     if(w->keys&4) {
         if(ssa_weapon_controller_cooldowns(s,c->game->ticks)<0) goto done;
@@ -301,6 +378,7 @@ static int run(void *context,SsaCombatScope *scope) {
         if(pending && (pending!=w->requested || !s->inventory->ammo[pending-1] ||
            !s->source_health || (c->game->local_flags&8)))pending=r->fire_pending_weapon=0;
         if(pending!=9 || !r->time_strike_requires_target)r->time_strike_empty_pending=0;
+        if(w->requested!=2 || !s->source_health || (c->game->local_flags&8))r->colt_pair_pending=0;
         previous_shots=pending?c->game->shots[pending-1]:0;
         if(pending){
             /* A real release still acknowledges the original held-fire gate.
@@ -310,7 +388,10 @@ static int run(void *context,SsaCombatScope *scope) {
             if(w->current==pending)s->held|=1;
             else s->held&=(uint16_t)~1u;
         }
+        if(r->colt_pair && r->colt_pair_pending && w->current==2)s->held|=1;
         held=s->held;
+        if(r->fire_inhibited || ((r->switch_blocked || r->double_colt) && w->requested!=w->current))s->held&=(uint16_t)~1u;
+        if(r->alternate_shotgun && w->current==3 && w->requested!=3)s->held&=(uint16_t)~1u;
         was_firing=w->flags&0x400;
         if(r->finish_fire_before_switch && w->requested!=w->current && (w->flags&0x400)){
             if(r->rules->continuous[w->current-1]){
@@ -346,6 +427,15 @@ static int run(void *context,SsaCombatScope *scope) {
             ssa_weapon_controller_step_free(s,c->game,r->rules,&ops):
             ssa_weapon_controller_step(s,c->game,r->rules,&ops))<0)goto done;
         s->held=held;
+        if(r->alternate_shotgun && w->current==3 && !was_firing && (w->flags&0x400)){
+            r->shotgun_animating=1;r->shotgun_elapsed=0;r->object.period=0;
+        }
+        if(r->colt_pair && w->current==2 && !was_firing && (w->flags&0x400)){
+            /* Held fire opens another pair only when its first shot starts.
+             * A released click keeps its second shot through cadence/reload. */
+            if(!r->colt_pair_pending)r->colt_pair_pending=2;
+            --r->colt_pair_pending;
+        }
         /* Discrete Time Strike completes itself after start. Consume its
          * buffered click at that boundary, including a visual-only attempt. */
         if(pending==9 && r->time_strike_requires_target && w->current==9 && !was_firing && (w->flags&0x400)){
@@ -356,7 +446,8 @@ static int run(void *context,SsaCombatScope *scope) {
         }
         if(pending && c->game->shots[pending-1]!=previous_shots)r->fire_pending_weapon=0;
         if(c->clear_marker) {r->trace.marker=0;c->clear_marker=0;}
-        if(!(r->finish_fire_before_switch && w->requested!=w->current && (w->flags&0x400))){
+        if(!(r->switch_blocked && w->requested!=w->current) &&
+           !(r->finish_fire_before_switch && w->requested!=w->current && (w->flags&0x400))){
             r->switch_wait=0;
             if(ssa_weapon_controller_switch(s,c->game->ticks)<0) goto done;
         }
@@ -366,14 +457,14 @@ done:
     s->held=held;sync(r);d->credit_player=0;d->shot_hit_count=NULL;d->credited_kills=previous_kills;
     return result;
 }
-int ssa_weapon_runtime_step(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
+static int step_once(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
     uint16_t pressed,const SsaWeaponRuntimeOps *ops) {
-    WeaponCall c={r,game,ops,NULL,0};int result;
+    WeaponCall c={r,game,ops,NULL,0,0};int result;
     if(!idle(r) || r->automatic_period>255 || r->automatic_gba_clock>1 || r->double_minigun>1 ||
        r->clocked_chainsaw>SSA_CHAINSAW_GBA_CADENCE || r->chainsaw_range>32767 ||
        (r->clocked_chainsaw==SSA_CHAINSAW_GBA_CADENCE && !r->automatic_gba_clock) ||
        (r->chainsaw_range && !r->rules->range[0]) || r->buffer_fire>1 || r->fire_pending_weapon>10 ||
-       r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 ||
+       r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 || r->fire_inhibited>1 || r->double_colt>1 || r->switch_blocked>1 || r->colt_pair>1 || r->alternate_shotgun>1 || r->shotgun_animating>1 || r->shotgun_elapsed>105 ||
        !game || game->players!=r->combat->player_count || !ops ||
        !ops->combat || !ops->combat->event || !ops->event || !ops->impact ||
        r->player->weapon.current<1 || r->player->weapon.current>10 ||
@@ -382,21 +473,55 @@ int ssa_weapon_runtime_step(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t hel
        r->combat->damage->local_player>=r->combat->player_count) return -1;
     /* F150 runs before122AC: paused objects retain visibility; input-state3
      * objects still refresh it. Display-local index differs from motion index. */
-    if(game->flags&1){r->fire_pending_weapon=r->time_strike_empty_pending=0;return 0;}
+    if(game->flags&1){r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;return 0;}
     if(r->combat->players[r->combat->damage->local_player]->player->motion.movement.flags&8)
         r->object.flags&=~1u;
     else r->object.flags|=1;
-    if(r->player->life_game.input_state==3){r->fire_pending_weapon=r->time_strike_empty_pending=0;return 0;}
+    if(r->player->life_game.input_state==3){r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;return 0;}
+    if(!r->colt_pair || r->player->weapon.requested!=2)r->colt_pair_pending=0;
     if(!r->controller.inventory->health || !(r->player->runtime->player->motion.movement.flags&4))
-        r->fire_pending_weapon=r->time_strike_empty_pending=0;
-    else if(r->buffer_fire && (pressed&1) && r->player->weapon.requested>=1 && r->player->weapon.requested<=10)
+        r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;
+    else if(r->buffer_fire && (pressed&1) && r->player->weapon.requested>=1 && r->player->weapon.requested<=10){
         r->fire_pending_weapon=r->player->weapon.requested;
+        if(r->colt_pair && r->player->weapon.requested==2 && r->colt_pair_pending<=UINT_MAX-2)
+            r->colt_pair_pending+=2;
+    }
     r->updating=1;r->player->updating=1;
     r->controller.held=held;r->controller.pressed=pressed;
     result=ssa_combat_scope_run(r->combat,ops->combat,run,&c);
     r->player->updating=0;r->updating=0;return result;
 }
+int ssa_weapon_runtime_step(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
+    uint16_t pressed,const SsaWeaponRuntimeOps *ops) {
+    uint16_t cooldowns[10];int result=step_once(r,game,held,pressed,ops);
+    if(result<0 || !r->double_colt || (game->flags&1) || r->player->life_game.input_state==3 ||
+       r->player->weapon.current!=2 || r->player->weapon.requested!=2 || r->object.y!=0x5000)return result;
+    /* Two controller/animation phases per world tick only for dual Colts.
+     * Feed the click edge once and retain the normal clock for other guns'
+     * cooldowns. Presentation plays each hand's recoil at the original speed. */
+    memcpy(cooldowns,r->controller.cooldown,sizeof cooldowns);
+    if(ssa_weapon_runtime_animate(r,game->flags,game->ticks)<0)return -1;
+    result=step_once(r,game,held,0,ops);
+    memcpy(r->controller.cooldown,cooldowns,sizeof cooldowns);
+    return result;
+}
 int ssa_weapon_runtime_animate(SsaWeaponRuntime *r,uint16_t flags,unsigned ticks) {
-    if(!idle(r)) return -1;
+    if(!idle(r) || ticks>255) return -1;
+    if(r->alternate_shotgun && r->shotgun_animating && r->player->weapon.current==3 &&
+       (r->object.animation==12 || r->object.animation==22)){
+        unsigned count,position;
+        if((flags&1) && r->object.type==2)return 0;
+        count=r->animations->lengths[r->object.animation]-1u;
+        if(!count)return -1;
+        r->shotgun_elapsed=r->shotgun_elapsed+ticks>105?105:r->shotgun_elapsed+ticks;
+        position=r->shotgun_elapsed==105?count-1:r->shotgun_elapsed*count/105;
+        r->object.frame_index=(uint16_t)position;r->object.elapsed=0;
+        r->object.done=(uint8_t)(r->shotgun_elapsed==105);
+        return ssa_weapon_animation_resolve(&r->object,r->animations)<0?-1:0;
+    }
+    if(r->shotgun_animating){
+        if(r->player->weapon.current==3)r->object.period=r->rules->period[2];
+        r->shotgun_animating=r->shotgun_elapsed=0;
+    }
     return ssa_weapon_animation_step(&r->object,r->animations,flags,ticks)<0 ? -1 : 0;
 }

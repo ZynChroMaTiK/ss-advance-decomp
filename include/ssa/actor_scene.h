@@ -6,6 +6,7 @@
 /* D2D0/01828 composition AFTER fresh world geometry. Borrows all dependencies,
  * owns projection/ordering/clipping scratch. Keep addresses stable; zero-init. */
 typedef struct SsaActorScene {
+    unsigned screen_mirrors; /* PC alternate-hand muzzle presentation;default0. */
     SsaActorQueue queue;
     SsaActorProjector projector;
     SsaWorldScene *geometry;

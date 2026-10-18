@@ -1,5 +1,27 @@
 # Original startup menus
 
+Main now has Single Player, Multi Player, Options, Scores and a PC-only Quit
+row, in that order. Rows start at74 with16-pixel spacing, so the fifth row stays
+on the160-pixel canvas. Quit is localized as Quit/Beenden/Quitter and supports
+keyboard and mouse. Selecting Quit opens a localized Yes/No warning with No
+selected by default. Enter on No or Esc returns to Main with Quit selected;
+only explicitly confirming Yes sets the separate `quit_requested` result. It never enters the
+new-game/level handoff; the host leaves its loop and uses normal cleanup.
+
+Pause-menu Quit still asks Yes/No, then returns to Main. The frontend records
+the current game counter on every menu entry and checks that it stays frozen.
+The old startup-only counter-zero check incorrectly rejected a return from
+gameplay on the next tick, closing the window. Native menu checks now pass73072
+assertions; Windows verifies12pause paths, six Main-menu Quit paths and six
+completion routes in both renderers and all3languages, including40menu ticks
+after each pause return. The settled menu rows and hover/click regions share
+the same positions; the menu startup/credits/options/map/restart check also passes.
+The current quit warning tests cover all3languages, keyboard/mouse Yes/No,
+default-No confirmation, Esc from Yes and blank-area clicks. Previews are at
+`build/intermission-tests/quit-confirmation-0.bmp` and `quit-confirmation-1.bmp`.
+See `menu-validation.json`, `quit-confirmation-validation.json` and the earlier
+`windows-intermission-validation.json`.
+
 `play-native.cmd` now begins directly with the title prompt,
 main menu, Single Player, New Game and difficulty selection. All three languages
 and difficulty tiers work. Arrows/WASD navigate, Enter/Space confirms,
@@ -19,15 +41,24 @@ Single Player now inserts Select Level between New Game and Password. It uses
 the original localized campaign names, saved previous-level completion unlocks,
 and no multiplayer maps. Options → Clear Data confirms Yes/No before resetting
 progress and language. Full behavior/storage/tests are in [profile.md](profile.md).
-Options has four rows: Music On/Off, Credits, a localized Language row, and Clear Data.
+Options has five rows: Settings, Extras, localized Language, Clear Data, and Credits.
+Keyboard and mouse follow that visible order; Credits is last. Internal IDs
+remain stable for existing Settings/Clear Data return paths. The row removal
+and reordering are requested PC UI changes; historical original Options-callback
+comparisons below describe the earlier layout, not this five-row screen.
+Extras holds Jump (moved from Settings), Third-person, and In-game NETRICSA toggles.
+All default to On, persist in settings.dat, and accept keyboard or mouse changes.
+Disabling in-game NETRICSA leaves pre-level briefings enabled. See
+[Settings and Extras](audio-settings.md).
 Enter, click or Right cycles English/German/French in place; Left cycles
 backward, wrapping at either end. All menu labels change immediately. The
 chosen language carries into maps, new games, password starts and R restart.
 Fresh profiles default to English; subsequent launches restore the saved language.
 The dedicated language list is no longer
 part of startup or reachable through Options.
-Esc goes back. The Music On/Off option changes the live music setting and
-persists through maps, level advancement and restart. M remains a separate PC
+Esc goes back. The redundant Music On/Off row is removed; Settings provides
+the music volume slider (0% silences music) and sound volume/music style controls.
+Preferences persist through maps, level advancement and restart. M remains a separate PC
 mute control. Options → Credits now shows the original credits. Hold Up/W to
 pause or Down/S to scroll faster; Enter/Space/click or Esc returns to Options.
 An explicit `--level 0..7` launch bypasses startup menus for diagnostics.
@@ -83,8 +114,9 @@ Frontend pages are0,1,4,8,9,11,12; page10 is a recovery-only diagnostic. Multipl
 remain unfinished. Their entries give a clear unavailable notice and keep the
 current menu usable. These guarded destinations are PC prototype boundaries,
 not recovered original behavior or completed features. Publisher/boot screens,
-the initial stage narrative/cutscene, full pause/continue menus, save/settings
-persistence and remaining menu pages also remain. The full game is not claimed
+remaining menu pages also remain. Pause Continue/Quit/Yes/No now connects to the
+frontend, alongside persistent saved options and original chapter panels; see
+[pause and completion](completion.md). The full game is not claimed
 feature-identical by this milestone.
 
 ## Validation

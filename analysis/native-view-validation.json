@@ -1,5 +1,5 @@
 {
-  "checks": 10962,
+  "checks": 10837,
   "real_map_camera_frames": 2048,
   "pitched_map_poses": 128,
   "maps": 16,
@@ -7,7 +7,7 @@
   "scope": "Native new-feature tests: H key routing, chase pose, static obstruction and jump following. No renderer/OS event loop or avatar rendering.",
   "sanitizer_options": "detect_leaks=0",
   "source_sha256": {
-    "view.c": "6a26f31c7112ee063f63f403af2928d9690951963c3a4a0543fae43eef3ffb67",
+    "view.c": "cac771a6266378e03afc87939414028467c64a553b70e539cd19c6ede9a9b8e6",
     "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
     "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
     "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",

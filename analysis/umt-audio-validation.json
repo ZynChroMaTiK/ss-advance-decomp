@@ -1,0 +1,19 @@
+{
+  "result": "pass",
+  "checks": 2927,
+  "runs": 9,
+  "actual_pickups": 8,
+  "decoder_errors": 0,
+  "scope": "U.M.T. pickup1D must finish without preempting independent PC sounds.",
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "source_sha256": {
+    "tests/test_umt_audio.c": "b3165b73cddaf10cc3c073eb63487cab0b6968de5b820fdb085426533747793a",
+    "src/audio.c": "9615bc5c9badc44a1b210bafe80d2b3e443d20df57d6e65fd84688d7f60cdffa",
+    "src/pickup.c": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4",
+    "src/inventory.c": "c0ff470500858213182e43f235aeae2e5bd8a3153317f5687064b51b4ee90fbe",
+    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "include/ssa/pickup.h": "afec5de99617f7a021faa9282b48fe9358c19db5ab1afc26196e0ab5326ea9ac",
+    "include/ssa/inventory.h": "eeb1f9df587c903098837adf690fd3ac2e6aab242ebeff6b30ff78899603fae3",
+    "tests/test_umt_audio.py": "106795dc81875ae80e1b2c3ca2daf72da141143d90eb0381b8be9ed30c8cb72f"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole original1E48/1CF4/1D9C statistics routines; no controlled callees.",
+  "sanitizers": "UBSan",
+  "complete_comparisons": 8192,
+  "checkpoint_capture_comparisons": 8192,
+  "checkpoint_restore_comparisons": 8192,
+  "composed_sequences": 512,
+  "guards": 6,
+  "source_sha256": {
+    "tests/test_statistics_rom.py": "8207cca6b5a9d8540d59670f69999dca5d8187151faa666722b141110579c994",
+    "src/statistics.c": "735e5abc43b6d631a41943924fd71223f85be2b12d6225321e9c1b93e1319e73",
+    "include/ssa/statistics.h": "a9ed9c51990de791afa3cd21466d7f1478f10c3993dc246cd0977c0189e62199",
+    "include/ssa/weapon_progress.h": "77006d1162bb51dd6be331b663ee1ddd222deeb48ce8a994b05a92240617d072"
+  }
+}

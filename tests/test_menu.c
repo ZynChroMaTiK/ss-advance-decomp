@@ -51,22 +51,30 @@ int main(int argc,char **argv)
         step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_CONFIRM,pixels);
         CHECK(m->unsupported==3 && m->page==SSA_MENU_MAIN);
         step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_OPTIONS);
-        step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==2);
+        CHECK(m->selection==4 && m->music_enabled==music);
+        step(m,SSA_MENU_UP,pixels);CHECK(m->selection==4 && m->commands[0]==17);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==5);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==2);
         step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==3);
-        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==3 && m->commands[0]==17);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==1);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==1 && m->commands[0]==17);
         step(m,SSA_MENU_UP,pixels);
+        step(m,SSA_MENU_UP,pixels);
+        step(m,SSA_MENU_UP,pixels);
+        step(m,SSA_MENU_UP,pixels);
+        step(m,SSA_MENU_DOWN,pixels);
+        step(m,SSA_MENU_DOWN,pixels);
         step(m,SSA_MENU_LEFT,pixels);CHECK(m->language==2 && m->page==SSA_MENU_OPTIONS);
         step(m,SSA_MENU_RIGHT,pixels);CHECK(!m->language && m->selection==2 && m->music_enabled==music);
-        for(i=0;i<3;++i){unsigned click=ssa_menu_pointer(m,120,130,1);
+        for(i=0;i<3;++i){unsigned click=ssa_menu_pointer(m,120,114,1);
             CHECK(click==SSA_MENU_CONFIRM);step(m,click,pixels);
             CHECK(m->language==(i+1)%3 && m->page==SSA_MENU_OPTIONS && m->selection==2 && m->music_enabled==music);
         }
         for(i=0;i<language;++i)step(m,SSA_MENU_RIGHT,pixels);
         CHECK(m->language==language && m->canvas.language==language);
-        step(m,SSA_MENU_UP,pixels);step(m,SSA_MENU_UP,pixels);
-        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->music_enabled==!music);
-        step(m,SSA_MENU_RIGHT,pixels);CHECK(m->music_enabled==music);
-        step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_CONFIRM,pixels);
+        step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_DOWN,pixels);
+        CHECK(m->selection==1 && m->music_enabled==music);
+        step(m,SSA_MENU_CONFIRM,pixels);
         CHECK(m->page==SSA_MENU_CREDITS && !m->unsupported);
         held_step(m,0,0,pixels);CHECK(m->credits_y==160*65536-0x8000 && !m->credits_lines);
         for(i=0;i<40;++i)held_step(m,0,0,pixels);
@@ -76,9 +84,11 @@ int main(int argc,char **argv)
         held_step(m,0,SSA_MENU_DOWN,pixels);CHECK(m->credits_y==saved->credits_y-0x20000);
         held_step(m,0,0,pixels);CHECK(m->credits_speed==0x8000);
         step(m,SSA_MENU_BACK,pixels);CHECK(m->page==SSA_MENU_CREDITS && m->credits_done && !m->canvas.glyph_count);
-        step(m,0,pixels);CHECK(m->page==SSA_MENU_OPTIONS && !m->selection && m->marker==65535);
+        step(m,0,pixels);CHECK(m->page==SSA_MENU_OPTIONS && m->selection==4 && m->marker==65535);
         if(!difficulty && !music){
-            step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_CONFIRM,pixels);
+            step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_DOWN,pixels);
+            step(m,SSA_MENU_DOWN,pixels);
+            step(m,SSA_MENU_CONFIRM,pixels);
             for(i=0;i<2000 && m->page==SSA_MENU_CREDITS;++i)held_step(m,0,SSA_MENU_DOWN,pixels);
             CHECK(m->page==SSA_MENU_OPTIONS && m->credits_done && m->credits_lines==88);
         }
@@ -167,16 +177,34 @@ int main(int argc,char **argv)
         m->page=m->draw_page=SSA_MENU_MAIN;m->language=language;m->fading=m->fade_volume=0;
         for(i=0;i<16;++i)step(m,0,pixels);
         CHECK(!m->offset);
-        for(i=0;i<4;++i){m->selection=(i+1)%4;
-            CHECK(ssa_menu_pointer(m,120,90+(int)i*16,0)==0 && m->selection==i);
-            CHECK(ssa_menu_pointer(m,120,90+(int)i*16,1)==SSA_MENU_CONFIRM);
+        for(i=0;i<5;++i){m->selection=(i+1)%5;
+            CHECK(ssa_menu_pointer(m,120,82+(int)i*16,0)==0 && m->selection==i);
+            CHECK(ssa_menu_pointer(m,120,82+(int)i*16,1)==SSA_MENU_CONFIRM);
         }
-        CHECK(ssa_menu_pointer(m,1,1,1)==0 && m->selection==3);
+        CHECK(ssa_menu_pointer(m,1,1,1)==0 && m->selection==4);
         CHECK(ssa_menu_pointer(m,-1,100,1)==0 && ssa_menu_pointer(m,240,100,1)==0);
-        CHECK(ssa_menu_pointer(m,120,122,1)==SSA_MENU_CONFIRM && m->selection==2);
+        CHECK(ssa_menu_pointer(m,120,114,1)==SSA_MENU_CONFIRM && m->selection==2);
         step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_OPTIONS);
-        CHECK(ssa_menu_pointer(m,120,98,1)==0); /* Don't click through old page. */
-        step(m,0,pixels);CHECK(ssa_menu_pointer(m,120,98,1)==SSA_MENU_CONFIRM && !m->selection);
+        CHECK(ssa_menu_pointer(m,120,82,1)==0); /* Don't click through old page. */
+        step(m,0,pixels);CHECK(ssa_menu_pointer(m,120,82,1)==SSA_MENU_CONFIRM && m->selection==4);
+        /* Quit is a distinct terminal result, never a new-game handoff. */
+        m->page=m->draw_page=SSA_MENU_MAIN;m->selection=0;m->offset=0;
+        for(i=0;i<4;++i)step(m,SSA_MENU_DOWN,pixels);
+        CHECK(m->selection==4 && !m->quit_requested && !m->done);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==4 && m->commands[0]==17);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_QUIT && m->selection==1 && !m->quit_requested);
+        step(m,0,pixels);CHECK(ssa_menu_pointer(m,1,1,1)==0 && m->selection==1);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_MAIN && m->selection==4 && !m->quit_requested);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_QUIT && m->selection==1);
+        step(m,SSA_MENU_UP,pixels);CHECK(!m->selection);
+        step(m,SSA_MENU_BACK,pixels);CHECK(m->page==SSA_MENU_MAIN && m->selection==4 && !m->quit_requested);
+        step(m,SSA_MENU_CONFIRM,pixels);step(m,0,pixels);
+        CHECK(ssa_menu_pointer(m,120,136,1)==SSA_MENU_CONFIRM && m->selection==1);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_MAIN && !m->quit_requested);
+        step(m,SSA_MENU_CONFIRM,pixels);step(m,0,pixels);
+        CHECK(ssa_menu_pointer(m,120,120,1)==SSA_MENU_CONFIRM && !m->selection);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->quit_requested && !m->done && !m->leaving && !m->clear_requested);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==0);
     }
     {int x,y,ox,oy,ow,oh;
         CHECK(ssa_ui_viewport(1000,1000,240,160,&ox,&oy,&ow,&oh)==1 && ox==0 && oy==167 && ow==1000 && oh==666);

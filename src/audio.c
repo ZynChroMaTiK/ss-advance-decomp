@@ -8,16 +8,24 @@
 #define SONG_TABLE 0x3e99d0u
 #define PLAYER_TABLE 0x3e99a0u
 #define LEVEL_SONGS 0x44a9dcu
-/* PC balance requested after listening: all sampled voices, including
- * music/percussion, effects and footsteps, receive +6.02dB at the output bus.
+/* PC balance requested after listening: Original-mode sampled music and
+ * sampled effects/footsteps receive +6.02dB at the output bus.
+ * Hybrid SoundFont music bypasses this fixed adjustment.
  * Keep the recovered per-note arithmetic and PSG output levels unchanged. */
 #define PCM_BUS_GAIN 2.0
 /* Additional gameplay-effect balance, including PCM and PSG effects.
  * Songs1..6 are menu cues;6E..85 are music. Footsteps13/14 are effects. */
 #define EFFECTS_BUS_GAIN 1.5
-/* Overall soundtrack balance; apply equally to samples and all PSG voices.
+/* Original-mode soundtrack balance; applies to samples and all PSG voices.
  * Menu cues and gameplay effects retain their existing output levels. */
 #define MUSIC_BUS_GAIN 0.5
+/* Requested overall SoundFont-mode lift: +3dB after balancing synth and ROM
+ * samples together. Keep their relative levels and Original mode unchanged. */
+#define HYBRID_MUSIC_BUS_GAIN 1.4125375446227544
+/* Raise both balanced music modes to full output peaks. The shared music
+ * limiter below catches overloads without altering the instrument balance. */
+#define ORIGINAL_MUSIC_OUTPUT_GAIN 3.0
+#define HYBRID_MUSIC_OUTPUT_GAIN 2.0
 static const unsigned duration[49]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,
     28,30,32,36,40,42,44,48,52,54,56,60,64,66,68,72,76,78,80,84,88,90,92,96};
 static unsigned u16(const uint8_t *p){return p[0]|(unsigned)p[1]<<8;}
@@ -109,10 +117,13 @@ static void release_voice(SsaAudioVoice *v){
     if(v->type && !v->release)echo_voice(v);
 }
 static void stop_track(SsaAudio *a,unsigned player,unsigned track){unsigned i;
+    if(!player){a->players[0].tracks[track].synth_on=0;
+        if(a->synth.context)a->synth.release(a->synth.context,track);}
     a->players[player].tracks[track].active=0;
     for(i=0;i<SSA_AUDIO_VOICES;++i)if(a->voices[i].active && a->voices[i].player==player && a->voices[i].track==track)release_voice(&a->voices[i]);
 }
 static void stop_player(SsaAudio *a,unsigned player){unsigned i;
+    if(!player && a->synth.context)a->synth.reset(a->synth.context);
     memset(&a->players[player],0,sizeof(a->players[player]));
     for(i=0;i<SSA_AUDIO_VOICES;++i)if(a->voices[i].player==player)a->voices[i].active=0;
 }
@@ -122,11 +133,16 @@ void ssa_audio_reset(SsaAudio *a){
     memset(&a->listener,0,sizeof(a->listener));a->listener_ready=0;
     a->music=(SsaAudioMusicState){0,0,0,0xffdc,0xffff};
     a->music_command=a->music_level=0;a->master_gain=1;a->effects_headroom_gain=a->world_headroom_gain=1;
+    a->music_headroom_gain=1;
+    /* A hardware synth reads these gains while resetting its controllers.
+     * Restore the post-fade state first, so reset cannot reapply zero gain. */
+    if(a->synth.context)a->synth.reset(a->synth.context);
 }
 int ssa_audio_init(SsaAudio *a,const uint8_t *rom,size_t size,unsigned rate){
     SsaAudio next={0};unsigned i;
     if(!a || a->loaded || !rom || size!=0x800000 || rate<8000 || rate>96000)return -1;
     next.rom=rom;next.rom_size=size;next.sample_rate=rate;next.music_enabled=1;
+    next.music_volume=next.sound_volume=100;
     for(i=0;i<SSA_AUDIO_SONGS;++i){uint32_t h=offset(u32(rom+SONG_TABLE+i*8));
         if(!span(&next,h,4) || rom[h]>SSA_AUDIO_TRACKS || u16(rom+SONG_TABLE+i*8+4)>=SSA_AUDIO_ROM_PLAYERS)return -1;
         if(rom[h]){unsigned j;
@@ -139,6 +155,21 @@ int ssa_audio_init(SsaAudio *a,const uint8_t *rom,size_t size,unsigned rate){
     for(i=61;i<128;++i)next.ratios[i]=next.ratios[i-1]*1.0594630943592953;
     for(i=60;i>0;--i)next.ratios[i-1]=next.ratios[i]/1.0594630943592953;
     next.loaded=1;ssa_audio_reset(&next);*a=next;return 1;
+}
+int ssa_audio_set_volume(SsaAudio *a,unsigned music,unsigned sounds){
+    if(!a || !a->loaded || music>100 || sounds>100)return -1;
+    a->music_volume=music;a->sound_volume=sounds;return 1;
+}
+int ssa_audio_set_synth(SsaAudio *a,const SsaAudioSynth *s){unsigned i;
+    if(!a || !a->loaded || (s && (!s->context || !s->reset || !s->note || !s->release || !s->control || !s->sample)))return -1;
+    if(a->synth.context)a->synth.reset(a->synth.context);
+    if(s)a->synth=*s;else memset(&a->synth,0,sizeof(a->synth));
+    a->music_headroom_gain=1;
+    if(s){s->reset(s->context);
+        for(i=0;i<a->players[0].count;++i)if(a->players[0].tracks[i].synth_on &&
+            s->note(s->context,i,&a->players[0].tracks[i],&a->voices[i])!=1){
+                s->reset(s->context);memset(&a->synth,0,sizeof(a->synth));return -1;}}
+    return 1;
 }
 static int error(SsaAudio *a,unsigned p,unsigned cmd){
     ++a->errors;a->last_error_song=a->players[p].song;a->last_error_command=cmd;return -1;
@@ -281,7 +312,10 @@ static int start_note(SsaAudio *a,unsigned player,unsigned track,unsigned gate,u
         v.envelope=v.envelope_level/15.0;
         if(v.stage==2 && !v.envelope_level)echo_voice(&v);
     }
-    a->voices[best]=v;t->lfo_phase=0;t->lfo_wait=t->lfo_delay;++a->notes;return 1;
+    a->voices[best]=v;t->lfo_phase=0;t->lfo_wait=t->lfo_delay;++a->notes;
+    if(!player){t->synth_on=1;t->synth_gate=gate;t->synth_tied=tied;t->synth_note=v.note;
+        if(a->synth.context && a->synth.note(a->synth.context,track,t,&v)!=1)return -1;}
+    return 1;
 }
 static int byte(SsaAudio *a,SsaAudioTrack *t,unsigned *value){
     if(!span(a,t->pc,1))return -1;
@@ -294,6 +328,8 @@ static int jump(SsaAudio *a,SsaAudioTrack *t,uint32_t *target){
 static int track_tick(SsaAudio *a,unsigned player,unsigned track){
     SsaAudioPlayer *p=&a->players[player];SsaAudioTrack *t=&p->tracks[track];unsigned work,i;
     if(!t->active)return 1;
+    if(!player && t->synth_on && !t->synth_tied && t->synth_gate && !--t->synth_gate){
+        t->synth_on=0;if(a->synth.context)a->synth.release(a->synth.context,track);}
     for(i=0;i<SSA_AUDIO_VOICES;++i){SsaAudioVoice *v=&a->voices[i];
         if(v->active && v->player==player && v->track==track && !v->tied && v->gate && !--v->gate)release_voice(v);
     }
@@ -313,6 +349,13 @@ static int track_tick(SsaAudio *a,unsigned player,unsigned track){
         if(cmd==0xb1){stop_track(a,player,track);return 1;}
         if(cmd==0xb2 || cmd==0xb3){
             if(jump(a,t,&target)<0 || (cmd==0xb3 && t->depth>=3))return error(a,player,cmd);
+            /* U.M.T. pickup1D holds three PSG notes behind an endless GOTO.
+             * The original shared effect player eventually replaces them.
+             * Independent PC pickup instances must finish after their first
+             * pass; only an explicit LOOP request owns a persistent repeat. */
+            if(cmd==0xb2 && p->song==0x1d && !p->source_loop){
+                stop_track(a,player,track);return 1;
+            }
             if(cmd==0xb3)t->stack[t->depth++]=t->pc;else ++a->loops;
             t->pc=target;continue;
         }
@@ -324,6 +367,8 @@ static int track_tick(SsaAudio *a,unsigned player,unsigned track){
         }
         if(cmd==0xce){arg=t->key;
             if(span(a,t->pc,1) && a->rom[t->pc]<0x80)arg=a->rom[t->pc++];
+            if(!player && t->synth_on && t->synth_tied && t->synth_note==(unsigned)((int)arg+t->transpose)){
+                t->synth_on=0;if(a->synth.context)a->synth.release(a->synth.context,track);}
             for(i=0;i<SSA_AUDIO_VOICES;++i){SsaAudioVoice *v=&a->voices[i];
                 if(v->active && v->player==player && v->track==track && v->tied && v->note==(unsigned)((int)arg+t->transpose))release_voice(v);
             }continue;
@@ -448,6 +493,17 @@ int ssa_audio_music_select(const uint8_t *rom,size_t size,unsigned command,unsig
 }
 int ssa_audio_music(SsaAudio *a,unsigned command,unsigned level){unsigned song,i;int result;
     if(!a || !a->loaded)return -1;
+    if(command==4 || command==5){
+        unsigned pause=command==4;
+        for(i=0;i<SSA_AUDIO_PLAYERS;++i)a->players[i].paused=pause;
+        if(pause)a->music.flags|=2;else a->music.flags&=(uint8_t)~2u;
+        if(a->synth.context)for(i=0;i<a->players[0].count;++i){SsaAudioTrack track=a->players[0].tracks[i];
+            if(pause)track.volume=0;
+            a->synth.control(a->synth.context,i,&track);
+        }
+        return 1;
+    }
+    if(command==6){for(i=0;i<SSA_AUDIO_PLAYERS;++i)stop_player(a,i);return 1;}
     result=ssa_audio_music_select(a->rom,a->rom_size,command,level,a->music_enabled,&song);
     /* PC terminal screens freeze entity updates. Retire old effects here so
      * loops cannot outlive their controller, including in effects-only mode.
@@ -464,7 +520,9 @@ int ssa_audio_music(SsaAudio *a,unsigned command,unsigned level){unsigned song,i
     }
     return 1;
 }
-static void music_update(SsaAudio *a){int action=music_frame(&a->music);
+static void music_update(SsaAudio *a){int action;
+    if(a->players[0].paused)return;
+    action=music_frame(&a->music);
     if(action==65535)stop_player(a,0);
     else if(action>=0 && ssa_audio_play(a,(unsigned)action)<0){
         (void)error(a,0,0x102);stop_player(a,0);
@@ -484,11 +542,12 @@ static void music_update(SsaAudio *a){int action=music_frame(&a->music);
     }
 }
 static void envelope_frame(SsaAudio *a){unsigned i,p,t;
-    for(p=0;p<SSA_AUDIO_PLAYERS;++p)for(t=0;t<a->players[p].count;++t){SsaAudioTrack *track=&a->players[p].tracks[t];
+    for(p=0;p<SSA_AUDIO_PLAYERS;++p)if(!a->players[p].paused)for(t=0;t<a->players[p].count;++t){SsaAudioTrack *track=&a->players[p].tracks[t];
         if(track->lfo_wait)--track->lfo_wait;else track->lfo_phase=(track->lfo_phase+track->lfo_speed)&255;
+        if(!p && a->synth.context)a->synth.control(a->synth.context,t,track);
     }
     for(i=0;i<SSA_AUDIO_VOICES;++i){SsaAudioVoice *v=&a->voices[i];
-        if(!v->active)continue;
+        if(!v->active || a->players[v->player].paused)continue;
         /* Both tail lengths count sound frames, independently of tempo and
          * the64Hz PSG ADSR clock. A zero length ends on the next frame too. */
         if(v->stage==4){unsigned length=v->echo_length;v->echo_length=(length-1)&255;
@@ -512,7 +571,7 @@ static void envelope_frame(SsaAudio *a){unsigned i,p,t;
 }
 static void psg_envelope_tick(SsaAudio *a){unsigned i;
     for(i=0;i<SSA_AUDIO_VOICES;++i){SsaAudioVoice *v=&a->voices[i];unsigned target;
-        if(!v->active || !v->type || v->stage==4)continue;
+        if(!v->active || a->players[v->player].paused || !v->type || v->stage==4)continue;
         v->volume_goal=psg_goal(a,v);
         target=(v->volume_goal*v->sustain+15)/16;
         if(v->stage==2){v->envelope_level=target;v->envelope=target/15.0;continue;}
@@ -590,6 +649,7 @@ static void mix_effects(SsaAudio *a,double *left,double *right,double el,double 
 int ssa_audio_render(SsaAudio *a,int16_t *out,size_t frames){size_t n;unsigned p,i;
     if(!a || !a->loaded || (!out && frames) || frames>SIZE_MAX/2)return -1;
     for(n=0;n<frames;++n){double left=0,right=0,effects_left=0,effects_right=0,world_left=0,world_right=0;
+        double music_left=0,music_right=0;
         if(!a->frame_samples){music_update(a);envelope_frame(a);}
         if(++a->frame_samples>=a->sample_rate/60)a->frame_samples=0;
         a->psg_clock+=64;
@@ -597,7 +657,7 @@ int ssa_audio_render(SsaAudio *a,int16_t *out,size_t frames){size_t n;unsigned p
         for(p=0;p<SSA_AUDIO_PLAYERS;++p){SsaAudioPlayer *player=&a->players[p];unsigned active=0;
             player->left+=(player->target_left-player->left)*(100.0/a->sample_rate);
             player->right+=(player->target_right-player->right)*(100.0/a->sample_rate);
-            if(!player->active)continue;
+            if(!player->active || player->paused)continue;
             player->clock+=(uint64_t)player->tempo*48;
             while(player->clock>=(uint64_t)a->sample_rate*60){
                 player->clock-=(uint64_t)a->sample_rate*60;
@@ -606,16 +666,44 @@ int ssa_audio_render(SsaAudio *a,int16_t *out,size_t frames){size_t n;unsigned p
             for(i=0;i<player->count;++i)active|=player->tracks[i].active;
             if(!active)player->active=0;
         }
-        for(i=0;i<SSA_AUDIO_VOICES;++i)if(a->voices[i].active){double l,r,value=sample(a,&a->voices[i],&l,&r)*128;
+        for(i=0;i<SSA_AUDIO_VOICES;++i)if(a->voices[i].active && !a->players[a->voices[i].player].paused){double l,r,value=sample(a,&a->voices[i],&l,&r)*128;
             SsaAudioPlayer *player=&a->players[a->voices[i].player];
-            if(!a->voices[i].type)value*=PCM_BUS_GAIN;
-            if(player->song>=0x6e)value*=MUSIC_BUS_GAIN;
+            if(player->song>=0x6e){
+                if(a->synth.context){
+                    /* Hybrid music: retain resolved ROM PCM instruments at
+                     * their native level; replace only PSG. Original-mode
+                     * PCM boost and soundtrack attenuation do not apply. */
+                    if(a->voices[i].type)value=0;
+                }else{
+                    if(!a->voices[i].type)value*=PCM_BUS_GAIN;
+                    value*=MUSIC_BUS_GAIN;
+                }
+                value*=a->music_volume/100.0;
+            }else{
+                if(!a->voices[i].type)value*=PCM_BUS_GAIN;
+                value*=a->sound_volume/100.0;
+            }
             if(player->song>=7 && player->song<0x6e){value*=EFFECTS_BUS_GAIN;
                 if(player->local_priority){effects_left+=value*l*player->left;effects_right+=value*r*player->right;}
                 else{world_left+=value*l*player->left;world_right+=value*r*player->right;}
-            }else{left+=value*l*player->left;right+=value*r*player->right;}
+            }else if(player->song>=0x6e){
+                music_left+=value*l*(a->synth.context?1:player->left);
+                music_right+=value*r*(a->synth.context?1:player->right);}
+            else{left+=value*l*player->left;right+=value*r*player->right;}
         }
+        if(a->synth.context && !a->players[0].paused){float stereo[2];double gain=32768*a->music_volume/100.0;
+            a->synth.sample(a->synth.context,stereo);music_left+=stereo[0]*gain;music_right+=stereo[1]*gain;}
         left*=a->master_gain;right*=a->master_gain;
+        {
+            /* Both modes share stereo-linked overload protection after their
+             * individual balance, master fade and requested output lift. */
+            double gain=a->master_gain*(a->synth.context?
+                HYBRID_MUSIC_OUTPUT_GAIN*HYBRID_MUSIC_BUS_GAIN:ORIGINAL_MUSIC_OUTPUT_GAIN);
+            double stereo[2]={music_left*gain,music_right*gain};
+            if(a->synth.context && a->synth.mix_music)a->synth.mix_music(a->synth.context,stereo);
+            mix_effects(a,&left,&right,stereo[0],stereo[1],&a->music_headroom_gain);
+            if(a->music_headroom_gain<1)++a->music_limited_frames;
+        }
         effects_left*=a->master_gain;effects_right*=a->master_gain;
         world_left*=a->master_gain;world_right*=a->master_gain;
         mix_effects(a,&left,&right,effects_left,effects_right,&a->effects_headroom_gain);

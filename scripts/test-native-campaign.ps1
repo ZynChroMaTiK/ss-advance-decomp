@@ -26,7 +26,7 @@ for ($i=0; $i -lt $levelCount; ++$i) {
     foreach ($field in @('result','frames','finished','score','collected','spawned','health','rendered_views','carry_guards',
         'airborne_frames','third_person_frames','pitched_frames','machinegun_shots','activated_switches','boss_frames','boss_hud_frames','boss_projectile_frames',
         'boss_hurt_frames','boss_wait_frames','boss_defeated','boss_music','post_boss_music','mixed_frames','audio_errors',
-        'owned_weapons','conversion_shots','conversion_frames','navigation_recoveries','closing_door_wait_frames','meteor_shots','falling_effect_frames')) {
+        'owned_weapons','conversion_shots','conversion_frames','navigation_recoveries','closing_door_wait_frames','meteor_shots','falling_effect_frames','cannon_shots','boss_launches')) {
         if ($completion[$i].$field -ne $reference[$i].$field) { throw "MSVC/GCC level $i differs: $field" }
     }
 }
@@ -101,7 +101,7 @@ $report = [ordered]@{ result='pass'; levels=$completion; map_view=$mapResult; wi
     checker_sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $checker).Hash.ToLowerInvariant()
     map_checker_sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $mapChecker).Hash.ToLowerInvariant()
     source_sha256=[ordered]@{} }
-foreach ($source in @('src/native_game.c','src/native_audio.inc','include/ssa/native_game.h','src/palette_effect.c','include/ssa/palette_effect.h',
+foreach ($source in @('src/native_game.c','src/native_audio.inc','include/ssa/native_game.h','src/weapon_progress.c','include/ssa/weapon_progress.h','src/palette_effect.c','include/ssa/palette_effect.h',
     'src/projectile_runtime.c','src/projectile_runtime_internal.h','src/weapon_runtime.c','src/audio.c','include/ssa/audio.h','platform/win32/game.c',
     'src/map_view.c','include/ssa/map_view.h','src/menu.c','include/ssa/menu.h','tests/test_map_view.c','platform/win32/audio_win32.c','platform/win32/audio_win32.h',
     'tests/test_campaign.c','tests/test_campaign.py','tests/test_second_level.c','tests/test_native_playability.c','scripts/test-native-campaign.ps1','CMakeLists.txt')) {

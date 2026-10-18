@@ -1,5 +1,52 @@
 # Project instructions
 
+Latest music options: SoundFont is selectable only with a successfully loaded
+bank whose file is present. Style2 adds Microsoft GS Wavetable Synth via WinMM,
+independent of SF2; keep Original/SoundFont style values0/1 and settings layout.
+MIDI shares PSG-to-GM mapping and retains ROM PCM. Only offer it when its named
+device opens. Respect music volume, mute/fades, switching and note cleanup.
+MIDI is rendered by Windows outside the PCM peak limiter. See analysis/audio-settings.md.
+MIDI timing now delays only retained music PCM by185ms, calibrated against the
+actual GS output with process-only loopback. Sound effects stay immediate;
+Original/SoundFont bypass the delay. Clear the ring on reset/stop/style changes.
+`--midi-delay 0..500` overrides the calibration. `test-midi-sync.ps1` is an
+explicit audible diagnostic, not a startup task; measured residual <=0.021ms.
+Latest MIDI balance correction: keep channel volume at1.8x, capped at127, and
+trim retained music PCM by0.5 (-6.02dB) in the MIDI-only mix_music hook. This
+addresses MIDI still being too quiet after channel volume reaches its ceiling.
+Apply the trim even with zero delay. Preserve velocities, user controls,185ms
+sync, immediate sound effects, and Original/SoundFont mode levels.
+
+Latest audio direction (2026-10-17): SoundFont music must retain original ROM
+sampled instruments (including sampled rhythm entries) and replace only PSG.
+Do not apply Original-mode fixed music attenuation or PCM boost to SoundFont
+music. User volume, sequence fades and overload-only peak protection remain.
+The subsequent listening correction requests normalization against ROM samples:
+apply the separate 15 dB synth-only trim calibrated for Musical Artifacts 1228
+SC-55.sf2. Retained PCM stays at its native level before the shared music bus.
+This includes the user's additional 3 dB reduction after listening to the 12 dB trim.
+The latest request raises SoundFont-mode music as a whole: a separate +3 dB
+hybrid music bus gain applies to both layers, preserving their relative balance.
+The subsequent request brings BOTH music modes to peak: additional music output
+gain is 3x for Original and 2x for SoundFont, with shared stereo-linked peak protection.
+Keep the existing internal instrument balance and sequence fades.
+See analysis/audio-settings.md; sound effects keep their existing mix.
+
+Latest user direction (2026-10-17): enable all twelve campaign levels without
+waiting for automated level/playthrough validation; the user will validate
+manually. This overrides older admission gates below. Preserve ordinary unlocks
+and save compatibility; do not grant equipment or bypass gameplay to force a
+test pass. The frontend now admits12 maps, including Caesar's Palace (index11).
+Only build/launch sanity checks are required for this admission change.
+Native chapter/ending panels now run through campaign_screen.c and the Windows
+frontend. New Game shows Egypt; advance5->6 shows Rome; Enter after the final
+exit shows the ending and returns to Main. R replay/password/selected starts
+skip stories. Preview with play-native.cmd --story 0/6/12. Original timed
+completion tally UI, totals lifetime and score/name flow remain next work.
+Read analysis/campaign-story.md; test-campaign-screen and its Windows script
+pass focused presentation checks. No full campaign replay was run this pass.
+Further automated campaign runs are not required unless the user requests them.
+
 The objective is a native PC port of Serious Sam Advance with keyboard/mouse
 controls, FPS movement, a new jump feature and an H-toggle third-person view.
 The user explicitly rejected an interim emulated
@@ -3384,3 +3431,1321 @@ Current reports: campaign-validation.json, windows-native-campaign-validation.js
 special-weapons-validation.json, windows-special-weapons-validation.json,
 windows-native-build-validation.json and windows-native-startup-validation.json.
 Original ROM SHA1 remains4ff48d8c18b70a5184758f1917343ae85a70858e.
+
+Continuation (2026-10-17): Praetorian Fort/index10 now completes naturally and
+SSA_NATIVE_CAMPAIGN_LEVELS is11. The uninterrupted earned chain is136552frames,
+1532000score/1HP; first ten map results stay unchanged. Map10:18711frames,
+99spawns,11pickups,14cannon shots,10Prion/10TimeStrike shots,208PC/pitched draws,
+14968800native stereo frames, zero mixer errors. Its original Normal standalone
+loadout also completes:16319frames,142000score/5HP,99spawns,10pickups,7cannon
+shots,20Prion/20TimeStrike shots. The final map/index11 remains unavailable.
+No gameplay health/ammo/damage/collision/hazard/script bypass was added.
+
+The input-test planner now uses grid32 on levels>=10, initially zero clearance;
+a real stall enables one unit of extra clearance and fractional steering, with
+interior waypoint approaches. This avoids exact64-unit corridors/corners that
+cannot accept its fractional position. Earned cannon ammunition is used when
+automatic guns empty. Earlier maps retain their previous input decisions.
+The read-only BFS tree cache retains queue/predecessor order and invalidates on
+start cell, geometry, clearance, dimensions and body flags. Exploration reads
+current visited sectors. Cached/uncached30000-frame probes have identical stderr
+SHA25657d562dd61a8218935d9235c523056230067c1e158af7773dd7776099d0f2c41 and
+all result fields; both fail the same route, not completion evidence. Successful
+full-chain and separate standalone reports supersede them.
+
+Current portable profile checks:590187assertions/1257frames/99selected starts.
+Original loadout/password checks:2713assertions/33password starts/33fresh starts/
+33carry starts/33entry restarts, all11maps and3difficulties. Windows startup,
+profile persistence/ClearData, password and selected-loadout paths were rebuilt
+and checked with both renderers. Local website availability now derives from
+the native campaign limit; no publication was performed.
+
+Actual decomp.wtf status:74/526functions,2152/87648catalogued bytes(2.46%),
+530attempts. Boss wait14804 still89.5%, not exact: commuting operands gives the
+same output; local register asm was rejected, restored plain-C best and released
+with notes. No new matching function this continuation; discovery incomplete.
+Next substantive campaign work is the final map's natural D8 boss progression,
+then original continue/death, NETRICSA, scores and interchapter presentation.
+Final verification: the default eleven-map GCC ASan/UBSan/leaks chain and MSVC
+agree on every field, including14cannon shots on map10. Separate standalone
+reports agree too. Windows transition tests pass40stages,20entry restarts,
+21map views/1470frozen map ticks per renderer; all21reveals verify HUD, weapons,
+movement and entry carry, with actual black/mid/full pixels. Ten final reports
+pass1260current source-hash checks, executable hashes and unchanged ROM identity.
+Current reports include campaign-validation.json, campaign-standalone-validation.json,
+windows-native-campaign-validation.json and windows-campaign-standalone-validation.json.
+Local site wiki/availability and full export/link audit pass; its pinned validation
+dependencies were installed only in build/site-validation-linux. Nothing published.
+
+Continuation (2026-10-17, original campaign entry): original completion02B26
+saves gear through1231C. Setup02076 calls05E4C for a new100-HP body and cleared
+protection/queue; F84C calls1240C; the existing-progress path020C8 calls123C4.
+123C4 restores only current, owned mask, ten ammo halfwords and requested=current,
+thenFC04(current-1,3). It does not restore vitality or pending acquisitions.
+The previous full-vitality advancement was incorrect. Native weapon_progress.c
+now implements123C4; carry_next requires finished and prepares original100HP/
+zeroC4/C6/empty queue while retaining earned gear/score and PC H/Q history.
+It prefers actual equipped over an unfinished request, retaining the documented
+PC usable-weapon fallback. Capture/apply remain exact entry snapshots for R;
+do not normalize init_campaign(progress), since restart uses that path.
+Windows Enter and campaign checker now call carry_next. Read campaign-entry.md.
+
+test-weapon-progress passes8192 whole original123C4 comparisons with actualFC04,
+256record bytes and sprite fields, four guards, UBSan. Invalid animation leaves
+the sprite alone but does not fail the original inventory restore. Player-spawn
+tests retain688 original constructor comparisons and add512 actual05E4C/1240C/
+123C4 compositions on16maps, proving health100/protection0/queue0. Only original
+allocation/platform memory boundaries are controlled. Password/start now3010
+checks,33password/fresh/carry/restart/advancement scenarios across11maps and
+3difficulties. MSVC agrees and frontend password/direct-start/R checks pass in
+both renderers. All108Windows libraries and launcher build; startup checks pass.
+
+Actual decomp.wtf123C4 matches first attempt:72bytes/36instructions, plain typed
+C in recovered/weapon_progress_restore.c. Live status75/526functions,
+2224/87648catalogued bytes(2.54%),531attempts; discovery incomplete. Export75C
+functions and independent rebuild are byte-identical to unchanged original ROM.
+
+Corrected eleven-map normal-input chain:140712frames,1544000score/45HP.
+Map8(index8)17235frames/106spawns/14pickups/76HP; map9:10930/50/6/46;
+map10:17231/99/9/45. Old136552-frame full-vitality-carry results are historical.
+Bot-only changes: index8 uses1100-unit danger spacing and reachable armor between
+waves; index10 read-only planner may consider low ledges and delivers ordinary
+Space input while moving safely. This exits its secret room's64-unit raised
+windows without changing actual collision or moving the body. First-arena
+stairs retain zero planning margin; southern stalled routes can add one unit.
+Native health/ammo/damage/collision/scripts remain unchanged by the bot.
+
+Final-map/index11 Normal standalone now passes on GCC ASan/UBSan/leaks and MSVC:
+17270frames,160000score,117spawns,8pickups,63HP; D8 health/HUD/group death and
+real VM exit, music19/20 once,9boss firing events,13816000native stereo frames,
+zero mixer errors. Active6A post-frame count is0 on this route: do not claim
+natural D8 projectile flight. Original standalone starter is3FF,100HP/0armor.
+Input bot commits a requested final-map weapon until one real shot instead of
+cancelling lower/raise on short visibility gaps, uses shotgun against CDs, and
+prefers an earned Serious bomb for a packed D6 cluster. No grants or forced
+defeats. Current standalone reports now describe index11 rather than index10.
+
+Frontend cap REMAINS11. Corrected full-chain development probe to index11 dies
+at4961frames beforeD8. Its genuine earned entry is weapons37F, ammo999/999/96/
+0/0/25/0/0/0/0,100HP/0armor,1544000score. Raw probe twelve-current.* and entry
+twelve-current-entry.bin.level11 under build/native-campaign are NOT completion
+proof. The next campaign task is natural final-map completion with earned gear;
+do not silently use the standalone all-weapons starter to admit it. Still later:
+original continue/death/NETRICSA/scores/interchapter/ending/full multiplayer parity.
+Optional SSA_CAMPAIGN_PROBE_FRAMES is accepted only by --fresh/--resume probes;
+default uninterrupted checker always retains30000 frames per map.
+
+Concurrent unrelated website/font/document changes were already in the worktree;
+preserve them. This continuation edits root/analysis docs and native code only,
+with no website publication, commit or push.
+
+Final verification for original-entry continuation: default eleven-map GCC
+ASan/UBSan/leaks and MSVC agree on EVERY field (140712frames/1544000score/45HP).
+Standalone final-map GCC/MSVC fields also agree. Windows launcher validation
+passes40transition stages/20R restarts/21map views per renderer, with all21HUD/
+weapon/movement/entry reveals and3264912black/mid/fullRGBsamples per renderer.
+The transition fixture initially assumed requested weapon3; it now checks the
+actual equipped gun when its immediate completion interrupts the handoff.
+The original equipped-gun advancement policy was retained. Password/direct
+starts, saved language/unlocks/ClearData and startup tests were rerun after
+that test-only correction and pass with the rebuilt executable. One earlier
+MSVC comparison used the previous GCC report before its replay completed;
+rerunning against the refreshed report passes. No failed run was counted as
+completion. Final12report audit checks1281current source hashes, checker/game
+binary identities and unchanged ROM SHA1. Local reproducible audit helper:
+build/native-campaign/audit_entry.py. No runtime processes are left running.
+
+Continuation (2026-10-17, completion capture): native weapon_progress.c now
+recovers original1231C in full, not only123C4 restoration. SsaWeaponProgress adds
+requested after ammo; capture saves equipped u32/owned/tenammo/requested separately.
+SsaWeaponProgressStats models ten original GAME+90 rows: owned i32, signed ammo
+i32, shots u32, hits u32. Capture always refreshes owned/ammo even for unowned
+weapons. Original settings+1B byte0 preserves counters; ANY nonzero byte clears
+all shot/hit counters. It leaves every other original saved/source/game/settings
+byte untouched. Native null guards reject before writes; arguments are distinct.
+
+ssa_native_game_weapon_progress exposes a read-only ongoing-campaign(setting0)
+projection from canonical inventory/control, weapon_game.shots and weapon.hits.
+Six busy locks plus loaded/error/null checks reject before output writes.
+carry_capture now uses this original native capture for gear, preserving its
+existing exact-entry snapshot policy and usable-weapon fallback. carry_next
+still uses actual equipped and original100HP/zero protection/empty queue reset.
+No cross-level counter accumulation or original score/summary UI was added.
+Original1E48 and outer completion/statistics presentation are concrete next work;
+do not infer their policy merely from1231C's setting byte. Read campaign-entry.md.
+
+test-weapon-progress now8192 originalrestore comparisons,4096 originalcapture
+comparisons(all256setting values, signed ammo boundaries and preserved full
+records),512 actualcapture/restore compositions,8guards, UBSan. The original
+FC04 executes in restore tests. Password/start now3736ASan/UBSan/leak checks,
+33read-only live counter captures on11maps/3difficulties plus all prior loadout/
+advancement/R scenarios. Whole-game memcmp verifies getter purity; all6busy
+guards and null outputs are covered. MSVC agrees. All108Windows libraries build.
+
+Actual decomp.wtf1231C candidate reached86.8% after5plain-C attempts,168bytes/
+84instructions. It is NOT exact; claim released with details. Source is
+recovered/weapon_progress_capture.c (NONMATCHING). Remaining register allocation,
+literal placement and loop strength reduction differ. No asm/pinned registers.
+Live status remains75/526,2224/87648catalogued bytes(2.54%),536attempts.
+
+Final-map earned probes this continuation tested spacing, immediate threat
+selection, automatic/cannon use and read-only encounter-aware input. All failed
+beforeD8; no failed probe counted as completion. ALL bot experiments were removed:
+test_second_level.c's SHA256 again matches the previously validated baseline.
+Logs final-spacing.*, final-melee.*, final-auto.*, final-waves.*, final-encounters.*,
+final-cannon.* under build/native-campaign are diagnostic failures only. The
+initial item trace is final-items.log. Frontend cap still11; genuine earned
+entry twelve-current-entry.bin.level11 is unchanged and has no new grants.
+The default eleven-map GCC replay with the integrated capture stays identical:
+140712frames/1544000score/45HP. Separate final-map standalone GCC/MSVC remains
+17270frames/160000score/63HP, original all-weapons starter only; not admission.
+
+Current focused reports: weapon-progress-validation.json and password-start-
+validation.json (plus windows-password-start-validation.json). Profile persistence,
+ClearData, selected starts, normal launcher/raw input/paint/R tests were rerun
+on the rebuilt executable in both renderers. Unrelated ongoing website changes
+are preserved; no publication, commit or push was performed.
+
+Final capture-continuation verification: default11-map GCC ASan/UBSan/leaks and
+MSVC agree on every result field; standalone final-map comparisons also agree.
+Windows Enter/R/map-music/fade checks pass both renderers,40stages/20restarts/
+21map views each, including real black/mid/full pixel comparisons. Captures use
+the new1231C native path throughout.12report audit passes1283current source-hash
+checks plus actual checker/game hashes and original ROM identity. Independent
+75-C full-ROM rebuild was rerun and is byte-identical; no new exact match added.
+No native runtime/test processes remain. Original weapon stats offsets were
+cross-checked against existing controller(+98shots) and combat(+9Chits) ROM tests.
+
+Latest statistics continuation: original1E48 completion accumulation,1CF4
+checkpoint save and1D9C checkpoint restore are now native in statistics.c and
+all three match exactly through actual decomp.wtf. See analysis/statistics.md.
+Native value projections preserve full weapon/enemy rows. Complete adds elapsed,
+ten weapon HIT counts, twelve spawn/kill/player-hit counts and accepted pickups
+with wrap32; overwrites score/signed vitality/byte level. It does not clear input
+counters and has no once-only guard. Caller must commit once per completion.
+Checkpoint save copies rows only; restore copies rows and clears current pickups
+only. It does not restore player health/score/time or change campaign totals.
+Original1B99C confirms GAME+31C counts accepted ordinary pickups, not secrets.
+
+New native_statistics.c / native_statistics.h exposes
+ssa_native_game_statistics as a read-only idle snapshot using canonical inventory
+health/protection and existing six ownership/query guards. It is a separate
+library linked to native_game_core/statistics, not a change to the game struct or
+SsaNativeCarry. It does not run1231C's password-setting counter reset, commit
+totals, restore a player or unlock anything. Frontend total persistence, original
+statistics/score UI, continue/death screens and interchapter/final presentation
+remain unfinished. Frontend cap stays11. Current native game executable SHA256
+498e3e0071607a4c2a7a9b69aa71be1740d19c78babb8db1f3dfb35df0638504 is
+byte-identical to the previous validated build; campaign runtime was unchanged.
+
+test-statistics passes8192 complete original calls per routine(24576 total),
+512 real save/mutate/restore/twice-complete sequences and6nullguards underUBSan,
+comparing whole GAME/player/body records with no controlled callees. Tests cover
+all256levelbytes,32bitoverflow,signedhealth/armor and distinct shots/hits.
+test-native-statistics and scripts/test-statistics.ps1 -SkipBuild agree on
+27699checks/48starts/3072frames/288snapshots/480guards on all16maps and3difficulties.
+ActualPC input sends jump,H and quickleftclick. Directed counter fixtures are
+projection tests, not earned campaign completion. GCCASan/UBSan/leaks andMSVC
+pass. Leftmousebutton ID is1 (SSA_PC_MOUSE_LEFT), not0; the new test was corrected
+after its first fixture failure. Reports: statistics-validation.json,
+native-statistics-validation.json,windows-native-statistics-validation.json.
+Both tests are in decomp.ps1/scripts/decomp.py. Windows builds110libraries.
+
+Live exact status78/526,2816/87648cataloguedbytes(3.21%),541attempts. New matching
+files:recovered/level_statistics.c(252bytes),statistics_checkpoint_capture.c
+(168bytes),statistics_checkpoint_restore.c(172bytes). Ordinary C, no asm/pins.
+All78-C export and independent rebuild are byte-identical to original SHA1.
+The incomplete catalogue is not whole-game coverage. No new matching claim
+remains. Website changes from other work were preserved, no publication/commit.
+
+Final statistics verification: full portable CMake build passes109libraries;
+Windows passes110. The portable all-target build exposed the existing Windows
+profile-disk test outside WIN32; its target is now correctly guarded. Rebuilt
+both platforms and reran Windows statistics successfully. Final audit passes565
+current source hashes across four reports, unchanged playable exe SHA256 and
+the78-C original-ROM identity. All tool/test/build sessions for this continuation
+have completed. No additional campaign replay was necessary: existing runtime
+source and playable executable are unchanged; the new statistics API is separate.
+
+Latest continuation: completion.c now recovers the single-player tally loop
+inside02564 (phase2626..2A2E), with complete original loop execution in the ROM
+oracle. No speculative function split, matching claim or exact match was added.
+OriginalE914 executes; world capture/draw/sprite animation,VBlank,input,audio and
+formatter are controlled. Read analysis/completion.md before integrating it.
+Time bonus is signed-positive(par-elapsed/60)*1000*(difficulty+1), wrap32.
+Ammo bonus sums signed ammo3..10, multiplies10*(diff+1), tests positive, then
+multiplies10*(diff+1)again; ammo is not consumed. Count100 or1000 with heldfire,
+60tick holds,30tick short wait, command16 onlycounter&7==0/nonfinal transfers.
+Stage2 is retained but ordinary paths skip it. Stage6 sends B9+level andsound7;
+after its first tick, fresh pressedfire can bypass remaininghold but never the
+signed audio-finished condition. GAME+75 is BONUS NUMBER Y88/120, distinct
+from E914 text Y40 at+73. Original blend-table flash29..0 retained as data.
+
+native_completion.c composes native_game snapshot, tally and ordered original
+1231C->1E48->1CF4 record, then nextlevel. It captures equipped/requested separately,
+supplies bonus-adjusted score, and applies the original setting-byte weapon
+shots/hits reset before totals/checkpoint. Setting0 preserves,ANYnonzero clears.
+Output is value-only SsaCompletionRecord with caller-seeded totals. Successful
+record marks tally.recorded, duplicates/premature/sourcechanged/busy/error reject
+without output/recorded changes. Source game and prior totals are unchanged.
+Frozen source score/counter/elapsed/ammo/level/difficulty/completion are checked.
+This is NOT frontend integration, disk saving, next-player restoration or ending
+routing. SsaNativeGame/SsaNativeCarry and playable exe are unchanged. Cap stays11.
+
+test-completion:7370sequentialROMframes/36map-difficultytraces +4096directedstates,
+865reentryguards,13invalidguards,3callbackfailures,UBSan. Tests compare events and
+prefix fields, actual timer/flags/Y, score arithmetic and blend data. It is NOT
+whole02564/UI parity. First oracle fixture bug was pre-loop event capture before
+stack setup; corrected. Comparing actualE914 revealed +75/+73 distinction above.
+test-native-completion:410217checks/36starts/1152actualgameframes withjump/H,
+29148tallyframes,9216records(all256settingbytes),36chainedrecords,10152guards,
+3254events. Native end fixtures are controlled, NOT campaign admission evidence.
+GCCASan/UBSan/leaks agreeswithMSVC. New drivers test-completion,test-native-completion,
+scripts/test-completion.ps1 -SkipBuild. Reports completion-validation.json,
+native-completion-validation.json,windows-native-completion-validation.json.
+All111portableCMake/112Windowslibraries build. Windowsstatistics still27699checks.
+Live decomp.wtf78/526,2816/87648bytes(3.21%),541attempts;78-Crebuildunchanged.
+Next frontend work: original pre-tally capture/fade, activeE914/E9D4 notice path,
+bonus digits and realvoice gating, then campaign record lifetime/Enter/R routing.
+Do not substitute instant bonuses or commit pre-tally score. No publication,
+commit/push, user-save mutation or website-source changes made this continuation.
+
+Final completion audit:800current source hashes across5focused reports pass;
+actualMSVC completionchecker SHA matches its report, playableexe is unchanged,
+originalROM SHA1 unchanged. All continuation tool/build/test sessions completed.
+Existing campaign replays were not repeated: runtime source/game executable did
+not change; new backend libraries are unbound until original UI integration.
+
+Latest user cannon fix: native PC now enables ballistic_player_cannon (new
+SsaProjectileRuntime field). Player type67 weapon commit clears attachment4000,
+matching the existing rocket/Prion policy. Preserve all initial positions/XYZ
+velocities, source/owner/weapon credit,100owner exclusion and original bounce/
+penetration/damage paths. Default recovered runtime leaves option0. Enemy
+cannonballs do not pass through this player commit correction. No new exact C.
+
+test-weapon-fixes reproduced attachment failure before the fix, then passes
+127418ASan/UBSan/leak checks:46audio cases,6rocket/6Prion/6cannon trajectories,
+36frames per projectile weapon, level/up/down aim inbothviews with immediate
+largeyaw/pitch,walking,jump input. MSVC agrees on every counter via
+scripts/test-native-weapon-fixes.ps1 -SkipBuild. The unchanged default projectile
+integration passes37132assertions/3270frames/16maps,10bounces/2penetrations.
+test-gunrilla passes418checks/8launches/8returnhits/39frames with the newoption1;
+MSVC also agrees. Windows all112libraries rebuild; native startup/launcher/raw
+input/paint/R and concurrent PC/reference checks pass. Full campaign was not
+rerun for this targeted correction; earlier campaign reports are historical.
+
+User's running game PID41848 held the executable locked, causing first rebuild
+LNK1104. Did NOT stop it. Moved only the exact Release/ssa_native_game.exe to
+Release/ssa_native_game.running-41c7ba8aa2f949d690ef957f82e723d4.exe after checking
+both absolute paths stay within Release. User session remains running. Successful
+rebuild now puts the fixed game at the original launcher path. New executable
+SHA25645eba34b176709cd333a00fadd7564b326a5e30d6f1bf99efc9b25027f5ec953.
+Relaunch is needed to use the fix. Do not kill the user session or remove its
+running backup. Source/report updates in weapon-fixes.md/projectile-runtime.md.
+No website changes, save mutation, publication, commit or push for this fix.
+
+Latest requested PC Prion targeting: native_game enables the new
+entities.nearest_converted policy (default recovery runtime remains off).
+Before every living converted CD..D6 behavior pass, choose the nearest living
+combatant in active-pool order by 3D body-center distance. Includes players,
+CD..D8 enemies/bosses and other converted enemies; excludes self, dead health,
+corpse flag20, items and projectiles. No player preference or 600-tick sticky
+target. Project chosen target into controller player/XY for visibility, facing,
+distance/reaction/attack logic, restoring real player fields after calls/errors.
+Converted ranged heading follows target. Converted enemy melee requires an
+actual blocked walk this update against that selected nonplayer, after hazards,
+and uses existing combat damage20/40 for D0/D6. Do not infer contact from stale
+navigation phase/move_result: original navigation can reset phase on contact.
+No candidates clears target and skips attacks. Original recovered routines and
+unconverted behavior remain unchanged; existing Prion2x policy remains enabled.
+
+New test-prion-targeting passes1602ASan/UBSan checks with actual weapon7 impacts
+on all10eligible types,80selections,2enemy melee hits,6ranged types,nearest-player,
+dead/corpse exclusion,vertical distance,retargeting,boss and no-target cases.
+Windows checker agrees on every counter. Existing special-weapons32318 checks
+and default entity-runtime85982 assertions pass. The old special-weapons speed
+fixture disables nearest_converted explicitly to isolate behavior-clock timing.
+All112Windows libraries/frontend rebuild; launcher/raw-input registration/paint/
+restart checks pass. Physical device input and full campaign were not replayed
+for this change. Prior campaign route reports remain historical.
+
+Current playable executable SHA256:
+60130cb42939c2beb653303bf4d569a30ad0ef6127bc4469f1a381819fefab98.
+Audit passed1154current source hashes across7focused reports plus checker/game
+hashes and unchanged originalROM SHA1. No new exact matching work. Docs:
+analysis/projectile-conversion.md (requested PC nearest-target behavior),
+prion-targeting-validation.json and windows-prion-targeting-validation.json.
+No user session stopped, save mutation, website changes, publication, commit or
+push. Relaunch play-native.cmd to use the rebuilt executable.
+
+Latest requested artwork: Rome ankhs now use a golden laurel wreath generated
+with the built-in image_gen tool from the user's reference and original ankh.
+Saved source/prompt/final indexed PNGs/manifest in assets/rome-laurel/. Reproduce
+with scripts/import-laurel-art.ps1 (System.Drawing, linear-light alpha sampling,
+strict mapping to the original ankh's10opaque Rome palette indices; transparent0).
+src/native_laurel.inc holds compiled column-major20x34 and10x17 pixels.
+native_pickup_art.c applies them after original asset decode, before borrowers.
+Only resource63/images28,56 change on original Rome-family maps6..11,14..15.
+Preserve origins(-9,-35)/(-4,-15), metadata and all gameplay. Egypt's artwork,
+the ROM, other resource copies and pickup triggers/sounds remain original.
+This policy does not enable multiplayer gameplay or admit the final campaign map.
+
+One-off ASan/UBSan/leak audit initializes all16maps:182146checks,16replaced
+image references,86496unchanged, all dimensions/origins and allowed indices valid.
+Four real engine captures inspect Egypt/ Rome in both renderers; fixtures move
+the pickup and lower only render camera to frame it. Existing PC renderer suite
+passes11169482checks/7resolutions/24jump-H frames. MSVC rebuilds112libraries and
+game; both Windows renderers launch Rome for5smoke frames, and normal launcher/
+startup/restart/concurrent checks pass. Importer reproduces arrays exactly.
+132build/artwork source hashes pass, startup agrees with current executable,
+ROM SHA1 unchanged. See analysis/rome-laurel-validation.json and assets README.
+No full campaign replay or new exact matching work. No user save mutation,
+website edits, session termination, publication, commit or push this task.
+Current playable exe SHA256:
+937c9d17b3296ddfa9cbaea092929863dca3757cba5c68d3bb30311f439e7e8d.
+Relaunch play-native.cmd for the replacement artwork.
+
+Latest port continuation: original localized HUD notices now run in the playable
+frontend. New hud_notice.c/h recovers E914's bounded literal HUD-message domain
+and full E9D4 controller; weapon_animation_resolve recovers E410 frame selection
+without advancing time. SsaNativeGame and SsaHudScene embed stable notice state.
+Route typeD through ssa_hud_notice_step, not scalar ssa_hud_sprite_step's deliberate
+inactive-only branch. Run in original order before E460/cache/OAM. Preserve
+42glyph arrays, line centering/space/newline/byte-wrap/ARM-shift behavior, previous
+vs current cache-frame readiness and flags40/200 reveal/expiry. Automap8 hides
+without ticking. Literal messages retain original Latin1 ROM bytes; formatted
+encyclopedia strings and >42glyph layouts reject explicitly, not silent stubs.
+
+Native pickup names, boss introductions and death callbacks now forward original
+IDs/arguments into sprite artwork instead of generic English GDI text. Pickups
+use Y48/font0. Language follows saved menu selection, direct start and reload.
+HUD and player lifecycle share timer76: E914120, death's later600 overwrite,
+one decrement per sprite phase. Commit flags/timer between HUD handlers so new
+projections cannot overwrite readiness/rectangle effects. Legacy completion
+shortcut remains separate; timed completion is NOT integrated yet.
+
+test-hud-notice:2625E914 comparisons +135104wholeE9D4->FC04->E410 calls under
+UBSan,24sequences/3168frames/3languages,2048directedstates,6guards. Formatter
+literal-copy and cache-readiness transfer boundaries controlled; GAME/scratch/
+whole48byte sprite compared. Existing HUD whole frame-chain regression still
+passes2048frames/16maps/172032objects/64independentRGB comparisons (inactive
+notice fixture). test-native-notices passes13650ASan/UBSan/leak checks on
+48starts/16mapdatasets/3languages/6432frames:39actualpickup contacts,48ready/
+expired notices,48fatal-combat/death cases,144render pairs. Nine explicit
+presentation fixtures cover MP map datasets without initial pickups. Do NOT
+enable pickup respawning for one player. Initial test fixtures incorrectly
+used NULL single-player damage source and expected MP respawns with one player;
+corrected fixtures, preserved runtime guards. Actual native combat needs a
+nonnull source for a vulnerable single-player target.
+
+MSVC agrees on every native counter via scripts/test-native-notices.ps1 -SkipBuild.
+Normal-input level1 still finishes5110frames/24000score/8pickups/100HP, all enemies
+and groups clear. Full campaign not replayed, cap remains11 and final map remains
+unavailable. Full portable CMake and113Windowslibraries/frontend build. WSL CMake
+is .venv-linux/bin/cmake, not on the default PATH. Launcher/startup/restart and
+concurrent launches pass. Audit950current source/fixture hashes across7reports,
+actual checker/game hashes and unchanged originalROM SHA1. All sessions complete.
+Current playable exe SHA256:
+26238745d64c86365a001377b92f2ed5abb26b105282cbaf915596560f5f4110.
+
+decomp.wtf ran7manual ordinary-C E914 attempts; recovered/hud_notice_set.c stays
+99.7%,94instructions,score25. Only5loop-counter instructions swap pointer/value
+registers. NOT exact; claim released with detailed notes. No pins/asm/catalogue
+splits. Live status78/526,2816/87648bytes(3.21%),548attempts; incomplete catalogue,
+not whole-game coverage. No new export/rebuild required for an unmatched candidate.
+Read analysis/hud-notices.md and updated completion.md. Next: pre-tally captured
+world/fade, bonus-number sprites, real voice-finished service, then campaign record
+lifetime/Enter/R/ending routing. Do not commit an instant/pre-tally score as a
+substitute. No publication, commit/push, save mutation, user session termination
+or website-source changes. Relaunch play-native.cmd to use the restored notices.
+
+Latest audio fix: U.M.T. pickup item27 / weapon8 / HUD93 requests sound1D.
+Its three PSG tracks tie notes behind endless GOTO commands. Independent PC
+effect players left those voices buzzing indefinitely. src/audio.c now releases
+non-loop1D tracks at their first original GOTO; explicit SOURCE_LOOP still
+repeats until scoped STOP. Keep other songs and music unaffected. New
+test-umt-audio driver and scripts/test-umt-audio.ps1 cover actual pickup dispatch,
+24/48kHz, legacy/source sinks, overlapping pickups and independent music/weapon/
+door loops:2927 checks/9 cases/8 pickups/zero errors, GCC ASan/UBSan/leaks and
+MSVC agree. Windows launch/audio-device/startup/restart passes. Full GCC/MSVC mixer
+passes654862 assertions/131 audible entries/35640000 stereo frames/no clipping
+or decode errors, with original-ROM audio oracle checks. The old terminal-music
+fixture incorrectly expected immediate music on fatal damage; it now waits for
+the recovered lifecycle to enter state4. No runtime death-timing change.
+Standard Windows audio validation also passes with music enabled/disabled;
+an initial report-sharing lock cleared on retry. See windows-native-audio-validation.json.
+Read analysis/audio.md and umt-audio-validation.json/windows-umt-audio-validation.json.
+Rebuilt frontend SHA256:
+1d77f38021e6068735ccf6f4bd5ef596c2a6175c407078472803164aee235544.
+All115Windows libraries/frontend build. No campaign playthrough, save changes,
+publication or process termination. ROM SHA1 remains unchanged. This is a
+mixer bug fix, with no new exact-match claim. Relaunch play-native.cmd to load it.
+
+Latest port continuation: native NETRICSA is integrated in src/netricsa.c,
+include/ssa/netricsa.h and the Win32 frontend. N/Tab opens during gameplay;
+Esc/N closes. Tab/Enter/Space cycles category/upper/lower focus; arrows/WASD
+navigate/scroll; Left/Right cycles acquired/encountered records. Mouse hover/
+click categories/panels, wheel scrolling and illustration-half clicks/wheel
+work. All23 original illustrations/frame/fonts/localized records load as data.
+No ROM execution at runtime. Read analysis/netricsa.md before changing ordering.
+
+Original19C00/1A2C4 semantics: category4/focus1 initial, categories0stats/1enemy/
+2weapon/3strategic/4tactical,18tile7row upper and15tile9row lower scrolling.
+Category changes can refresh records twice; combined direction inputs preserve
+this. Enemy category availability sums first11 counters. Native empty-weapon
+init rejects instead of looping. German129 has4numeric directives but original
+passes3values: native duplicates attacks in the duplicate row and putskills last,
+excluding12undefined variadic cases from exact text comparison. Streamed rows
+retain31-byte clipping. Tip RNG is a frame-based native projection; global
+original RNG/OAM/whole-screen pixel parity is not claimed. Keep loaded screen
+address stable; formatted-text pointers point inside it and init repairs them
+after copying. data snapshot owns no world references.
+
+Frontend uses native_statistics plus prior-map session totals/rows. Add only on
+successful advancement; R retains previous-map totals, fresh starts clear them.
+NET Lives uses lifecycle continue_flag, not a map index. Opening freezes the
+world counter, clears held PC input and resets audio to original command7/song70.
+Closing restores current game music mode and previous capture preference. World
+loops resync on later native ticks. No new save format/tally/continue flow.
+
+Driver test-netricsa passes10167ASan/UBSan/leak assertions/36starts/5292ticks on
+12maps/3languages. Original-ROM oracle passes2684textrows,174recordcalls and
+405wholecontroller steps with19C00reached, plus zero-shot pistol division.
+MSVC agrees. scripts/test-netricsa.ps1 -SkipBuild passes both renderers/maps0&6:
+157pausedticks/3real-WMpointer checks/1snapshot/70music checks each, then3resumed
+worldticks, no decoder errors. Physical input/listening and campaign playthroughs
+not run. Initial fixture assumptions about encounter availability/briefing
+length were corrected. All118portable/Windows libraries and frontend build.
+
+A running executable was preserved as
+build/native-windows/Release/ssa_native_game.running-netricsa-7a80b894091046cab6cb31a468b9b3ac.exe
+without stopping its process. Current rebuilt/validated frontend SHA256:
+48cc8fb40743e537c75994b5121f4237b77f5871d178219cba1c55dcea2ad1f5.
+Live decomp.wtf remains78/526functions,2816/87648cataloguedbytes(3.21%),549attempts.
+One1A27C ordinary-C attempt matches instructions but fails to link uncatalogued
+19C00; NOT exact, claim released with notes. No export/rebuild matching claim.
+Original ROM unchanged. No campaign bots, save mutation, publication or commit.
+Concurrent Settings/SoundFont work in the shared workspace is preserved; NETRICSA
+uses the existing audio settings/reset service. See netricsa-validation.json,
+netricsa-rom-validation.json and windows-netricsa-validation.json. Completion
+tally UI, original continue/death, scores/name entry and other documented parity
+gaps remain; this NETRICSA increment is not a finished whole-game port.
+
+NETRICSA presentation continuation: every level entry/restart now follows
+NETRICSA -> map -> gameplay; chapter introductions precede NETRICSA and the
+ending still returns to Main. Pre-level NETRICSA retains its animated background.
+N/Tab during play instead captures the current game image and composites only
+the NETRICSA frame/text/artwork over it, preserving renderer resolution. World
+simulation remains paused. Closing frees the captured buffers and restores
+music/capture. Pointer coordinates account for the game viewport and the inner
+240x160 canvas. ssa_netricsa_overlay supports in-place RGB888 composition;
+uncovered pixels/letterboxing remain unchanged and background scroll is ignored.
+See analysis/netricsa.md. Keep net_backdrop/net_pixels lifetime and stable screen
+address contracts when changing frontend presentation.
+
+Latest test-netricsa:10175 ASan/UBSan/leak assertions/36starts/5292ticks; MSVC
+agrees. Original-ROM oracle still passes2684textrows/174recordcalls/405controller
+calls. Windows tests pass both854x480 PC and240x160 reference renderer cases:
+127pre-level briefing ticks,157in-game overlay ticks,3pointer checks,1snapshot,
+70music checks,zero decoder errors,then3resumed world ticks each. Intro/ending
+route checks pass. Actual Windows briefing/overlay captures visually inspected.
+All119 Windows libraries/frontend build. The launcher's current executable was
+rechecked with both focused Windows suites; SHA256:
+5eff19892ce195cf277b377275c7c71c746476f07a030090b3c673ab44110d44.
+Original ROM SHA1 remains unchanged. No campaign playthrough or physical-input/
+listening claim, save mutation, process termination, commit or new exact match.
+Concurrent Settings/audio work was preserved. See refreshed
+windows-netricsa-validation.json and windows-campaign-screen-validation.json.
+
+NETRICSA fade update: in-game frontend uses ssa_netricsa_pc_step for15tick/250ms
+opening and closing, with early-close reversal. The recovered ssa_netricsa_step
+retains original timing. In-game overlay blends full-HUD capture into a dark
+green world+weapon capture while UI fades in; reverse blend restores HUD on
+close. All HUD types except weapon type2 are omitted from the clean capture,
+including crosshair/notices. Weapon-only OAM uses private sprite/dispatch copies;
+restore live OAM after render even on failure. Free net_hud_frame with the other
+captured buffers. Pre-level NETRICSA keeps animated background and ORIGINAL
+fade speed through ssa_netricsa_step, as explicitly requested by the user.
+Tab now toggles NETRICSA on/off during play; Enter/Space cycle panel focus.
+Pre-level Tab still cycles focus. N/Esc close behavior remains available.
+Windows fixture opens/closes with actual Tab messages and uses Enter for focus.
+Portable suite now10237ASan/UBSan/leak assertions; original oracle unchanged.
+Windows cases pass110overlayticks/127briefingticks,6/14weaponpieces retained and
+19251/2508HUDpixels removed in PC/reference renderers. Controls/music/pause/
+resume and intro/ending route checks pass. Updated overlay visually inspected.
+Current rebuilt/validated executable SHA256:
+8a97551c094b463c6822af9c784a4399b11a93c2456fcc3115ef0691768c6435.
+ROM unchanged; no new matching claim or campaign playthrough. See netricsa.md.
+
+Select Level chapter headings now use original white font palette3 instead of
+green palette4, for Egypt/Rome in all languages. MSVC profile/menu fixture passes
+590232checks/1275frames/108starts; generated chapter previews contain white
+heading pixels on both pages in all3languages. All119 Windows libraries/frontend
+build. Running game preserved without terminating it; relaunch for the change.
+Current frontend SHA256:
+ee3eaaa8ef249f96529480f9da40fdc022f48eae4e56c9edab2ba331dcb9b348.
+
+Options now shows Language, Clear Data, Settings, Credits in that order. Music
+On/Off is removed; Music volume0% silences music. Existing internal IDs remain
+1Credits/2Language/3ClearData/4Settings; option_ids[] defines visible order for
+draw, pointer and keyboard navigation. Entry/credits return selects Language;
+Settings/ClearData retain their own return rows. CLI --no-music and M mute stay
+available. See analysis/menu.md and audio-settings.md.
+Native menu passes72685ASan/UBSan/leak checks/9571frames across3languages,
+3difficulties and2music flags. MSVC agrees. Profile/menu passes590232checks.
+Settings checks pass38739core/21068Windows with sliders, style changes and
+test-only preference persistence. Updated native-menu startup fixture now uses
+3Down edges to Credits,292frozen menu ticks and0music toggles. The initial
+Windows failure was its stale288tick expectation; corrected and rerun. Final
+English/German paths passed on ae7d790a...; concurrent rebuild temporarily
+removed the launcher exe before French. Sources stayed unchanged; French rerun
+passes on current7d632cad5ad65906972c7721069f18308edc9bfa3fd036199847bea803ac8d01.
+Current windows-native-menu-validation.json explicitly contains that final
+French case; English/German output remains in build/options-final-menu.log.
+test-native-menu.ps1 defaults to all9cases and accepts -Selections for focused
+checks. No campaign playthrough, user save mutation, process termination or
+new exact match. ROM unchanged. Running user game was preserved during rebuild.
+
+Settings is now FIRST in Options, followed by Language/Clear Data/Credits.
+option_ids is4/2/3/1; entry and credits-return select Settings. Settings page
+rows0..5 are Renderer, Jump, Music style, Music volume, Sounds volume, Back.
+Software selects full-resolution PC rendering; GBA selects native240x160.
+Renderer and jump persist with audio in settings.dat. Version2 keeps16bytes,
+packing style/renderer/jump in byte9 under CRC32; version1 audio preferences
+migrate with Software/JumpOn defaults. CLI --original-renderer overrides the
+loaded choice for that session. Jump Off masks Space's held/pressed jump input
+before game_tick, preserving gravity/current airborne motion and menu Space.
+Do not disable player physics to implement this preference.
+GCC Settings passes38770ASan/UBSan/leak checks including legacy migration and
+all renderer/jump combinations; Windows core agrees. Windows UI/input/save/
+audio checks pass21096, including actual240x160/854x480 renders and actual
+Space suppression/positive jump velocity. Initial renderer fixture failed
+before sprite OAM was populated; one ordinary game tick fixes fixture setup.
+Native menu remains72685checks/9571frames; final original-renderer startup,
+credits/music/map/restart path passes with292menu ticks. All119Windows libraries
+and frontend build. English/German Settings previews visually checked; no
+clipping. Running game preserved without termination. ROM unchanged; no new
+exact match or campaign playthrough. Validated frontend SHA256:
+9af531fd1d24e6da08f0dfcdc41e0dc4a5527cf24bf5ebfd4305c171f236b0bf.
+
+Tab now closes NETRICSA both during gameplay and before map view. Enter/Space
+cycle panel focus in both modes; pre-level original fade timing is unchanged.
+Windows NETRICSA fixture now sends an actual Tab key message to dismiss the
+pre-level briefing. Both renderers pass briefing/map/overlay/pause/resume checks.
+All119Windows libraries/frontend build; running session preserved. Validated
+frontend SHA2563341e78f05450138b2965d576fda28cbb046d52131f563da15dc1c8503a647a8.
+
+User confirmed current NETRICSA record availability is correct and cancelled
+the proposed per-level catalogue change. All unfinished catalogue code/tests
+were reverted; source hashes again match the prior passing NETRICSA reports.
+Playable executable unchanged. Keep acquired/encountered filtering as it is.
+
+NETRICSA now draws clickable numbered record selectors above the upper panel
+(native x91,y17..24): weapons1..10/enemies1..12. Current record is highlighted,
+hover highlights available numbers, unavailable numbers are dimmed/nonclickable.
+Availability still uses acquired/encountered data; no catalogue/unlock changes.
+Clicking a different number resets scroll and held-scroll deltas in both panels.
+hover IDs10..21 identify these buttons;8/9 remain illustration halves.
+Original text font/palette, fades and full-resolution overlay handle numbers.
+Native suite passes13411ASan/UBSan/leak checks; original2684textrows/174records/
+405controller comparisons still pass. MSVC agrees. Windows tests pass5pointer
+checks each, including actual numbered-button clicks in PC/reference renderers.
+Native full-availability and Windows sparse-availability previews visually checked.
+All119Windows libraries/frontend build; source/executable hashes verified. Current
+executable SHA256bcee0d285df1a2c8324cf3ba41c41af0217efaef9c36023dc7dc769a760e4c8e.
+Running session preserved; no ROM mutation, new exact match or campaign replay.
+
+GBA renderer now follows auto-aim vertically with the original type18 cursor.
+gba_view is bound in frontend level_options/settings_change; native ticks reset
+software pitch/free_aim and consume pending mouse Y. GBA still ignores manual Y.
+Cursor projects exact shot contact using dedicated camera_trace, original D490
+distance table and120-to160 scaling. Collision-checked chase height/distance
+therefore lowers it appropriately; visible-edge clamping prevents OAM wrapping.
+Original artwork/target animation/visibility remain; software cursor is centered.
+Do not rebuild all OAM in reference draw: NETRICSA supplies filtered HUD storage.
+test-gba-aim passes263ASan/UBSan/leak checks/nine projected views, including above/
+below autoaim, actual OAM, shortened boom, mode changes and chainsaw hiding.
+MSVC agrees; projection error<=1.310reference pixels with original quantization.
+Software free-look remains3899155checks/30100depth samples; chase9328checks/
+232aligned views. Windows Settings21099checks; free-look passes five modes
+including GBA first/third-person, with visually checked snapshots. All119Windows
+libraries/frontend build. Running user process preserved, ROM hash unchanged;
+no campaign replay or new exact match. See analysis/free-look.md and current
+gba-aim/free-look/chase/Windows reports. Frontend SHA256:
+eedb66c5cec1131a24ef4d575cd4faae8e2f8107fc43f4457d0fa8b719f61457.
+
+Third-person close-wall fallback threshold increased from32 to64 units in
+src/view.c MIN_BOOM, shared by software/GBA. Below64 returns the eye pose;
+H preference persists and clearance restores chase. Default256/64 framing is
+unchanged. test-view passes10837ASan/UBSan checks/2048real-map frames/128pitched
+poses, including explicit63/64/65-unit boundary cases and ceiling retraction.
+GBA aim fixture now uses a96-unit shortened boom and asserts actual third-person;
+264ASan/UBSan/leak checks pass. Chase remains9328checks/232aligned views.
+All119Windows libraries/frontend build; five Windows free-look modes and MSVC
+GBA checks pass. No campaign replay or ROM mutation; running process preserved.
+See analysis/chase-aim.md and current native-view/gba-aim/chase/Windows reports.
+Current executable SHA256:
+f91a2508ef383ec5ee1d5731867f452330b43ed5d0e3b2abedef2bcb44a9dca2.
+
+Third-person local corpse facing now freezes when native player_animation
+receives death animation0x68: player_death_facing snapshots motion.facing before
+subsequent camera-controlled movement updates. Dead render sources (motion flag10)
+use that snapshot; live sources keep actual facing. Gameplay yaw, original death
+animation/timing, base/shirt direction tables and white appearance are unchanged.
+Both reference/software use the same source, so all five original death angles
+remain visible as the camera rotates instead of the corpse turning with it.
+Chase fixture adds actual combat death plus64mouse-turn frames across software/
+GBA policies, six animation frames, all five projected body/white-shirt directions
+and final held corpse. GCC ASan/UBSan/leaks and MSVC agree:9944checks/232aligned
+views. CMake now builds ssa_native_chase_aim_check; test-free-look.ps1 records its
+results alongside GBA264checks and five Windows render modes. All119libraries
+and frontend build. No campaign replay, process termination, ROM mutation or
+new matching claim. Current frontend SHA256:
+1a94a968ca5cc912e9a4399cc72c301de35786ea0602973613f0c1b3b8c74a09.
+
+NETRICSA numbered records now align from the full grid's left edge: cells begin
+at native x8, text at x9/y17, fixed16-pixel spacing for both weapon/enemy lists.
+Hit regions use the same geometry. Font palettes are green2 normally, white1
+on hover, yellow0 when active (active wins); unavailable stays dim green and
+non-clickable. Native/overlay fonts and acquired/encountered filtering remain.
+Native tests pass13443ASan/UBSan/leak checks including exact glyph-color/position
+checks; original2684textrows/174records/405controller comparisons still pass.
+MSVC agrees, both Windows renderer paths pass all5pointer checks at the new
+coordinates and normal NETRICSA briefing/overlay/pause/audio/resume checks.
+All119Windows libraries/frontend build. Native and MSVC three-color previews
+visually checked: build/native-tests/netricsa.bmp.selectors.bmp and
+build/netricsa-tests/screen.bmp.selectors.bmp. No campaign replay, ROM mutation,
+process termination or new match. Current executable SHA256:
+98b35bd1eadedc28a43d5b18fd787b0b65d273d237549207614d7a72620321d6.
+
+Options now lists Settings/Extra/Language/Clear Data/Credits (IDs4/5/2/3/1).
+SSA_MENU_EXTRA=17 holds Jump, Third-person, In-game NETRICSA and Back; all three
+permissions default On. Jump moved out of Settings; Settings now has renderer,
+music style, music volume, sound volume and Back. Extra rows0..3 render at
+44/68/92/132 and mouse hit regions follow. Settings rows0..4 use32/56/86/112/144;
+volume bars remain98/124. All labels support English/German/French.
+Settings v4 stays16bytes/CRC32: byte9 music bits0..1, renderer2, jump3,
+in-game NETRICSA4 and third-person5. v1..3 decode; missing permissions defaultOn,
+existing preferences survive. SsaSettings has seven unsigned fields; update any
+aggregate initializers. v3 migration preserves its NETRICSA choice. User saves
+were not modified by tests (settings-test.dat is isolated).
+Frontend game_tick masks new jumps as before; Third-person Off consumes pending
+H and resets view.third_person, returning eye pose on next tick. Enabling permits
+fresh H without auto-entering chase. In-game NETRICSA Off ignores Tab/N without
+failed=1; begin_netricsa also rejects disabled gameplay entry. Pre-level entry
+is independent. Disabling gameplay briefing must never disable original pre-map
+NETRICSA. settings_change compares/applies/persists both new preferences.
+Native Settings38834ASan/UBSan/leak checks include all16boolean combinations,
+three legacy formats, invalid flags and localized keyboard/mouse UI. Windows
+21148checks include actual Space and captured H routing, Off→first-person,
+new H after On, both Tab/N blocked when Off, enabled Tab opening, preserved
+pre-level entry and atomic persistence. Native menu72874checks/9628frames;
+MSVC agrees. Final Windows menu startup/credits/map/restart and both NETRICSA
+renderers pass. Extra previews in all3languages and Settings/Options visually
+checked without clipping. All119libraries/frontend build. No campaign replay,
+process termination, ROM modification or new exact match. Current frontend SHA256:
+daefa8d1fe5316b92d6f26c2950499084fee39fbd12b0573e9aba2e44ade36d9.
+
+NETRICSA record number row now starts x91/y17 in fixed12-pixel cells, confined
+to the upper text panel's144-pixel width. Background selection/hover rectangles
+are removed; glyphs retain green/white/yellow normal/hover/active palettes.
+Unavailable numbers are not drawn and remain noninteractive; their stable
+number slots are retained. Frontend pointer fixture now uses97/109 for1/2.
+Enemies label becomes dim gray when !has_enemies; disabled region is zeroed
+before hover/focus/selection handling. Availability includes all12enemy types
+(including a dossier with only enemy11), rather than skipping the final type.
+Native fixture passes17744ASan/UBSan/leak checks, including exact glyph colors,
+no off-panel pixels/background highlights, hidden-number background equality,
+disabled label pixels and final-boss-only availability. Original2684textrows/
+174records/405controller comparisons still pass. MSVC agrees. Windows both
+renderers pass5pointer checks each plus pre-level/overlay/pause/music/resume.
+Full/sparse previews visually checked in build/native-tests/netricsa.bmp.*.bmp.
+All119Windows libraries/frontend build; running process preserved. No campaign
+replay, ROM mutation or new matching claim. Current frontend SHA256:
+7d6556679a9d0061a389a8e5138e6e4f0130752df6389aca909c43c6834b45e1.
+
+NETRICSA number row now aligns to the text panel's actual grid boundary:
+x88/y16, one8-pixel grid cell per number from left to right (previous x91/12
+spacing was between grid columns). Visible numbers stay within the top panel;
+colors, no backgrounds, hidden records and disabled Enemies behavior remain.
+Pointer cells and frontend test clicks now use92/100 for1/2; record12 is180.
+Native suite19336ASan/UBSan/leak checks and original2684rows/174records/405
+controller comparisons pass. MSVC agrees; both Windows NETRICSA paths pass
+five pointer checks plus briefing/overlay/pause/music/resume. Full preview
+visually checked. All119Windows libraries/frontend build; running session
+preserved, ROM unchanged, no campaign replay or matching claim. Frontend SHA256:
+0dfb1582ab8fc6fc30d0dc2553153ed25dbad88f91451f6ec40bc72b45bd8b24.
+
+Requested PC projectile surface behavior is now enabled in native_game:
+projectiles.rolling_cannonballs=1 and ceiling_impacts=1. Both default zero in
+standalone recovery runtimes. Runtime vertical callback temporarily clears body
+NO_GRAVITY for type67 physics, restores flags and treats floor landing as success
+with VZ0. XY velocity, damage/penetration and wall reflection remain. All cannon
+owners use it; leaving ledges resumes gravity. Type65/69 use 64-bit swept top-Z
+against ceiling, inclusive contact, clamp Z to ceiling-height and return normal
+impact. Rockets explode through native combat/particle; Prion destroys without
+blast/conversion. Recovered physics/motion/controllers unchanged.
+Focused GCC ASan/UBSan/leak and MSVC agree on129106checks, including both view
+modes, gravity/drop-offs/grounded wall reflections,12ceiling contacts and all
+six launch cases per weapon. Test's view assertion allows legitimate wall-driven
+camera fallback (requested mode still checked). Gunrilla446checks now exercise
+floor rolling in8headings and return impacts; MSVC agrees. Default projectile
+runtime37132assertions on16maps still passes. All119Windows libraries/frontend
+build; launcher/startup/restart/concurrent launches pass both renderers. User
+session was preserved by renaming prior executable before rebuilding. No ROM
+modification, campaign replay or new match. Current frontend SHA256:
+9da9344330c45c6e7e103e103a683e926a792aa3bc3978d1c99518a74771faa8.
+See analysis/weapon-fixes.md for contracts, commands and reports.
+Pause and level-end tally are now connected to the playable Windows frontend.
+Esc/P opens Continue/Quit and the original Yes/No warning (defaultNo), keyboard/
+mouse selects; Esc cancels warning or resumes. src/pause.c is a SINGLE-PLAYER
+adapter around existing mode_control.c/021E4, not duplicate recovered logic.
+Flags100/800 network states reject. Original commands/notices queue in order;
+8192 additional ROM comparisons pass. Existing whole-mode-control evidence remains.
+intermission.c owns its own84sprite pool/cache/OAM and borrows frozen game assets/
+math. Keep stable and stop using before game teardown; reinit resets bindings.
+Original E914/E9D4 glyphs, ECF8score and EE60-compatible bonus spacing/Y88/120
+render over captured software(full resolution)/GBA frames. Original30blend table
+controls text fade; backdrop dim/selected-row white are PC composition, not proven
+pixel parity. Draws never tick state. Stage0 wrapped negative par difference is
+hidden rather than overflowing8digit scratch. Pending0 preserves scratch/hidden.
+Frontend private OAM capture removes old notices for pause and old HUD for tally.
+Do not rebuild live OAM or run gameplay while screen_active. Input route precedes
+NETRICSA/menu/gameplay; fire/Enter/Space held and fresh presses are distinct.
+Completion auto-starts on living finished/input3 boundary when a window exists;
+windowless profile simulation hooks retain no-UI behavior. Tick at60Hz presentation,
+use actual mixer song7 status even when muted; absent device explicitly silent.
+After tally: native_completion_record ONCE with completion_setting (password/
+standalone value;0 on carried starts), session totals/rows and bonus-adjusted
+completed_carry. reload skips duplicate accumulation when tally_recorded and
+uses this carry. Rome6/ending12 route AFTER record. Next map R restores finalscore.
+High-score/name entry and campaign-totals disk format remain unfinished.
+Audio commands4/5 pause/resume existing instance sequence/envelope/sample clocks;
+new menu cues aren't paused. command6 stops prior instances. Synth channel volumes
+mute/restore. Immediate PC suspension is not original temporary-fade parity.
+Test drivers: test-pause,test-intermission,test-completion,test-native-completion;
+scripts/test-intermission.ps1 -SkipBuild drives both MSVC/core and real hidden
+window routes, captures previews in build/intermission-tests. Native18760checks/
+36starts/16482tallyframes, Windows11511checks/12pausepaths/6next/chapter/ending
+routes/2renderers/3languages. Clean-capture test independently compares empty-OAM
+world render with captured completion background. Original11466tally frame ROM
+comparisons, native410217record checks/9216records and654862audio checks/131songs
+pass. All121Windows libraries/frontend build. Startup/restart/concurrent launch
+checks pass both renderers; report source/executable hashes agree. Pause/bonus/
+Sam previews visually checked. Controlled exit fixtures are not campaign replays.
+No user process terminated, ROM unchanged, no new exact match. Live status78/526,
+2816/87648bytes(3.21% incomplete catalogue),549attempts. Frontend SHA256:
+7af8196723adc5b84e2ff2db9c8e0e7d2b57d77be739d75faf271c946b349b06.
+See analysis/completion.md and intermission/pause-ROM/Windows validation reports.
+User requested original cannonball flight again. Removed rolling_cannonballs
+field, enable flag and vertical gravity/floor-success override entirely.
+Type67 now goes directly through original ssa_vertical_step with constructor
+NO_GRAVITY flag4 intact: constant launch XYZ velocity, original floor/ceiling
+and bounce/penetration behavior. Applies to player and enemy cannonballs.
+ballistic_player_cannon stays enabled (do not restore view-follow bug), as do
+Gunrilla shooter-overlap correction and rocket/Prion ceiling_impacts.
+Existing weapon regression now asserts constant VZ for all6cannon launch cases
+(first/third, level/up/down) during mouse turns, movement and jump. Removed
+floor-roll fixture/metrics. Gunrilla8heading fixture uses airborne muzzle Z
+again and checks constant height. GCC sanitizer/MSVC:127910weaponchecks,
+446Gunrillachecks; original projectile integration37132assertions/16maps passes.
+All121Windows libraries/frontend rebuild; no campaign replay or new match.
+Prior pause/tally feature remains in build. ROM remains unchanged. Current exe:
+7ba96df8fa51d94e42e3e64c2424fde0eba51a453bdf45aef92a15bb8b54b685.
+Final launcher/startup/restart/concurrent-launch checks pass both renderers; executable hash agrees with the startup report.
+
+Pause Quit now returns to Main reliably: menu_game_counter captures the current
+counter in begin_menu; menu_frozen compares against that baseline, not zero.
+The old startup-only guard terminated the run on the first post-game menu tick.
+begin_menu resets pending/held/menu-page input. Main now has5rows at74/90/106/
+122/138; original4IDs remain and4is Quit (English/German/French Quit/Beenden/
+Quitter). Both pointer and draw use main_text; arrays hold5entries. Keyboard
+last index4. SsaMenu appends quit_requested; it is independent of done/leaving
+and must never start a new game. menu_action handles this result by stopping
+App.running; run returns success for normal wmain cleanup. Menu entry clears
+it through reinitialization. No new quit confirmation was added on Main.
+Native menu72946checks/9646frames passes, including5row hits, keyboard lastrow,
+localized labels and terminal-vs-newgame distinction. Current menu ctypes layout
+includes all7settings fields,3availability fields and quit_requested.
+Windows intermission checker now verifies40idle Main ticks after each pause
+Quit, checks frozen gameplay/window/running state, and separately tests3keyboard/
+3mouse Main Quit paths.12289checks:12pausepaths,6Mainquits,6completionroutes,
+2renderers/3languages. Native intermission18760checks refreshed for source hashes.
+One Windows menu startup/credits/options/map/restart combination passes; core
+agrees with GCC. Main previews visually checked in build/intermission-tests/
+main-menu-0.bmp and main-menu-1.bmp (logo still entering in40tick captures).
+All121Windows libraries/frontend build; source/report hashes agree. ROM unchanged,
+no process terminated, campaign replay or new matching claim. Current exeSHA256:
+f6a0b4b396ba78102d4c93ddd94c676fa9873758a97d6b25068823d9a026cff8.
+Completion input/timing correction: intermission.c now transfers the current
+pending time/ammo bonus in full on fresh click/Enter/Space, clears hold/pending,
+and lets unchanged completion.c perform its original phase/notices. Score wraps;
+source game/ammo stays frozen; normal held acceleration remains. Final reading
+window is180 fully visible ticks; fresh confirm after60 visible ticks can shorten
+it, but both paths wait for original MUSIC completion. Count only when notice
+B9+level has reached HUD flag200 after glyph readiness. No draw-driven clocks.
+This longer reading hold/direct skip are PC presentation policy, not new ROM
+matching claims. The original60-tick controller is untouched and11466 ROM
+comparisons still pass.
+Important correction to earlier voice interpretation: original02932 reads
+03006994, status of music player0 (ROM table083E99A0 entry0 points03006990).
+Song7 uses player1 at030069D0, two PSG tracks, not recorded speech. All12final
+Sam texts B9..C4 share that short cue (~36ticks). Windows now checks music
+player0 under mutex, not every song7 effect instance. Completion music starts
+at tally entry, not at final text. Muting continues its timeline; no device
+uses the silent reading window.
+GCC ASan/UBSan/leaks and MSVC agree:143825checks/36starts/69917tallyframes,
+3languages/all12maps. Includes full point awards/wrap, no-input natural count,
+held acceleration, fresh-vs-held final confirm, late music and visible timing.
+Windows6015checks/6completionroutes/12pausepaths/6Mainquits in both renderers;
+short mouse down/up, Enter and Space routes and independent music/cue statuses.
+Controlled completion fixtures, not campaign replays or physical listening.
+All121Windows libraries/frontend build. Sam previews at90visible ticks checked
+in both renderers. Current exeSHA256:
+bd3c2cefd14237c5f499fb0adcf2fa3f532033475fd0ca103f6c2824c96c165d.
+ROM unchanged; no user process terminated. See analysis/completion.md and
+intermission-validation.json/windows-intermission-validation.json.
+
+NETRICSA item-number row moved by(+2,+1) GBA pixels at user request:
+SELECTOR_LEFT90,SELECTOR_TOP17,stride8 in src/netricsa.c. Both weapon/enemy
+glyph drawing and pointer hit cells share these constants. Updated existing
+pixel/color/background/disabled-record/pointer checks to the new coordinates.
+GCC ASan/UBSan/leaks:19336checks/36runs/5292frames/all12levels/3languages;
+original text/record controller comparisons still pass. All121Windows libraries
+and playable frontend rebuilt. This supersedes earlier x88/y16 layout notes.
+
+Settings now begins with Display mode: Fullscreen(borderless,default)/Windowed,
+then Renderer/Music style/Music volume/Sounds volume/Back. Settings indexes
+are0display,1renderer,2musicstyle,3musicvolume,4soundvolume,5back. Render labels
+Y26/46/66/86/112/144; existing bars98/124 stay put. Draw per-row text batches to
+avoid128glyph overflow, with English/German/French labels and matching mouse
+regions. SsaSettings appends display_mode(enum0Fullscreen,1Windowed); default0.
+settings.dat v5 stores bit6 of byte9, same16byte length/CRC. v1..4 migrate
+with fullscreen default, preserving all their known fields. Settings ctypes
+layout in test_menu_rom.py is now8uints. Old seven-field positional initializers
+were updated.
+Win32 display_mode_apply saves windowed style/WINDOWPLACEMENT before entering
+fullscreen, removes WS_OVERLAPPEDWINDOW and uses WS_POPUP at nearest monitor's
+full rect via SetWindowPos(HWND_NOTOPMOST,NOACTIVATE). No exclusive display mode
+or forced topmost. Windowed restores prior style/placement, preserving current
+visibility(including hidden tests); resize frame flushes. Apply saved mode before
+initial ShowWindow. WM_DPICHANGED/WM_DISPLAYCHANGE refit fullscreen; existing
+WM_SIZE/MOVE confines input. Failed switches revert style/placement and report
+session notice; prior mode retained. Renderer choice and internal resolution
+remain independent of display mode. Save settings on actual mode changes.
+GCC ASan/UBSan/leaks Settings38852checks (v4migration/both mode roundtrips/menu),
+Windows21179checks (hidden window, keyboard/mouse selection, fullscreen monitor
+and client bounds, resizable geometry restore, mode persistence, audio unchanged).
+General menu72946checks/9646frames. All121Windows libraries/frontend built.
+Launcher startup/restart/rawinput/paint/concurrent tests pass both renderers.
+Three localized Settings previews visually checked in build/audio-settings/.
+No user process stopped or campaign replay; ROM unchanged. Current exeSHA256:
+50793fa0efd58b743330d60d73b7aec8aba98f4c2256fc0950b3531f0b58a616.
+See analysis/audio-settings.md and audio-settings/windows-audio-settings reports.
+
+Jump/landing sounds now connect in native audio presentation. Before the
+SSA_FRAME_ENTITIES phase, audio_player_begin snapshots body/jump latch/health/
+movement flags in SsaNativeGame.audio_player_before/audio_jump_held/etc. Before
+SSA_FRAME_MOVERS, audio_player_motion observes the completed entity phase:
+newly consumed jump edge + old grounded/nonpositiveVZ + actual Z rise above
+floor ->sound15(existing short player hurt grunt); descending airborne body
+reaches floor ->sound13(boot impact). Both centered source1 local PLAY with
+legacy play fallback. Skip dead/locked/gravity-disabled/hovering players.
+No new sound files or physics/controller changes. Comparison before movers
+avoids mistaking mover height edits for player contacts. Original walking
+bob13/14 is suppressed on the landing frame to avoid doubled boot sounds.
+Held jump, rejected airborne press and disabled controls don't make extra cues;
+respawn's old health<=0 suppresses contact noise. This is PC jump presentation,
+not claimed original GBA behavior.
+Existing audio walking fixture now covers moving/stationary jumps in both H
+views and legacy/source sinks:8takeoffs/8landings, held/repressed airborne input,
+quiet idle/disabled input, independent ongoing music. GCC ASan/UBSan/leaks and
+MSVC agree:660209checks/131audiblesongs/zero decodererrors or catalogueclipping;
+23walkingevents,312airborneframes,1284blocked/idleframes. Windows actual audio
+device buffering/restart passes music enabled/disabled(output muted, no physical
+listening claim). All121Windows libraries/frontend build. No campaign replay,
+user process termination or ROM changes. See audio-validation.json and
+windows-native-audio-validation.json. Current exeSHA256:
+19d3155b12804e7faa20bca6d2bbaf62085c63a7bd1a65a42584443c870c422f.
+
+Main-menu Quit now opens SSA_MENU_QUIT(page18), a localized Yes/No warning
+using the shared answer font/pointer rows at112/128. Default selection1=No.
+No or Esc cancels to Main with Quit(selection4) retained; only explicit Yes
+sets quit_requested, keeping it separate from done/leaving/new-game handoff.
+Back dominates a combined Back+Confirm edge. Existing menu command13/16
+confirm/cancel sounds are retained, with normal title music continuity.
+Tests updated rather than bypassed: GCC ASan/UBSan/leaks menu73072checks/
+9679frames/18newgames, all3languages. Windows hidden frontend6205checks covers
+six confirmed application exits, default-No cancel and Esc from Yes in both
+renderers/all3languages, plus12pause paths/six completion routes. No physical
+input or campaign replay claimed. Warning previews visually checked at
+build/intermission-tests/quit-confirmation-{0,1}.bmp. All121Windows libraries
+and playable frontend rebuilt; no user process terminated. Current exeSHA256:
+a3fa10c327a0202dca76fc8a823e831ae27d768d74a37d30eb001cba981477f7.
+See analysis/menu.md and quit-confirmation-validation.json. This supersedes
+earlier notes that Main Quit closes immediately/has no confirmation.
+
+MIDI map->level silence fixed in src/audio.c:ssa_audio_reset. Previously the
+synth.reset callback ran BEFORE the mixer cleared the map fade/master_gain0;
+GS controller reset observed that stale zero gain. Sequencer and cached MIDI
+expression later looked healthy(127, active notes, no errors) but actual GS
+output after the handoff was silent. Moved the callback to the END of reset,
+after players/voices/fade/master_gain are cleared/restored. No instrument,
+volume balance, sequence/fade timing, effect or mapping changes.
+Reproduced before fix with real process-only Windows loopback on maps0/6:
+map MIDI audible, fully faded expression0, level peak/energy exactly0 despite
+notes and cached expression127. A diagnostic explicit CC11 resend restored
+output; that probe is NOT a production fix. Reset ordering alone restores
+rendered MIDI in both transitions.
+New tests/test_midi_transition_win32.cpp reuses the MIDI sync diagnostic's
+Activation/process-loopback helper (renamed unused main). Real WinMM worker
+runs map, full fade and level; test-only mix_music hook discards retained ROM
+PCM to isolate Windows MIDI. Captures ONLY this process, no microphone/other
+process capture. CMake target ssa_native_midi_transition_check; runner
+scripts/test-midi-transition.ps1 -SkipBuild. Current corrected level peaks:
+Egypt~0.985/Rome~0.069, faded expression0 then127, no errors. Test emits2cases
+plus summary; report analysis/windows-midi-transition-validation.json.
+Full Windows Settings21179checks passes (including renderer/input/persistence,
+SoundFont/MIDI and26sequences); sanitized native audio660209checks/131songs,
+8jump/8land events/zero decoder errors or catalogue clipping passes. All121
+Windows libraries/frontend rebuilt. Report/source hashes verified. No campaign
+replay, user process termination or ROM changes. Restart launcher to use fix.
+Current exeSHA256:
+2f141c9afaaf4381f5ef296eab47f7d0fee14eba969231a26f2bf2ddbc1ff9a1.
+See analysis/audio-settings.md and Windows MIDI transition report.
+
+User found jump grunt too painful. Takeoff now plays non-vocal bootstep14,
+replacing hurt sound15. Landing stays13. Updated audio walking fixture to
+classify airborne takeoff14 before ordinary grounded footsteps. No changes
+to triggers, volumes, physics or MIDI reset fix. All121Windows libraries and
+frontend rebuilt. MSVC audio suite660209checks/8jump/8landing/131songs passes,
+zero decoder errors or catalogue clipping. No physical listening claim.
+See analysis/jump-audio-validation.json for current source/executable hashes.
+This supersedes earlier takeoff15/grunt notes.
+
+Cannon request now combines floating flight WITH floor rolling. Reintroduced
+SsaProjectileRuntime.rolling_cannonballs as a FLOOR-ONLY PC policy, default0 in
+recovery runtimes/enabled1 in native_game. vertical() always runs original
+ssa_vertical_step; only a type67 floor clamp at floorZ with a valid body-height
+aperture zeroes VZ and returns success1, preventing floor failure/bounce/expiry.
+Original no-gravity flag/airborne XYZ velocity stay intact; no added gravity,
+friction or launch drag. Original wall/entity impact/damage/penetration paths
+remain. This supersedes earlier notes saying the rolling option was removed.
+Existing focused fixture adds12floor cases: player/enemy ownership, both views,
+exact/overshot/larger-timestep contacts then8straight rolling frames each. The
+six airborne cannon trajectories still verify constant XYZ during player look,
+movement and jump. GCC ASan/UBSan/leaks and MSVC agree128390checks; Windows
+Gunrilla446checks passes with rolling enabled, eight floating launch headings
+and original return/wall/player/enemy hits. Original rocket/Prion ceiling12cases
+and46continuous weapon-audio cases still pass. All121Windows libs/frontend
+rebuilt; Windows/native report hashes match. No new campaign replay, exact
+match or ROM change; no user process stopped. Current exeSHA256:
+8bb32bc8be1c3b5ba35b8a3737d79d0fba0c867027862bde805343f094a88e77.
+See analysis/weapon-fixes.md and weapon-fixes-validation.json/
+windows-weapon-fixes-validation.json. scripts/test-native-weapon-fixes.ps1
+now compares cannon_floor_cases as well.
+
+Settings/Extras layout now follows the original 8px background grid. Labels
+start at X32, values at X144; Settings rows use Y32/48/64/80/112, with
+slider borders X32..176 and Y96..104 /128..136. Pointer normalization uses
+those same inclusive bar bounds. Titles and Back anchors snap to the grid;
+Extras rows retain Y48/72/96. English/German/French previews reviewed with
+no text overlap. Existing sanitized portable Settings checks38852 and actual
+Windows Settings checks21179 pass; all121Windows libraries/frontend rebuilt.
+See analysis/audio-settings.md and refreshed audio-settings-validation.json,
+windows-audio-settings-validation.json, windows-native-build-validation.json.
+Current exeSHA256:
+eb22ba79465ed93562767cffc036ae0178a6c21de8db58626583a17aa270ef39.
+
+NETRICSA's localized Press A to skip prompt is now clickable at x134/y9,
+using its original font width and 8px height, including the blink-off phase.
+ssa_netricsa_pointer returns SSA_NET_POINTER_CLOSE; the Windows adapter queues
+SSA_NET_CLOSE for the next screen tick, preserving original pre-level fades
+and the faster in-game fade/audio/destination. No generic click sound is added.
+Existing native checks pass19553 across3languages/12maps with GCC sanitizers
+and MSVC, plus original text/record/controller comparisons. Windows NETRICSA
+tests now click the prompt in BOTH pre-level and in-game screens with both
+renderers;7pointer checks/case, original127briefing ticks and110overlay ticks,
+normal resume and0audio errors. All121Windows libraries/frontend rebuilt.
+See analysis/netricsa.md, netricsa-validation.json and
+windows-netricsa-validation.json. Current exeSHA256:
+63550022c5a954a0cba6ee21b4ccb344230ecede8a65eb83abbeaeb4d1b403b7.
+
+Removed the prototype click-to-capture mode, Esc's standalone release fallback,
+top-left help/debug notice overlays and prototype/Click to play window title.
+Gameplay automatically confines/hides the cursor on entry, focus return and
+after native window move/menu loops; pause/NETRICSA/menu/focus loss still free
+it and clear input. Gameplay clicks go directly to firing. Removed Win32
+SetCapture/ReleaseCapture and recapture-preference state; returning from Pause
+or in-game NETRICSA always restores gameplay mouse control when foreground.
+Original HUD notices and menu save/error messages remain. Tests never seize
+foreground input: automatic loop/focus behavior is disabled in startup/smoke
+diagnostics. All121Windows libraries/frontend rebuilt; existing intermission
+core143825 sanitized checks and6205Windows checks pass, including12pause paths,
+6quit and6completion routes. NETRICSA both-renderer pre-level/in-game click
+close/resume tests pass too. Refreshed the stale intermission baseline after
+the earlier audio reset fix. Current exeSHA256:
+b793b7823bd65a16c9e86e47658e4a4723dc78ae0f8365fbd35b71e6a08ba872.
+Normal PC/reference startup, raw input registration, restart, concurrent
+launcher/error logging checks also pass (windows-native-startup-validation.json).
+
+PC Alternate weapons is now an Extras toggle (Off by default), persisted in
+Settings v6/byte9 bit7; the16-byte CRC file still migrates v1..5 with it Off.
+SsaSettings now has9unsigned fields; tests/test_menu_rom.py matches that layout.
+Extras keeps its grid columns, adds the alternate row at y120 and Back at152.
+User explicitly chose to KEEP existing number keys: Colts2, chainsaw1.
+Enabled fresh New Game grants/equips one Colt with ordinary pickup ammo; explicit
+password/level-select loadouts stay original. A second Colt accepts the owned
+weapon pickup, grants normal ammo and equips duals; further Colt pickups refuse.
+The original pickup entry retains original behavior; pickup_runtime.repeat_weapon
+selects explicit ssa_pickup_touch_alternate acceptance. Native observer callback
+updates only PC variant state, not bound world/actor ownership.
+
+src/native_alternates.inc owns the PC selection/presentation policy. Colt variant1
+shares original ID2/ammo/HUD/statistics. Key2 toggles; wheel order inserts dual
+immediately after single, and Q records variants. The unchanged original Colt
+controller supplies combined firing cadence/damage/ammo: right and left alternate,
+starting right. Current firing finishes before a variant change; only the left
+gun moves, at original draw/store speed. weapon.fire_inhibited buffers new clicks
+during that handoff. Other weapons keep full lower/raise. Native carry/restart
+includes the policy, dual ownership, requested variant and previous variant;
+death clears both previous-weapon/history fields. Loss of original Colt ownership
+clears dual ownership. Start grant is explicit in finish_menu, never in reload.
+
+The left gun uses exact mirrored original sprites/palette. Native OAM helper
+adds a temporary hand, without a gameplay sprite allocation/animation clock.
+Idle's30tiles live at reserved weapon bank96..125; firing uses at most45 at0.
+This avoids two different hand frames overwriting each other or using HUD cache.
+The helper retains original sprite screen-position mirrors, including the first
+reveal after a dual carry. Both renderers and pause/NETRICSA filtered OAM use it.
+Left flashes use PC SCREEN_MIRROR snapshots and actor_scene.screen_mirrors;
+original actor project/collect APIs ignore that bit as before. Third-person
+continues to hide first-person weapons/flashes.
+
+tests/test_alternate_weapons.py passes731131 ASan/UBSan/leak checks over820frames:
+5real world pickup cases,10alternating shots matched per-frame against single
+Colt ammo/cadence, exact idle reflection, unchanged right-hand pixels during2
+transitions, mirrored reference muzzle emission, buffered clicks, Q/wheel,
+restart/next-level carry and both renderers. MSVC agrees via
+scripts/test-alternate-weapons.ps1;171actual hidden Windows key/wheel checks and
+3295original switch checks/20cases/506waiting frames pass. Settings38871portable
+and21190Windows checks pass, including old v5 migration and persisted new toggle;
+all3localized Extras previews reviewed. Original pickup5420ROM comparisons,
+actor projection15456billboards/2208fixed/384collections and menu73072sanitized
+checks pass. Existing weapon/projectile fixes128390checks pass too. All121Windows
+libraries/frontend rebuilt; final normal PC/reference startup/restart/concurrent
+launcher checks pass. No full campaign replay, new byte match or ROM changes.
+See analysis/alternate-weapons.md and alternate-weapons-validation.json/
+windows-alternate-weapons-validation.json. Current exeSHA256:
+c768b364a7f36bfa0c246ffe8b0237af3d1ac379bcb7bfa592b1befd23d400bc.
+
+Alternate-mode standalone loadouts now upgrade any owned starting Colt to duals
+on campaign maps1..11 (displayed levels2..12). Map0 retains the original single
+variant. This supersedes the earlier note that password/level-select variants
+stay original. Inventory bits, ammunition, other gear and selected weapon ID
+are untouched. If Colts are initially selected, both hands are ready for the
+first reveal; otherwise selecting Colt chooses dual. Explicit startup policy
+modes are SSA_ALTERNATE_RETAIN(0), NEW_GAME(1), LOADOUT(2). finish_menu passes
+LOADOUT for passwords/level selection; direct --level does likewise. Reload and
+campaign carry use RETAIN, so an earned/carried single is not upgraded merely
+by advancing. NEW_GAME still starts map0 with one Colt.
+Updated existing alternate fixture covers all36loadouts x On/Off (72cases),
+first-level exception, identical inventory/ammo/selected-ID and retained single
+carry, alongside the earlier firing/render/switch cases. GCC ASan/UBSan/leaks
+and MSVC agree731808checks/850frames; real Windows key/wheel and original
+weapon-switch regressions pass. All121Windows libraries/frontend rebuilt.
+See refreshed alternate-weapons-validation.json/windows-alternate-weapons-validation.json.
+Current exeSHA256:
+6347d62d461c34b26bc9cc6ae61c07cff635dbe3d6757a524efeb8338b459a70.
+
+Alternate Colt timing/magazines supersede the earlier firing notes. The user
+specified0.445seconds per hand,1.07seconds per gun reload and six shots per
+magazine, ONLY with Alternate weapons On (single and dual). When either hand
+empties, stop new shots immediately; finish recoil, reload RIGHT first, then
+LEFT even if the left still has a round. Single reloads right alone. Reserve
+ammo remains unlimited. R remains level restart, not manual reload.
+native_alternates.inc tracks1/1200second deadlines (shot534/dual spacing267/
+reload1284) with fractional carry across60Hz ticks. Rendering never advances
+this clock. Pause freezes it; normal pause input policy requires releasing the
+fire button before re-firing. Per-hand rounds persist through variants, weapon
+changes and value-only campaign carry/restart. An empty carried magazine queues
+reload on Colt selection. Disabling policy/death resets magazines.
+Dual shared controller runs two controller/animation phases per world tick,
+feeding pressed once and preserving other cooldowns at one tick. Each hand's
+original-speed recoil runs independently. fire_inhibited gates starts, never
+the in-progress damage commit. switch_blocked protects overlapping recoil and
+reload. Both hand frames fit reserved weapon tile banks0/80; queued uploads
+flush before hand copies. Original controller supplies damage/stats/sound.
+Native projection lowers/raises each reloading gun independently. Both renderers
+and pause/NETRICSA snapshots use it. Original behavior remains when Extras Off.
+Validation:928526 GCC ASan/UBSan/leak checks and identical MSVC results over
+3093frames,8reload completions,7pickup cases,72loadout cases; includes six-shot
+first magazines(dual right6/left5), exact fractional firing deadlines, ordered
+1.07second reloads, left-empty/right-full case, pause/carry, independent recoil,
+mirror pixels, buffered variant click, queued switch and disabled policy.
+Real hidden Windows keyboard/wheel and3295original switch checks pass;
+128390existing weapon/audio/projectile checks pass on both toolchains.
+All121Windows libraries and frontend rebuilt. Normal PC/reference launcher,
+startup, restart and concurrent launches pass on this executable.
+See refreshed alternate-weapons
+and weapon-fixes validation JSON. No new byte match or ROM changes.
+Current exeSHA256:
+8dba053c4a46456202c19b59b96a800954384d50e35c2f38135427edb5b3c563.
+
+R is now UNBOUND at the user's request; it must not restart a level or reload
+Colts. Enter's existing restart/advance path remains. Removed R replay hints
+from native completion notices and control documentation. The transition test
+requests its restart with Enter rather than the removed shortcut. Existing
+hidden-window keyboard/wheel fixture explicitly checks R down/up do not queue
+reload/advance (172checks). All121Windows libraries/frontend rebuilt.
+Normal PC/reference launcher startup/restart/concurrent checks pass. Current
+exeSHA256:54a7520ee45e700565a08a815b5b8bdd969a42275473bdcb7cfca949e87389fc.
+
+GBA type18 crosshair projection now removes view bob from its reference eye.
+gba_cursor runs original camera height handling on copies with horizontal
+velocity zero and eye recovery disabled (already advanced this frame), then
+applies the neutral eye delta to the actual pose. This retains stair adjustment,
+lowered eye/clamps, jump height and actual chase offset without changing camera,
+world/weapon bob, shot queries or software rendering. Autoaim target movement,
+original cursor art/animation/visibility and third-person height correction remain.
+test-gba-aim passes1289ASan/UBSan/leak checks: nine projected/OAM views and
+192stationary-cursor bob phases across first person, full chase and shortened
+boom; checks camera/eye recovery state remains untouched. MSVC agrees exactly.
+Windows free-look's five frontend modes (software,4K,GBA first/third) pass;
+chase regression9944checks/232aligned views passes. All121Windows libraries and
+frontend rebuilt. Reports/source hashes verified; no ROM edits or new byte match.
+Current exeSHA256:
+27eac2927922a476adc484f0ea85c8d8e71c575c7217799927e5db7ea13a8967.
+
+User requested Colt counter reset on re-equipping and reload audio. A whole
+weapon switch back to Colts now clears the right magazine's used-round count
+and the left if duals are selected, cancelling any deferred reload. A completed
+single-to-dual draw clears ONLY the left counter; the right stays equipped and
+retains its rounds. Existing0.445second cadence, six-shot magazines,1.07second
+right-then-left reloads and Alternate-weapons-only scope remain.
+Each actual reload phase start plays original empty-trigger sound0x28 as a
+local centered mechanical click, once per hand. Uses sound() / source1 / NULL
+position, so ordinary player priority and sound volume apply; no loop/stereo
+attenuation. Pause does not retrigger it. No external audio asset added.
+GCC ASan/UBSan/leaks and MSVC agree1967695checks/3531frames,8reload completions,
+11observed reload cues,4re-equip cases,8pickups,72loadout cases. Tests cover
+partial magazines with real shots, left-only/full/single draws, deferred reload
+cancellation, local sound identity/phase/count and pause sound stability, plus
+existing mirrored rendering, firing, switching and carry tests.172real hidden
+Windows input checks (including unbound R) and3295original switch checks pass.
+All121Windows libraries/frontend rebuilt. See current alternate-weapons reports.
+Current exeSHA256:
+28433a33aff351f8395603a266ff612ae267dd9ed3156e2ef61da5f1445c84d9.
+
+Dual-Colt reload trigger now follows the user's revised rule: check the gun
+whose turn is NEXT, allowing12alternating shots from full six-round magazines.
+The right gun's sixth shot leaves the last left shot available. After the left
+gun's sixth, next-right is empty and the existing right-then-left reload begins
+after recoil. Unequal magazines do not skip an empty gun's turn or fire it;
+e.g. left starts with one round/right full, fire left then right, then reload
+because next-left is empty. alternate_before also checks retained next-hand
+counts before admitting a start; carry's initial right turn only queues reload
+when right is empty. Single remains six shots. Cadence,1.07sper-hand timing,
+reload sounds, re-equip refills and policy-Off behavior remain unchanged.
+Updated existing firing/reload tests require12per fresh dual cycle and6per
+single cycle, six starts per hand with fractional cadence, and partial-magazine
+next-turn behavior. GCC ASan/UBSan/leaks and MSVC agree1948538checks/3599frames,
+12initial alternating shots,8reload completions,11reload cues,4re-equip cases,
+72loadouts.172real hidden Windows input checks and3295original switch checks
+pass. All121Windows libraries/frontend rebuilt; current source/report hashes
+verified. No new byte match, ROM edits or full campaign replay.
+Current exeSHA256:
+8befc59807772e073ef0eb4d9b1f6271d02f971bb659e31ff638e38a77d6bb96.
+
+User revised Colt cadence to0.45seconds per hand (dual spacing0.225), and
+requested the left reload anticipated so the complete pair takes1.40seconds.
+The left now starts0.33seconds after the right; each retains1.07seconds of
+lower/hold/raise movement and its own one-shot local click. Clock units1/1200s:
+shot540, dual spacing270, each reload1284, left delay396, pair total1680.
+reload_end ALWAYS names the RIGHT deadline. Phase2=right-only, phase3=overlap
+followed by left-only tail; do not assume phase3 means the right has finished.
+Right refills at its deadline, left at right_deadline+396. Firing/switching stays
+blocked until the pair completes. Both offsets derive from independent deadlines.
+Single remains1.07seconds. Twelve shots, next-empty-gun rule, re-equip resets,
+policy-Off behavior and normal recoil animations remain.
+GCC ASan/UBSan/leaks and MSVC agree1967617checks/3525frames,12initial alternating
+shots,9reload completions,11reload cues,4re-equip and72loadout cases. Tests check
+0.45cadence,0.33left lead,1.07right completion,1.40pair completion, overlapping
+pixels and final right-idle/left-reload pixels, plus original pause/click/carry
+cases.172real hidden Windows input checks and3295original switch checks pass.
+All121Windows libraries/frontend rebuilt; right/overlap/left-tail previews
+reviewed and current source/report hashes verified. No full campaign replay,
+new byte match or ROM changes. Current exeSHA256:
+b69d1c9bc7077b246e30ea4e2b4d3611075394aea253747cb9816e45075da5c7.
+
+Dual Colt fire input now queues TWO consecutive alternating shots per press,
+including a sub-tick click released before sampling. Existing0.225s shot spacing,
+0.45sper-hand cadence,12-shot magazines and1.40s overlapping reload remain.
+Weapon runtime's optional colt_pair/colt_pair_pending fields count requested
+starts; the click edge enters once, each actual start consumes one. Held fire
+opens a new pair at its first admitted start and completes the second on release.
+Additional rapid click edges add pairs; reload/cadence/hand draw retain them.
+Native policy enables this for requested dual Colts only. Weapon/variant change,
+pause, death, input disabling, focus loss and respawn cancel pending starts;
+already started damage commits normally. pc_input_runtime.policy clears the
+queue alongside existing fire_pending. Single/default Colt clicks remain one.
+GCC ASan/UBSan/leaks and MSVC agree2313961checks/4122frames,9completed paired-click
+cases covering six clicks/all12rounds, reload buffering, two rapid clicks/four
+shots, focus/pause cancellation and single/disabled fallback. Existing72loadouts,
+mirrored pixels, re-equip, overlapping reload sounds/timing and held cadence pass.
+172real hidden Windows input and3295original switch checks pass. Existing weapon
+audio/projectile regression128390checks passes on both toolchains. All121Windows
+libraries/frontend rebuilt; four source/report hashes verified. No new byte
+match, ROM edits or full campaign replay. Current exeSHA256:
+1d7ad70e54a230b8e5f76b2abb67a44448e7bcbdacef7cc35000a21f3607099c.
+
+Alternate weapons On now also applies the user's fixed14-pellet double-shotgun
+pattern: row+2.58deg has horizontal-5.14/0/+5.14; row+.86 has-6.84/-1.72/+1.72/+6.84;
+row-.86 has-5.14/0/+5.14; row-2.58 has-6.84/-1.72/+1.72/+6.84. Chosen base damage
+is5per pellet/70full hit. Native math tables quantize offsets to936/1245/313
+horizontal and470/157vertical angle units. Rotate the view-local directions
+around actual yaw/free pitch or GBA autoaim slope; explicit full-yaw rays keep
+the spread in GBA mode too. Off retains the original three-ray/heading behavior.
+weapon_runtime.alternate_shotgun is bound by native_alternates setter/before.
+WeaponCall.shotgun_done expands the first original HITSCAN into14 and suppresses
+the remaining two original side events. Original trigger stats, two-shell use,
+sound/animation, unlimited range and plane/wall/entity stopping remain.
+IMPORTANT:037F4 sets enemy body flag1 even on survival, rejecting another damage
+call that frame. Trace/impact all14then aggregate base damage per target and
+apply each group once through combat; do not clear flag1. Per-pellet hit stats
+are preserved. Difficulty/armor rounding applies to grouped damage. No new math
+library dependency: native sin/cos/direction tables plus ssa_view_angles.
+GCC ASan/UBSan/leaks and MSVC agree2314773checks/4650frames. Eight shotgun cases
+include84independently checked pellet directions (level/up/down/steep pitch,
+rotated yaw and GBA autoaim), one real enemy losing70health with14hit stats,
+one trigger/two-shell use and original Off40damage/three-hit behavior. Existing
+paired Colts/magazine/reload/pickup/carry/72loadout checks remain passing.
+172hidden Windows input and3295original switch checks pass; existing weapon/
+audio/projectile regression128390checks passes on both toolchains. All121Windows
+libraries/frontend rebuilt; four current source/report hashes verified. No ROM
+changes, new exact match or full campaign replay. Current exeSHA256:
+7b4fd86ac801388525e49f8d65abdf45befa45673d932ffb446e87618c31858b.
+
+Alternate double shotgun now has the requested1.75second firing interval:
+105simulation ticks per cycle. weapon_runtime.shotgun_animating/shotgun_elapsed
+schedule the original17drawable animation entries evenly (6/7tick holds); the
+last-shell six-entry sequence uses17/18tick holds over the same duration.
+Animation completion is consumed before the next controller admission, so held
+starts are exactly105ticks apart, without an extra idle update. Shot commit,
+14pellets/5base damage each, ammo and sound are unchanged. Queued changes suppress
+fresh shots and wait the full cycle. Pause freezes it; respawn clears it; policy
+Off restores the original period on update. New animation field period0 prevents
+ordinary advancement during the explicit clock; frame/marker resolve remains
+native. game_runtime routes ONLY active alternate-shotgun weapon objects through
+ssa_weapon_runtime_animate; all other sprite animation paths stay original.
+GCC ASan/UBSan/leaks and MSVC agree2318073checks/5881frames. Three full native-game
+timing cases cover software, GBA third person and last shell, proving105tick held
+cadence, evenly distributed entries, pause freeze and full-cycle switch deferral.
+Existing pattern84directions/70damage, paired Colt clicks, reloads and loadouts
+remain passing.172hidden Windows input and3295original switch checks pass.
+Original game_runtime regression passes996095ASan/UBSan assertions over8220frames
+on16maps, including2048player frames and132multiplayer frames (harness callbacks,
+not a campaign replay). All121Windows libraries/frontend rebuilt. Current
+timing/Windows/game-runtime source hashes verified. No ROM edits/new byte match.
+Current exeSHA256:
+0885db97fba00bda451097a4997942c00fb2b0add03c44eb9ec57da3752d3a4f.

@@ -32,8 +32,8 @@
   "physical_listening_tested": false,
   "hardware_reference": "https://github.com/mgba-emu/mgba/blob/master/src/gb/audio.c",
   "source_sha256": {
-    "src/audio.c": "84c632ae9fe7a3a22210cd0a822d21e5d9d9fd120278008f67b6a67d43d0be24",
-    "include/ssa/audio.h": "ece0f01fab85e7e12ccd8420e786b41eef43a23b2a6a559921ec54e25f357255",
+    "src/audio.c": "f0a492179f155387cad911d71c143d11f3074e2dd444b2daf21e653c0ee75893",
+    "include/ssa/audio.h": "ac206e701b9b4af0d109e4bafeeefa012304558d5ec675cffeba1babb6983ddd",
     "tests/audio_wave_oracle.c": "9ed064d53df7603fff3a0599f6ebbaaa0bdc45fd9bb4046010e89881cadc2ca5",
     "tests/test_audio_wave.py": "3bd737e14f11848c236992fb7b0eb3d62f00805cf28bbe56f88af964fa6dbea0"
   }

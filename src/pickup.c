@@ -4,8 +4,8 @@ static void event(SsaPickupGame *g, enum SsaPickupEvent kind, unsigned a, unsign
     g->ops.event(g->ops.context,kind,a,b);
 }
 
-int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
-                     uint32_t override_item) {
+int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
+                     uint32_t override_item,unsigned repeat_weapon) {
     static const uint8_t weapons[10]={2,3,4,6,0,5,10,8,9,7};
     static const uint8_t ammo_weapons[10]={2,3,8,0,6,10,4,5,9,7};
     static const uint8_t amounts[10]={10,10,1,0,5,5,50,50,5,5};
@@ -13,7 +13,7 @@ int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup
     uint32_t item;
     unsigned sound=0x35,message=0;
     int local,accepted=1;
-    if (!g || !p || !g->rules || !(inv=p->inventory) || !g->ops.event ||
+    if (repeat_weapon>SSA_WEAPON_COUNT || !g || !p || !g->rules || !(inv=p->inventory) || !g->ops.event ||
         !g->ops.remove || (!override_item && !pickup) ||
         (override_item && !g->ops.nearest)) return -1;
     if ((uint16_t)(p->entity_type-0xc9u)>3u) return 0;
@@ -36,6 +36,9 @@ int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup
     if (item>=0x20 && item<=0x29 && weapons[item-0x20]) {
         unsigned weapon=weapons[item-0x20];
         accepted=ssa_inventory_queue_weapon(inv,weapon);
+        if(!accepted && weapon==repeat_weapon && inv->pending_count<SSA_PENDING_WEAPON_CAPACITY){
+            inv->pending_weapons[inv->pending_count++]=weapon;accepted=1;
+        }
         message=0x8b+weapon;
         if (weapon==8) sound=0x1d;
     } else if (item>=0x2a && item<=0x2f) {
@@ -76,3 +79,5 @@ int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup
     }
     return 1;
 }
+int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,uint32_t override_item)
+{return ssa_pickup_touch_alternate(g,p,pickup,override_item,0);}

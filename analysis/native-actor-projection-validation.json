@@ -10,8 +10,8 @@
   "maps": 16,
   "scope": "Whole D490/D884 and D2D0/D338 using actual actor metadata/math.\n\nIsolated projection cases control only the1238 queue-insertion boundary;\ncollection cases execute native/original1238 with a genuine empty wall list.\nBIOS divide is the only modeled hardware service. Unicorn is test-only.\n",
   "source_sha256": {
-    "src/actor_projection.c": "07dfe34414238dc9199e132755b1ac8569b3c35d9486595a462894ec9403ac94",
-    "include/ssa/actor_projection.h": "d9dee6c8b062e3ea091aa40bd7de65e8553311734b6796703cae6c05ba6414ed",
+    "src/actor_projection.c": "ea5a2fd325c40c41631215143aaa49e8f1cf3c116c62dd878272f6a6f0d8160d",
+    "include/ssa/actor_projection.h": "ca45562698028b7d819a15cbb1a41f7599d0c1e1bf96061bc2445729adb8e6ab",
     "src/actor_queue.c": "1f77fcf321ad0136ab7547193abe915e031d67f070794475ab41c90f7f53985e",
     "src/actor_assets.c": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544",
     "tests/test_actor_projection_rom.py": "fde5a33c3a05198deb3f9a6a83c7071094abef0df8f9cc0432994c4115781e78"

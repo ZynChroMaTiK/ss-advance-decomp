@@ -6,7 +6,7 @@
   "chase_jump_frames": 24,
   "source_sha256": {
     "tests/test_pc_renderer.c": "1e57e8184ef8101845b02134e9447c2b6d602358ce3fddaf7b62ebb923cca235",
-    "src/pc_renderer.c": "21dcda5ce3b0517af8998b92b3802a0b8ad9ee324340301addc39ed3a4646980",
+    "src/pc_renderer.c": "ead31ae80e8df4e59cad3c45821f3865ffdfb03cf91e065e6942a4699eb660eb",
     "src/pc_renderer_pitch.inc": "c299beb83c9a23aa799028fd96466342fedc3b58237a9148e698f3bb52e8617c",
     "include/ssa/pc_renderer.h": "99b61a9f38c51620e63a5468fda533ad8efe499d04953580abd827233b738845"
   }

@@ -84,7 +84,18 @@ int main(int argc,char **argv) {
     }
     wall(&m,-64,0,0,256);
     p=pose(&v,&b,&eye,0,&tables,&c);
-    CHECK(p.third_person && p.obstructed && p.boom_distance==60*U && p.y==-60*U);
+    CHECK(!p.third_person && p.obstructed && p.boom_distance==0 && p.y==b.y);
+    /* Four-unit clearance: the minimum64-unit boom survives exactly at
+     * a wall68 units away, and falls back just below that boundary. */
+    wall(&m,-67,0,0,256);
+    p=pose(&v,&b,&eye,0,&tables,&c);
+    CHECK(!p.third_person && p.obstructed && p.z==eye.eye_z && v.third_person);
+    wall(&m,-68,0,0,256);
+    p=pose(&v,&b,&eye,0,&tables,&c);
+    CHECK(p.third_person && p.obstructed && p.boom_distance==64*U && p.y==-64*U);
+    wall(&m,-69,0,0,256);
+    p=pose(&v,&b,&eye,0,&tables,&c);
+    CHECK(p.third_person && p.boom_distance==65*U);
     wall(&m,-24,0,0,256);
     p=pose(&v,&b,&eye,0,&tables,&c);
     CHECK(!p.third_person && p.obstructed && p.x==b.x && p.y==b.y && p.z==eye.eye_z);
@@ -96,7 +107,7 @@ int main(int argc,char **argv) {
     wall(&m,-64,4,0,256); /* expands as soon as obstruction clears */
     p=pose(&v,&b,&eye,0,&tables,&c); CHECK(p.third_person && p.boom_distance==256*U);
     put16(m.data+m.sectors+2,110);
-    p=pose(&v,&b,&eye,0,&tables,&c); CHECK(p.third_person && p.obstructed && p.z<=106*U);
+    p=pose(&v,&b,&eye,0,&tables,&c); CHECK(!p.third_person && p.obstructed && p.z==eye.eye_z);
     put16(m.data+m.sectors+2,98);
     p=pose(&v,&b,&eye,0,&tables,&c); CHECK(!p.third_person && p.obstructed);
     put16(m.data+m.sectors+2,256);

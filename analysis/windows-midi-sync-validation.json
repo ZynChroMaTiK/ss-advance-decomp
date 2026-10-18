@@ -1,0 +1,43 @@
+{
+    "result":  "pass",
+    "device":  "Microsoft GS Wavetable Synth",
+    "audible_markers":  true,
+    "microphone_used":  false,
+    "cases":  [
+                  {
+                      "pcm_onsets":  4,
+                      "midi_onsets":  4,
+                      "compensation_ms":  0,
+                      "offset_ms":  [
+                                        184.875,
+                                        185.000,
+                                        184.875,
+                                        185.000
+                                    ],
+                      "max_error_ms":  185.000,
+                      "process_loopback_only":  true,
+                      "result":  "pass"
+                  },
+                  {
+                      "pcm_onsets":  4,
+                      "midi_onsets":  4,
+                      "compensation_ms":  185,
+                      "offset_ms":  [
+                                        -0.021,
+                                        0.000,
+                                        -0.021,
+                                        0.000
+                                    ],
+                      "max_error_ms":  0.021,
+                      "process_loopback_only":  true,
+                      "result":  "pass"
+                  }
+              ],
+    "source_sha256":  {
+                          "src/audio.c":  "5c0b34ff382347e8d927f7bab1c4522abbe5c17a76884c490ccdeab22bdef3b9",
+                          "include/ssa/audio.h":  "31043b6c75471cd5bb969a5115e9fe479d06455c9bee653b2fdcd162bb56ca62",
+                          "platform/win32/midi_win32.c":  "f4e18086707e32eea4d6b1ddc86852e7cbcfa0897d5d91fadf39fe3f8852d83c",
+                          "platform/win32/midi_win32.h":  "6d726ae0e7688fbb34478dfad1513005c4caf4d06ae19be99d18b9bfaf391f5d",
+                          "tests/test_midi_sync_win32.cpp":  "cc93f88716c047c007f7b68f8333521b64728dafd42a82d13213951c2e8bdd40"
+                      }
+}

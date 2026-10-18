@@ -1,0 +1,121 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Original completion statistics and checkpoints — Advance Project</title><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Build &amp; Source</a><a href="../#project">Project home</a><a href="statistics.md" download>Markdown ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Project reference snapshot. Recovery notes retain earlier subsystem milestones; use the <a href="../#features">current feature overview</a> for playable scope.</p><h1 id="original-completion-statistics-and-checkpoints">Original completion statistics and checkpoints</h1>
+<p>The native backend now recovers the complete original <code>08001E48</code> completion
+accumulator and the <code>08001CF4</code> / <code>08001D9C</code> checkpoint helpers. All three also
+compile byte for byte through the requested local decomp.wtf engine, using
+ordinary C in <code>recovered/level_statistics.c</code>,
+<code>recovered/statistics_checkpoint_capture.c</code> and
+<code>recovered/statistics_checkpoint_restore.c</code>. They add 592 exactly matched bytes.</p>
+<h2 id="completion-accumulator">Completion accumulator</h2>
+<p>Original completion calls <code>1231C</code> before <code>1E48</code>. The former captures weapons
+and refreshes their statistics rows; the latter performs these writes:</p>
+<table>
+<thead>
+<tr>
+<th>GAME destination</th>
+<th>Source / operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+2F0</td>
+<td>Replace with score at +88</td>
+</tr>
+<tr>
+<td>+2F4</td>
+<td>Replace with signed body health at local player body+32</td>
+</tr>
+<tr>
+<td>+2F8, +2FC</td>
+<td>Replace with signed local player protection C6, C4</td>
+</tr>
+<tr>
+<td>+300</td>
+<td>Replace with unsigned level byte at +7C</td>
+</tr>
+<tr>
+<td>+304</td>
+<td>Add elapsed at +0C</td>
+</tr>
+<tr>
+<td>+308</td>
+<td>Add all 12 spawned counters at +130, stride12</td>
+</tr>
+<tr>
+<td>+30C</td>
+<td>Add all 12 kill counters at +138, stride12</td>
+</tr>
+<tr>
+<td>+310</td>
+<td>Add all 12 player-hit counters at +134, stride12</td>
+</tr>
+<tr>
+<td>+314</td>
+<td>Add all 10 weapon <strong>hit</strong> counters at +9C, stride16</td>
+</tr>
+<tr>
+<td>+318</td>
+<td>Add accepted pickups at +31C</td>
+</tr>
+</tbody>
+</table>
+<p>The weapon shot counter at +98 is not added. Pickups are accepted items, not
+all map objects or secrets: original <code>1B99C</code> increments +31C only after an
+accepted ordinary contact. Score replaces the saved score; it is not added
+again. Arithmetic wraps at 32 bits without saturation. Health and protection
+sign-extend from 16 bits. No input counter is cleared by <code>1E48</code>. There is no
+once-only latch; a second call adds the same counters again.</p>
+<p><code>ssa_statistics_complete</code> in <code>src/statistics.c</code> implements this with value-only
+<code>SsaLevelStatistics</code> and <code>SsaStatisticsTotals</code> projections. The caller must
+commit once per actual completion. Null arguments reject before writes.</p>
+<h2 id="checkpoint-helpers">Checkpoint helpers</h2>
+<p><code>1CF4</code> copies ten complete 16-byte weapon rows from GAME+90 to +1C0 and twelve
+12-byte enemy rows from +130 to +260. <code>1D9C</code> copies those rows back and clears
+only current accepted pickups at +31C. Both preserve elapsed, score, player
+vitality, level and campaign totals. The saved rows are not cleared. Native
+capture/restore helpers retain these exact boundaries; restoring statistics is
+not player respawn, level initialization or a complete continue workflow.</p>
+<h2 id="native-snapshot-adapter-and-limits">Native snapshot adapter and limits</h2>
+<p><code>ssa_native_game_statistics</code> in <code>src/native_statistics.c</code> collects the live
+native weapon rows, activation counts, combat counters, elapsed time, score,
+accepted pickups and player vitality. It uses canonical inventory health and
+protection; body health is a native mirror. It copies values only and preserves
+the entire game. It rejects unloaded/error/busy games without changing output,
+using the same six ownership/query guards as the existing weapon snapshot.</p>
+<p>This snapshot observes ongoing counters; it does not run the mutating <code>1231C</code>
+password-setting counter reset. The new <a href="completion.html">completion adapter</a>
+preserves original capture/accumulate/checkpoint ordering, the setting policy and
+bonus-adjusted score. The frontend now commits campaign-session totals and
+checkpoint rows after the visible bonus tally, and carries the resulting score
+to the next level and its R entry snapshot. See <a href="completion.html">pause/tally integration</a>.
+Disk persistence of campaign totals, continue/death orchestration and high-score/
+name entry remain pending. All twelve campaign maps are enabled for manual validation.</p>
+<h2 id="verification">Verification</h2>
+<pre><code class="language-powershell">.\decomp.ps1 test-statistics
+.\decomp.ps1 test-native-statistics
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-statistics.ps1 -SkipBuild
+</code></pre>
+<p><code>statistics-validation.json</code> records 8,192 complete original-ROM comparisons per
+routine (24,576 total), plus 512 original save/mutate/restore/twice-accumulate
+sequences and six null guards under UBSan. No callee is intercepted. Tests
+compare whole GAME/player/body blocks, including every untouched byte; they
+cover overflow, signed vitality boundaries, distinct shot/hit counters and all
+256 level byte values.</p>
+<p><code>native-statistics-validation.json</code> and
+<code>windows-native-statistics-validation.json</code> agree on 27,699 checks, 48 starts,
+3,072 actual native gameplay frames, 288 read-only snapshots and 480 rejection
+cases across all 16 maps and three difficulties. Jump, H-view and a quick mouse
+click are delivered through the actual PC input API. Directed counter fixtures
+check every column, high 32-bit values and canonical health separately from
+ordinary gameplay. These fixtures are not campaign-completion evidence. GCC
+ASan/UBSan/leak detection and MSVC pass.</p>
+<p>All 109 portable CMake libraries and 110 Windows libraries build. The complete
+portable build exposed an existing Windows-only profile disk test outside a
+platform guard; CMake now includes that target only under <code>WIN32</code>. Both full
+builds pass after that correction. The final audit checks 565 current source
+hashes across the four statistics/build reports and confirms the playable
+Windows executable remains unchanged.</p>
+<p>Live exact matching is now 78/526 functions and 2,816/87,648 catalogued bytes
+(3.21%), after 541 compiler attempts. The imported catalogue is incomplete and
+does not represent whole-game coverage. The 78-C export and independent rebuild
+retain the original ROM SHA-1 <code>4ff48d8c18b70a5184758f1917343ae85a70858e</code>.</p>
+</main></body></html>

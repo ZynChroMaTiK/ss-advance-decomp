@@ -1,0 +1,179 @@
+# Native NETRICSA
+
+NETRICSA now appears before the map on every level start, advance and restart.
+Chapter introductions lead to NETRICSA, then the map; the ending still returns
+to Main. Pre-level NETRICSA keeps the original animated background and music.
+Closing it proceeds to the map, with gameplay still at frame0.
+
+Opening N/Tab during play instead overlays NETRICSA on a frozen copy of the
+current game image. Its frame, artwork and text blend over that image, with
+transparent space showing the game. The animated background is omitted. The
+RGB888 compositor preserves the current PC renderer resolution, including
+letterbox areas, and also supports the240x160 reference renderer. Pointer mapping
+accounts for both the game viewport and the NETRICSA canvas. Closing returns to
+gameplay, restores capture/music, and frees the captured buffers.
+Options > Extra > In-game NETRICSA can disable this gameplay shortcut. It
+defaults to On and persists; pre-level briefings remain enabled either way.
+
+In-game presentation fades take15 ticks/250ms at60Hz through ssa_netricsa_pc_step.
+The original controller entry point retains its recovered timing for oracle
+comparisons. Closing during fade-in reverses from the current opacity.
+In-game opening blends from the full captured frame to a dark green world with
+the weapon still visible: health/ammo/boss bars, crosshair and notice sprites
+fade away. Closing restores them. The tint follows the same continuous opacity
+as the NETRICSA artwork/text, including the viewport margins. Pre-level
+NETRICSA retains its animated background and original fade speed through
+ssa_netricsa_step.
+
+The frontend captures a second frame with weapon-only OAM built from private
+sprite copies; live OAM is restored after rendering. No sprite links, animation
+timers or cache state are changed for this capture. Both RGB888 frames remain
+owned by the frontend until closing; the compositor supports output aliasing
+either frame and uses no animated menu background.
+
+Weapon/enemy item numbers sit only above the upper text panel, starting at
+two pixels right and one pixel down from its top-left grid boundary, at
+x90/y17, one number per8-pixel grid cell toward the
+right. The row stays within the panel's144-pixel width. Both lists share that
+alignment; hit regions follow the cells. Numbers use the original green font palette normally,
+white on hover and yellow for the active record, which takes precedence over
+hover, without any background highlight. Unavailable records are hidden and
+non-clickable; visible record numbers keep their stable positions. The numbers
+retain their original font, fades and overlay composition. The preview
+`build/native-tests/netricsa.bmp.selectors.bmp` shows all three available states.
+The Enemies category is dim gray and cannot be hovered or selected when no
+enemy records are available. The availability gate includes all twelve enemy
+types, including a dossier containing only the final boss. A sparse/disabled
+preview is `build/native-tests/netricsa.bmp.disabled.bmp`.
+
+The playable frontend now opens NETRICSA with N or Tab during gameplay, including
+terminal gameplay states. Tab toggles it off during play; Esc/N also returns to
+the same world. Enter/Space cycles
+category/upper/lower focus. Tab also closes pre-level NETRICSA and proceeds to
+map view, retaining its original fade speed. Arrows or WASD navigate; Left/Right cycles acquired
+weapons or encountered enemies. Mouse hover selects categories; clicking focuses
+a panel. Wheel scrolls that panel. Clicking either half of an illustration, or
+wheeling over it, cycles records. Hover sounds play when selection changes.
+Clicking the localized "Press A to skip" prompt also closes NETRICSA, both
+before a level and during gameplay. Its hit region follows the original font
+width at x134/y9 and remains active during the prompt's blink-off phase.
+The click queues the normal close input, preserving each screen's fade speed,
+close sound, music transition and destination.
+
+Weapons/enemies now show numbered selectors above the upper text panel, using
+the original small font: weapons1..10, enemies1..12. Click an available number
+to open its record and reset both panels' scroll/held-scroll state. The current
+record is highlighted; hover highlights another available number. Unavailable
+records are dimmed and ignore clicks, preserving acquired/encountered filtering.
+Keyboard and illustration/wheel cycling remain available. Selectors share the
+same fading/compositor and letterbox pointer transform in both screen modes.
+
+The screen uses the original23 illustrations at0844CF48, NETRICSA tiles/map
+080AAF38/080B4C20, scrolling menu background080A8368, small font080B7A60 and
+original metrics/charmap. It renders native240x160 RGB555 pixels, scaled by the
+existing letterbox/presentation service. No ROM instructions execute at runtime.
+
+## Recovered behavior
+
+Original19C00 builds the records and submits labels;1A2C4 handles category,
+focus, scrolling, close and refresh. The outer1A780 screen initializes category4
+and focus1, loads artwork, requests music7 (song70), updates the background,
+and fades. Native implementations are src/netricsa.c and include/ssa/netricsa.h.
+
+Categories are statistics, enemies, weapons, strategic data and tactical data.
+The upper/lower panels use18/15 BG tiles and7/9 row scroll bounds. Text keeps
+ROM Latin1 accents, palette directives,2px inset and original31-byte streamed
+line clipping. Records reference84..93 weapon lore,116..127 enemy lore,
+214+map strategic text,202+map tactical text, and a random227..236 tip.
+Tactical lower text uses the original136 record with its additional newline.
+Formatted stats include chainsaw damage, infinite pistol ammunition, the U.M.T.
+format without accuracy, ordinary weapon accuracy, enemy encounters/hits/kills,
+game totals and player status. Zero shots yields0accuracy.
+
+Original category ordering, clamped category movement, record wrap/skips and
+independent held one-pixel scrolling remain. Changing category can call record
+dispatch twice in the same original frame; simultaneous category/record keys
+retain that behavior. The original first11-enemy sum gates the enemy category.
+An empty weapon list rejects initialization instead of hanging in the original
+unavailable-record scan. Blank rows beyond record end are cleared natively.
+
+German enemy-stat record129 contains four numeric directives, although the
+original caller supplies three arguments. The native version safely repeats
+the attack count in its duplicated attacks row and puts kills in the final row.
+That undefined original variadic read is excluded from exact text comparison.
+
+## Frontend ownership
+
+NETRICSA owns a value snapshot, without world pointers. Native statistics come
+from ssa_native_game_statistics. Prior completed-map counters accumulate in
+the frontend only when advancing; R retains those prior-map counters and
+restarts the current map. Fresh New Game/password/level-selection starts clear
+session totals. Current health, armor, score, owned weapons and ammo remain
+authoritative. Lives uses the native lifecycle's continue count. Session totals
+are not a new save format, score table, completion tally or continue workflow.
+
+The game does not tick while NETRICSA owns presentation. Relative movement and
+held buttons are cleared on entry; focus loss clears NETRICSA held scroll.
+Closing restores the previous capture preference and current game music mode.
+The existing audio reset service flushes effect loops on entry/exit; live door
+and enemy loops resynchronize on subsequent world updates. Both renderers use
+the same NETRICSA canvas. The borrowed ROM and screen address must stay stable;
+embedded formatted-text pointers are repaired after initialization's copy.
+
+The tip seed currently comes from a native frame-based LCG projection. The
+original global random-state coupling and full outer hardware/OAM screen chain
+are not established as byte/pixel-identical. This is working native presentation,
+not a claim that the complete game port has original feature parity.
+
+## Verification
+
+Run .\decomp.ps1 test-netricsa and
+scripts/test-netricsa.ps1 -SkipBuild after the Windows build.
+
+The portable suite passes19,336 ASan/UBSan/leak assertions over36 map/language
+starts and5,292 presentation ticks. It visits all weapon/enemy records, tests
+independent panel focus/scroll, illustration clicks/wheel, unavailable records,
+bounded text, fades and blank output. A generated bitmap was visually inspected.
+Pixel checks compare normal/hover/active number glyphs to the original green,
+white and yellow palettes at the panel-aligned positions, and verify untouched
+background around glyphs, hidden unavailable numbers and disabled category text.
+MSVC runs the same fixture.
+Overlay checks use an854x480 patterned background and a distinct HUD frame:
+fade endpoints and midpoint, source preservation, dark green viewport margins,
+HUD removal, weapon retention and in-place composition are checked. Changing
+background scroll has no effect. PC fades complete in15 ticks in each direction;
+early closing reverses smoothly. Original controller tests retain their timing.
+
+The Unicorn test executes original CPU routines only as a test oracle. It compares
+2,684 localized text rows from18D70,174 record builds from19C00 (including both
+statistics panels), and405 whole1A2C4 navigation/scroll calls with original19C00
+still reached. Sprite label submission, DMA and sprintf are controlled boundaries;
+pixel services are intercepted only in the separate controller comparisons.
+Twelve German undefined-format cases are explicitly counted and excluded.
+
+Windows checks exercise Tab open/close, Enter panel focus, keyboard navigation, real window messages for
+mouse selection/wheel, music7, snapshot values, a frozen game counter and resumed
+simulation on maps0/6 with both renderers. They use muted output and do not prove
+physical device input or listening. Campaign playthroughs remain manual, as
+requested. Results/hashes are in netricsa-validation.json,
+netricsa-rom-validation.json and windows-netricsa-validation.json.
+Each Windows path passes127 pre-level briefing ticks before the map and110
+in-game overlay ticks,5 pointer checks,1 live snapshot check and70 music checks,
+with zero decoder errors; gameplay resumes for3 ticks. The PC case uses854x480
+and the reference case240x160. Egypt/Rome introduction checks now require
+NETRICSA before the map; the ending still returns to Main. Actual Windows
+briefing and overlay captures were visually inspected: the briefing retains
+the animated background, while the overlay shows the dark green frozen world
+and weapon through transparent regions with other HUD sprites removed.
+Weapon-only OAM retains6 pieces in the PC case and14 in the reference case;
+19,251 and2,508 pixels respectively differ from the original full-HUD capture.
+The initial Windows fixture assumed every map had an enemy record and a long
+tactical briefing. It now respects the original encounter gate and scrolls a
+known weapon description. A locked executable was preserved under a separate
+running-netricsa filename so the open session could continue during rebuilding.
+All119 portable/Windows libraries and the Windows frontend build successfully.
+
+One ordinary-C decomp.wtf dispatcher1A27C attempt has the same instructions,
+but fails linking its uncatalogued19C00 callee. It is not exact; the claim was
+released with notes. No catalogue split, ROM mutation or new matching claim was
+made for this screen.

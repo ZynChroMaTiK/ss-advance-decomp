@@ -16,6 +16,7 @@ struct SsaPickupRuntime {
     SsaPickupRuntimeOps ops;
     SsaPickup current;
     unsigned slot,player,loaded,updating,failed;
+    unsigned repeat_weapon; /* PC variant pickup policy;0 keeps original behavior. */
 };
 /* Borrow stable combat/spawn/player/rules storage. Binds an unused world
  * execute_special callback; refuses to replace an existing one. Initialize

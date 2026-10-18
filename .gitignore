@@ -16,6 +16,9 @@ __pycache__/
 *.pyc
 build/
 /save.dat
+/settings.dat
+/settings.dat.tmp-*
+/soundfonts/*.sf2
 /save.dat.lock
 /save.dat.tmp-*
 analysis/strings.tsv

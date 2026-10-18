@@ -3,7 +3,7 @@
 
 #define UNIT INT32_C(65536)
 #define CAMERA_RADIUS (4*UNIT)
-#define MIN_BOOM (32*UNIT)
+#define MIN_BOOM (64*UNIT)
 
 static int32_t clamp64(int64_t n) {
     return n>INT32_MAX ? INT32_MAX : n<INT32_MIN ? INT32_MIN : (int32_t)n;

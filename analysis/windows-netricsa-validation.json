@@ -1,0 +1,67 @@
+{
+    "result":  "pass",
+    "native":  {
+                   "result":  "pass",
+                   "checks":  19553,
+                   "runs":  36,
+                   "frames":  5292,
+                   "languages":  3,
+                   "levels":  12
+               },
+    "cases":  [
+                  {
+                      "original_renderer":  false,
+                      "startup":  {
+                                      "result":  "pass",
+                                      "netricsa_ticks":  110,
+                                      "pointer_checks":  7,
+                                      "snapshot_checks":  1,
+                                      "music_checks":  70,
+                                      "frozen_game_counter":  87,
+                                      "resumed_game_counter":  90,
+                                      "audio_errors":  0,
+                                      "briefings":  1,
+                                      "briefing_ticks":  127,
+                                      "overlay_checks":  1,
+                                      "overlay_width":  854,
+                                      "overlay_height":  480,
+                                      "hud_pixels_removed":  19251,
+                                      "weapon_pieces":  6
+                                  },
+                      "level":  0
+                  },
+                  {
+                      "original_renderer":  true,
+                      "startup":  {
+                                      "result":  "pass",
+                                      "netricsa_ticks":  110,
+                                      "pointer_checks":  7,
+                                      "snapshot_checks":  1,
+                                      "music_checks":  70,
+                                      "frozen_game_counter":  74,
+                                      "resumed_game_counter":  77,
+                                      "audio_errors":  0,
+                                      "briefings":  1,
+                                      "briefing_ticks":  127,
+                                      "overlay_checks":  1,
+                                      "overlay_width":  240,
+                                      "overlay_height":  160,
+                                      "hud_pixels_removed":  2508,
+                                      "weapon_pieces":  14
+                                  },
+                      "level":  6
+                  }
+              ],
+    "physical_input_tested":  false,
+    "scope":  "Native NETRICSA controls/snapshot/pause/music/resume; no campaign playthrough.",
+    "executable_sha256":  "b793b7823bd65a16c9e86e47658e4a4723dc78ae0f8365fbd35b71e6a08ba872",
+    "source_sha256":  {
+                          "src/netricsa.c":  "616e2af7d05b43c5ca32484c961e1bafd86bc5e7aa4586f3bafe565527f1767e",
+                          "include/ssa/netricsa.h":  "229cd3692665476fb2554766c619aa900a094198b6a605e12411d4abb86e0a46",
+                          "tests/test_netricsa.c":  "4359a81351cd98f299cec6cca07354ff94edd3a037bb066721ba496a60ed431c",
+                          "platform/win32/game.c":  "a53ce792e88638681a984a033b6186b68c2a4a07c85ff7f6ac730517b77d5565",
+                          "platform/win32/audio_win32.c":  "d7fc14300786afdfcb60b19c4c3bde2d14f472624303466c86c3a06519a2ec26",
+                          "platform/win32/audio_win32.h":  "d3b31f8cd9f390dc9231d15bf89b560b81b8a192153e6e3a7d70f5c84f75497c",
+                          "scripts/test-netricsa.ps1":  "1720e79884eaeb03b03468c2699305cce65dd90ed64bf2ea6ea8bff7cffeb162"
+                      }
+}

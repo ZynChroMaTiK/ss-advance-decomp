@@ -4,6 +4,12 @@ import {createHash} from 'node:crypto';
 import {createWikiView,searchEntries} from '../site/wiki.js';
 const site=new URL('../site/',import.meta.url);
 const {entries}=JSON.parse(readFileSync(new URL('data/wiki.json',site)));
+const campaignLimit=Number(readFileSync(new URL('../include/ssa/native_game.h',import.meta.url),'utf8').match(/SSA_NATIVE_CAMPAIGN_LEVELS=(\d+)/)[1]);
+assert(readFileSync(new URL('index.html',site),'utf8').includes(`<strong>${campaignLimit}<span>/12</span>`),'homepage native level count');
+for(const entry of entries.filter(e=>e.category==='levels')){
+ const availability=entry.sections.find(s=>s.title==='Native port availability').text;
+ assert.equal(availability.startsWith('Playable in'),entry.level<campaignLimit,`native availability: ${entry.title}`);
+}
 const ids=new Set(entries.map(e=>e.id));assert.equal(ids.size,entries.length);assert.equal(entries.length,54);
 const counts={};for(const entry of entries){counts[entry.category]=(counts[entry.category]||0)+1;assert(entry.summary&&entry.sections.length&&entry.sources.length);for(const id of entry.related||[])assert(ids.has(id),`${entry.id} -> ${id}`);for(const source of entry.sources)assert(source.href.startsWith('https://')?new URL(source.href).protocol==='https:':existsSync(new URL(source.href,site)),source.href);if(entry.image)assert(existsSync(new URL(entry.image,site)),entry.image);for(const appearance of entry.appearances||[])assert(ids.has(`level-${appearance.level+1}`))}
 assert.deepEqual(counts,{enemies:12,items:5,levels:16,secrets:5,systems:6,weapons:10});

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static unsigned checks,starts,frames,restarts,level_starts,carry_starts,starter_restarts;
+static unsigned checks,starts,frames,restarts,level_starts,carry_starts,starter_restarts,advancement_starts,progress_captures;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"password start%u line%d: %s\n",starts,__LINE__,#x);exit(1);}}while(0)
 int main(int argc,char **argv)
 {
@@ -75,13 +75,49 @@ int main(int argc,char **argv)
         CHECK(!memcmp(&g->players[0].inventory,&progress.inventory,sizeof(progress.inventory)));
         CHECK(g->gameplay.weapon.current==10 && g->gameplay.weapon.requested==10 && g->previous_weapon==9);
         CHECK(g->score==123456 && g->player.view.third_person==1 && g->damage.difficulty==difficulty);
-        CHECK(ssa_native_game_step(g)==1);++frames;++carry_starts;ssa_native_game_free(g);
+        CHECK(ssa_native_game_step(g)==1);++frames;++carry_starts;
+        /* R retains a captured entry exactly. A completed level instead uses
+         * the original fresh body/vitals plus123C4 weapon restoration. */
+        {SsaNativeCarry untouched,advance;SsaInventory expected;
+         memset(&untouched,0x5a,sizeof untouched);advance=untouched;
+         CHECK(ssa_native_game_carry_next(&advance,g)==-1 && !memcmp(&advance,&untouched,sizeof advance));
+         g->players[0].inventory.ammo[8]=7;g->gameplay.weapon.requested=9;g->finished=1;
+         expected=g->players[0].inventory;expected.health=100;expected.stat_c4=expected.stat_c6=0;
+         expected.pending_count=0;memset(expected.pending_weapons,0,sizeof expected.pending_weapons);
+         CHECK(ssa_native_game_carry_next(&advance,g)==1 && advance.weapon==10);
+         {SsaWeaponProgress saved,before_saved;SsaWeaponProgressStats rows[10],before_rows[10];
+          SsaNativeGame *snapshot=malloc(sizeof(*snapshot));unsigned *locks[6]={&g->game.updating,&g->combat.updating,&g->spawn.updating,&g->player.updating,&g->weapon.updating,&g->world.query_active};
+          CHECK(snapshot);
+          for(j=0;j<10;++j){g->weapon_game.shots[j]=UINT32_MAX-j;g->weapon.hits[j]=123456u+j;}
+          memcpy(snapshot,g,sizeof(*g));
+          CHECK(ssa_native_game_weapon_progress(&saved,rows,g)==1);
+          CHECK(!memcmp(snapshot,g,sizeof(*g)) && saved.current==10 && saved.requested==9 && saved.weapons==expected.weapons);
+          CHECK(!memcmp(saved.ammo,expected.ammo,sizeof saved.ammo));
+          for(j=0;j<10;++j)CHECK(rows[j].owned==((expected.weapons>>j)&1) && rows[j].ammo==expected.ammo[j] &&
+              rows[j].shots==UINT32_MAX-j && rows[j].hits==123456u+j);
+          before_saved=saved;memcpy(before_rows,rows,sizeof rows);
+          for(j=0;j<6;++j){*locks[j]=1;CHECK(ssa_native_game_weapon_progress(&saved,rows,g)==-1 &&
+              !memcmp(&saved,&before_saved,sizeof saved) && !memcmp(rows,before_rows,sizeof rows));*locks[j]=0;}
+          CHECK(ssa_native_game_weapon_progress(NULL,rows,g)==-1 && ssa_native_game_weapon_progress(&saved,NULL,g)==-1 &&
+              ssa_native_game_weapon_progress(&saved,rows,NULL)==-1);
+          CHECK(!memcmp(snapshot,g,sizeof(*g)));free(snapshot);++progress_captures;
+         }
+         CHECK(!memcmp(&advance.inventory,&expected,sizeof expected));
+         CHECK(g->players[0].inventory.health==73 && g->players[0].inventory.stat_c4==41 && g->gameplay.weapon.requested==9);
+         next=calloc(1,sizeof(*next));CHECK(next);
+         CHECK(ssa_native_game_init_campaign(next,rom,0x800000,(level+1)%12,difficulty,&advance)==1);
+         CHECK(!memcmp(&next->players[0].inventory,&expected,sizeof expected));
+         CHECK(next->score==g->score && next->player.view.third_person && next->previous_weapon==9);
+         CHECK(next->gameplay.weapon.current==10 && next->gameplay.weapon.requested==10 && next->weapon.object.animation==9 && next->weapon.object.period==3);
+         ++advancement_starts;ssa_native_game_free(next);free(next);
+        }
+        ssa_native_game_free(g);
         progress.inventory.health=0;
         CHECK(ssa_native_game_init_campaign(g,rom,0x800000,level,difficulty,&progress)==-1 && !g->rom);
     }
     CHECK(ssa_native_game_init_campaign(g,rom,0x800000,12,1,NULL)==-1 && !g->rom);
     CHECK(ssa_native_game_init_campaign(g,rom,0x800000,0,3,NULL)==-1 && !g->rom);
     free(g);free(rom);
-    printf("{\"result\":\"pass\",\"checks\":%u,\"password_starts\":%u,\"frames\":%u,\"entry_restarts\":%u,\"level_starts\":%u,\"carry_starts\":%u,\"starter_restarts\":%u,\"levels\":%u,\"difficulties\":3}\n",checks,starts,frames,restarts,level_starts,carry_starts,starter_restarts,SSA_NATIVE_CAMPAIGN_LEVELS);
+    printf("{\"result\":\"pass\",\"checks\":%u,\"password_starts\":%u,\"frames\":%u,\"entry_restarts\":%u,\"level_starts\":%u,\"carry_starts\":%u,\"starter_restarts\":%u,\"advancement_starts\":%u,\"progress_captures\":%u,\"levels\":%u,\"difficulties\":3}\n",checks,starts,frames,restarts,level_starts,carry_starts,starter_restarts,advancement_starts,progress_captures,SSA_NATIVE_CAMPAIGN_LEVELS);
     return 0;
 }

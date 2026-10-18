@@ -17,7 +17,8 @@ class Menu(C.Structure):
  ('credits_y',C.c_int32),('credits_speed',C.c_int32),('credits_done',C.c_uint16),('credits_lines',C.c_uint16),
  ('level',C.c_uint),('loadout',C.c_uint),('level_limit',C.c_uint),('password',C.c_char*9),
  ('password_cursor',C.c_uint8),('password_up',C.c_uint8),('password_down',C.c_uint8),('password_typed',C.c_uint8),('grid',C.c_uint8*64),
- ('completed_levels',C.c_uint16),('level_scroll',C.c_uint),('selecting_level',C.c_uint),('clear_requested',C.c_uint)]
+ ('completed_levels',C.c_uint16),('level_scroll',C.c_uint),('selecting_level',C.c_uint),('clear_requested',C.c_uint),
+ ('settings',C.c_uint*9),('soundfont_available',C.c_uint),('midi_available',C.c_uint),('settings_unavailable',C.c_uint),('quit_requested',C.c_uint)]
 lib=C.CDLL(str(b/'libssa_menu.so'));lib.ssa_menu_init.argtypes=[C.POINTER(Menu),C.c_void_p,C.c_size_t,C.c_uint]
 lib.ssa_menu_step.argtypes=[C.POINTER(Menu),C.c_uint];lib.ssa_menu_draw.argtypes=[C.POINTER(Menu),C.POINTER(C.c_uint16),C.c_size_t]
 lib.ssa_menu_step_input.argtypes=[C.POINTER(Menu),C.c_uint,C.c_uint]

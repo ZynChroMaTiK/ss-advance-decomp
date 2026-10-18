@@ -1,4 +1,10 @@
-# Serious Sam Advance - playable native prototype
+# Serious Sam Advance - v0.8.0 Alpha 1
+
+**Windows x64 prerelease: [download v0.8.0-alpha.1](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.1).**
+Extract the ZIP to a writable folder, put your own ROM at `orig/SSA.gba`, and run
+`play-native.cmd`. The package includes the native executable; no build tools are
+needed. ROMs and SoundFont banks are not included. See the
+[release notes](releases/v0.8.0-alpha.1.md) for features and known limitations.
 
 [Project website, features and roadmap](https://zynchromatik.github.io/ss-advance-decomp/)
 · [Combined 2D atlas / 3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/2d)
@@ -15,7 +21,59 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 Compilation does not require a ROM. To play, place your own game ROM at
 `orig/SSA.gba`, then run `play-native.cmd`. The launcher uses
 `build/native-windows/Release/ssa_native_game.exe`; build it first.
-The first ten campaign levels are supported; the final two remain unavailable.
+All twelve campaign levels are enabled, including Caesar's Palace.
+Campaign playthrough validation is manual at the user's request.
+
+Options starts with **Settings**: its first row is **Display mode**, choosing
+**Fullscreen** (borderless, default) or **Windowed**. Changes apply immediately
+and persist in `settings.dat`; windowed mode restores the previous window size
+and position. Then choose **Software / GBA** rendering,
+choose **Original / SoundFont / MIDI** music and
+adjust **Music volume** and **Sounds volume** with bars and percentages.
+The separate Music On/Off option is removed; set Music volume to0% to silence music.
+Options lists Settings, Extras, Language, Clear Data, then Credits at the bottom.
+**Extras** contains **Jump**, **Third-person**, **In-game NETRICSA** and **Alternate weapons**.
+The first three default to On; Alternate weapons defaults to Off. All persist with your settings.
+With Alternate weapons On, a new campaign starts with one Colt; picking up another unlocks and
+equips dual Colts. Each Colt fires every 0.45 seconds; duals alternate hands at 0.225 seconds.
+A click fires two alternating shots even when released quickly; holding fire continues the sequence.
+Each holds six shots with unlimited reserve ammo. Reload starts when the next gun's turn
+finds it empty, allowing 12 alternating shots from full duals. The right Colt reloads
+first, with the left starting 0.33 seconds later: 1.07 seconds per gun, 1.40 seconds
+for the complete pair. Single Colts reload alone after six shots.
+Each reload plays a local mechanical click. Re-equipping a Colt refills its six-shot magazine;
+switching from single to dual refills only the left gun that is drawn.
+These timing and magazine rules apply only with Alternate weapons On.
+That mode also gives the double shotgun a fixed 14-pellet pattern, with 5 base damage
+per pellet (70 for a full hit), horizontal spread up to ±6.84° and vertical rows
+at +2.58°, +0.86°, −0.86° and −2.58°. It follows free aim and GBA auto-aim.
+The alternate double shotgun fires every 1.75 seconds, with its animation frames
+spread evenly across that cycle.
+Colts retain key **2**: press it again to toggle single/dual once acquired. Mouse-wheel order puts
+single immediately before dual. Switching variants draws/stores only the left Colt.
+Password/level-select starts after the first level upgrade starting Colts to duals in this mode.
+Disabling in-game NETRICSA blocks Tab/N during
+gameplay; pre-level briefings still appear.
+Disabling Third-person returns to first-person and disables the H view toggle.
+GBA rendering keeps the camera level and moves the original crosshair vertically
+with auto-aim without following camera bob. Third-person cursor placement accounts for the raised camera.
+Use Left/Right or click a bar; preferences persist in `settings.dat`.
+For the optional SC-55 music style, run
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-soundfont.ps1`.
+You can load another GM bank with `play-native.cmd --soundfont "path\bank.sf2"`.
+SoundFont is offered only when that file exists and loads successfully. MIDI
+uses **Microsoft GS Wavetable Synth** and needs no SF2 file; it is offered when
+Windows can open that device. Missing saved modes fall back to Original.
+MIDI mode compensates for the GS synth's measured delay by buffering only the
+original music samples for 185 ms. Sound effects stay immediate. For a different
+audio device, override with `play-native.cmd --midi-delay 0..500` (milliseconds).
+SoundFont mode retains the ROM's sampled instruments and replaces only PSG
+instruments. Its music uses the volume slider without Original-mode fixed
+boosts/cuts; a 15 dB SoundFont trim balances it against the retained samples,
+then a shared +3 dB gain raises the whole mix. Final output gains raise both
+music modes to full peaks (Original +9.54 dB, SoundFont +6.02 dB), with peak
+protection to prevent overload.
+See [audio settings and checks](analysis/audio-settings.md).
 
 The repository includes native source, Windows frontend, tests, scripts,
 research, recovered C and the complete static website. ROMs, saves, generated
@@ -36,10 +94,17 @@ separately by `scripts/bootstrap.sh` under WSL/Ubuntu; see the setup below.
 
 ## Current prototype
 
-**The first ten levels are playable natively on Windows.** Run `play-native.cmd` to use your
+**All twelve campaign levels are available natively on Windows.** Run `play-native.cmd` to use your
 supplied `orig/SSA.gba`. This build includes actual enemy AI, weapon firing,
 damage/death, pickups, scripted waves, doors, the exit, and restart, with the
 original world, actors, HUD and weapon graphics.
+New Game includes the original Egypt intro; entering Rome shows its chapter
+panel. After the final level's bonus tally, the ending returns to Main.
+Up/W pauses the story, Down/S scrolls faster, Right skips a hold, and
+Enter/Space/Esc or a click skips the screen. Preview the ending directly with
+`play-native.cmd --story 12`. See [campaign screens](analysis/campaign-story.md).
+Rome's ankh pickup now uses a golden laurel wreath in the original 20×34 and
+10×17 sprite sizes and palette. See [artwork and generation prompt](assets/rome-laurel/README.md).
 Time Strike targets now keep a valid rendered frame if their controller changes
 animation while frozen, preventing a reference-renderer failure during combat.
 Health, armor and boss bars now use the original scanline palette colors,
@@ -55,7 +120,7 @@ beating a level unlocks its successor on any difficulty. Select Level uses the
 original localized campaign names, shows locked levels with padlocks, and omits
 multiplayer maps. Egypt and Rome each have a page of six levels, shown without number prefixes.
 Use Up/Down to select a level or Left/Right/the arrows to switch chapters.
-The final two campaign maps remain marked unavailable until supported by the port.
+Caesar's Palace unlocks when Praetorian Fort is beaten, using the existing save.
 Selected levels use their original starting weapons and ammo after choosing difficulty.
 Options → Clear Data resets progress and language after a Yes/No warning;
 No is selected by default, and Esc cancels. New Game keeps existing unlocks.
@@ -68,7 +133,7 @@ The title music continues after Press Start without restarting.
 Options → Credits now shows the original scrolling credits. Hold Up/W to pause
 or Down/S to speed up; Enter/Space/click or Esc returns to Options.
 Single Player → Password now restores original starting weapons and ammunition
-for the ten supported maps. Type the password directly (case-insensitive),
+for all twelve campaign maps. Type the password directly (case-insensitive),
 with or without its trailing underscore placeholders;
 use Backspace/Delete to correct it, and Enter or a click to submit. Left/Right
 moves the cursor; Up/Down retains the original character cycling. Esc goes back.
@@ -76,6 +141,23 @@ Passwords select difficulty too.
 Fresh `--level` launches use that map's original starting weapons and ammo.
 Advancing from a previous level keeps your carried weapons and ammunition.
 Original ROM sound effects and level music now play through a native audio mixer.
+Pickup names, boss introductions and death messages now use the original
+localized sprite lettering, reveal and expiry timing in both renderers.
+See [original HUD notices](analysis/hud-notices.md).
+NETRICSA appears before the map view on every level start/restart, with its
+original animated background. During gameplay, press N or Tab to open it as an
+overlay over the paused game, without that animated background. Tab toggles it
+on/off during play; Esc or N also returns. It includes original localized weapon/enemy records,
+illustrations, strategic/tactical briefings and live statistics. Enter/Space cycles
+panel focus; Up/Down selects categories or scrolls text; Left/Right cycles records.
+Hover/click categories and panels, wheel to scroll, or click either half of an
+illustration to cycle records. The overlay preserves the current renderer's resolution.
+Click numbered weapon/enemy indicators above the text panel to view a record;
+unavailable records are dimmed and the current selection is highlighted.
+During play, NETRICSA fades in/out over250ms, removing the HUD while keeping
+the weapon visible and darkening the level with a green tint. Before map view,
+NETRICSA keeps the original fade speed; Tab closes it and proceeds to map view.
+See [NETRICSA recovery and controls](analysis/netricsa.md).
 The overall soundtrack plays at50% of its previous amplitude so effects stand out.
 Audio buffers refill on device events, keeping music at normal speed when the
 mouse and UI are idle.
@@ -98,7 +180,10 @@ Continuous weapon loops stop on release, switching, empty ammo, pause or focus l
 the minigun keeps its wind-down sound. See [weapon fixes](analysis/weapon-fixes.md).
 Prion gun shots now start on the aim line and fly independently immediately,
 like the corrected rocket launcher, without following later mouse movement.
+Cannonballs also fly independently from the instant of launch, so later mouse
+movement, walking or jumping cannot steer them.
 Prion-affected enemies run their behavior and animation at twice normal speed.
+They continually target the nearest living enemy or player, without preferring Sam.
 Quick fire clicks stay pending until the first shot, even if released during
 weapon startup, raising or reload. Holding fire keeps the same firing rate.
 World and enemy sounds pan left/right and fade with three-dimensional distance
@@ -106,6 +191,7 @@ from Sam. Doors use the same smooth falloff as enemies, getting quieter as you
 move away even at close range. Pickups play locally like player sounds, without
 distance attenuation or positional panning. Door loops stop when each door stops; multiple enemies can sound at
 once, with moving sounds following their own source.
+The U.M.T. pickup cue finishes after its initial sequence instead of leaving a buzzing loop.
 The third-person camera keeps the same audio listener as first person.
 Before every level start/restart, the original map view plays its start music.
 Click or press Space/Enter to leave the map; it fades to solid black, pauses,
@@ -128,16 +214,40 @@ spawns, while keeping walls, doors and the player solid.
 Gunrilla cannonballs clear their shooter's collision bounds before normal
 collision with that shooter resumes; walls, players and other enemies still block them.
 
-Click to capture the mouse. WASD moves, mouse turns, left mouse fires, Space
+Mouse look activates automatically during gameplay and when returning to the game.
+WASD moves, mouse turns, left mouse fires, Space
 jumps, H toggles first/third person, E uses doors, and 1–0 selects owned weapons.
 Mouse wheel up selects the previous usable weapon; down selects the next.
 Cycling wraps around and skips unowned or empty weapons.
 Q swaps to the last equipped weapon. Weapon changes wait until the current
 firing/reload animation ends; automatic weapons finish the current animation cycle.
 Buttons activate immediately on E, without waiting for the weapon to finish lowering.
-Esc releases the mouse; R restarts from the current level's entry state.
-Enter advances from supported intermediate levels with your health, armor,
-weapons, ammo and score. At the last supported level, Enter replays it.
+Esc or P opens the pause menu and releases the mouse. Continue resumes; Quit
+asks Yes/No, with No selected initially, then returns to Main. The separate Quit
+item at the bottom of Main asks Yes/No before closing the application, with No
+selected by default. No or Esc returns to Main with Quit selected.
+Arrows/WASD and Enter/Space, or mouse
+hover/click, operate it. Esc cancels quit confirmation or resumes gameplay.
+R is unbound and does not restart the level.
+Level completion now shows the original localized time/ammo bonus tally and
+score digits over the frozen level. Click or press Enter/Space to finish the
+current bonus count immediately, awarding every remaining point. Holding an
+action still counts faster. The final Sam text stays fully visible for three
+seconds and waits for completion music; a fresh confirm after one second can
+shorten the reading hold once music ends. The original sound7 is a short
+synthesized cue, not recorded speech.
+Then the next map retains earned weapons, ammo and the bonus-adjusted score,
+with100 health and no armor. Chapter and ending panels follow the tally.
+See [original campaign entry](analysis/campaign-entry.md).
+The native snapshot path also uses the recovered original weapon-progress
+capture, with verified per-weapon ownership, signed ammo and shot/hit counters.
+The original completion-statistics accumulator and checkpoint helpers are also
+recovered and verified. Completion totals and checkpoints now connect to the
+frontend's campaign session. High-score/name entry remains unfinished.
+See [statistics recovery](analysis/statistics.md).
+The native backend now also reproduces the original timed time/ammo bonus tally
+and completion-record ordering. Its frontend presentation now uses the original
+notice and number sprites; see [pause and tally integration](analysis/completion.md).
 Press M to mute/unmute audio. Use `play-native.cmd --no-music` for effects only,
 or `play-native.cmd --mute` to start silently. Mouse look turns and aims vertically
 through 80 degrees up or down, with perspective-correct world rendering.
@@ -165,18 +275,29 @@ Arbitrary dimensions are supported within memory and platform limits; this
 renders new world samples. `--original-renderer` restores the 240×160 reference
 view. See [render settings](analysis/pc-renderer.md).
 
-The updated normal-input campaign run completes ten consecutive maps in
-117,841 frames, ending with1,390,000 total score and33 health, carrying only earned
-inventory between maps. It covers pickup-triggered doors, wall switches, elevated
+The updated normal-input campaign run completes eleven consecutive maps in
+140,712 frames, ending with 1,544,000 total score and 45 health. Weapons and ammo
+are earned; each next level uses the original 100-health/no-armor construction.
+It covers pickup-triggered doors, wall switches, elevated
 enemies, the first boss, Prion conversion, Time Strike and the real exits.
 GCC ASan/UBSan with leak detection and Windows MSVC agree on every result.
+Praetorian Fort completes in 17,231 frames with all 99 original enemy spawns,
+scripted waves, pit hazards and the real exit. Both renderers and the native
+mixer remain active. The final map separately completes from its original Normal
+starter loadout in 17,270 frames, including D8 defeat and the scripted exit.
+These are historical automated results. All twelve maps are now enabled at
+the user's request, without requiring an automated earned-inventory completion.
+To jump directly to the last map for manual testing, run
+`play-native.cmd --level 11`. See [campaign details](analysis/native-game.md#validation).
 Converted enemies can now fire safely after their previous target's actor slot
 has been cleared or reused, preserving the original slot behavior.
 See [playable build details](analysis/native-game.md).
 Original feature and behavior parity is the completion target, alongside the
-explicitly requested PC controls and rendering changes. The remaining campaign,
-boss-level progression, remaining original menus/presentation
-effects remain unfinished. Audio fidelity is still being refined;
+explicitly requested PC controls and rendering changes. Full campaign playthrough
+verification, score/name entry and remaining
+menus/presentation effects are unfinished. Original chapter/ending panels now
+run natively; see [campaign story recovery](analysis/campaign-story.md).
+Audio fidelity is still being refined;
 see [audio integration](analysis/audio.md).
 See [special weapons and palette recovery](analysis/special-weapons.md) for the
 new integration checks and remaining presentation limits.
@@ -214,8 +335,9 @@ viewer with idle objects; it is not the playable build.
 - Both original boss controllers now run natively, including volleys, reinforcement
   script requests, damage/death and the boss health gauge binding. ROM comparisons
   and Windows/GCC integration pass. The sixth map now includes its natural D7 boss
-  fight, boss music and scripted completion using earned equipment. The later D8
-  boss map still needs full progression testing. See [boss recovery](analysis/enemy-boss.md).
+  fight, boss music and scripted completion using earned equipment. D8 now has
+  a separate standalone completion; its earned-inventory campaign path remains
+  unfinished. See [boss recovery](analysis/enemy-boss.md).
 - CF/D0/D1/D2 and CE/D3/D4/D5/D6 controllers, native pickup contact binding,
   particles, impacts, enemy target aiming and extended projectile controllers
   are connected to production owners. See `enemy-control.md`, `enemy-ranged.md`,
@@ -228,8 +350,8 @@ viewer with idle objects; it is not the playable build.
 - Catalogued 526 functions: the initial conservative 525 plus one validated
   entity-collision callback. Discovery is incomplete;
   these are not all functions in the game.
-- 74 functions compile to the exact original bytes: 2,152 of 87,648 bytes in
-  that catalogue (2.46%). The initial automatic pass also produced 80 near-matches.
+- 78 functions compile to the exact original bytes: 2,816 of 87,648 bytes in
+  that catalogue (3.21%). The initial automatic pass also produced 80 near-matches.
 - The exported C plus remaining assembly/data rebuilds the entire 8 MiB ROM
   byte for byte. This is a GBA rebuild, not a PC executable.
 - Native keypad polling, input recording and input playback are implemented in
@@ -446,10 +568,10 @@ viewer with idle objects; it is not the playable build.
   sanitizer assertions, including pending/committed weapon selection and H
   weapon hiding. See `analysis/hud-presentation.md`.
 
-The playable ten-level frontend now composes these systems; see
-`analysis/native-game.md`. The complete campaign, bosses, special weapons,
-active original notices, remaining palette effects and audio fidelity still need
-work. Earlier module-by-module limitations above describe those individual
+The twelve-level frontend now composes these systems; see
+`analysis/native-game.md`. Manual campaign verification,
+score/name entry, remaining palette effects and audio fidelity still
+need work. Earlier module-by-module limitations above describe those individual
 test boundaries and the separate diagnostic viewer.
 
 ## Use the existing workspace from PowerShell

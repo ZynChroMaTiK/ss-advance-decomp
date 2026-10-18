@@ -21,13 +21,14 @@ typedef struct SsaAudioTrack {
     unsigned volume,pan,bend_range,lfo_speed,lfo_delay,mod_depth,mod_type,lfo_phase,lfo_wait;
     unsigned echo_volume,echo_length,priority;
     int transpose,bend,tune;
+    unsigned synth_gate,synth_tied,synth_note,synth_on;
 } SsaAudioTrack;
 typedef struct SsaAudioPlayer {
     SsaAudioTrack tracks[SSA_AUDIO_TRACKS];
     unsigned song,active,priority,count,tempo;
     uint64_t clock,serial,source;
     SsaAudioPoint position;
-    unsigned positioned,source_loop,local_priority;
+    unsigned positioned,source_loop,local_priority,paused;
     double left,right,target_left,target_right;
 } SsaAudioPlayer;
 typedef struct SsaAudioVoice {
@@ -41,6 +42,21 @@ typedef struct SsaAudioVoice {
     int instrument_pan;
     double position,step,envelope;
 } SsaAudioVoice;
+/* Optional music renderer. Borrowed context, called only on the mixer thread.
+ * Sequence timing stays in audio.c. Resolved PCM music voices and all effects
+ * keep the ROM renderer. note receives PCM too, to retire the track's previous
+ * synth note, but must not synthesize it. Only PSG music is replaced. */
+typedef struct SsaAudioSynth {
+    void *context;
+    void (*reset)(void *);
+    int (*note)(void *,unsigned,const SsaAudioTrack *,const SsaAudioVoice *);
+    void (*release)(void *,unsigned);
+    void (*control)(void *,unsigned,const SsaAudioTrack *);
+    void (*sample)(void *,float stereo[2]);
+    /* Optional music-only output processing before peak protection/effects.
+     * A hardware MIDI renderer uses this to align retained PCM with its sink. */
+    void (*mix_music)(void *,double stereo[2]);
+} SsaAudioSynth;
 /* Recovered08C04/08D30/08E74 policy. Volume uses the original16-bit scale. */
 typedef struct SsaAudioMusicState {
     uint8_t flags,rate;
@@ -57,14 +73,19 @@ typedef struct SsaAudio {
     SsaAudioVoice voices[SSA_AUDIO_VOICES];
     SsaAudioMusicState music;
     unsigned music_command,music_level;
-    double master_gain,effects_headroom_gain,world_headroom_gain;
+    double master_gain,effects_headroom_gain,world_headroom_gain,music_headroom_gain;
     double ratios[128];
+    unsigned music_volume,sound_volume; /* PC bus levels, 0..100. */
+    SsaAudioSynth synth;
     uint64_t frames,notes,loops,clipped,effects_limited_frames;
+    uint64_t music_limited_frames;
     uint64_t starts,effect_recycles,voice_recycles,effect_drops,voice_drops;
     unsigned errors,last_error_song,last_error_command;
 } SsaAudio;
 int ssa_audio_init(SsaAudio *,const uint8_t *,size_t,unsigned sample_rate);
 void ssa_audio_reset(SsaAudio *);
+int ssa_audio_set_synth(SsaAudio *,const SsaAudioSynth *); /* NULL: original */
+int ssa_audio_set_volume(SsaAudio *,unsigned music,unsigned sounds);
 /* PC concurrency: music owns player0 and one voice per sequence track.
  * Each effect/menu cue gets an independent instance, including repeat sounds
  * and footsteps. Effects never borrow music voices. At capacity only the

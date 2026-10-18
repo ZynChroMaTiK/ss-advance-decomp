@@ -1,5 +1,11 @@
 # Native audio integration
 
+The fixed mix adjustments below describe Original music mode. SoundFont mode
+now retains every ROM sampled instrument and replaces only PSG music, with
+unity gain before the Music volume slider, sequence fades and overload-only
+peak protection. It does not inherit Original's fixed PCM boost/music cut.
+See [audio settings](audio-settings.md) for the hybrid route and focused checks.
+
 `play-native.cmd` now plays original ROM sound effects and the level soundtrack.
 Overall music amplitude is now50% (-6.02dB) of the previous mix. This applies
 equally to every music sequence and PCM/PSG instrument, including menus, map,
@@ -28,6 +34,30 @@ The native composition suppresses them without movement input, after less than
 1/16 unit of horizontal displacement, or while airborne/dead. The recovered
 camera/physics routines remain unchanged. This avoids walking sounds while
 jumping, standing still or pushing against a wall.
+
+The native jump extension now plays a non-vocal bootstep (sound14) once on
+actual takeoff, replacing the hurt grunt at the user's request. Landing plays a
+local boot impact (sound13), including
+stationary landings and falls. Both use the ordinary player-effect path/source1,
+without distance attenuation or camera-dependent panning. Held Space, rejected
+airborne presses, disabled jumps and death/respawn do not generate takeoff cues.
+The normal bob footstep is suppressed on the landing frame to avoid doubling it.
+
+The composition snapshots player position/velocity, jump latch, health and
+control flags before the entity phase, then checks the result immediately
+before movers. A jump requires a newly consumed edge and a grounded body
+actually rising above its floor; a landing requires a descending airborne body
+to reach the floor. Movers and later scripts cannot masquerade as that contact.
+Original physics, camera and controller routines are unchanged. This audio is
+a PC extension alongside the requested jump, not an original GBA jump feature.
+The updated audio suite passes660209 checks under GCC ASan/UBSan/leak detection
+and MSVC, including eight takeoffs/eight landings across moving and stationary
+jumps, both camera views, legacy and source-aware sinks, held/rejected input and
+disabled controls. All131 populated songs still render without decoder errors
+or catalogue clipping. Windows audio buffering/restart checks pass with music
+enabled and disabled (output muted, no physical listening claim). All121 native
+Windows libraries/frontend rebuild; executable SHA256:
+`19d3155b12804e7faa20bca6d2bbaf62085c63a7bd1a65a42584443c870c422f`.
 
 Enemy, activation and impact sounds now pan and attenuate with distance from
 Sam. Turning or moving updates their direction. H keeps the listener at Sam's
@@ -554,3 +584,36 @@ music, producing nonzero audio and zero decoder errors. Both recessed switches
 and the real VM exit execute normally. This complements the sixth map's boss
 audio coverage; it is automated mixer evidence, not a physical listening test.
 See campaign-validation.json and windows-native-campaign-validation.json.
+
+## U.M.T. pickup lifetime
+
+Pickup item0x27 grants weapon8 and requests sound0x1D (HUD name0x93, U.M.T.).
+Its three ROM tracks tie PSG notes and repeat indefinitely with GOTO. With the
+PC mixer's independent effect instances, later sounds do not replace those
+tracks. A baseline isolated replay still had three sustained voices and105
+repeats after19.5seconds, explaining the persistent buzzing.
+
+Non-loop playback of sound0x1D now ends each track at its first GOTO, releasing
+its tied notes through the existing envelope. The original first-pass notes,
+waits and volume remain intact. Jump addresses are still validated. Explicit
+SSA_AUDIO_SOURCE_LOOP requests retain their repeats and require a scoped STOP;
+other songs, music tracks and source lifetimes are unchanged.
+
+test-umt-audio covers actual pickup dispatch, legacy and source-aware playback,
+24/48kHz, isolated silence after release, concurrent music/weapon/door audio,
+three overlapping pickups and an explicitly requested1D loop. GCC with
+ASan/UBSan/leak checks and MSVC agree on2,927 assertions over9 cases with8 actual
+pickups and zero decoder errors. Windows launcher startup/restart and the real
+audio device check pass. No physical listening or campaign playthrough was
+performed. See umt-audio-validation.json and windows-umt-audio-validation.json.
+
+The full GCC and MSVC mixer regressions also pass654,862 assertions across all131
+audible catalogue entries and35,640,000 stereo frames, with zero clipping or
+decoder errors. The music-transition fixture now waits for the recovered death
+notice/fall phase to enter input state4 before expecting the terminal music;
+the old immediate-on-damage expectation failed after HUD notice restoration.
+Runtime death timing was not changed. Original-ROM audio oracle checks pass.
+Windows device startup/restart passes with music enabled and disabled, output
+muted. An initial report write hit a Windows sharing lock; rerunning the standard
+check completed successfully. See audio-validation.json and
+windows-native-audio-validation.json.

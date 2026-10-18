@@ -44,6 +44,7 @@ typedef struct Call {
     SsaCombatScope *scope;
     unsigned slot;
     SsaPlayerHazardGame hazards;
+    unsigned contact_blocked;
 } Call;
 static int visibility(void *ctx,int player,int enemy,int *blocked) {
     Call *c=ctx;SsaEnemyNavigationOps *o=&c->r->queries->ops;
@@ -76,12 +77,20 @@ static int move(void *ctx,SsaEnemyNavigation *n,int32_t *result) {
         ssa_enemy_walk_world(&m,c->r->math,c->frame->ticks,c->r->walk_count,c->r->combat->spawn->world);
     c->r->game.blocking_entity=c->r->combat->spawn->world->blocking_entity;
     if(moved<0)return -1;
+    c->contact_blocked=moved==0;
     *result=moved;return 0;
 }
 static int finish(void *ctx,SsaEnemyNavigation *n) {
-    Call *c=ctx;
-    return ssa_enemy_hazards(n->entity,&c->r->controllers[c->slot].activation->health,
-        c->r->combat->spawn->level->map,&c->hazards);
+    Call *c=ctx;SsaEnemyActivation *a=c->r->controllers[c->slot].activation;
+    SsaEntity *hit=c->r->combat->spawn->world->blocking_entity;
+    int result=ssa_enemy_hazards(n->entity,&a->health,c->r->combat->spawn->level->map,&c->hazards);
+    if(result<0)return result;
+    if(c->r->converted_combat && a->health>0 && (n->entity->body.flags&0x400) &&
+       c->contact_blocked && hit && hit==n->target && !(hit->body.flags&0x10) &&
+       !(hit->body.flags&0x20))
+        return ssa_combat_scope_damage(c->scope,hit,n->entity,NULL,
+            n->entity->type==0xd0 || n->entity->type==0xd6?40u:20u);
+    return 0;
 }
 static int aim(void *ctx,const SsaEnemyControl *v,int32_t z,uint16_t heading,int32_t range,SsaEntity **out) {
     Call *c=ctx;int32_t slope;
@@ -101,6 +110,11 @@ static int event(void *ctx,const SsaEnemyControl *v,const SsaEnemyControlEvent *
     case SSA_ENEMY_CONTROL_PROJECTILE: {
         SsaProjectileCreateRequest q={(uint16_t)args[0],source,args[1],args[2],args[3],(uint32_t)args[4],0};
         const SsaEntity *target=v->navigation->target; /* exact original source+20, including NULL */
+        if(c->r->converted_combat && (source->body.flags&0x400) && target){
+            q.heading=ssa_direction(c->r->math,
+                (int16_t)(((uint32_t)target->body.x-(uint32_t)source->body.x)>>16),
+                (int16_t)(((uint32_t)target->body.y-(uint32_t)source->body.y)>>16));
+        }
         if(args[5]!=0 && args[5]!=1)return -1;
         return ssa_projectile_runtime_enemy_scoped(c->r->projectiles,c->scope,&q,target,args[5]);
     }
@@ -157,9 +171,9 @@ static int run(void *ctx,SsaCombatScope *scope) {
 }
 int ssa_enemy_control_runtime_step(SsaEnemyControlRuntime *r,unsigned slot,
     const SsaEnemyCdFrame *frame,const SsaEnemyControlRuntimeOps *ops) {
-    Call c={r,frame,ops,NULL,slot,{0}};SsaScriptSpawn *s;SsaScriptActor *a;
+    Call c={r,frame,ops,NULL,slot,{0},0};SsaScriptSpawn *s;SsaScriptActor *a;
     SsaEnemyControl *v;unsigned i;int result;
-    if(!ready(r) || r->crowd_slide>1 || slot>=100 || !frame || frame->ticks>255 || !ops || !ops->combat ||
+    if(!ready(r) || r->crowd_slide>1 || r->converted_combat>1 || slot>=100 || !frame || frame->ticks>255 || !ops || !ops->combat ||
        !ops->combat->event || !ops->presentation || !r->queries->ops.visibility ||
        !r->queries->ops.nearest || !r->queries->ops.path)return -1;
     s=r->combat->spawn;a=&s->actors[slot];v=&r->controllers[slot];

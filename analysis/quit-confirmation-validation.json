@@ -1,0 +1,42 @@
+{
+    "result":  "pass",
+    "scope":  "Main menu Quit confirmation: No default, No/Esc cancel and explicit Yes exit. Existing hidden Windows pause/completion routes also exercised.",
+    "native_menu":  {
+                        "result":  "pass",
+                        "checks":  73072,
+                        "frames":  9679,
+                        "new_games":  18,
+                        "languages":  3,
+                        "difficulties":  3,
+                        "music_modes":  2,
+                        "sanitizers":  "ASan/UBSan/leaks=1",
+                        "source_sha256":  {
+                                              "src/menu.c":  "5e063074df180d544961f3f464f60b99cbeb94bda2fea410f4a8edbf96581253",
+                                              "src/map_view.c":  "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+                                              "src/map_assets.c":  "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+                                              "tests/test_menu.c":  "7e2c3b64eacaf980dde89224277cbd2a532244ca5610568f6b48419a7aeeb0ac",
+                                              "include/ssa/menu.h":  "b6b276ae75e58e621e7f48300ad66fd2c5ecd8482471d75594ef8808a7d945ea",
+                                              "include/ssa/map_view.h":  "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
+                                              "tests/test_menu.py":  "e44c654f529856232dcd622b3c0c149c3b6a38b3f334b670906c643b797fa5bc"
+                                          }
+                    },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  6205,
+                    "completion_routes":  6,
+                    "pause_paths":  12,
+                    "main_menu_quits":  6,
+                    "renderers":  2,
+                    "languages":  3,
+                    "hidden_window":  true
+                },
+    "physical_input_tested":  false,
+    "executable_sha256":  "a3fa10c327a0202dca76fc8a823e831ae27d768d74a37d30eb001cba981477f7",
+    "source_sha256":  {
+                          "src/menu.c":  "5e063074df180d544961f3f464f60b99cbeb94bda2fea410f4a8edbf96581253",
+                          "include/ssa/menu.h":  "b6b276ae75e58e621e7f48300ad66fd2c5ecd8482471d75594ef8808a7d945ea",
+                          "tests/test_menu.c":  "7e2c3b64eacaf980dde89224277cbd2a532244ca5610568f6b48419a7aeeb0ac",
+                          "tests/test_intermission_win32.c":  "70f27187f04e4a045a26cd2a90a90bf4e8f4a48c6038883400767a58cda96262",
+                          "platform/win32/game.c":  "7df885d1d5aa8fdb00fcaa75c84057dab1106963c429a532003b5e8767e1aa4f"
+                      }
+}

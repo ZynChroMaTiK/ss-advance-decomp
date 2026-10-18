@@ -1,0 +1,20 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole original1965C calls, including real19458 timing and193D8 motion.\n\nInput polling, image transfer, text layout/line count and tile rendering are\ncontrolled presentation boundaries. This does not establish outer197B0\nscreen/fade/dispatch parity or a playable campaign ending.\n",
+  "sanitizers": "UBSan",
+  "whole_calls": 50462,
+  "sequences": 24,
+  "sequence_frames": 40592,
+  "directed_calls": 8334,
+  "events": 61546,
+  "row_events": 19402,
+  "guards": 19,
+  "callback_reentry_checks": 61554,
+  "callback_failures": 6,
+  "source_sha256": {
+    "src/campaign_story.c": "e3a7bcc8d5eae82c1e25ffa21a1608b380228dcf950564afcd2eb433cd0ba478",
+    "include/ssa/campaign_story.h": "d8b325802141c75813715772b1ea106de76462c8553c8ad77d1c054bc945e33e",
+    "tests/test_campaign_story_rom.py": "13c5c22f70f297c88443190fb4da24aed02c4b4de0d08336382a7d079fe32b09"
+  }
+}

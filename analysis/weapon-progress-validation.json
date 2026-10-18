@@ -1,0 +1,21 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "rom_comparisons": 8192,
+  "native_guards": 8,
+  "scope": "Whole original1231C capture/statistics and123C4 restore, including originalFC04 and untouched record bytes.",
+  "sanitizers": "UBSan",
+  "capture_comparisons": 4096,
+  "capture_restore_comparisons": 512,
+  "capture_setting_values": 256,
+  "source_sha256": {
+    "tests/test_weapon_progress_rom.py": "5ecb96970d664fe514378841589939b770465064f56a7b87b41945a80529a0ce",
+    "tests/test_weapon_animation_rom.py": "70c9fb565633a12e0fd4dbcd6fe40b4f61ad5ca3576b7342f5a27a950b60c168",
+    "src/weapon_progress.c": "051e71b45298bdb6d502176a1a20d576de66925ca07ba7767db44ac2b2cff662",
+    "src/weapon_animation.c": "753b4a822423496376d6fb677382f6cf4f42101c772194aa16c2434b59e0b3cd",
+    "include/ssa/weapon_progress.h": "77006d1162bb51dd6be331b663ee1ddd222deeb48ce8a994b05a92240617d072",
+    "include/ssa/weapon_animation.h": "f06665795d60fb1656988465f7dd7f6e3ba9b0ba9b4902c1895a2065545eee54",
+    "include/ssa/weapon_select.h": "00ccff80d928debe57c67f54d6df7e87e9c73b7dbf25c4a88eb53d7c9925a0f7",
+    "include/ssa/inventory.h": "eeb1f9df587c903098837adf690fd3ac2e6aab242ebeff6b30ff78899603fae3"
+  }
+}

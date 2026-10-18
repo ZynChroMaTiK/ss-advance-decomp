@@ -31,4 +31,8 @@ The combined game adapter still delegates CONTROL to its external callback; a
 frontend must bind the canonical GAMEflags and shared life_game.input_state,
 provide menu scalars and implement the two UI events. No Escape-key policy,
 menu rendering or playable executable is claimed by this module.</p>
+<p>The playable frontend now composes this routine through <code>pause.c</code>, a one-player
+event-queue adapter, and <code>intermission.c</code> original notice-sprite presentation.
+Esc/P, keyboard/mouse Continue/Quit/Yes/No, frozen scene and pause/resume audio
+are connected. See <a href="completion.html">current integration and verification</a>.</p>
 </main></body></html>

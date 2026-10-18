@@ -1,6 +1,7 @@
 #ifndef SSA_HUD_SCENE_H
 #define SSA_HUD_SCENE_H
 #include "ssa/hud_sprites.h"
+#include "ssa/hud_notice.h"
 #include "ssa/sprite_cache.h"
 #include "ssa/display.h"
 #include "ssa/weapon_controller.h"
@@ -17,6 +18,7 @@ typedef struct SsaHudScene {
     SsaSpriteCache cache;
     SsaSpriteOam oam;
     SsaHudSpriteState state;
+    SsaHudNotice notice;
     SsaWeaponAnimations animations;
     SsaWeaponLoadouts loadouts;
     SsaInventoryRules inventory_rules;

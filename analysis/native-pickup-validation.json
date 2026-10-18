@@ -7,7 +7,7 @@
   "effects": 6482,
   "scope": "whole0801B99C plus all seven unhooked inventory helpers; hooks only script/sound/text/network/nearest/destruction; full bytes and effect-time inventory/counter snapshots",
   "total_rom_comparisons": 5420,
-  "source_sha256": "aa029e9bd745eb06e65a1503b88e41749d4473102b5493d86ff0a421dcbb84a4",
+  "source_sha256": "902d9a6d4ea02cd610abc8dbef2a5ec9a70fb824f0b823caf5a3cd7bc79ab524",
   "compiler": "GCC C11 strict warnings and UndefinedBehaviorSanitizer",
   "result": "pass"
 }

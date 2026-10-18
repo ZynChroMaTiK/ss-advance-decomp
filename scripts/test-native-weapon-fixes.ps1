@@ -6,7 +6,7 @@ $binary=Join-Path $projectRoot 'build/native-windows/Release/ssa_native_weapon_f
 $native=& $binary (Join-Path $projectRoot 'orig/SSA.gba') | ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or $native.result -ne 'pass'){throw 'Windows weapon audio/projectile regression failed.'}
 $reference=Get-Content -LiteralPath (Join-Path $projectRoot 'analysis/weapon-fixes-validation.json') -Raw | ConvertFrom-Json
-foreach($field in @('result','checks','weapon_loop_cases','rocket_trajectory_cases','rocket_frames','prion_trajectory_cases','prion_frames')){
+foreach($field in @('result','checks','weapon_loop_cases','rocket_trajectory_cases','rocket_frames','prion_trajectory_cases','prion_frames','cannon_trajectory_cases','cannon_frames','cannon_floor_cases','ceiling_cases')){
     if($native.$field -ne $reference.$field){throw "MSVC/GCC weapon regression differs: $field"}
 }
 $report=[ordered]@{result='pass';native=$native;scope=$reference.scope
@@ -21,4 +21,4 @@ foreach($source in @('CMakeLists.txt','scripts/test-native-weapon-fixes.ps1')){
     $report.source_sha256[$source]=(Get-FileHash -LiteralPath (Join-Path $projectRoot $source) -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 [IO.File]::WriteAllText((Join-Path $projectRoot 'analysis/windows-weapon-fixes-validation.json'),($report | ConvertTo-Json -Depth 5)+[Environment]::NewLine)
-Write-Output 'Passed 46 continuous-weapon sound cases, six rocket trajectories and six aim-aligned Prion trajectories; Windows/GCC agree.'
+Write-Output 'Passed 46 continuous-weapon sound cases, six rocket, six Prion and six floating cannon trajectories, plus 12 cannon floor cases and 12 ceiling contacts; Windows/GCC agree.'

@@ -1,0 +1,25 @@
+{
+  "result": "pass",
+  "scope": "Original story fonts/text rows plus native chapter/ending presentation.",
+  "rom_row_comparisons": 1018,
+  "streamed_rows": 703,
+  "languages": 3,
+  "native": {
+    "result": "pass",
+    "checks": 87854,
+    "screens": 27,
+    "frames": 43510,
+    "commands": 9,
+    "fades": 36
+  },
+  "sanitizers": "UBSan text ROM comparisons; ASan/UBSan/leaks=1 native screen sequences",
+  "source_sha256": {
+    "src/campaign_story.c": "e3a7bcc8d5eae82c1e25ffa21a1608b380228dcf950564afcd2eb433cd0ba478",
+    "src/campaign_screen.c": "7565aecbc8a094909399eeeaee4ab571d38bdfe3125d50946fb7cd8c4d4fe145",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "include/ssa/campaign_story.h": "d8b325802141c75813715772b1ea106de76462c8553c8ad77d1c054bc945e33e",
+    "include/ssa/campaign_screen.h": "a14575a2897e7533b280a69dcebce051dad61f6bb16cf934607ce4c9dce2db5b",
+    "tests/test_campaign_screen.c": "cdfd18294f03d6ce34bce4afd6c31d97c4419245973331bf37d57acc86edc68f",
+    "tests/test_campaign_screen.py": "531a132d3ba0eebe55f5716a844d5eda1ef61460f120c58ac8bb6a7b4a95117e"
+  }
+}

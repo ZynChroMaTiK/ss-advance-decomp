@@ -36,6 +36,7 @@ int ssa_hud_scene_init(SsaHudScene *s,SsaInventory *inventory,SsaEntity *body,
        ssa_weapon_loadouts_load(&s->loadouts,rom,size)!=1 ||
        ssa_inventory_rules_load(&s->inventory_rules,rom,size)<0 ||
        ssa_hud_glyphs_load(&s->state,rom,size)!=1 ||
+       ssa_hud_notice_init(&s->notice,rom,size,0)!=1 ||
        ssa_sprite_pool_init(&s->pool,&s->dispatch)!=1 ||
        ssa_sprite_cache_init(&s->cache)!=1 ||
        ssa_sprite_oam_init(&s->oam,rom,size)!=1 ||
@@ -71,7 +72,8 @@ int ssa_hud_scene_step_idle(SsaHudScene *s,unsigned ticks,unsigned input_state,u
     for(i=0;i<s->dispatch.active_count;++i) {
         SsaWeaponObject *o=s->dispatch.objects[s->dispatch.active[i]];
         if(o==s->weapon_object)continue;
-        if(ssa_hud_sprite_step(o,&s->state)!=1)goto done;
+        if((o->type==13?ssa_hud_notice_step(o,&s->state,&s->notice,&s->animations,ticks):
+            ssa_hud_sprite_step(o,&s->state))!=1)goto done;
     }
     memcpy(s->weapon.inventory->ammo,s->state.ammo,sizeof(s->state.ammo));
     for(i=0;i<s->dispatch.active_count;++i)

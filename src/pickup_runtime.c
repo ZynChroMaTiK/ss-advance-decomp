@@ -86,7 +86,7 @@ int ssa_pickup_runtime_execute(void *context,const SsaEntity *current,SsaEntity 
     r->game.player_count=(uint8_t)c->player_count;r->game.local_player=c->damage->local_player;
     r->updating=1;c->updating=1;s->updating=1;level_lock=s->level->updating;s->level->updating=1;
     for(i=0;i<c->player_count;++i){locks[i]=c->players[i]->updating;c->players[i]->updating=1;}
-    result=ssa_pickup_touch(&r->game,&view,&r->current,0);
+    result=ssa_pickup_touch_alternate(&r->game,&view,&r->current,0,r->repeat_weapon);
     if(actor->owned)actor->script.trigger=r->current.trigger;
     p->entity_health=p->inventory.health;
     for(i=0;i<c->player_count;++i)c->players[i]->updating=locks[i];

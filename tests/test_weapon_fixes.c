@@ -74,12 +74,13 @@ static void projectile_case(const uint8_t *rom,int pitch,unsigned third,unsigned
     int32_t x,y,z,vx,vy,vz;uint16_t facing;
     CHECK(g->projectiles.ballistic_player_rockets==1);
     CHECK(g->projectiles.ballistic_player_prion==1);
+    CHECK(g->projectiles.ballistic_player_cannon==1);
     g->input.yaw_per_count=1;
     CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,0,-pitch)==1);
     if(third){CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0)==1);CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0)==1);}
     tap(g);await_click(g,weapon,0);
-    for(j=0;j<100;++j)if(g->projectiles.active[j] && g->projectiles.projectiles[j].entity->type==(weapon==6?0x65:0x69)){p=&g->projectiles.projectiles[j];break;}
-    CHECK(p && p->owner==1 && (weapon==7 || p->weapon==6) && !(p->entity->body.flags&0x4000));
+    for(j=0;j<100;++j)if(g->projectiles.active[j] && g->projectiles.projectiles[j].entity->type==(weapon==6?0x65:weapon==10?0x67:0x69)){p=&g->projectiles.projectiles[j];break;}
+    CHECK(p && p->owner==1 && (weapon==7 || p->weapon==weapon) && !(p->entity->body.flags&0x4000));
     CHECK(p->entity->body.flags&0x100); /* Original owner collision exclusion. */
     if(weapon==7){int32_t sine,cosine,ps,pc;double dx,dy,forward,side,up,slope;
         CHECK((g->player.free_aim!=0)==(pitch!=0)); /* Level aim before any pitch input. */
@@ -96,7 +97,7 @@ static void projectile_case(const uint8_t *rom,int pitch,unsigned third,unsigned
         CHECK(forward-192.0*pc/65536>-0.04 && forward-192.0*pc/65536<0.04);
         CHECK(up-forward*slope>-0.04 && up-forward*slope<0.04);
         CHECK(!p->timer && p->source==&g->players[0].entity && p->speed==16*65536);
-        CHECK(g->player.pose.third_person==third);
+        CHECK(g->player.view.third_person==third); /* Close walls may legitimately retract the camera. */
     }
     vx=p->entity->body.velocity_x;vy=p->entity->body.velocity_y;vz=p->entity->body.velocity_z;facing=p->facing;
     CHECK(vx || vy);if(pitch)CHECK(vz);
@@ -112,8 +113,9 @@ static void projectile_case(const uint8_t *rom,int pitch,unsigned third,unsigned
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'W',1,0)==1);
         CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',i<2,0)==1);
         CHECK(ssa_native_game_tick(g)==1 && g->projectiles.active[j]);
-        CHECK(p->entity->body.velocity_x==vx && p->entity->body.velocity_y==vy && p->entity->body.velocity_z==vz && p->facing==facing);
+        CHECK(p->entity->body.velocity_x==vx && p->entity->body.velocity_y==vy && p->facing==facing);
         CHECK(p->entity->body.x==x+vx && p->entity->body.y==y+vy && p->entity->body.z==z+vz);
+        CHECK(p->entity->body.velocity_z==vz);
     }
     ssa_native_game_free(g);free(g);
 }
@@ -133,16 +135,73 @@ static void clipped_portal(void){
     CHECK(ssa_world_raster_column_clip_bottom(clipped,14520,14519,texture,128,0,0,3,25)==-1);
     CHECK(!memcmp(clipped,original,sizeof(clipped)));
 }
+static unsigned shot_slot(SsaNativeGame *g,unsigned weapon){
+    unsigned slot;tap(g);await_click(g,weapon,0);
+    for(slot=0;slot<100;++slot)if(g->projectiles.active[slot] &&
+        g->projectiles.projectiles[slot].entity->type==(weapon==6?0x65:weapon==7?0x69:0x67))break;
+    CHECK(slot<100);return slot;
+}
+static void ceiling_case(const uint8_t *rom,unsigned weapon,unsigned third,unsigned mode){
+    SsaNativeGame *g=click_game(rom,weapon);SsaProjectile *p;SsaBody *b;
+    unsigned slot,i,particles=0;uint8_t before[100];int32_t contact;
+    CHECK(g->projectiles.ceiling_impacts==1);
+    if(third){CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0)==1);CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0)==1);}
+    slot=shot_slot(g,weapon);p=&g->projectiles.projectiles[slot];b=&p->entity->body;
+    contact=(int32_t)b->ceiling*65536-b->height;
+    b->z=contact-8*65536;b->velocity_x=b->velocity_y=0;b->velocity_z=4*65536;
+    /* Below the ceiling remains alive. Then test exact contact, overshoot,
+     * and a larger timestep which crosses the entire remaining aperture. */
+    CHECK(ssa_projectile_runtime_step(&g->projectiles,slot,1,&g->projectile_ops)==0);
+    CHECK(g->projectiles.active[slot] && b->z==contact-4*65536);
+    b->velocity_z=(mode==0?4:mode==1?16:64)*65536;
+    for(i=0;i<100;++i)before[i]=g->spawn.actors[i].owned;
+    CHECK(ssa_projectile_runtime_step(&g->projectiles,slot,mode==2?3:1,&g->projectile_ops)==1);
+    CHECK(!g->projectiles.active[slot]);
+    for(i=0;i<100;++i)if(g->spawn.actors[i].owned && !before[i] && g->spawn.actors[i].entity.type==0x96 &&
+        g->spawn.actors[i].animation==g->particle_rules.animation[4]){
+        CHECK(g->spawn.actors[i].entity.body.z==contact);++particles;
+    }
+    CHECK(particles==(weapon==6?1u:0u));
+    /* A ceiling is never an enemy target for the conversion projectile. */
+    for(i=0;i<100;++i)if(g->spawn.actors[i].owned)CHECK(!(g->spawn.actors[i].entity.body.flags&0x400));
+    ssa_native_game_free(g);free(g);
+}
+static void cannon_floor_case(const uint8_t *rom,unsigned third,unsigned owner,unsigned mode){
+    SsaNativeGame *g=click_game(rom,10);SsaProjectile *p;SsaBody *b;
+    unsigned slot,i;int32_t vx,vy,x,y,floor;
+    CHECK(g->projectiles.rolling_cannonballs==1);
+    if(third){CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0)==1);CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0)==1);}
+    slot=shot_slot(g,10);p=&g->projectiles.projectiles[slot];b=&p->entity->body;
+    p->owner=owner; /* Exercise the floor policy for owned and enemy shots. */
+    vx=b->velocity_x;vy=b->velocity_y;floor=(int32_t)b->floor*65536;
+    CHECK((vx || vy) && (b->flags&SSA_BODY_NO_GRAVITY));
+    b->z=floor+8*65536;b->velocity_z=-4*65536;
+    CHECK(ssa_projectile_runtime_step(&g->projectiles,slot,1,&g->projectile_ops)==0 && g->projectiles.active[slot]);
+    CHECK(b->z==floor+4*65536 && b->velocity_z==-4*65536); /* No gravity added. */
+    b->velocity_z=-(mode==0?4:mode==1?16:64)*65536;
+    CHECK(ssa_projectile_runtime_step(&g->projectiles,slot,mode==2?3:1,&g->projectile_ops)==0 && g->projectiles.active[slot]);
+    CHECK(b->z==(int32_t)b->floor*65536 && !b->velocity_z);
+    for(i=0;i<8;++i){x=b->x;y=b->y;
+        CHECK(ssa_projectile_runtime_step(&g->projectiles,slot,1,&g->projectile_ops)==0 && g->projectiles.active[slot]);
+        CHECK(b->x==x+vx && b->y==y+vy && b->velocity_x==vx && b->velocity_y==vy);
+        CHECK(b->z==(int32_t)b->floor*65536 && !b->velocity_z && (b->flags&SSA_BODY_NO_GRAVITY));
+    }
+    ssa_native_game_free(g);free(g);
+}
 int main(int argc,char **argv){
-    FILE *f;uint8_t *rom=malloc(0x800000);unsigned w,mode,scoped,loops=0,rockets=0,prions=0;
+    FILE *f;uint8_t *rom=malloc(0x800000);unsigned w,mode,scoped,loops=0,rockets=0,prions=0,cannons=0;
     CHECK(argc==2 && rom);f=fopen(argv[1],"rb");CHECK(f);CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);
     clipped_portal();
+    for(scoped=0;scoped<2;++scoped)
+        for(mode=0;mode<3;++mode){ceiling_case(rom,6,scoped,mode);ceiling_case(rom,7,scoped,mode);
+            cannon_floor_case(rom,scoped,0,mode);cannon_floor_case(rom,scoped,1,mode);}
     for(w=1;w<=5;++w)if(w==1 || w==4 || w==5)for(scoped=0;scoped<2;++scoped)for(mode=0;mode<8;++mode){
         if(w==1 && mode==2)continue; /* Original chainsaw ammo restores to999. */
         loop_case(rom,w,mode,scoped);++loops;
     }
     for(scoped=0;scoped<2;++scoped){boss_loop_case(rom,19,scoped);boss_loop_case(rom,20,scoped);
         projectile_case(rom,0,scoped,6);projectile_case(rom,3000,scoped,6);projectile_case(rom,-3000,scoped,6);rockets+=3;
-        projectile_case(rom,0,scoped,7);projectile_case(rom,3000,scoped,7);projectile_case(rom,-3000,scoped,7);prions+=3;}
-    free(rom);printf("{\"result\":\"pass\",\"checks\":%u,\"weapon_loop_cases\":%u,\"rocket_trajectory_cases\":%u,\"rocket_frames\":%u,\"prion_trajectory_cases\":%u,\"prion_frames\":%u}\n",checks,loops,rockets,rockets*6,prions,prions*6);return 0;
+        projectile_case(rom,0,scoped,7);projectile_case(rom,3000,scoped,7);projectile_case(rom,-3000,scoped,7);prions+=3;
+        projectile_case(rom,0,scoped,10);projectile_case(rom,3000,scoped,10);projectile_case(rom,-3000,scoped,10);cannons+=3;}
+    free(rom);printf("{\"result\":\"pass\",\"checks\":%u,\"weapon_loop_cases\":%u,\"rocket_trajectory_cases\":%u,\"rocket_frames\":%u,\"prion_trajectory_cases\":%u,\"prion_frames\":%u,\"cannon_trajectory_cases\":%u,\"cannon_frames\":%u,\"cannon_floor_cases\":12,\"ceiling_cases\":12}\n",checks,loops,rockets,rockets*6,prions,prions*6,cannons,cannons*6);return 0;
 }

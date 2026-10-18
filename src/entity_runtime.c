@@ -4,7 +4,7 @@
 
 static int idle(const SsaEntityRuntime *r) {
     SsaScriptSpawn *s=r && r->combat?r->combat->spawn:NULL;unsigned i;
-    if(!s || !s->world || !s->level || r->fast_converted>1 || r->updating || r->dispatch.updating ||
+    if(!s || !s->world || !s->level || r->fast_converted>1 || r->nearest_converted>1 || r->updating || r->dispatch.updating ||
        r->combat->updating || !r->combat->damage || r->combat->damage->updating ||
        r->combat->explosion.updating || !r->projectiles || r->projectiles->combat!=r->combat ||
        r->projectiles->updating || !r->queries || r->queries->spawn!=s || r->queries->updating ||
@@ -102,6 +102,46 @@ static int cd_presentation(void *context,const SsaEnemyCd *cd,SsaEnemyCdEvent ev
     mirror_cd(c);
     return ops->presentation(ops->context,cd,event,other,a,b,d);
 }
+/* PC conversion policy. Use canonical health and the active pool, never stale
+ * navigation pointers. The distance is between body centers in3D, at1/256-unit
+ * precision; differences/squares fit64bits even across the full coordinate
+ * range. Equal distances retain active order with no player/type preference. */
+static int converted_target(SsaEntityRuntime *r,SsaEntity *source,SsaEntity **out)
+{
+    SsaScriptSpawn *s=r->combat->spawn;SsaEntity *best=NULL;uint64_t distance=UINT64_MAX;
+    unsigned i,j;
+    for(i=0;i<s->pool.active_count;++i){
+        unsigned slot=s->pool.active_slots[i];SsaEntity *e;
+        int living=0;int64_t dx,dy,dz;uint64_t squared;
+        if(slot>=100 || !s->pool.occupied[slot] || s->pool.positions[slot]!=i)return -1;
+        e=r->entities[slot];if(!e || e->owner!=s->world)return -1;
+        if(e==source || (e->body.flags&0x20))continue;
+        if(e->body.flags&0x10){
+            for(j=0;j<r->combat->player_count;++j)if(e==&r->players[j]->runtime->player->entity){
+                SsaPlayerSpawn *p=r->players[j]->runtime->player;
+                living=p->inventory.health>0 && (p->motion.movement.flags&4);break;
+            }
+        }else if(e->type>=0xcd && e->type<=0xd8 && s->actors[slot].owned)
+            living=s->actors[slot].activation.health>0;
+        if(!living)continue;
+        dx=((int64_t)e->body.x-source->body.x)/256;
+        dy=((int64_t)e->body.y-source->body.y)/256;
+        dz=((int64_t)e->body.z+e->body.height/2-source->body.z-source->body.height/2)/256;
+        squared=(uint64_t)(dx*dx)+(uint64_t)(dy*dy)+(uint64_t)(dz*dz);
+        if(squared<distance){distance=squared;best=e;}
+    }
+    *out=best;return 0;
+}
+static int converted_select(SsaEntityRuntime *r,SsaEntity *e,SsaEnemyNavigation *n,SsaEntity **target)
+{
+    if(!r->nearest_converted || !(e->body.flags&0x400) || e->type<0xcd || e->type>0xd6 ||
+       (e->body.flags&0x20))
+        return 0;
+    if(converted_target(r,e,target)<0)return -1;
+    if(n->target!=*target){n->phase=0;n->navigation_flags&=UINT8_C(0xfe);}
+    n->target=*target;n->target_timer=600;
+    return 1;
+}
 static int handler(void *context,SsaEntityDispatch *dispatch,uint32_t entry,unsigned slot) {
     Call *c=context;SsaEntityRuntime *r=c->r;SsaScriptSpawn *s=r->combat->spawn;
     SsaEntity *e=r->entities[slot];int result=-1;unsigned i,pass;
@@ -141,8 +181,15 @@ static int handler(void *context,SsaEntityDispatch *dispatch,uint32_t entry,unsi
         mirror_cd(c);
         adapters=(SsaCombatCdOps){c->ops->enemies->combat,cd_presentation,c};
         if(r->enemy_speeds)frame.speed_factor=r->enemy_speeds[0];
+        cd->converted_combat=r->nearest_converted;
         for(pass=0;pass<repeats;++pass){
+            SsaEntity *target=NULL;int selected=0;
+            if(s->actors[slot].activation.health>0)selected=converted_select(r,e,&cd->navigation,&target);
+            if(selected<0){result=-1;break;}
+            if(selected && !target){result=0;break;}
+            if(selected){cd->game->player=target;cd->game->player_x=target->body.x;cd->game->player_y=target->body.y;}
             result=ssa_combat_cd_step(r->combat,cd,&frame,&r->queries->ops,&adapters);
+            cd->game->player=&player->entity;cd->game->player_x=player->motion.x;cd->game->player_y=player->motion.y;
             if(result<0 || !cd->active || s->actors[slot].activation.health<=0 || (e->body.flags&0x20))break;
         }
         mirror_cd(c);cd->game=c->previous_cd_game;c->previous_cd_game=NULL;
@@ -154,8 +201,15 @@ static int handler(void *context,SsaEntityDispatch *dispatch,uint32_t entry,unsi
         if(!g || !r->generic_ops) return -1;
         g->game.player=&p->entity;g->game.player_x=p->motion.x;g->game.player_y=p->motion.y;
         if(r->enemy_speeds)frame.speed_factor=r->enemy_speeds[e->type-0xcd];
+        g->converted_combat=r->nearest_converted;
         for(pass=0;pass<repeats;++pass){
+            SsaEntity *target=NULL;int selected=0;
+            if(g->active[slot] && s->actors[slot].activation.health>0)selected=converted_select(r,e,&g->navigation[slot],&target);
+            if(selected<0){result=-1;break;}
+            if(selected && !target){result=0;break;}
+            if(selected){g->game.player=target;g->game.player_x=target->body.x;g->game.player_y=target->body.y;}
             result=ssa_enemy_control_runtime_step(g,slot,&frame,r->generic_ops);
+            g->game.player=&p->entity;g->game.player_x=p->motion.x;g->game.player_y=p->motion.y;
             if(result<0 || !g->active[slot] || s->actors[slot].activation.health<=0 || (e->body.flags&0x20))break;
         }
     } else if(entry==0x0801b848) {

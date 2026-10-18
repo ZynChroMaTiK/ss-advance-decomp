@@ -34,6 +34,8 @@ int main(int argc,char **argv) {
     CHECK(ssa_inventory_rules_load(&inventory,rom,0x800000)==0);
     CHECK(ssa_weapon_rules_load(&rules,rom,0x800000)==1);CHECK(ssa_weapon_animations_load(&animations,rom,0x800000)==1);
     setup(f,rom,0x800000,0,&math,&defs,100);projectile_init(t,f,&inventory,&rules,&animations,&math);
+    t->runtime.ballistic_player_cannon=1; /* PC fix must preserve enemy cannonballs. */
+    t->runtime.rolling_cannonballs=1;
     for(thing=0;thing<64;++thing)if(defs.thing[thing].type==0xd6 && !defs.thing[thing].variant)break;
     CHECK(thing<64);script(f,rom,thing,1,1);step(f,1);gun=&f->spawn.actors[first_owned(f)];
     for(i=0;i<4 && !gun->activation.state;++i)CHECK(ssa_script_spawn_activate(&f->spawn,(unsigned)(gun-f->spawn.actors),100,&f->ops)>=0);
@@ -85,6 +87,7 @@ int main(int argc,char **argv) {
                 floor,ceiling,f->world.blocking_entity?f->world.blocking_entity->type:0);
             CHECK(result==0 && t->runtime.active[slot]);
             CHECK(p->entity->body.x!=x || p->entity->body.y!=y);
+            CHECK(p->entity->body.z==z && !p->entity->body.velocity_z);
             CHECK(gun->entity.body.flags==flags && gun->activation.health==150 && projectile_particles==old_particles);
         }
         CHECK(i>0 && i<16);++escapes;

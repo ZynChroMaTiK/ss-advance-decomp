@@ -23,6 +23,9 @@ typedef struct SsaProjectileRuntime {
     unsigned unlimited_player_range; /* PC shots have no age/distance expiry. */
     unsigned ballistic_player_rockets; /* PC type65 detaches from view at launch. */
     unsigned ballistic_player_prion; /* PC type69 launches on the sight ray and detaches. */
+    unsigned ballistic_player_cannon; /* PC type67 detaches from view at launch. */
+    unsigned rolling_cannonballs; /* PC floor contact continues XY motion; airborne gravity stays unchanged. */
+    unsigned ceiling_impacts; /* PC rockets/Prion terminate on vertical ceiling contact. */
     const SsaParticleRules *particle_rules;
     int (*particle_sound)(void *,const struct SsaProjectileRuntime *,const SsaProjectile *,unsigned);
     void *particle_context;

@@ -14,6 +14,36 @@ original placement, target animation and weapon/death/automap visibility rules.
 The temporary custom projected crosshair has been removed. Level restart
 resets pitch and restores the initial aiming policy. The explicit original
 renderer option retains the horizontal GBA reference and ignores mouse Y.</p>
+<p>GBA mode now follows the selected auto-aim slope with the original type18 cursor.
+<code>SsaNativeGame.gba_view</code> is bound at level initialization and when Settings changes
+renderer. A GBA tick clears software pitch/free-aim and consumes pending vertical
+input, so switching from software restores the original target search. Mouse Y
+still does not position the GBA cursor manually.</p>
+<p>The HUD controller preserves original visibility and target animation, then
+projects the exact weapon-ray contact from the current level camera with view
+bob removed from the cursor's eye height. Original camera calculations run on
+copies with horizontal velocity zero and eye recovery disabled, retaining
+lowering, stair adjustment and height clamps without advancing simulation twice.
+The world/weapon view keeps its normal bob. Jump height and the chase-camera
+offset still contribute to cursor placement. This uses
+the original actor reciprocal-distance table and vertical projection, including
+the120-to160 display scale. The collision-checked chase position therefore
+lowers the cursor according to actual camera height, boom length and contact
+distance. Cursor placement is limited to visible screen edges. This read-only
+query uses the dedicated camera workspace, leaving gameplay traces intact.
+Software crosshair placement stays centered. NETRICSA's filtered OAM remains
+honored because reference drawing does not rebuild HUD sprites.</p>
+<p>Run <code>.\decomp.ps1 test-gba-aim</code>:1289ASan/UBSan/leak checks cover nine projected
+views, targets above/level/below, first/third person, a shortened boom, renderer
+changes, chainsaw visibility, target animation and actual OAM coordinates.
+Another192camera-bob phases cover a steady cursor in first person, full chase
+and a shortened chase boom, without mutating camera/eye recovery state.
+The independent perspective comparison differs by at most1.310reference pixels
+after original distance-table quantization. MSVC agrees. Software regressions
+pass3,899,155free-look checks/30,100depth comparisons and9,944chase checks/
+232aligned views. Windows Settings passes21,099checks including renderer binding
+and pitch reset; Windows free-look includes GBA first/third-person snapshots.
+See <code>gba-aim-validation.json</code> and the existing free-look/chase/Settings reports.</p>
 <p>Third-person PC view now orbits its rear offset with aim pitch while retaining
 the world-up height bias and swept clearance. A dedicated presentation query
 finds the actual weapon-ray contact, without impact-particle backoff. The PC

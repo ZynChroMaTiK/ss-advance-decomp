@@ -1,0 +1,139 @@
+# PC alternate weapons
+
+Options > Extras > Alternate weapons enables dual Colts and the requested double-shotgun pellet pattern.
+It defaults to Off and persists in Settings v6 (16 bytes, byte9 bit7, existing
+CRC). Versions1..5 keep their previous preferences and migrate with it Off.
+Extras retains its grid-aligned labels/values; the new row is at y120 and Back
+at y152. English, German and French use the original fonts.
+
+With this enabled, a fresh New Game starts Egypt with one Colt and the original
+Colt pickup's half-capacity ammunition. Password/level-select starts outside the
+first level upgrade any starting Colt to dual ownership, retaining the original
+ammunition, other gear and selected weapon ID. If Colts are initially selected,
+both are drawn at level entry; otherwise selecting Colts chooses the dual pair.
+The first level keeps its single Colt, and carried/restarted campaign inventory
+retains the variant actually earned. A Colt pickup while already owning one accepts the second
+gun, adds the usual pickup ammunition and equips dual Colts. A further Colt is
+refused as before. The pickup still runs original script triggers, sound, HUD
+notice, collected statistics and removal. The recovered pickup entry point
+retains its original behavior; an explicit PC runtime policy permits this one
+repeat acquisition.
+
+The user chose to retain the current key assignments: Colts are key2, chainsaw
+key1. Press2 while Colts are requested to toggle single/dual after acquisition.
+Wheel order is chainsaw, single Colt, dual Colts, then the other original weapon
+IDs; unowned/empty entries are skipped. Rapid wheel events use the requested
+variant. Q remembers the previous weapon and variant. Both variants share the
+original Colt inventory bit, ammunition, HUD and NETRICSA record.
+
+The original Colt controller supplies damage, aim, sounds, ammunition and statistics.
+With Alternate weapons On, single and dual Colts use the requested0.45second
+interval per hand. Duals alternate right/left every0.225seconds. Each independently
+plays the original recoil animation at normal speed. The first shot is right-handed.
+The shared controller runs two phases per world tick for duals; an explicit firing
+deadline admits starts. The click edge is delivered once, and other weapons'
+cooldowns retain one update per world tick.
+Each fire press queues two alternating shots, including a click released before
+the next simulation tick. Held fire opens another pair at the next admitted
+start, completing its second shot after release. Additional click edges queue
+another pair, so a click during recoil/cadence or reload is retained. Pending
+shots still obey the magazine, reload and shot deadlines. Changing weapon or
+variant, death, pause, lost focus and disabled input cancel unstarted shots;
+an already started shot still commits normally. Single Colts keep one-shot clicks.
+
+Each hand tracks six shots separately from the original infinite reserve ammo/HUD.
+Reload is required only when the next hand in the alternating sequence is empty.
+The newly emptied right gun does not block the left gun's sixth shot: full duals
+fire12shots before reloading. Unequal magazines still respect hand order and
+never fire an empty gun or skip its turn. Once recoil finishes, the right Colt reloads;
+the left (duals only) starts0.33seconds later. Each reload takes1.07seconds and the
+complete dual reload takes1.40seconds. Each hand lowers and rises using original
+art while the other stays visible. Each hand's reload start plays the original
+empty-trigger click(sound0x28) as a centered local cue, once per reload phase;
+it is not looped, attenuated or restarted by pause. Reloading blocks queued weapon changes until
+completion of both hands, freezes during pause, and resumes held fire with the right hand.
+The fixed simulation clock uses1/1200second units:540per shot,270between hands,
+1284per hand reload,396left-start delay and1680for the pair. reload_end retains
+the right-hand deadline throughout: phase2 is right-only; phase3 includes overlap
+and the left-only tail. Each hand refills and finishes its projection independently.
+Fractional deadlines carry across ticks; rendering frequency
+does not change the average rate. Each event is quantized to the next60Hz update.
+The policy is absent when Alternate weapons is Off, preserving original behavior.
+Re-equipping a gun resets its six-shot counter. A full switch back to Colts
+refills the right gun and the left if duals are selected; a single-to-dual
+transition refills only the newly drawn left gun. The right counter is retained
+through variant changes because that gun remains equipped.
+Changing single/dual waits for both active hand animations, then moves only the
+left hand at the original draw/store speed. The right hand stays in place.
+Quick clicks during this transition remain buffered for its completion.
+Ordinary changes to another weapon retain the existing full lower/raise path.
+
+Presentation reuses the original Colt art and palette, reflecting its entire
+sprite across the240px canvas for the left hand. A temporary OAM projection
+includes both hands without adding gameplay sprite objects. Colt idle uses30
+tiles, firing at most45. The two independently animated images occupy reserved
+weapon banks at tile0 and tile80, after queued sprite uploads have completed,
+so overlapping recoil frames cannot overwrite each other. No HUD cache
+allocation is needed. Both renderers, pause and NETRICSA's
+weapon-only snapshot use the same projection. Left muzzle flashes are mirrored
+through an explicit PC projection path; original D490/D884 entry points retain
+their previous semantics. Third-person still hides first-person weapons/flashes.
+
+Value-only campaign carry/restart snapshots include dual ownership, selection,
+the Extras policy, magazine counts and Q history. Carried counts are checked
+against the next gun if Colts remain selected; re-equipping them instead refills
+the guns being drawn. There are no new ROM writes or save-game files.
+Disabling alternate weapons restores single-Colt selection and original pickup
+acceptance.
+
+The double shotgun uses14fixed pellets while this option is On: three at
+vertical+2.58degrees/horizontal-5.14,0,+5.14; four at+0.86/-6.84,-1.72,+1.72,+6.84;
+three at-0.86/-5.14,0,+5.14; four at-2.58/-6.84,-1.72,+1.72,+6.84.
+Each pellet contributes5base damage,70if all hit the same enemy. The view-local
+pattern rotates around actual yaw/free-aim pitch or the selected GBA auto-aim
+slope, using the original math tables. Angle rounding is within one turn/65536.
+Both modes use explicit full-precision rays; the original GBA heading-override
+quirk remains only with the option Off. All pellets retain unlimited PC range,
+wall/floor/ceiling stops, impact effects and the original two-shell consumption,
+single trigger statistic and firing animation/sound.
+
+Its alternate firing interval is1.75seconds (105simulation ticks). The original
+17drawable sequence entries are distributed evenly over that cycle, with6/7tick
+holds; the last-shell six-entry sequence uses17/18tick holds across the same105.
+Weapon runtime consumes completion before the next controller admission, avoiding
+an extra idle tick. Native game_runtime routes only an active alternate shotgun's
+sprite-animation stage through weapon_runtime_animate; other objects retain the
+original animation path. Pause freezes the cycle. Queued weapon changes wait for
+the full animation, and pending quick clicks survive until the next shot.
+Switching the option Off restores the original animation clock on the next update.
+
+The original damage routine rejects repeated damage calls on an enemy in the
+same frame. The alternate blast therefore traces/impacts all14pellets, groups
+damage per entity and applies each group once through native combat. Per-pellet
+hit counts are retained. Difficulty/armor rounding and rewards apply to that
+grouped damage; no entity protection flags are cleared. Original Off behavior
+and all other weapons retain their previous paths.
+
+Validation: tests/test_alternate_weapons.py runs with ASan/UBSan/leaks; the
+Windows counterpart is scripts/test-alternate-weapons.ps1. Checks cover genuine
+world pickup/removal, requested shot deadlines and six-round magazines with
+12alternating shots before each full dual reload and next-hand checks for unequal magazines,
+right-before-left overlapping reload duration/order,1.40second total and centered one-shot reload audio,
+per-hand re-equipping, pause, carry and disabled-policy behavior,
+paired short/rapid clicks, reload buffering, focus/pause cancellation and single-shot fallback,
+eight shotgun cases (six alternate/two original) with84pellet-direction checks
+against independent floating-point camera rotation, including steep pitch and
+GBA auto-aim, plus actual70damage/14hits, shell consumption and original Off damage,
+three full-game shotgun timing cases (software/GBA chase/last shell) proving
+105ticks between held starts, evenly paced entries, pause and deferred switching,
+original-speed recoil, unlimited reserve ammo, alternating hands, other-gun cooldowns,
+pixel-symmetric idle sprites, an unchanged right-hand image throughout variant
+draw/store, click buffering, Q/wheel order, carry/restart and both renderers.
+Actual hidden-window number-key/wheel messages and the existing ten-weapon
+switch suite pass on MSVC. Settings/persistence runs in all three languages;
+original pickup and actor projection comparisons remain passing. Coverage also
+includes all36password/level-select starter rows with alternate mode both On and
+Off, plus a retained single-Colt campaign carry into the next level. Current counts
+and source hashes are in alternate-weapons-validation.json,
+windows-alternate-weapons-validation.json, audio-settings-validation.json and
+windows-audio-settings-validation.json. Full campaign playthroughs remain manual.

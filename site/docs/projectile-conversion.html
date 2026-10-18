@@ -130,4 +130,35 @@ passes85,982 and actor/corpse playback75,088. The extended special-weapon suite
 fires a real Prion shot at each of all ten eligible types, then verifies one
 versus two actual walks/retarget/drain/animation increments, unchanged unconverted
 actors, pause and one-tick corpse expiry. GCC sanitizers and MSVC agree.</p>
+<h2 id="requested-pc-nearest-target-behavior">Requested PC nearest-target behavior</h2>
+<p>The playable frontend now enables <code>entities.nearest_converted</code>. Before each
+living converted controller pass, it selects the nearest living combatant from
+the active pool by three-dimensional body-center distance. Candidates include
+players, ordinary enemies, bosses and other converted enemies. Self, dead actors,
+corpses, items and projectiles are excluded. Equal distances retain active-pool
+order, with no player preference. Selection refreshes every behavior pass,
+including both passes of the existing doubled behavior clock, rather than
+retaining the original 600-tick target preference.</p>
+<p>The controller temporarily sees the chosen actor as its target for facing,
+visibility, distance checks, reactions and attacks. The real player fields are
+restored after the call, including errors. Converted ranged attacks launch
+toward the selected actor. Converted melee contact can damage that enemy through
+the existing combat path, using 20 damage, or 40 for D0/D6. It requires an actual
+blocked walk during this update and contact with the selected target; stale
+blocking pointers cannot cause a hit. Native floor hazards run first. With no
+living candidates, the target clears and the actor does not attack.</p>
+<p>This is a requested PC policy. The recovered navigation, contact and controller
+routines retain their original behavior when the runtime option is off.
+Unconverted enemies still target the player normally. The existing behavior-clock
+fixture explicitly disables nearest selection to isolate its timing assertions.</p>
+<p><code>test-prion-targeting</code> performs actual Prion impacts on all ten eligible enemy
+types and passes 1,602 ASan/UBSan checks: 80 target selections, prompt retargeting,
+nearest-player selection, dead/corpse rejection, vertical distance, enemy melee,
+six ranged attack types, a boss target and no-target cases. Windows agrees on
+every counter. The special-weapon suite still passes 32,318 checks, and the
+default entity-runtime integration passes 85,982. All 112 Windows libraries and
+the playable frontend rebuild; launcher/startup/restart checks pass. Reports:
+<code>prion-targeting-validation.json</code> and <code>windows-prion-targeting-validation.json</code>.
+Full campaign replays were not repeated for this targeting change; earlier route
+reports describe their recorded build.</p>
 </main></body></html>

@@ -12,6 +12,7 @@ typedef struct SsaEnemyCdRuntime {
     SsaEnemyCd controller;
     unsigned slot, active, updating;
     unsigned crowd_slide; /* Optional PC enemy/body sliding; default is original. */
+    unsigned converted_combat; /* PC: contact damage can hit the selected enemy. */
     SsaEnemyCrowd crowd;
 } SsaEnemyCdRuntime;
 typedef struct SsaEnemyCdFrame {

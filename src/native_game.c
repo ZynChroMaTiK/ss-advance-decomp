@@ -1,8 +1,14 @@
 #include "ssa/native_game.h"
+#include "ssa/native_pickup_art.h"
+#include "ssa/weapon_progress.h"
 #include <stdio.h>
 #include <string.h>
 
 #include "native_audio.inc"
+static int select_variant(SsaNativeGame *,unsigned,unsigned);
+static void alternate_before(SsaNativeGame *);
+static void alternate_after(SsaNativeGame *);
+#include "native_alternates.inc"
 static void music(SsaNativeGame *g,unsigned command)
 {
     if(g->music_mode==command)return;
@@ -20,8 +26,24 @@ int ssa_native_game_bind_audio(SsaNativeGame *g,const SsaNativeAudioOps *ops)
 }
 static void notice(SsaNativeGame *g,const char *text)
 {snprintf(g->notice,sizeof(g->notice),"%s",text);g->notice_ticks=180;++g->notice_serial;}
+static int original_notice(SsaNativeGame *g,unsigned id,unsigned value,unsigned y,unsigned font)
+{
+    g->hud.game_flags=g->frame_game.flags;
+    if(ssa_hud_notice_set(&g->hud_notice,&g->hud,id,value,y,font)<0){g->error_line=__LINE__;return -1;}
+    g->frame_game.flags=g->hud.game_flags;
+    g->game.life_game.message_ticks=g->gameplay.life_game.message_ticks=(uint16_t)g->hud.notice_timer;
+    ++g->notice_serial;return 0;
+}
 static int particle(SsaNativeGame *g,unsigned id,int32_t x,int32_t y,int32_t z)
-{return ssa_projectile_runtime_particle_held(&g->projectiles,id,x,y,z);}
+{
+    uint8_t occupied[100];unsigned i;int result;
+    if(!g->alternates.enabled)return ssa_projectile_runtime_particle_held(&g->projectiles,id,x,y,z);
+    memcpy(occupied,g->spawn.pool.occupied,sizeof occupied);
+    result=ssa_projectile_runtime_particle_held(&g->projectiles,id,x,y,z);
+    for(i=0;i<100;++i)if(!occupied[i] && g->spawn.pool.occupied[i])
+        g->alternates.flash_left[i]=(uint8_t)(id==8 && g->alternates.firing_left);
+    return result;
+}
 static int particle_sound(void *p,const SsaProjectileRuntime *r,const SsaProjectile *e,unsigned id)
 {(void)r;return world_sound(p,id,e->entity);}
 static int combat_event(void *p,const SsaCombatRuntime *r,const SsaCombatDamageTarget *v,
@@ -37,12 +59,16 @@ static int player_event(void *p,SsaPlayerGameplay *player,enum SsaPlayerLifecycl
     SsaNativeGame *g=p;
     if(kind==SSA_LIFECYCLE_WEAPON_ANIMATION)return ssa_weapon_runtime_respawn(&g->weapon,(uint16_t)a,(uint16_t)b);
     if(kind==SSA_LIFECYCLE_EFFECT)return particle(g,(unsigned)a,b,c,d);
-    if(kind==SSA_LIFECYCLE_NOTICE){music(g,10);notice(g,"You died. Press Enter to restart.");return 0;}
-    if(kind==SSA_LIFECYCLE_MODE){(void)player;music(g,(unsigned)a);notice(g,"You died. Press Enter to restart.");return 0;}
+    if(kind==SSA_LIFECYCLE_NOTICE)return original_notice(g,(unsigned)a,(unsigned)b,(unsigned)c,(unsigned)d);
+    if(kind==SSA_LIFECYCLE_MODE){(void)player;music(g,(unsigned)a);return 0;}
     return -1;
 }
 static int player_animation(void *p,SsaPlayerRuntime *r,unsigned id,unsigned period)
-{(void)r;return ssa_actor_animation_set(&((SsaNativeGame *)p)->player_animation,(uint16_t)id,(uint16_t)period)<0?-1:0;}
+{
+    SsaNativeGame *g=p;
+    if(id==0x68)g->player_death_facing=r->player->motion.facing;
+    return ssa_actor_animation_set(&g->player_animation,(uint16_t)id,(uint16_t)period)<0?-1:0;
+}
 static int player_sound(void *p,SsaPlayerRuntime *r,unsigned id)
 {
     SsaNativeGame *g=p;
@@ -58,6 +84,7 @@ static int player_sound(void *p,SsaPlayerRuntime *r,unsigned id)
          * In particular, jump bob and pushing into a wall are not footsteps. */
         if(!r->player->inventory.health || !(r->player->motion.movement.keys&0x3c0) ||
            b->z!=(int32_t)b->floor*65536 ||
+           g->audio_player_before.z>(int32_t)g->audio_player_before.floor*65536 ||
            (dx> -4096 && dx<4096 && dy> -4096 && dy<4096))return 0;
     }
     sound(g,id);return 0;
@@ -80,7 +107,7 @@ static int enemy_event(void *p,const SsaEnemyControl *c,const SsaEnemyControlEve
     if(e->kind==SSA_ENEMY_CONTROL_SOUND){world_sound(p,(unsigned)e->args[0],c->activation->entity);return 0;}
     if(e->kind==SSA_ENEMY_CONTROL_STOP_SOUND){world_stop(p,(unsigned)e->args[0],c->activation->entity);return 0;}
     if(e->kind==SSA_ENEMY_CONTROL_MUSIC){music(p,(unsigned)e->args[0]);return 0;}
-    if(e->kind==SSA_ENEMY_CONTROL_NOTICE){notice(p,"Enemy incoming");return 0;}
+    if(e->kind==SSA_ENEMY_CONTROL_NOTICE)return original_notice(p,(unsigned)e->args[0],(unsigned)e->args[1],(unsigned)e->args[2],(unsigned)e->args[3]);
     return -1;
 }
 static int script_particle(void *p,const SsaScriptSpawn *s,unsigned id,int32_t x,int32_t y,int32_t z)
@@ -88,11 +115,10 @@ static int script_particle(void *p,const SsaScriptSpawn *s,unsigned id,int32_t x
 static int script_event(void *p,const SsaScriptSpawn *s,unsigned slot,SsaEnemyActivationEvent kind,
  int32_t a,int32_t b,int32_t c,int32_t d)
 {
-    (void)b;(void)c;(void)d;
     if(kind==SSA_ENEMY_ACTIVATION_SOUND){world_sound(p,(unsigned)a,slot<100?&s->actors[slot].entity:NULL);return 0;}
     if(kind==SSA_ENEMY_ACTIVATION_MUSIC){music(p,(unsigned)a);return 0;}
     if(kind==SSA_ENEMY_ACTIVATION_ANIMATION)return 0;
-    if(kind==SSA_ENEMY_ACTIVATION_NOTICE){notice(p,"Enemy incoming");return 0;}
+    if(kind==SSA_ENEMY_ACTIVATION_NOTICE)return original_notice(p,(unsigned)a,(unsigned)b,(unsigned)c,(unsigned)d);
     return -1;
 }
 static int pickup_particle(void *p,const SsaPickupRespawnRuntime *r,unsigned id,int32_t x,int32_t y,int32_t z)
@@ -102,7 +128,16 @@ static void pickup_event(void *p,const SsaPickupRuntime *r,unsigned player,
 {
     (void)r;(void)player;(void)b;
     if(kind==SSA_PICKUP_SOUND)sound(p,a);
-    else if(kind==SSA_PICKUP_MESSAGE)notice(p,"Pickup collected");
+    else if(kind==SSA_PICKUP_MESSAGE){SsaNativeGame *g=p;unsigned i,colts=0;
+        if(g->alternates.enabled && !g->alternates.dual_colts && r->current.item==0x20){
+            for(i=0;i<g->players[0].inventory.pending_count;++i)
+                colts+=g->players[0].inventory.pending_weapons[i]==2;
+            if((g->players[0].inventory.weapons&2) || colts>=2){
+                g->alternates.dual_colts=g->alternates.equip_dual=1;g->pickup.repeat_weapon=0;
+            }
+        }
+        (void)original_notice(p,a,0,48,0);
+    }
 }
 static int projectile_particle(void *p,const SsaProjectileRuntime *r,unsigned id,int32_t x,int32_t y,int32_t z)
 {(void)r;return particle(p,id,x,y,z);}
@@ -111,7 +146,31 @@ static int weapon_event(void *p,const SsaWeaponRuntime *w,SsaWeaponEvent *e)
     SsaNativeGame *g=p;(void)w;
     if(e->kind==SSA_WEAPON_SOUND_PLAY){e->result=weapon_sound(g,(unsigned)e->args[0]);return 0;}
     if(e->kind==SSA_WEAPON_SOUND_STOP){stop_sound(g,(unsigned)e->args[0]);return 0;}
-    if(e->kind==SSA_WEAPON_PARTICLE)return particle(g,(unsigned)e->args[0],e->args[1],e->args[2],e->args[3]);
+    if(e->kind==SSA_WEAPON_PARTICLE){
+        if(e->args[0]==8){
+            g->alternates.firing_left=g->alternates.enabled && g->alternates.variant?g->alternates.next_left:0;
+            if(g->alternates.enabled && g->alternates.variant)g->alternates.next_left^=1;
+            if(g->alternates.enabled){
+                SsaWeaponObject *hand=&g->alternates.hands[g->alternates.firing_left];
+                *hand=g->weapon.object;
+                (void)ssa_weapon_animation_set(hand,11,g->weapon_rules.period[1]);
+                (void)ssa_weapon_animation_resolve(hand,&g->weapon_animations);
+                ++g->alternates.shot_serial;
+                if(g->alternates.next_shot+20<g->alternates.clock)
+                    g->alternates.next_shot=g->alternates.clock;
+                g->alternates.next_shot+=g->alternates.variant?270:540;
+                ++g->alternates.rounds[g->alternates.firing_left];
+                if(g->alternates.rounds[g->alternates.variant?g->alternates.next_left:0]>=6){
+                    g->alternates.reload_phase=1;
+                    g->alternates.reload_dual=g->alternates.variant;
+                }
+                /* A second controller phase may finish this shot, but must
+                 * not begin another before the next clock deadline. */
+                g->weapon.fire_inhibited=1;
+            }
+        }
+        return particle(g,(unsigned)e->args[0],e->args[1],e->args[2],e->args[3]);
+    }
     if(e->kind==SSA_WEAPON_REQUEST && ((uint32_t)e->args[0]==0x80000009 || (uint32_t)e->args[0]==0x40000009)){
         g->damage.hurt_flash=(uint32_t)e->args[0];return 0;
     }
@@ -125,6 +184,49 @@ static int weapon_impact(void *p,const SsaWeaponRuntime *w,const SsaWeaponHit *h
     return ssa_weapon_impact(&g->impact,w->controller.source,g->weapon_game.motion_index,
         g->gameplay.weapon.current,h->target!=NULL,h->x,h->y,h->z,&ops);
 }
+/* Presentation-only exact contact; never reuse the gameplay aim workspace. */
+static int sight_target(SsaNativeGame *g,int32_t *x,int32_t *y,int32_t *height)
+{
+    SsaEntity *source=&g->players[0].entity;SsaWeaponHit hit;
+    int32_t slope=g->weapon.controller.aim_slope,z=96*65536;
+    uint16_t heading=(uint16_t)((unsigned)g->players[0].motion.facing<<8);
+    if(g->player.free_aim){int32_t sine,cosine;
+        ssa_sincos(&g->math,(uint16_t)g->player.pitch,&sine,&cosine);
+        slope=(int32_t)((int64_t)sine*65536/cosine);
+        heading=g->players[0].motion.movement.heading;z=g->player.camera.eye_z-source->body.z;
+    }
+    if(ssa_weapon_hit_query_unlimited(&g->camera_trace,source,heading,z,slope,&hit,1)<0)return -1;
+    if(hit.impact){*x=hit.x;*y=hit.y;*height=hit.z;}
+    else {int64_t h=(int64_t)g->camera_trace.shoot_z+(int64_t)g->camera_trace.range*slope/65536;
+        *x=g->camera_trace.end_x;*y=g->camera_trace.end_y;
+        *height=h>INT32_MAX?INT32_MAX:h<INT32_MIN?INT32_MIN:(int32_t)h;
+    }
+    return 1;
+}
+static int gba_cursor(SsaNativeGame *g,SsaWeaponObject *object)
+{
+    SsaBody still=g->players[0].entity.body;
+    SsaPlayerVertical vertical=g->players[0].vertical;
+    SsaCamera eye={0};SsaCameraFrame frame={0};
+    int32_t x,y,z,sine,cosine;int64_t depth,scale,screen,eye_z;
+    if(sight_target(g,&x,&y,&z)<0)return -1;
+    /* Use a non-bobbing eye for the HUD, retaining the actual chase-camera
+     * offset. Reuse original lowering, stair and clamp handling on copies;
+     * eye recovery has already advanced this frame and must not advance twice. */
+    still.velocity_x=still.velocity_y=0;vertical.flags&=(uint16_t)~4u;
+    (void)ssa_camera_step(&still,&vertical,&eye,&frame,&g->math);
+    eye_z=(int64_t)g->player.pose.z+eye.eye_z-g->player.camera.eye_z;
+    ssa_sincos(&g->math,g->players[0].motion.movement.heading,&sine,&cosine);
+    depth=(((int64_t)x-g->player.pose.x)*sine+((int64_t)y-g->player.pose.y)*cosine)/65536;
+    if(depth<=0){object->y=0x5000;return 1;}
+    /* D490's distance table and vertical projection, then the reference
+     * display's120-to160 scaling. Keep8.8 precision until OAM placement. */
+    if(depth/65536>65535)depth=INT64_C(65535)*65536;
+    scale=((int64_t)0x55b05a*(g->actor_assets.reciprocal[depth/65536]>>8)>>16)>>8;
+    screen=80*256-((int64_t)z-eye_z)*(scale+scale/2)/(16*65536*12);
+    object->y=(int32_t)(screen<2*256?2*256:screen>157*256?157*256:screen);
+    return 1;
+}
 static void hud_state(SsaNativeGame *g)
 {
     SsaInventory *i=&g->players[0].inventory;unsigned slot;
@@ -137,6 +239,7 @@ static void hud_state(SsaNativeGame *g)
     g->hud.weapon_flags=g->gameplay.weapon.flags;g->hud.aim_marker=g->weapon.controller.aim.marker;
     g->hud.health=i->health;g->hud.armor=i->stat_c4;
     g->hud.score=g->score;g->hud.time=g->frame_game.elapsed;g->hud.game_flags=g->frame_game.flags;
+    g->hud.notice_timer=(int16_t)g->game.life_game.message_ticks;
     memcpy(g->hud.ammo,i->ammo,sizeof(g->hud.ammo));
 }
 static int sprite_handler(void *p,SsaSpriteDispatch *d,uint32_t entry,unsigned slot)
@@ -144,7 +247,13 @@ static int sprite_handler(void *p,SsaSpriteDispatch *d,uint32_t entry,unsigned s
     SsaNativeGame *g=p;int result;(void)entry;
     if(d!=&g->sprites || slot>=84)return -1;
     hud_state(g);
-    result=ssa_hud_sprite_step(d->objects[slot],&g->hud);
+    result=d->objects[slot]->type==13?
+        ssa_hud_notice_step(d->objects[slot],&g->hud,&g->hud_notice,&g->weapon_animations,g->frame_game.ticks):
+        ssa_hud_sprite_step(d->objects[slot],&g->hud);
+    if(result==1 && g->gba_view && d->objects[slot]->type==18 && (d->objects[slot]->flags&1))
+        result=gba_cursor(g,d->objects[slot]);
+    g->frame_game.flags=g->hud.game_flags;
+    g->game.life_game.message_ticks=g->gameplay.life_game.message_ticks=(uint16_t)g->hud.notice_timer;
     memcpy(g->players[0].inventory.ammo,g->hud.ammo,sizeof(g->hud.ammo));
     return result==1?0:-1;
 }
@@ -158,25 +267,30 @@ static int external(void *p,SsaGameRuntime *r,SsaFrameStage stage)
          * and VM modes still gate simulation input through shared state. */
         if(r->life_game.input_state==3){
             if(!g->finished){music(g,9);notice(g,g->level+1<SSA_NATIVE_CAMPAIGN_LEVELS?
-                "Level complete. Press Enter for the next level, R to replay.":"Prototype complete. Press Enter to replay.");}
+                "Level complete. Press Enter for the next level.":"Final level complete. Press Enter for the ending.");}
             g->finished=1;g->frame_game.flags|=1;
         }
         if(r->life_game.input_state==4){music(g,10);g->frame_game.flags|=1;}
         return 0;
     }
     if(stage==SSA_FRAME_PREPARE_SPRITES){
+        alternate_after(g);
         if(g->player.pose.third_person)g->weapon.object.flags&=~UINT32_C(1);
         return ssa_sprite_cache_prepare(&g->cache,&g->sprites,&g->sprite_assets,0)<0?-1:0;
     }
     if(stage==SSA_FRAME_BUILD_OAM){
         g->oam.counter=g->sprites.counter;
-        if(ssa_sprite_oam_build(&g->oam,&g->sprites,&g->sprite_assets,g->cache.entries,&g->math)<0)return -1;
+        if(ssa_native_game_build_oam(g,&g->oam,&g->sprites)<0)return -1;
         return ssa_sprite_cache_flush(&g->cache,&g->sprite_assets)<0?-1:0;
     }
     return -1;
 }
 static int stage_before(void *p,const SsaGameRuntime *r,SsaFrameStage stage)
-{SsaNativeGame *g=p;(void)r;g->error_stage=(uint32_t)stage;return 0;}
+{SsaNativeGame *g=p;(void)r;g->error_stage=(uint32_t)stage;
+    if(stage==SSA_FRAME_ENTITIES)audio_player_begin(g);
+    else if(stage==SSA_FRAME_MOVERS)audio_player_motion(g);
+    else if(stage==SSA_FRAME_SPRITE_CONTROLLERS)alternate_before(g);
+    return 0;}
 static int entity_before(void *p,const SsaEntityRuntime *r,uint32_t entry,unsigned slot)
 {SsaNativeGame *g=p;(void)r;g->error_entry=entry;g->error_slot=slot;
     if(slot<100 && g->spawn.actors[slot].owned && g->spawn.actors[slot].entity.type>=0xcd &&
@@ -197,21 +311,10 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
        ssa_render_view_pose(&g->render_view,&g->player.pose,g->players[0].motion.movement.heading,&g->map)<0)return -1;
     g->pc_camera=g->render_view.camera;g->render_pitch=g->player.pitch;g->pc_pose=g->player.pose;
     if(g->player.pose.third_person){
-        SsaEntity *source=&g->players[0].entity;SsaWeaponHit hit;
-        int32_t slope=g->weapon.controller.aim_slope,z=96*65536;
-        uint16_t heading=(uint16_t)((unsigned)g->players[0].motion.facing<<8);
         /* Camera convergence uses a common unlimited sight ray. Short melee reach
          * must not tilt the chase view when switching weapons. Attack queries
          * retain their own ROM weapon ranges. */
-        if(g->player.free_aim){int32_t sine,cosine;
-            ssa_sincos(&g->math,(uint16_t)g->player.pitch,&sine,&cosine);
-            slope=(int32_t)((int64_t)sine*65536/cosine);
-            heading=g->players[0].motion.movement.heading;z=g->player.camera.eye_z-source->body.z;}
-        if(ssa_weapon_hit_query_unlimited(&g->camera_trace,source,heading,z,slope,&hit,1)<0)return -1;
-        if(hit.impact){g->pc_pose.target_x=hit.x;g->pc_pose.target_y=hit.y;g->pc_pose.target_z=hit.z;}
-        else {int64_t height=(int64_t)g->camera_trace.shoot_z+(int64_t)g->camera_trace.range*slope/65536;
-            g->pc_pose.target_x=g->camera_trace.end_x;g->pc_pose.target_y=g->camera_trace.end_y;
-            g->pc_pose.target_z=height>INT32_MAX?INT32_MAX:height<INT32_MIN?INT32_MIN:(int32_t)height;}
+        if(sight_target(g,&g->pc_pose.target_x,&g->pc_pose.target_y,&g->pc_pose.target_z)<0)return -1;
         if(!ssa_view_angles(&g->pc_pose,&g->math,&g->pc_camera.heading,&g->render_pitch))return -1;
     }
     n=g->spawn.pool.active_count;
@@ -219,6 +322,8 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
         g->source_z_offsets[i]=0;
         if(a->owned){g->sources[i]=(SsaActorSource){&a->entity,a->animation,a->animation_display_frame,
             a->entity.body.flags,a->activation.facing,a->entity.player_index};
+            if(g->alternates.enabled && g->alternates.flash_left[slot] && a->entity.type==0x96 &&
+               a->animation==g->particle_rules.animation[8])g->sources[i].flags|=SSA_ACTOR_SCREEN_MIRROR;
             /* A controller can change animation while Time Strike freezes
              * 00908. Its previous displayed frame may belong to a longer
              * sequence. Repair only the render snapshot until playback resumes;
@@ -244,6 +349,7 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
         else {SsaPlayerSpawn *q=&g->players[0];
             g->sources[i]=(SsaActorSource){&q->entity,g->player_animation.animation,g->player_animation.frame,
                 q->entity.body.flags,q->motion.facing,q->entity.player_index};
+            if(q->motion.movement.flags&0x10)g->sources[i].facing=g->player_death_facing;
             /* Original body overlay family3 is the white shirt. Select only
              * the render appearance; player0 keeps its gameplay identity. */
             if(g->combat.player_count==1)g->sources[i].owner=3;
@@ -267,9 +373,10 @@ int ssa_native_game_draw(SsaNativeGame *g)
 }
 int ssa_native_game_tick(SsaNativeGame *g)
 {
-    SsaGameRuntimeInput in={0};const SsaEntity *peers[1];unsigned old_weapon;int16_t old_health;
+    SsaGameRuntimeInput in={0};const SsaEntity *peers[1];unsigned old_weapon,old_variant;int16_t old_health;
     if(!g || !g->loaded || g->error_line)return -1;
-    old_weapon=g->gameplay.weapon.current;old_health=g->players[0].inventory.health;
+    if(g->gba_view){g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;}
+    old_weapon=g->gameplay.weapon.current;old_variant=g->alternates.variant;old_health=g->players[0].inventory.health;
     peers[0]=&g->players[0].entity;
     g->footstep_x=peers[0]->body.x;g->footstep_y=peers[0]->body.y;
     in.entities.players[0].motion=(SsaMotionFrame){peers,1,1,0,0};
@@ -279,8 +386,10 @@ int ssa_native_game_tick(SsaNativeGame *g)
     in.entities.enemies.level_counter=(uint16_t)g->frame_game.counter;
     if(ssa_game_runtime_step(&g->game,&in,&g->game_ops)<0){g->error_line=__LINE__;return -1;}
     if(old_health>0 && g->players[0].inventory.health>0 && old_weapon>=1 && old_weapon<=10 &&
-       old_weapon!=g->gameplay.weapon.current)g->previous_weapon=old_weapon;
-    if(g->players[0].inventory.health<=0)g->previous_weapon=0;
+       (old_weapon!=g->gameplay.weapon.current || old_variant!=g->alternates.variant)){
+        g->previous_weapon=old_weapon;g->alternates.previous_variant=g->alternates.dual_colts?old_variant:0;
+    }
+    if(g->players[0].inventory.health<=0){g->previous_weapon=0;g->alternates.previous_variant=0;}
     if(ssa_palette_effect_step(&g->palette_effect,&g->damage.hurt_flash,g->players[0].motion.movement.flags)<0){g->error_line=__LINE__;return -1;}
     audio_listener(g);
     audio_world_sync(g);
@@ -291,9 +400,22 @@ int ssa_native_game_step(SsaNativeGame *g)
 {return ssa_native_game_tick(g)<0?-1:ssa_native_game_draw(g);}
 int ssa_native_game_select_weapon(SsaNativeGame *g,unsigned weapon)
 {
+    unsigned variant=0;
     if(!g || !g->loaded || g->game.updating || weapon<1 || weapon>10)return -1;
+    if(weapon==2 && g->alternates.enabled && g->alternates.dual_colts)
+        variant=g->gameplay.weapon.requested==2?!g->alternates.requested_variant:1;
+    return select_variant(g,weapon,variant);
+}
+static int select_variant(SsaNativeGame *g,unsigned weapon,unsigned variant)
+{
     if(!(g->players[0].inventory.weapons&(1u<<(weapon-1))) || !g->players[0].inventory.ammo[weapon-1])return 0;
+    if(variant && (!g->alternates.enabled || !g->alternates.dual_colts || weapon!=2))return 0;
     g->gameplay.weapon.requested=(uint16_t)weapon;
+    g->alternates.requested_variant=variant;
+    if(g->alternates.enabled && weapon==2 && g->gameplay.weapon.current==2){
+        g->gameplay.weapon.flags&=~0x2100u;
+        g->players[0].motion.movement.weapon_flags=g->gameplay.weapon.flags;return 1;
+    }
     if(g->weapon.finish_fire_before_switch && weapon==g->gameplay.weapon.current && (g->gameplay.weapon.flags&0x400)){
         /* Selecting the firing weapon again cancels the queued handoff. */
         g->gameplay.weapon.flags&=~0x2100u;g->weapon.switch_wait=0;
@@ -302,30 +424,35 @@ int ssa_native_game_select_weapon(SsaNativeGame *g,unsigned weapon)
 }
 int ssa_native_game_cycle_weapon(SsaNativeGame *g,int steps)
 {
-    unsigned current,next,count=0,i,hops;uint16_t usable=0;int direction;
+    unsigned weapons[11],variants[11],current=0,next,count=0,i,hops,found=0;int direction;
     int64_t magnitude=steps;
     if(!g || !g->loaded || g->game.updating || g->gameplay.weapon.requested<1 ||
        g->gameplay.weapon.requested>10)return -1;
     if(!steps)return 0;
     for(i=0;i<10;++i)if((g->players[0].inventory.weapons&(1u<<i)) && g->players[0].inventory.ammo[i]){
-        usable|=(uint16_t)(1u<<i);++count;
+        weapons[count]=i+1;variants[count++]=0;
+        if(i==1 && g->alternates.enabled && g->alternates.dual_colts){weapons[count]=2;variants[count++]=1;}
     }
     if(!count)return 0;
     direction=steps<0?-1:1;if(magnitude<0)magnitude=-magnitude;
-    current=next=g->gameplay.weapon.requested;
+    for(i=0;i<count;++i)if(weapons[i]==g->gameplay.weapon.requested && variants[i]==g->alternates.requested_variant){current=i;found=1;break;}
+    if(!found){unsigned requested=g->gameplay.weapon.requested*2+g->alternates.requested_variant;
+        if(direction>0){current=count-1;for(i=0;i<count;++i)if(weapons[i]*2+variants[i]>requested){current=(i+count-1)%count;break;}}
+        else{current=0;for(i=0;i<count;++i)if(weapons[i]*2+variants[i]<requested)current=(i+1)%count;}
+    }
+    next=current;
     hops=(unsigned)((magnitude-1)%count)+1;
     for(i=0;i<hops;++i){
-        do{next=direction>0?(next==10?1:next+1):(next==1?10:next-1);}
-        while(!(usable&(1u<<(next-1))));
+        next=direction>0?(next+1)%count:(next+count-1)%count;
     }
-    return next==current?0:ssa_native_game_select_weapon(g,next);
+    return found && next==current?0:select_variant(g,weapons[next],variants[next]);
 }
 int ssa_native_game_previous_weapon(SsaNativeGame *g)
 {
     if(!g || !g->loaded || g->game.updating)return -1;
     if(!g->previous_weapon || g->previous_weapon>10 ||
-       g->previous_weapon==g->gameplay.weapon.requested)return 0;
-    return ssa_native_game_select_weapon(g,g->previous_weapon);
+       (g->previous_weapon==g->gameplay.weapon.requested && g->alternates.previous_variant==g->alternates.requested_variant))return 0;
+    return select_variant(g,g->previous_weapon,g->alternates.previous_variant);
 }
 int ssa_native_game_init(SsaNativeGame *g,const uint8_t *rom,size_t size,unsigned level)
 {return ssa_native_game_init_loadout(g,rom,size,level,0);}
@@ -342,6 +469,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_sky_assets_load(&g->sky,rom,size)==1);INIT(ssa_visibility_tables_load(&g->visibility_tables,rom,size)==1);
     INIT(ssa_wall_render_tables_load(&g->wall_tables,rom,size)==1);INIT(ssa_spawn_definitions_load(&g->definitions,rom,size));
     INIT(ssa_actor_animations_load(&g->actor_animations,rom,size)==1);INIT(ssa_actor_assets_load(&g->actor_assets,rom,size)==1);
+    INIT(ssa_native_pickup_art_apply(&g->actor_assets,level)>=0);
     INIT(ssa_inventory_rules_load(&g->inventory_rules,rom,size)==0);INIT(ssa_weapon_rules_load(&g->weapon_rules,rom,size)==1);
     INIT(ssa_weapon_animations_load(&g->weapon_animations,rom,size)==1);INIT(ssa_weapon_loadouts_load(&g->loadouts,rom,size)==1);
     INIT(ssa_pickup_respawn_data_load(&g->pickup_data,rom,size)==1);INIT(ssa_particle_rules_load(&g->particle_rules,rom,size)==1);
@@ -377,6 +505,9 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->weapon.unlimited_ranged=1;g->projectiles.unlimited_player_range=1;
     g->projectiles.ballistic_player_rockets=1;
     g->projectiles.ballistic_player_prion=1;
+    g->projectiles.ballistic_player_cannon=1;
+    g->projectiles.rolling_cannonballs=1;
+    g->projectiles.ceiling_impacts=1;
     g->weapon.time_strike_requires_target=1;
     g->projectiles.time_strike_gba_clock=1;
     /* Tommy/minigun: seven original GBA refreshes per shot. Chainsaw uses
@@ -387,7 +518,8 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->weapon.buffer_fire=1;
     g->weapon.finish_fire_before_switch=1;
     INIT(ssa_hud_sprites_create(&g->sprite_pool,1,0,level)==74);
-    INIT(ssa_hud_glyphs_load(&g->hud,rom,size)==1);INIT(ssa_sprite_cache_init(&g->cache)==1);
+    INIT(ssa_hud_glyphs_load(&g->hud,rom,size)==1);INIT(ssa_hud_notice_init(&g->hud_notice,rom,size,0)==1);
+    INIT(ssa_sprite_cache_init(&g->cache)==1);
     INIT(ssa_palette_effect_init(&g->palette_effect,rom,size,level)==1);
     INIT(ssa_sprite_oam_init(&g->oam,rom,size)==1);INIT(ssa_display_registers_default(&g->registers)==1);
     INIT(ssa_actor_animation_set(&g->player_animation,g->players[0].animation,g->players[0].animation_ticks)==1);
@@ -396,6 +528,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_pickup_respawn_runtime_init(&g->pickup_respawn,&g->combat,&g->plan,&g->pickup_data)==0);
     INIT(ssa_entity_runtime_init(&g->entities,&g->combat,&g->projectiles,&g->queries,gameplays,0)==0);
     g->entities.fast_converted=1;
+    g->entities.nearest_converted=1;
     INIT(ssa_enemy_control_runtime_init(&g->enemies,&g->combat,&g->projectiles,&g->queries,&g->math,
         &g->entities.dispatch.walk_count,rom,size)==0);
     g->enemies.crowd_slide=1;
@@ -432,20 +565,37 @@ static int carry_valid(const SsaNativeCarry *s)
     if(!(s && s->inventory.health>0 && s->inventory.pending_count<=SSA_PENDING_WEAPON_CAPACITY &&
         (s->inventory.weapons&1) && !(s->inventory.weapons&~0x3ffu) && s->weapon>=1 && s->weapon<=10 &&
         (s->inventory.weapons&(1u<<(s->weapon-1))) && s->inventory.ammo[s->weapon-1]>0 && s->third_person<=1 &&
-        s->previous_weapon<=10))return 0;
+        s->previous_weapon<=10 && s->alternate_weapons<=1 && s->dual_colts<=1 &&
+        s->weapon_variant<=1 && s->previous_variant<=1 && s->colt_rounds[0]<=6 && s->colt_rounds[1]<=6 &&
+        (!s->weapon_variant || (s->weapon==2 && s->dual_colts && s->alternate_weapons)) &&
+        (!s->previous_variant || (s->previous_weapon==2 && s->dual_colts))))return 0;
     for(i=0;i<s->inventory.pending_count;++i)if(s->inventory.pending_weapons[i]<1 || s->inventory.pending_weapons[i]>10)return 0;
     return 1;
 }
+int ssa_native_game_weapon_progress(SsaWeaponProgress *saved,SsaWeaponProgressStats stats[10],const SsaNativeGame *g)
+{
+    SsaWeaponProgress next={0};SsaWeaponProgressStats rows[10];unsigned i;
+    if(!saved || !stats || !g || !g->loaded || g->error_line || g->game.updating || g->world.query_active ||
+       g->combat.updating || g->spawn.updating || g->player.updating || g->weapon.updating)return -1;
+    for(i=0;i<10;++i){rows[i].owned=rows[i].ammo=0;rows[i].shots=g->weapon_game.shots[i];rows[i].hits=g->weapon.hits[i];}
+    if(ssa_weapon_progress_capture(&next,rows,&g->players[0].inventory,&g->gameplay.weapon,0)!=1)return -1;
+    *saved=next;memcpy(stats,rows,sizeof rows);return 1;
+}
 int ssa_native_game_carry_capture(SsaNativeCarry *out,const SsaNativeGame *g)
 {
-    SsaNativeCarry next={0};unsigned i;
-    if(!out || !g || !g->loaded || g->error_line || g->game.updating || g->world.query_active ||
-       g->combat.updating || g->spawn.updating || g->player.updating || g->weapon.updating)return -1;
-    next.inventory=g->players[0].inventory;next.score=g->score;next.weapon=g->gameplay.weapon.requested;
+    SsaNativeCarry next={0};SsaWeaponProgress saved;SsaWeaponProgressStats stats[10];unsigned i;
+    if(!out || ssa_native_game_weapon_progress(&saved,stats,g)!=1)return -1;
+    next.inventory=g->players[0].inventory;next.inventory.weapons=saved.weapons;
+    memcpy(next.inventory.ammo,saved.ammo,sizeof saved.ammo);
+    next.score=g->score;next.weapon=saved.requested;
     next.third_person=g->player.view.third_person!=0;
     next.previous_weapon=g->previous_weapon;
+    next.alternate_weapons=g->alternates.enabled;next.dual_colts=g->alternates.dual_colts;
+    next.weapon_variant=saved.requested==2?g->alternates.requested_variant:0;
+    next.previous_variant=g->alternates.previous_variant;
+    memcpy(next.colt_rounds,g->alternates.rounds,sizeof next.colt_rounds);
     if(next.weapon<1 || next.weapon>10 || !(next.inventory.weapons&(1u<<(next.weapon-1))) || next.inventory.ammo[next.weapon-1]<=0){
-        next.weapon=1;
+        next.weapon=1;next.weapon_variant=0;
         for(i=1;i<=10;++i)if((next.inventory.weapons&(1u<<(i-1))) && next.inventory.ammo[i-1]>0)next.weapon=i;
     }
     if(!carry_valid(&next))return -1;
@@ -453,14 +603,39 @@ int ssa_native_game_carry_capture(SsaNativeCarry *out,const SsaNativeGame *g)
 }
 int ssa_native_game_carry_apply(SsaNativeGame *g,const SsaNativeCarry *s)
 {
+    SsaWeaponProgress saved;
     if(!g || !g->loaded || g->error_line || g->game.updating || g->world.query_active ||
        g->combat.updating || g->spawn.updating || g->player.updating || g->weapon.updating ||
        g->frame_game.counter || !carry_valid(s))return -1;
     g->players[0].inventory=s->inventory;g->score=s->score;
-    g->gameplay.weapon.current=g->gameplay.weapon.requested=(uint16_t)s->weapon;
+    saved.current=s->weapon;saved.requested=(uint16_t)s->weapon;saved.weapons=s->inventory.weapons;
+    memcpy(saved.ammo,s->inventory.ammo,sizeof saved.ammo);
     g->player.view.third_person=(uint8_t)s->third_person;
     g->previous_weapon=s->previous_weapon;
-    return ssa_weapon_animation_idle(&g->weapon.object,&g->gameplay.weapon)==1?1:-1;
+    g->alternates.enabled=s->alternate_weapons;g->alternates.dual_colts=s->dual_colts;
+    g->actor_scene.screen_mirrors=s->alternate_weapons;
+    g->alternates.variant=g->alternates.requested_variant=s->weapon_variant;
+    g->alternates.previous_variant=s->previous_variant;g->alternates.weapon=s->weapon;
+    g->alternates.left_y=s->weapon_variant?0x5000:0xdc00;
+    memcpy(g->alternates.rounds,s->colt_rounds,sizeof g->alternates.rounds);
+    if(g->alternates.enabled && s->colt_rounds[0]==6){
+        g->alternates.reload_phase=1;g->alternates.reload_dual=s->dual_colts;
+    }
+    g->pickup.repeat_weapon=s->alternate_weapons && !s->dual_colts?2:0;
+    g->gameplay.weapon.flags&=~UINT32_C(0x1400);
+    return ssa_weapon_progress_restore(&g->players[0].inventory,&g->gameplay.weapon,&g->weapon.object,&saved);
+}
+int ssa_native_game_carry_next(SsaNativeCarry *out,const SsaNativeGame *g)
+{
+    SsaNativeCarry next;unsigned current;
+    if(!out || !g || !g->finished || ssa_native_game_carry_capture(&next,g)!=1)return -1;
+    current=g->gameplay.weapon.current;
+    if(current>=1 && current<=10 && (next.inventory.weapons&(1u<<(current-1))) && next.inventory.ammo[current-1]>0)
+        {next.weapon=current;next.weapon_variant=current==2?g->alternates.variant:0;}
+    next.inventory.health=100;next.inventory.stat_c4=next.inventory.stat_c6=0;
+    next.inventory.pending_count=0;
+    memset(next.inventory.pending_weapons,0,sizeof next.inventory.pending_weapons);
+    *out=next;return 1;
 }
 int ssa_native_game_init_campaign(SsaNativeGame *g,const uint8_t *rom,size_t size,
     unsigned level,unsigned difficulty,const SsaNativeCarry *progress)

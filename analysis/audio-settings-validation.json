@@ -1,0 +1,25 @@
+{
+  "result": "pass",
+  "checks": 38871,
+  "music_sequences": 26,
+  "soundfont_seconds": 208,
+  "peak": 32760,
+  "hybrid_music": true,
+  "music_limited_frames": 237192,
+  "cpu_seconds": 9.39,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "physical_listening_tested": false,
+  "source_sha256": {
+    "src/audio.c": "f0a492179f155387cad911d71c143d11f3074e2dd444b2daf21e653c0ee75893",
+    "src/audio/soundfont.c": "9f129b39456f91ea01b62d9c384c1633d26422aec51de356e529cc7974bae4b0",
+    "src/menu.c": "d9147b70d8a749e1982f85a58c27657c4a1ef14a18e10c091573715ca31eaeea",
+    "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "src/settings.c": "5202e4138a67c3ce08b6b56ac6670aa3a31ba99d74eb9ed9f02fa4252ed77d98",
+    "tests/test_audio_settings.c": "6147401d69ec578864302f6fad8459c05044240c237df184f345ff0fb604a687",
+    "include/ssa/music_instrument.h": "485cd06b76033ea185e83f2cd796935995876c9734b56a2dae4e54467ce15d4d",
+    "include/ssa/settings.h": "20e80daffa638f9e7a01d69215966ae2b497e49f15b1e895ba3a4f85cb800727",
+    "include/ssa/menu.h": "b6b276ae75e58e621e7f48300ad66fd2c5ecd8482471d75594ef8808a7d945ea"
+  },
+  "soundfont_sha256": "ae2e56711dc40835d3f97d975d80eadb2abdc76dc9da8b055f7a3c18dab20974"
+}

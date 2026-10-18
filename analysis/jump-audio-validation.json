@@ -1,0 +1,40 @@
+{
+    "result":  "pass",
+    "scope":  "Takeoff sound14 non-vocal bootstep; landing sound13 retained.",
+    "windows_audio":  {
+                          "jump_events":  8,
+                          "landing_events":  8,
+                          "priority_cases":  7,
+                          "world_audio_cases":  6,
+                          "concurrency_cases":  6,
+                          "effect_instances":  32,
+                          "effect_voice_capacity":  64,
+                          "result":  "pass",
+                          "checks":  660209,
+                          "songs":  131,
+                          "audible_songs":  131,
+                          "catalog_frames":  35640000,
+                          "catalog_peak":  32760,
+                          "catalog_clipped_samples":  0,
+                          "pcm_bus_gain":  2,
+                          "effects_bus_gain":  1.5,
+                          "music_bus_gain":  0.5,
+                          "effects_scope_cases":  2310,
+                          "max_pcm_voices":  2,
+                          "max_psg_voices":  8,
+                          "play_events":  2,
+                          "stop_events":  1,
+                          "walking_events":  23,
+                          "airborne_frames":  312,
+                          "blocked_or_idle_frames":  1284,
+                          "intro_returns":  4,
+                          "decoder_errors":  0
+                      },
+    "physical_listening_tested":  false,
+    "executable_sha256":  "7daef908e45788f8cfb2d742fda83ffa7088953a1282d9934e831f16a58f5446",
+    "source_sha256":  {
+                          "src/native_audio.inc":  "6b4445c12290778a1494575b4831658b0d2b662e7af0d398421dec056cf953cc",
+                          "src/native_game.c":  "0b6692ad0cdeda838f7fc8153da2206e544bffc7fc9b3299134ab7e5dd562f71",
+                          "tests/test_audio.c":  "64012b99903f8f0f83987a19ea75ccab517d296dcb1227a65d2d40af8fe60969"
+                      }
+}

@@ -38,7 +38,7 @@ static int emit(SsaActorProjector *p,const SsaActorSource *s,int32_t x,int32_t y
     p->queue->actors[actor].clip_offset=0;p->queue->actors[actor].depth=depth;
     return ssa_actor_queue_insert(p->queue,(unsigned)actor)<0?-1:1;
 }
-static int project(SsaActorProjector *p,const SsaActorSource *s,int fixed){
+static int project(SsaActorProjector *p,const SsaActorSource *s,int fixed,int screen_mirror){
     const SsaBody *b;const SsaActorResource *r;const SsaActorImage *im;
     int32_t dx,dy,lateral,depth,scale,mscale=0,x,y,w,h,origin,dir,mip=0;
     uint32_t image;unsigned flip=0,dirs;uint16_t facing;
@@ -51,8 +51,10 @@ static int project(SsaActorProjector *p,const SsaActorSource *s,int fixed){
     if(fixed){
         image=(uint32_t)s->frame+1;if(image>3000)return 1;
         im=ssa_actor_assets_image(p->assets,s->animation,image);if(!im)return -1;
-        return emit(p,s,60+asr(im->origin_x,1),60+asr(mul((int32_t)im->origin_y*4096,3072,12),12),
-            im->width/2,asr(mul(3072,(int32_t)im->height*4096,12),12),image,2048,65536,1);
+        x=60+asr(im->origin_x,1);w=im->width/2;
+        if(screen_mirror && (s->flags&SSA_ACTOR_SCREEN_MIRROR)){x=120-x-w;image|=UINT32_C(0x80000000);}
+        return emit(p,s,x,60+asr(mul((int32_t)im->origin_y*4096,3072,12),12),
+            w,asr(mul(3072,(int32_t)im->height*4096,12),12),image,2048,65536,1);
     }
     dx=sub(b->x,p->camera->x);dy=sub(b->y,p->camera->y);
     lateral=dot(dx,dy,p->camera->cosine,p->camera->sine);
@@ -88,9 +90,9 @@ chosen:
     return emit(p,s,x,y,w,h,image|((uint32_t)flip<<31),mscale,depth,0);
 }
 int ssa_actor_project(SsaActorProjector *p,const SsaActorSource *s,int fixed){
-    int rc;if(!valid(p))return -1;p->updating=1;rc=project(p,s,fixed!=0);p->updating=0;return rc;
+    int rc;if(!valid(p))return -1;p->updating=1;rc=project(p,s,fixed!=0,0);p->updating=0;return rc;
 }
-int ssa_actor_collect_offsets(SsaActorProjector *p,const SsaWorld *world,const SsaActorSource *sources,size_t count,const int32_t *z_offsets){
+static int collect_offsets(SsaActorProjector *p,const SsaWorld *world,const SsaActorSource *sources,size_t count,const int32_t *z_offsets,int screen_mirror){
     size_t i,j,steps=0;unsigned sector;int rc=1;const SsaWorldVisibility *v;
     if(!valid(p)||!world||world->query_active||!world->collision.map||!world->sectors||(!sources&&count))return -1;
     v=p->queue->visibility;if(!v||v->updating||v->map!=world->collision.map||!v->sector_visited||v->sector_words<((size_t)v->map->sector_count+15)/16)return -1;
@@ -105,12 +107,16 @@ int ssa_actor_collect_offsets(SsaActorProjector *p,const SsaWorld *world,const S
             view=sources[i];
             if(z_offsets && z_offsets[i]){int64_t z=(int64_t)e->body.z+z_offsets[i];
                 display=*e;display.body.z=z<INT32_MIN?INT32_MIN:z>INT32_MAX?INT32_MAX:(int32_t)z;view.entity=&display;}
-            rc=project(p,&view,(view.flags&0x2000)!=0);if(rc<0)goto done;
-            if(view.flags&16){second=view;second.animation=(uint16_t)(second.animation+5u*(second.owner+1u));rc=project(p,&second,0);if(rc<0)goto done;}
+            rc=project(p,&view,(view.flags&0x2000)!=0,screen_mirror);if(rc<0)goto done;
+            if(view.flags&16){second=view;second.animation=(uint16_t)(second.animation+5u*(second.owner+1u));rc=project(p,&second,0,0);if(rc<0)goto done;}
         }
     }
 done:p->updating=0;return rc;
 }
+int ssa_actor_collect_offsets(SsaActorProjector *p,const SsaWorld *world,const SsaActorSource *sources,size_t count,const int32_t *z_offsets)
+{return collect_offsets(p,world,sources,count,z_offsets,0);}
+int ssa_actor_collect_mirrored(SsaActorProjector *p,const SsaWorld *world,const SsaActorSource *sources,size_t count,const int32_t *z_offsets)
+{return collect_offsets(p,world,sources,count,z_offsets,1);}
 int ssa_actor_collect(SsaActorProjector *p,const SsaWorld *world,const SsaActorSource *sources,size_t count){
     return ssa_actor_collect_offsets(p,world,sources,count,NULL);
 }

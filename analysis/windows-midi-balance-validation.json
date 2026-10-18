@@ -1,0 +1,32 @@
+{
+    "result":  "pass",
+    "scope":  "MIDI balance and core audio only",
+    "midi":  {
+                 "result":  "pass",
+                 "checks":  20998,
+                 "midi_only":  true,
+                 "hidden_window":  true,
+                 "output_muted":  true,
+                 "midi_device":  "Microsoft GS Wavetable Synth",
+                 "midi_sequences":  26
+             },
+    "core":  {
+                 "result":  "pass",
+                 "checks":  38770,
+                 "music_sequences":  26,
+                 "soundfont_seconds":  208,
+                 "peak":  32760,
+                 "hybrid_music":  true,
+                 "music_limited_frames":  237192,
+                 "cpu_seconds":  4.99
+             },
+    "pcm_music_gain":  0.5,
+    "channel_volume_gain":  1.8,
+    "physical_listening_tested":  false,
+    "full_settings_result":  "failed before MIDI checks: native display composition in renderer assertion",
+    "source_sha256":  {
+                          "platform/win32/midi_win32.c":  "ad23849cad82e7f6508f07f865ee2634bb89b772d6b2053543192a70169e0449",
+                          "tests/test_settings_win32.c":  "856d6043e94fab42263b04bfe47976d660545484193021eff7b37b7032c2c636",
+                          "src/audio.c":  "5c0b34ff382347e8d927f7bab1c4522abbe5c17a76884c490ccdeab22bdef3b9"
+                      }
+}

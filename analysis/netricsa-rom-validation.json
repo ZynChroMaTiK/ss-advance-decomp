@@ -1,0 +1,13 @@
+{
+  "result": "pass",
+  "scope": "Original NETRICSA18D70 text rows and19C00 records; DMA, labels and sprintf are controlled test boundaries.",
+  "rom_rows": 2684,
+  "record_calls": 174,
+  "controller_calls": 405,
+  "german_undefined_format_cases": 12,
+  "source_sha256": {
+    "src/netricsa.c": "616e2af7d05b43c5ca32484c961e1bafd86bc5e7aa4586f3bafe565527f1767e",
+    "include/ssa/netricsa.h": "229cd3692665476fb2554766c619aa900a094198b6a605e12411d4abb86e0a46",
+    "tests/test_netricsa_rom.py": "8d3f2c9c23632351dc6098e0c430da4db405707c9d079d55d3c318bb476f0ea4"
+  }
+}

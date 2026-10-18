@@ -2,9 +2,9 @@ name: Build native Windows project
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
+    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'third_party/**', 'VERSION', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
   pull_request:
-    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
+    paths: ['src/**', 'include/**', 'platform/**', 'tests/**', 'third_party/**', 'VERSION', 'CMakeLists.txt', 'scripts/build-windows.ps1', '.github/workflows/native-build.yml']
   workflow_dispatch:
 permissions:
   contents: read

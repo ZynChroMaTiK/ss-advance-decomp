@@ -54,5 +54,5 @@ location.hash='#levels/8/3d';await missing.render();assert.match(elements.get('v
 location.hash='#levels/8/2d';await missing.render();assert.equal(frame.src,'atlas/index.html#level-8');
 assert.throws(()=>missing.setCatalog([]),/Invalid level catalog/);await missing.setCatalog(catalog);assert.equal(selects[0].disabled,false);assert.equal(selects[0].children.length,16);
 location.hash=`#levels/${supported}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,/supported by/);
-location.hash=`#levels/${supported+1}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,/still in development/);
+location.hash=`#levels/${supported+1}/2d`;await missing.render();assert.match(elements.get('level-status').textContent,supported<12?/still in development/:/Multiplayer arena.*unfinished/);
 console.log(JSON.stringify({status:'PASS',level_options:16,checks:'unified modes, legacy links, shared selection, async guards, iframe bridge, route focus, skip link, catalog failure/recovery, homepage support boundary'}));

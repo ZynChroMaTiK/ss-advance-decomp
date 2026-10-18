@@ -1,6 +1,7 @@
 #ifndef SSA_PROFILE_WIN32_H
 #define SSA_PROFILE_WIN32_H
 #include "ssa/profile.h"
+#include "ssa/settings.h"
 #include <wchar.h>
 enum { SSA_SAVE_LANGUAGE,SSA_SAVE_COMPLETE,SSA_SAVE_CLEAR };
 typedef struct SsaWin32Profile {
@@ -14,4 +15,6 @@ int ssa_win32_profile_open(SsaWin32Profile *,const wchar_t *,unsigned enabled);
 /* Serialize concurrent writers, reload the latest file, apply only this event,
  * then flush and atomically replace it. Clear does not merge old progress. */
 int ssa_win32_profile_store(SsaWin32Profile *,unsigned action,unsigned value);
+int ssa_win32_settings_read(SsaSettings *,const wchar_t *);
+int ssa_win32_settings_write(const SsaSettings *,const wchar_t *);
 #endif

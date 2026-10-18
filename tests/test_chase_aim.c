@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static unsigned checks,aligned,third,first,switch_frames;static double maximum_error;
+static unsigned checks,aligned,third,first,switch_frames,death_frames,death_directions;static double maximum_error;
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"chase aim line%d: %s\n",__LINE__,#x);abort();}++checks;}while(0)
 static double absolute(double n){return n<0?-n:n;}
 static void alignment(SsaNativeGame *g,SsaWeaponAim *query)
@@ -87,6 +87,42 @@ static void muzzle_visibility(SsaNativeGame *g,SsaPcRenderer *renderer)
     }
     free(pixels);
 }
+static void death_view(SsaNativeGame *g,SsaPcRenderer *renderer)
+{
+    unsigned i,n,base_directions=0,shirt_directions=0,animation_frames=0,turned=0,visible=0;
+    uint8_t facing=g->players[0].motion.facing;
+    g->players[0].entity.body.flags&=(uint16_t)~1u;
+    CHECK(ssa_combat_runtime_damage(&g->combat,&g->players[0].entity,&g->players[0].entity,NULL,10000,&g->combat_ops)==0);
+    CHECK(!g->players[0].inventory.health);
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0)==1);
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0)==1);
+    CHECK(ssa_native_game_step(g)==1);
+    CHECK(g->player_death_facing==facing && g->player_animation.animation==0x68);
+    /* Real death and mouse-look path, including the falling eye, completed
+     * corpse animation and both presentation policies. The body must stay
+     * facing its death direction while the view can turn all the way around. */
+    for(i=0;i<64;++i){SsaActorSource *body=NULL;
+        g->gba_view=i>=32;
+        if(!(i&1))CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,4096,0)==1);
+        CHECK(ssa_native_game_step(g)==1);
+        CHECK(g->player_death_facing==facing && (g->players[0].motion.movement.flags&0x10));
+        for(n=0;n<g->spawn.pool.active_count;++n)if(g->sources[n].entity==&g->players[0].entity)body=&g->sources[n];
+        CHECK(body && body->facing==facing && body->animation==0x68 && body->owner==3);
+        if(g->players[0].motion.facing!=facing)++turned;
+        CHECK(g->player_animation.frame<6);animation_frames|=1u<<g->player_animation.frame;
+        for(n=0;n<g->actor_scene.queue.projection_count;++n){const SsaActorProjection *p=&g->actor_scene.queue.projections[n];
+            unsigned direction,image=p->frame_flags&0x3fffffffu;
+            if(p->animation!=0x68 && p->animation!=0x7c)continue;
+            CHECK(image>=1);direction=(image-1)/6;CHECK(direction<5);
+            if(p->animation==0x68)base_directions|=1u<<direction;else shirt_directions|=1u<<direction;
+            ++visible;
+        }
+        CHECK(ssa_pc_renderer_draw(renderer,g)==1);++death_frames;
+    }
+    CHECK(turned>=48 && visible>0);
+    CHECK(animation_frames==63 && base_directions==31 && shirt_directions==31);
+    death_directions=5;
+}
 int main(int argc,char **argv)
 {
     SsaNativeGame *g=calloc(1,sizeof(*g)),*saved=malloc(sizeof(*saved));SsaPcRenderer renderer={0};
@@ -148,8 +184,9 @@ int main(int argc,char **argv)
     muzzle_visibility(g,&renderer);
     ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0);ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0);
     CHECK(ssa_native_game_step(g)==1 && !g->player.pose.third_person);alignment(g,&query);
+    death_view(g,&renderer);
     CHECK(ssa_weapon_aim_free(&query)==1);ssa_pc_renderer_free(&renderer);ssa_native_game_free(g);
     free(rom);free(saved);free(g);
-    printf("{\"result\":\"pass\",\"checks\":%u,\"aligned_views\":%u,\"third_person\":%u,\"collision_fallbacks\":%u,\"weapon_switch_frames\":%u,\"maximum_4k_error_pixels\":%.6f}\n",
-        checks,aligned,third,first,switch_frames,maximum_error);return 0;
+    printf("{\"result\":\"pass\",\"checks\":%u,\"aligned_views\":%u,\"third_person\":%u,\"collision_fallbacks\":%u,\"weapon_switch_frames\":%u,\"maximum_4k_error_pixels\":%.6f,\"death_frames\":%u,\"death_directions\":%u}\n",
+        checks,aligned,third,first,switch_frames,maximum_error,death_frames,death_directions);return 0;
 }

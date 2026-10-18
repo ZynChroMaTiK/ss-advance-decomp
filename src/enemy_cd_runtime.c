@@ -34,6 +34,7 @@ typedef struct RuntimeCall {
     const SsaEnemyCdFrame *frame;
     const SsaEnemyCdRuntimeOps *ops;
     SsaPlayerHazardGame hazards;
+    unsigned contact_blocked;
 } RuntimeCall;
 static int visibility(void *context, int player, int enemy, int *blocked)
 {
@@ -80,14 +81,21 @@ static int move(void *context, SsaEnemyNavigation *n, int32_t *result)
         ssa_enemy_walk_world(&m,c->r->math,c->frame->ticks,c->r->walk_count,c->r->spawn->world);
     c->r->game->blocking_entity = c->r->spawn->world->blocking_entity;
     if (moved < 0) return -1;
+    c->contact_blocked=moved==0;
     *result = moved;
     return 0;
 }
 static int finish(void *context, SsaEnemyNavigation *n)
 {
-    RuntimeCall *c = context;
-    return ssa_enemy_hazards(n->entity, &c->r->controller.activation->health,
+    RuntimeCall *c = context;SsaEntity *hit=c->r->spawn->world->blocking_entity;
+    int result=ssa_enemy_hazards(n->entity, &c->r->controller.activation->health,
         c->r->spawn->level->map, &c->hazards);
+    if(result<0)return result;
+    if(c->r->converted_combat && c->r->controller.activation->health>0 &&
+       (n->entity->body.flags&0x400) && c->contact_blocked &&
+       hit && hit==n->target && !(hit->body.flags&0x10) && !(hit->body.flags&0x20))
+        return c->ops->event(c->ops->context,&c->r->controller,SSA_ENEMY_CD_CONTACT_DAMAGE,hit,20,0,0);
+    return 0;
 }
 static int event(void *context, const SsaEnemyCd *cd, SsaEnemyCdEvent kind,
                   SsaEntity *other, int32_t a, int32_t b, int32_t d)
@@ -113,13 +121,13 @@ static int event(void *context, const SsaEnemyCd *cd, SsaEnemyCdEvent kind,
 int ssa_enemy_cd_runtime_step(SsaEnemyCdRuntime *r, const SsaEnemyCdFrame *frame,
                                const SsaEnemyCdRuntimeOps *ops)
 {
-    RuntimeCall c = {r, frame, ops, {0}};
+    RuntimeCall c = {r, frame, ops, {0},0};
     SsaEnemyNavigationOps nav = {visibility, nearest, path, turn, move, finish, &c};
     SsaEnemyCdOps adapters = {&nav, event, &c};
     SsaScriptActor *a;
     unsigned i;
     int result;
-    if (!r || !r->active || r->updating || r->crowd_slide>1 || !ready(r->spawn) || r->slot >= 100 ||
+    if (!r || !r->active || r->updating || r->crowd_slide>1 || r->converted_combat>1 || !ready(r->spawn) || r->slot >= 100 ||
         !frame || frame->ticks > 255 || !ops || !ops->event || !ops->queries ||
         !ops->queries->visibility || !ops->queries->nearest || !ops->queries->path ||
         !r->game || r->game->activation != &r->spawn->game || !r->game->player ||

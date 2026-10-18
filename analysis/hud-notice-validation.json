@@ -1,0 +1,24 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Whole E914 (literal formatter boundary) and E9D4 -> FC04 -> E410 ROM comparisons.",
+  "sanitizers": "UBSan",
+  "setter_cases": 2625,
+  "whole_controller_calls": 135104,
+  "sequences": 24,
+  "sequence_frames": 3168,
+  "directed_cases": 2048,
+  "guards": 6,
+  "source_sha256": {
+    "src/hud_notice.c": "bda00d63ef761aceee2dc53a03f802c11fac9d13c5c9752de4387d32a4416139",
+    "src/hud_sprites.c": "7a2606cd53a9d409f4a3a47d0831d73c6fa8256692e332daf67943305b58cc93",
+    "src/weapon_animation.c": "25925b5addca32e51c05d3a2a9608304eff60eb718c27fc15a503abc2fd80c9e",
+    "src/sprite_pool.c": "d79524a997a9fbd271c977abb24743d4d4f4921f5f0d897576d4765d9e16e12a",
+    "src/sprite_dispatch.c": "e9c6b7ac4359bbdcf41f65b5a4a013455e383e6853ca463f326f40edf1cb388c",
+    "include/ssa/hud_notice.h": "25476a819f95995d80f894dbb2b897147582c973ee986357762200734a6e842b",
+    "include/ssa/weapon_animation.h": "bdcb1012f7c58bb9d745713b9322d6be153e31b73bff8b0c8475d13e1211740a",
+    "include/ssa/hud_sprites.h": "0533f5067be3179af63122b89ec2cf2d3de656f4855d7ecf890c0de147d5e05d",
+    "tests/test_hud_notice_rom.c": "b6b0442c6147dea518b185360a72f011c1e6ca7b53b7f8dc2be9797ae501fe36",
+    "tests/test_hud_notice_rom.py": "88f94d6769cd4dd6778d0e3f36ed097201bdd5210d38f00b94ddb03560adc1c3"
+  }
+}

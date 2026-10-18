@@ -1,8 +1,8 @@
 {
   "result": "pass",
-  "checks": 590142,
-  "frames": 1239,
-  "level_starts": 90,
+  "checks": 590187,
+  "frames": 1257,
+  "level_starts": 99,
   "campaign_names": 12,
   "languages": 3,
   "sanitizers": "ASan/UBSan/leaks=1",
@@ -16,7 +16,7 @@
     "include/ssa/profile.h": "63989b06752471d795e375aa2364038aeb035c85d3ccdaa7cf01a5b7bf0b664d",
     "include/ssa/menu.h": "f59a6c3fa42f354e8ac391ef67e3ed9e9441178086a9df9ab9f528815618c9fd",
     "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
-    "include/ssa/native_game.h": "fa559c34447269c23b0ea33354d26e0d5c5bba12fe339676a2a0382b06936501",
+    "include/ssa/native_game.h": "1bbb464753edba7c56d8551f519912cbce477aff33eea94e7c545ad027a42610",
     "tests/test_profile.py": "d59ae1e81905208b307ab037b56e4356acf78bf314186190491275bdc665cbd0"
   }
 }

@@ -1,0 +1,61 @@
+{
+    "kind":  "Generated PC artwork",
+    "generator":  "Built-in image_gen",
+    "chapter":  "Rome",
+    "levels":  [
+                   6,
+                   7,
+                   8,
+                   9,
+                   10,
+                   11,
+                   14,
+                   15
+               ],
+    "resource":  63,
+    "images":  [
+                   28,
+                   56
+               ],
+    "dimensions":  [
+                       [
+                           20,
+                           34
+                       ],
+                       [
+                           10,
+                           17
+                       ]
+                   ],
+    "origins":  [
+                    [
+                        -9,
+                        -35
+                    ],
+                    [
+                        -4,
+                        -15
+                    ]
+                ],
+    "palette_rom_offset":  "0x454c5c",
+    "opaque_palette_indices":  [
+                                   11,
+                                   15,
+                                   32,
+                                   33,
+                                   34,
+                                   37,
+                                   39,
+                                   40,
+                                   42,
+                                   52
+                               ],
+    "transparent_palette_index":  0,
+    "source_sha256":  "1d2bfaf46f96a13114c0c3fc80b0479491fc7bbae070fcfca6ebb2080c2b18ad",
+    "files":  {
+                  "assets/rome-laurel/laurel-20x34.png":  "2953ce81609bf6cbd6a420c3422b0a19a376d2bb1ad5432172ad3a97ed59270e",
+                  "assets/rome-laurel/laurel-10x17.png":  "dd85527ce9e8fd0470731c22f389b85ab1cea9e7c4ab93c02e9754d1f3190155",
+                  "src/native_laurel.inc":  "55cf6135c9f03928e417090ca6be2a1d6f973a646c1779cfd21c97cc806889cd",
+                  "scripts/import-laurel-art.ps1":  "56639931a45069091ead15fefec0e1be8b6b924e1b7c8945d6feb7f33ea8f7c8"
+              }
+}

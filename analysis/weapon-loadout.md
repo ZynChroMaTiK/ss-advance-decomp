@@ -69,9 +69,11 @@ Passwords and explicit `--level N` launches select the matching ROM row
 (`difficulty*12 + N + 1`), including its capped ammo and initial selected gun.
 Ordinary New Game retains original setting0. The host helper
 `ssa_native_game_init_campaign` uses a later map's starter row only when no
-progress is supplied. A supplied `SsaNativeCarry` takes precedence completely:
-weapons, depleted ammo, pending acquisitions, selected/previous weapon, health,
-armor, score and H mode carry through. R restores the captured entry unchanged.
-No per-level starter grant is added on normal advancement. This follows the
-user's explicit fresh-start/carry distinction; it does not claim recovery of
-the entire original outer campaign dispatcher.
+progress is supplied. A supplied `SsaNativeCarry` is an exact entry snapshot,
+and R restores it unchanged. Normal advancement first calls `carry_next`:
+earned weapons, depleted ammo and score persist, while a newly constructed
+player starts at 100 health with zero protection and an empty acquisition
+queue. Original `123C4` restores only weapon ownership, ammunition and the
+equipped gun onto that new player. No per-level starter grant is added during
+advancement. See [campaign entry](campaign-entry.md) for original construction/
+restore comparisons and the separate restart policy.

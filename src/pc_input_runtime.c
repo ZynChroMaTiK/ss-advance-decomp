@@ -21,6 +21,7 @@ static void policy(SsaPcInputRuntime *r) {
     if((!r->input->enabled || !r->input->focused) && r->game->weapons[r->player_index]){
         r->game->weapons[r->player_index]->fire_pending_weapon=0;
         r->game->weapons[r->player_index]->time_strike_empty_pending=0;
+        r->game->weapons[r->player_index]->colt_pair_pending=0;
     }
 }
 static void suppress_sample(SsaPcInputRuntime *r) {
