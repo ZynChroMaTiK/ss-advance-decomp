@@ -41,16 +41,21 @@ for(const category of data.usageSections){
  for(const card of $('graphics-grid').children)assert.match(card.children[2].textContent,/^\d+ × \d+$/,'cards show dimensions without group labels');
  for(const [index,card] of $('graphics-grid').children.entries()){
   assert.equal(card.children.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
+  const images=pictures[index].images;
+  assert.equal(card.children.some(child=>child.className==='graphics-palette-variant'),images.length>1&&images[0].path!==images[1].path,'only visibly different palettes receive a chip');
  }
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
 gallery.open(actor.id,{focus:true});
+assert.equal($('graphics-palette-variant').hidden,false);
+assert.equal($('graphics-palette-note').hidden,false);
 assert.equal($('graphics-category').value,actor.uses[0].section);assert($('graphics-title').focused);
 assert(!$('graphics-detail').scrolled);assert.equal($('graphics-title').focusOptions.preventScroll,true);assert.equal($('graphics-preview').src,actor.images[0].path);
 $('graphics-palette').value='1';$('graphics-palette').onchange();
 assert.equal(links.at(-1),graphicsUrl(actor.id,1),'palette persists in the URL');
 follow(links.at(-1));
 assert.equal($('graphics-preview').src,actor.images[1].path);
+assert.equal($('graphics-palette-variant').hidden,false,'palette chip remains visible in Rome colours');
 assert.equal($('graphics-download').href,actor.images[1].path);
 assert.equal($('graphics-original').href,actor.images[1].path);
 assert.equal($('graphics-download').download,actor.images[1].source.replaceAll('/','-'));
@@ -120,7 +125,13 @@ assert(!data.usageSections.some(s=>s.id==='unconfirmed'));
 const oldHud=filterGraphics(data.entries,'','old-hud');
 assert(oldHud.length>0 && oldHud.every(e=>e.unused));
 assert.deepEqual(filterGraphics(data.entries,'unused'),data.entries.filter(e=>e.unused));
+assert.deepEqual(filterGraphics(data.entries,'palette variants'),data.entries.filter(e=>e.images.length>1&&e.images[0].path!==e.images[1].path));
+const samePalette=data.entries.find(e=>e.images.length>1&&e.images[0].path===e.images[1].path);
+assert(samePalette,'catalog includes sprites that look identical in both palettes');
+gallery.open(samePalette.id);
+assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'identical palettes clear the chip and explanation');
 gallery.open(oldHud[0].id);
+assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'single-image artwork has no palette chip');
 assert.equal($('graphics-unused').hidden,false);
 assert.equal($('graphics-unused-note').textContent,oldHud[0].unusedReason);
 assert.match($('graphics-usage').textContent,/^Artwork:/);

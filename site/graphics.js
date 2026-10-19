@@ -1,7 +1,10 @@
+export function hasPaletteVariants(entry) {
+  return entry.images.length > 1 && entry.images[0].path !== entry.images[1].path;
+}
 export function filterGraphics(entries, query = '', category = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(e => e.uses.some(u => category === 'all' || u.section === category)
-    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.unused ? 'unused' : ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
+    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.unused ? 'unused' : ''} ${hasPaletteVariants(e) ? 'palette variants' : ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 export function imageFor(entry, palette = 0) { return entry.images[palette] || entry.images[0]; }
 export function uniqueGraphics(entries, palette = 0, preferred = null) {
@@ -68,6 +71,10 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       if (entry.unused) {
         const chip = make('span', 'Unused', 'graphics-unused'); chip.title = entry.unusedReason; button.append(chip);
       }
+      if (hasPaletteVariants(entry)) {
+        const chip = make('span', 'Palette variants', 'graphics-palette-variant');
+        chip.title = 'Different Egypt and Rome colours. Use Sprite colours to switch.'; button.append(chip);
+      }
       button.onclick = () => route(entry.id);
       cards.set(entry.id, button); $('graphics-grid').append(button);
     }
@@ -93,9 +100,11 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-unused').hidden = !selected.unused;
     $('graphics-unused-note').hidden = !selected.unused;
     $('graphics-unused-note').textContent = selected.unusedReason || '';
+    $('graphics-palette-variant').hidden = !hasPaletteVariants(selected);
+    $('graphics-palette-note').hidden = !hasPaletteVariants(selected);
     $('graphics-usage').textContent = (selected.unused ? 'Artwork: ' : 'Used for: ')+selected.uses.map(u => u.title).join('; ')+'.';
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
-      ? 'An original sprite frame. Use Sprite colours to see its Egypt and Rome versions.'
+      ? 'An original sprite from the game.'
       : selected.category === 'sprites' ? 'Original weapon or on-screen artwork. Some images are pieces the game draws together.'
       : selected.category === 'textures' ? 'An original texture from the Egypt or Rome set. Each set includes both walls and doors.'
       : 'Original artwork. Zoom in to see the pixels.');
