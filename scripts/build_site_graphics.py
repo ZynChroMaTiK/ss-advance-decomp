@@ -7,7 +7,7 @@ Run after export_graphics_archive.py. No ROM is needed for this step.
 from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
-from graphics_content import actor_content, screen_content, pixel_digest, is_sheet
+from graphics_content import actor_content, actor_variant, resolution_label, screen_content, pixel_digest, is_sheet
 from graphics_usage import SECTIONS, actor_uses, screen_uses, other_uses, texture_uses, referenced_textures, merge_uses, finalize_uses
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,24 +96,29 @@ def main():
             group = resource['id']
             for frame in resource['images']:
                 collection, label = actor_content(group, frame['index'])
+                variant = actor_variant(resource,frame['index'])
+                suffix = variant.pop('variantTitle')
+                detail = variant.get('resolutionLabel',suffix)
                 entries.append({'id': f'actor-{group:03}-{frame["index"]:03}', 'category': 'actors',
-                    'title': f'{label} · frame {frame["index"]}', 'group': collection,
+                    'title': label+(f' · {suffix}' if suffix else ''), 'group': collection, **variant,
                     'groupLabel': label, 'frame': frame['index'],
-                    'tags': label, 'origin': [frame['origin_x'], frame['origin_y']],
+                    'tags': label+' '+detail, 'origin': [frame['origin_x'], frame['origin_y']],
                     'collection': collection, 'collectionTitle': label,
                     'uses': actor_usage[group,frame['index']],
-                    'images': [dict(image(p), label=label) for p,label in zip(frame['png'], ['Egypt colours', 'Rome colours'])]})
+                    'images': [dict(image(p), label=colour+' · '+detail) for p,colour in zip(frame['png'], ['Egypt colours', 'Rome colours'])]})
         for texture in manifest['textures']:
             family = ['Egypt', 'Rome'][texture['family']]
+            resolution = resolution_label(100//(2**texture['mip']),texture['mip'])
             entries.append({'id': f'texture-{texture["family"]}-{texture["mip"]}-{texture["index"]:03}',
-                'title': texture['name'], 'category': 'textures', 'family': family,
-                'resolution': texture['mip'], 'tags': f'{family} resolution {texture["mip"]}',
+                'title': f'{texture["name"].strip()} · {family} · {resolution}', 'category': 'textures', 'family': family,
+                'resolution': texture['mip'], 'mip':texture['mip'], 'resolutionLabel':resolution,
+                'resolutionPercent':100//(2**texture['mip']), 'tags': f'{family} {resolution}',
                 'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
                 'collectionTitle': f'{texture["name"]} · {family}',
                 'uses': texture_uses(texture['family']),
                 'unused': (texture['family'],texture['mip'],texture['index']) not in used_textures,
                 'unusedReason': 'Not referenced by any of the 16 original maps, including multiplayer maps and both switch states.',
-                'images': [dict(image(texture['png']), label=f'{family} · resolution {texture["mip"] + 1} of 3')]})
+                'images': [dict(image(texture['png']), label=f'{family} · {resolution}')]})
         for sprite in manifest['sprites']:
             label = sprite_names.get(sprite['id'])
             if label is None:

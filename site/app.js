@@ -76,8 +76,10 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
       }
     }
     if (route === 'graphics') {
-      $('graphics-status').hidden = false;
-      $('graphics-status-text').textContent = 'Loading the pictures…';
+      if (!graphicsPromise) {
+        $('graphics-status').hidden = false;
+        $('graphics-status-text').textContent = 'Loading the pictures…';
+      }
       $('graphics-retry').hidden = true;
       try {
         graphicsPromise ??= loadGraphics();

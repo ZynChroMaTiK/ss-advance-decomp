@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createGraphicsView,filterGraphics,imageFor,uniqueGraphics,graphicsUrl,PAGE_SIZE,createGraphics} from '../site/graphics.js';
+import {createGraphicsView,filterGraphics,imageFor,uniqueGraphics,graphicsUrl,createGraphics} from '../site/graphics.js';
 const data=JSON.parse(readFileSync(new URL('../site/data/graphics.json',import.meta.url)));
 const html=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 class Element {
  constructor(tag='div'){Object.assign(this,{tag,children:[],attrs:{},dataset:{},style:{},value:'',hidden:false,textContent:''})}
  append(...nodes){this.children.push(...nodes)} replaceChildren(...nodes){this.children=nodes}
- setAttribute(k,v){this.attrs[k]=v} focus(){this.focused=true} scrollIntoView(){this.scrolled=true}
+ setAttribute(k,v){this.attrs[k]=v} focus(options){this.focused=true;this.focusOptions=options} scrollIntoView(){this.scrolled=true}
 }
 const elements=new Map([...html.matchAll(/id="(graphics[^"]*)"/g)].map(m=>[m[1],new Element()]));
 const $=id=>{assert(elements.has(id),`Missing markup: ${id}`);return elements.get(id)};
@@ -16,32 +16,28 @@ let links=[];
 const gallery=createGraphicsView(data,doc,hash=>links.push(hash));
 const follow=hash=>{const parts=hash.slice(1).split('/');gallery.open(parts[1]||'',{palette:parts[2]==='rome'?1:0})};
 gallery.open();
-for(const id of ['graphics-group','graphics-view','graphics-back-group','graphics-collection','graphics-detail-category'])assert(!elements.has(id),'group controls and labels are removed');
+for(const id of ['graphics-group','graphics-view','graphics-back-group','graphics-collection','graphics-detail-category','graphics-back-pictures','graphics-next-page','graphics-previous-page','graphics-page'])assert(!elements.has(id),'group labels, back button and pagination are removed');
 assert(html.includes('<label>Category<select id="graphics-category">'));
 assert.equal($('graphics-category').children[0].textContent,'All');
 assert.match($('graphics-count').textContent,/pictures$/);
 for(const query of ['colt','dual colts','shotgun'])assert(filterGraphics(data.entries,query,'weapons').length>0,query);
 assert.equal($('graphics-controls').hidden,false);
-assert.equal($('graphics-grid').children.length,PAGE_SIZE);
-assert.equal($('graphics-previous-page').disabled,true);
+assert.equal($('graphics-grid').children.length,uniqueGraphics(data.entries).length,'all pictures are in one continuous list');
+const initialCards=$('graphics-grid').children;
 const singleCard=$('graphics-grid').children[0];singleCard.onclick();follow(links.at(-1));
 assert.equal($('graphics-detail').hidden,false,'a picture opens directly');
-$('graphics-back-pictures').onclick();assert.equal($('graphics-grid').children.length,PAGE_SIZE);
-assert($('graphics-grid').children.some(b=>b.focused),'return to the picture thumbnail');
-$('graphics-next-page').onclick();assert.match($('graphics-count').textContent,/61/);
-assert($('graphics-count').focused);
-$('graphics-previous-page').onclick();assert($('graphics-previous-page').disabled);
+assert.equal($('graphics-grid').children,initialCards,'selection does not rebuild thumbnails or disturb the scroll anchor');
+assert(!$('graphics-detail').scrolled,'selection must not scroll the document');
 $('graphics-category').value='weapons';$('graphics-category').onchange();
 const weaponPictures=uniqueGraphics(filterGraphics(data.entries,'','weapons'));
 for(const [index,card] of $('graphics-grid').children.entries()){
  card.onclick();follow(links.at(-1));
  assert.equal($('graphics-preview').src,imageFor(weaponPictures[index]).path,'each weapon card opens its picture directly');
- $('graphics-back-pictures').onclick();
 }
 for(const category of data.usageSections){
  $('graphics-category').value=category.id;$('graphics-category').onchange();
  const pictures=uniqueGraphics(filterGraphics(data.entries,'',category.id));
- assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,pictures.length));
+ assert.equal($('graphics-grid').children.length,pictures.length);
  for(const card of $('graphics-grid').children)assert.match(card.children[2].textContent,/^\d+ × \d+$/,'cards show dimensions without group labels');
  for(const [index,card] of $('graphics-grid').children.entries()){
   assert.equal(card.children.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
@@ -50,7 +46,7 @@ for(const category of data.usageSections){
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
 gallery.open(actor.id,{focus:true});
 assert.equal($('graphics-category').value,actor.uses[0].section);assert($('graphics-title').focused);
-assert($('graphics-detail').scrolled);assert.equal($('graphics-preview').src,actor.images[0].path);
+assert(!$('graphics-detail').scrolled);assert.equal($('graphics-title').focusOptions.preventScroll,true);assert.equal($('graphics-preview').src,actor.images[0].path);
 $('graphics-palette').value='1';$('graphics-palette').onchange();
 assert.equal(links.at(-1),graphicsUrl(actor.id,1),'palette persists in the URL');
 follow(links.at(-1));
@@ -70,19 +66,17 @@ assert($('graphics-detail').hidden,'changing categories clears an excluded previ
 assert($('graphics-palette-label').hidden,'palette control is hidden when it cannot change the pictures');
 assert.equal(links.at(-1),graphicsUrl('',1),'excluded selection is removed from URL');
 $('graphics-search').value='no-such-graphic-ever';$('graphics-search').oninput();
-assert.equal($('graphics-grid').children.length,0);assert($('graphics-next-page').disabled);
+assert.equal($('graphics-grid').children.length,0);
 assert($('graphics-next-image').disabled);assert.match($('graphics-count').textContent,/No pictures/);
 $('graphics-clear').onclick();assert.equal($('graphics-category').value,'all');assert($('graphics-search').focused);
 gallery.open(actor.id);
-globalThis.window={scrollY:850,scrollTo:options=>window.restoredY=options.top};
 const actorButton=$('graphics-grid').children.find(b=>b.attrs['aria-pressed']==='true');
-actorButton.onclick();follow(links.at(-1));$('graphics-back-pictures').onclick();
-assert($('graphics-detail').hidden);assert.equal(window.restoredY,850);
-assert($('graphics-grid').children.some(b=>b.focused),'back restores the selected thumbnail focus');
-delete globalThis.window;
+actorButton.onclick();follow(links.at(-1));
+assert.equal($('graphics-grid').children.find(b=>b.attrs['aria-pressed']==='true'),actorButton);
+assert(!$('graphics-detail').scrolled && !actorButton.scrolled,'selection never requests scrolling');
 const last=uniqueGraphics(data.entries).at(-1);gallery.open(last.id);
-assert($('graphics-next-page').disabled);assert($('graphics-next-image').disabled);
-assert($('graphics-grid').children.length<=PAGE_SIZE);
+assert($('graphics-next-image').disabled);
+assert.equal($('graphics-grid').children.length,uniqueGraphics(data.entries).length);
 assert.equal(imageFor(last,1),last.images[0]);
 $('graphics-grid').children.at(-1).onclick();assert.equal(links.at(-1),`#graphics/${last.id}`);
 gallery.open('does-not-exist');assert.equal($('graphics-not-found').hidden,false);assert($('graphics-detail').hidden);
@@ -137,4 +131,4 @@ assert(!html.includes('data-route="wiki"'),'NETRICSA navigation stays removed');
 assert(html.includes('European')&&html.includes('enable in Options → Extras'));
 assert(html.includes('secret-sources.html')&&html.includes('/issues/new'));
 globalThis.fetch=async()=>({ok:false});await assert.rejects(createGraphics,/unavailable/);
-console.log(JSON.stringify({status:'PASS',checks:'Category and All labels, direct picture browsing, game-use filters and search, usage descriptions, deduplication in both palettes, complete browsing, bounded pages, old links, restored scroll/focus, original downloads, zoom, retry'}));
+console.log(JSON.stringify({status:'PASS',checks:'continuous browsing without pagination, stable thumbnail nodes, selection without scrolling, category filters, unused chips, palette variants, old links, original downloads, zoom, retry'}));

@@ -51,7 +51,9 @@ These commands reuse the maps and artwork already in the repo, so you won’t ne
 
 To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. It keeps the original PNGs unchanged and compares their visible pixels to remove duplicates. Generated contact sheets and tile overviews are left out; different sizes and colours stay available. The source archive is unchanged and stays out of the website.
 
-Use the Category filter to browse enemies, weapons, menus and other parts of the game, or choose All to see everything. Pictures open directly, without a second layer of groups. Search also finds specific actions such as walking or firing, and each preview explains how the picture is used.
+Use the Category filter to browse enemies, weapons, menus and other parts of the game, or choose All to see everything. Results form one continuous list, with images loaded as you scroll. Selecting a picture updates the preview without moving the page. Search also finds specific actions such as walking or firing, and each preview explains how the picture is used.
+
+Image names distinguish animation frames, viewing angles and smaller resolution variants (mips). A smaller copy of a pickup is labeled Half resolution rather than another frame. Actor sizes and views come from the original layout flags, and textures retain their full, half and quarter sizes. Some enemies start at 75% resolution; those are labeled as such. Extra stored images outside a declared layout are called stored variants instead of guessing their resolution role. Original picture IDs and links stay the same.
 
 Textures are split into Egypt and Rome, with walls and doors together in each set. Their setting comes from the original texture bank. Unused pictures stay with their subject, and the old interface pieces have their own Old HUD category. The Unused chip also appears in the preview with a short explanation. Searching “unused” finds these pictures within the selected category.
 

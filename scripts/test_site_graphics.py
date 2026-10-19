@@ -2,7 +2,7 @@
 from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
-from graphics_content import pixel_digest, is_sheet
+from graphics_content import pixel_digest, is_sheet, actor_variant
 from graphics_usage import selected_actor_frames, referenced_textures, SECTIONS
 from export_graphics_archive import png
 
@@ -13,6 +13,17 @@ assert a != b and pixel_digest(a) == pixel_digest(b)
 assert pixel_digest(a) != pixel_digest(png(2,1,b'\0\1',[0,32,123],True))
 assert pixel_digest(a) != pixel_digest(png(2,1,b'\0\1',[0,31,123],False))
 assert pixel_digest(a) != pixel_digest(png(1,2,b'\0\1',[0,31,123],True))
+
+layout={'id':4,'directions':5,'frames_per_direction':6,'resolution_flags':30}
+variant=actor_variant(layout,61)
+assert (variant['animationFrame'],variant['view'],variant['mip'],variant['resolutionPercent']) == (1,1,2,50)
+assert 'Half resolution' in variant['variantTitle'] and 'Frame 61' not in variant['variantTitle']
+assert actor_variant(layout,37)['view']==2
+pickup=actor_variant({'id':32,'directions':1,'frames_per_direction':28,'resolution_flags':10},29)
+assert pickup['mip']==1 and pickup['resolutionPercent']==50 and 'animationFrame' not in pickup
+assert 'Frame' not in pickup['variantTitle']
+assert actor_variant({'id':6,'directions':5,'frames_per_direction':5,'resolution_flags':28},1)['resolutionPercent']==75
+assert actor_variant({'id':15,'directions':5,'frames_per_direction':1,'resolution_flags':2},6)=={'variantTitle':'Stored variant 1'}
 
 # Texture reachability must include the unused-looking switch-on image and
 # multiplayer maps, but exclude spare descriptors and later duplicate names.
@@ -130,6 +141,10 @@ for source, name in sources.items():
 for entry in textures_by_path.values():
     assert {u['section'] for u in entry['uses']} <= {'textures-egypt','textures-rome'}
     assert all(u['title'] in ('Egypt textures','Rome textures') for u in entry['uses'])
+    assert entry['mip']==entry['resolution'] and entry['resolutionPercent']==100//(2**entry['mip'])
+    assert entry['resolutionLabel'] in entry['title']
+assert 'Half resolution' in by_id['actor-032-029']['title'] and 'Frame' not in by_id['actor-032-029']['title']
+assert 'Half resolution' in by_id['actor-096-004']['title'] and 'Frame' not in by_id['actor-096-004']['title']
 usage_sources=set()
 for entry in entries:
     assert entry['uses'] and len({u['id'] for u in entry['uses']}) == len(entry['uses'])
@@ -159,6 +174,12 @@ if archive_path.exists():
         assert set(sources)|set(manifest['excluded']) == {p for p in archive.namelist() if p.endswith('.png')}
         assert hashlib.sha256(archive.read('manifest.json')).hexdigest() == manifest['source_manifest_sha256']
         original=json.loads(archive.read('manifest.json'))
+        for entry in entries:
+            if entry['category']!='actors': continue
+            resource,index=map(int,entry['id'].split('-')[1:])
+            variant=actor_variant(original['actor_resources'][resource],index)
+            for key,value in variant.items():
+                if key!='variantTitle': assert entry[key]==value,(entry['id'],key)
         used_textures=referenced_textures(archive,original)
         used_paths={sources[t['png']] for t in original['textures'] if (t['family'],t['mip'],t['index']) in used_textures}
         for entry in entries:

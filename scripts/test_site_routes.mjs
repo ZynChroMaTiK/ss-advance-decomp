@@ -51,7 +51,7 @@ location.hash='#graphics/actor-063-001';const pendingGraphics=app.render();locat
 resolveGraphics({open:(id,options)=>openedGraphics.push({id,options})});await pendingGraphics;assert.equal(openedGraphics.length,0);
 location.hash='#graphics/actor-063-001';await app.render();assert.equal(pages[5].hidden,false);assert.equal(active,false);
 assert.equal(openedGraphics.at(-1).id,'actor-063-001');assert(openedGraphics.at(-1).options.focus);
-location.hash='#graphics/actor-063-001/rome';await app.render();assert.equal(openedGraphics.at(-1).options.palette,1);
+location.hash='#graphics/actor-063-001/rome';const paletteRender=app.render();assert(elements.get('graphics-status').hidden,'loaded gallery selections must not flash a loading message and shift the page');await paletteRender;assert.equal(openedGraphics.at(-1).options.palette,1);
 assert.equal(openedGraphics.at(-1).options.focus,false,'palette links retain selection focus');
 assert.equal(links[5].attrs['aria-current'],'page');assert(elements.get('graphics-status').hidden);
 location.hash='#graphics';await app.render();assert.equal(openedGraphics.at(-1).id,'');

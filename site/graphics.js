@@ -1,4 +1,3 @@
-export const PAGE_SIZE = 60;
 export function filterGraphics(entries, query = '', category = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(e => e.uses.some(u => category === 'all' || u.section === category)
@@ -25,8 +24,8 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     if (className) node.className = className;
     return node;
   };
-  let category = 'all', query = '', palette = 0, page = 0, selected = null;
-  let returnSpot = null, cards = new Map();
+  let category = 'all', query = '', palette = 0, selected = null;
+  let cards = new Map(), renderedPalette = null, selectedCard = null;
   let filtered = data.entries;
   const byId = new Map(data.entries.map(e => [e.id, e]));
   for (const [alias, id] of Object.entries(data.aliases || {})) byId.set(alias, byId.get(id));
@@ -47,14 +46,18 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   const route = (id = '', replace = false) => navigate(graphicsUrl(id, palette), {replace});
   function renderGrid() {
     const list = frames();
-    page = Math.max(0, Math.min(page, Math.ceil(list.length/PAGE_SIZE)-1));
-    const start = page*PAGE_SIZE, end = Math.min(list.length, start+PAGE_SIZE);
-    $('graphics-count').textContent = list.length ? `${start+1}–${end} of ${list.length.toLocaleString()} pictures` : 'No pictures found. Try another name or clear the filters.';
-    $('graphics-page').textContent = `Page ${page+1} of ${Math.max(1, Math.ceil(list.length/PAGE_SIZE))}`;
-    $('graphics-previous-page').disabled = page === 0; $('graphics-next-page').disabled = end >= list.length;
+    $('graphics-count').textContent = list.length ? `${list.length.toLocaleString()} pictures` : 'No pictures found. Try another name or clear the filters.';
     $('graphics-palette-label').hidden = !(selected?.category === 'actors' || list.some(e => e.category === 'actors'));
+    // Selection changes the preview, not the result list. Keep thumbnail nodes
+    // in place to preserve keyboard focus and the browser's scroll anchor.
+    if (renderedPalette === palette && cards.size === list.length && list.every(e => cards.has(e.id))) {
+      selectedCard?.setAttribute('aria-pressed', 'false');
+      selectedCard = cards.get(selected?.id);
+      selectedCard?.setAttribute('aria-pressed', 'true');
+      return;
+    }
     cards = new Map(); $('graphics-grid').replaceChildren();
-    for (const entry of list.slice(start, end)) {
+    for (const entry of list) {
       const original = imageFor(entry, palette);
       const button = make('button', '', 'graphics-card'); button.type = 'button';
       button.setAttribute('aria-pressed', String(entry === selected));
@@ -65,11 +68,10 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       if (entry.unused) {
         const chip = make('span', 'Unused', 'graphics-unused'); chip.title = entry.unusedReason; button.append(chip);
       }
-      button.onclick = () => {
-        returnSpot = {id:entry.id, y:globalThis.window?.scrollY}; route(entry.id);
-      };
+      button.onclick = () => route(entry.id);
       cards.set(entry.id, button); $('graphics-grid').append(button);
     }
+    renderedPalette = palette; selectedCard = cards.get(selected?.id);
   }
   function updateImage() {
     if (!selected) return;
@@ -104,8 +106,8 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     doc.title = `${selected.title} — Graphics — Serious Sam Advance`; updateImage();
   }
   function filter() {
-    page = 0; filtered = filterGraphics(data.entries, query, category);
-    if (selected && !filtered.includes(selected)) { selected = null; returnSpot = null; route('', true); }
+    filtered = filterGraphics(data.entries, query, category);
+    if (selected && !filtered.includes(selected)) { selected = null; route('', true); }
     $('graphics-not-found').hidden = true; renderGrid(); renderSelection();
   }
   $('graphics-category').onchange = () => { category = $('graphics-category').value; filter(); };
@@ -114,26 +116,15 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     category = 'all'; query = ''; $('graphics-category').value = category; $('graphics-search').value = query;
     filter(); $('graphics-search').focus();
   };
-  $('graphics-back-pictures').onclick = () => {
-    const id = selected?.id; selected = null; route('', true); renderGrid(); renderSelection();
-    const button = cards.get(id);
-    button?.focus({preventScroll:true});
-    if (returnSpot?.id === id && Number.isFinite(returnSpot.y)) globalThis.window?.scrollTo({top:returnSpot.y, behavior:'instant'});
-    else button?.scrollIntoView({block:'nearest'});
-    returnSpot = null;
-  };
-  $('graphics-palette').onchange = () => { palette = Number($('graphics-palette').value); page = 0; route(selected?.id || '', true); renderGrid(); renderSelection(); };
+  $('graphics-palette').onchange = () => { palette = Number($('graphics-palette').value); route(selected?.id || '', true); renderGrid(); renderSelection(); };
   $('graphics-background').onchange = () => { $('graphics-preview-area').dataset.background = $('graphics-background').value; };
   $('graphics-zoom').onchange = updateImage;
-  function turnPage(amount) { page += amount; renderGrid(); $('graphics-count').focus(); }
-  $('graphics-previous-page').onclick = () => turnPage(-1); $('graphics-next-page').onclick = () => turnPage(1);
   function nextImage(amount) {
     const sequence = frames(), index = sequence.indexOf(selected), entry = sequence[index+amount];
-    if (index >= 0 && entry) { returnSpot = null; route(entry.id); }
+    if (index >= 0 && entry) route(entry.id);
   }
   $('graphics-previous-image').onclick = () => nextImage(-1); $('graphics-next-image').onclick = () => nextImage(1);
   function open(id = '', {focus = false, palette:requestedPalette = 0} = {}) {
-    const changed = selected?.id !== id;
     selected = byId.get(id) || null; palette = requestedPalette === 1 ? 1 : 0; $('graphics-palette').value = String(palette);
     $('graphics-not-found').hidden = !id || !!selected;
     if (selected) {
@@ -142,10 +133,9 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
         $('graphics-category').value = category; $('graphics-search').value = query;
         filtered = filterGraphics(data.entries, query, category);
       }
-      page = Math.floor(frames().indexOf(selected)/PAGE_SIZE);
     }
     renderGrid(); renderSelection();
-    if ((focus || changed) && selected) { $('graphics-title').focus({preventScroll:true}); $('graphics-detail').scrollIntoView({block:'start'}); }
+    if (focus && selected) $('graphics-title').focus({preventScroll:true});
   }
   return {open};
 }

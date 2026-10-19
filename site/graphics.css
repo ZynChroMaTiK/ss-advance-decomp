@@ -23,10 +23,10 @@
 .graphics-preview-controls{display:flex;gap:10px;flex-wrap:wrap}.graphics-preview-controls label{flex:1;min-width:100px}
 .graphics-inspector .actions{flex-wrap:wrap;gap:10px;margin:18px 0}.graphics-inspector .button{padding:11px 13px;gap:8px}
 .graphics-inspector p{font-size:14px;color:var(--muted)}.graphics-inspector code{display:block;overflow-wrap:anywhere;white-space:normal;margin:10px 0;font-size:12px;color:var(--muted)}
-.graphics-pagination,.graphics-image-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0}
-.graphics-pagination span{font-size:12px;color:var(--muted)}.graphics-image-nav button{font-size:12px}
+.graphics-image-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0}
+.graphics-image-nav button{font-size:12px}
 .graphics-page button:disabled{opacity:.4;cursor:default}.graphics-page details{font-size:12px;color:var(--muted)}
 @media(max-width:1150px){.site-header{gap:16px}.site-header nav{gap:15px}.brand span{display:none}.graphics-layout{grid-template-columns:minmax(0,1fr) 310px}}
-@media(max-width:800px){.graphics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}.graphics-controls label{min-width:0}.graphics-controls input,.graphics-controls select{width:100%;min-width:0}.graphics-layout{display:flex;flex-direction:column}.graphics-inspector{position:static;width:100%;max-height:none;overflow:visible}.graphics-browse{width:100%}.graphics-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.graphics-preview-area{height:280px}.graphics-heading h1{font-size:32px}}
-.graphics-back{margin-bottom:18px}.graphics-controls label,.graphics-preview-controls label,.graphics-pagination span,.graphics-image-nav button,.graphics-page details{font-size:14px}
+@media(max-width:800px){.graphics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}.graphics-controls label{min-width:0}.graphics-controls input,.graphics-controls select{width:100%;min-width:0}.graphics-layout{display:flex;flex-direction:column}.graphics-inspector{position:static;width:100%;height:calc(100dvh - var(--graphics-filter-height,110px) - 40px);min-height:220px;max-height:600px;overflow:auto}.graphics-browse{width:100%}.graphics-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.graphics-preview-area{height:280px}.graphics-heading h1{font-size:32px}}
+.graphics-controls label,.graphics-preview-controls label,.graphics-image-nav button,.graphics-page details{font-size:14px}
 @media(prefers-reduced-motion:reduce){.graphics-page *{scroll-behavior:auto}}
