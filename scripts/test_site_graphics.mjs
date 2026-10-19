@@ -16,7 +16,7 @@ let links=[];
 const gallery=createGraphicsView(data,doc,hash=>links.push(hash));
 const follow=hash=>{const parts=hash.slice(1).split('/');gallery.open(parts[1]||'',{palette:parts[2]==='rome'?1:0})};
 gallery.open();
-for(const id of ['graphics-group','graphics-view','graphics-back-group','graphics-collection'])assert(!elements.has(id),'group controls are removed');
+for(const id of ['graphics-group','graphics-view','graphics-back-group','graphics-collection','graphics-detail-category'])assert(!elements.has(id),'group controls and labels are removed');
 assert(html.includes('<label>Category<select id="graphics-category">'));
 assert.equal($('graphics-category').children[0].textContent,'All');
 assert.match($('graphics-count').textContent,/pictures$/);
@@ -42,6 +42,7 @@ for(const category of data.usageSections){
  $('graphics-category').value=category.id;$('graphics-category').onchange();
  const pictures=uniqueGraphics(filterGraphics(data.entries,'',category.id));
  assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,pictures.length));
+ for(const card of $('graphics-grid').children)assert.match(card.children[2].textContent,/^\d+ × \d+$/,'cards show dimensions without group labels');
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
 gallery.open(actor.id,{focus:true});
@@ -115,7 +116,6 @@ for(const setting of ['Egypt','Rome']){
  $('graphics-category').value=section;$('graphics-category').onchange();
  $('graphics-grid').children[0].onclick();follow(links.at(-1));
  assert.match($('graphics-usage').textContent,new RegExp(`${setting} textures`));
- assert.equal($('graphics-detail-category').textContent,'Textures');
  assert(!/ · (Walls|Doors)/.test($('graphics-usage').textContent));
 }
 assert.equal(filterGraphics(data.entries,'<script>not markup</script>').length,0);

@@ -30,7 +30,6 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   let filtered = data.entries;
   const byId = new Map(data.entries.map(e => [e.id, e]));
   for (const [alias, id] of Object.entries(data.aliases || {})) byId.set(alias, byId.get(id));
-  const categories = new Map(data.categories.map(e => [e.id, e.title]));
   for (const c of [{id:'all', title:'All'}, ...data.usageSections]) {
     const option = make('option', c.title); option.value = c.id; $('graphics-category').append(option);
   }
@@ -54,7 +53,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       const frame = make('span', '', 'graphics-thumb'), img = make('img');
       img.src = original.path; img.alt = ''; img.width = original.width; img.height = original.height;
       img.loading = 'lazy'; img.decoding = 'async'; frame.append(img);
-      button.append(frame, make('strong', entry.title), make('small', `${original.width} × ${original.height} · ${categories.get(entry.category)}`));
+      button.append(frame, make('strong', entry.title), make('small', `${original.width} × ${original.height}`));
       button.onclick = () => {
         returnSpot = {id:entry.id, y:globalThis.window?.scrollY}; route(entry.id);
       };
@@ -78,7 +77,6 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-previous-image').disabled = $('graphics-next-image').disabled = true;
     if (!selected) { doc.title = 'Graphics — Serious Sam Advance'; return; }
     $('graphics-title').textContent = selected.title;
-    $('graphics-detail-category').textContent = categories.get(selected.category);
     $('graphics-usage').textContent = 'Used for: '+selected.uses.map(u => u.title).join('; ')+'.';
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
       ? 'An original sprite frame. Use Sprite colours to see its Egypt and Rome versions.'
