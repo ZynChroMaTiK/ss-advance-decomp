@@ -4,7 +4,7 @@ export function hasPaletteVariants(entry) {
 export function filterGraphics(entries, query = '', category = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(e => e.uses.some(u => category === 'all' || u.section === category)
-    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.unused ? 'unused' : ''} ${hasPaletteVariants(e) ? 'palette variants' : ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
+    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.resolutionLabel || ''} ${e.brightnessLabel ? 'brightness variants '+e.brightnessLabel : ''} ${e.unused ? 'unused' : ''} ${hasPaletteVariants(e) ? 'palette variants' : ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 export function imageFor(entry, palette = 0) { return entry.images[palette] || entry.images[0]; }
 export function uniqueGraphics(entries, palette = 0, preferred = null) {
@@ -75,6 +75,8 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
         const chip = make('span', 'Palette variants', 'graphics-palette-variant');
         chip.title = 'Different Egypt and Rome colours. Use Sprite colours to switch.'; button.append(chip);
       }
+      if (entry.resolutionLabel) button.append(make('span', entry.resolutionLabel, 'graphics-resolution'));
+      if (entry.brightnessLabel) button.append(make('span', entry.brightnessLabel, 'graphics-brightness'));
       button.onclick = () => route(entry.id);
       cards.set(entry.id, button); $('graphics-grid').append(button);
     }
@@ -102,6 +104,22 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-unused-note').textContent = selected.unusedReason || '';
     $('graphics-palette-variant').hidden = !hasPaletteVariants(selected);
     $('graphics-palette-note').hidden = !hasPaletteVariants(selected);
+    $('graphics-resolution').hidden = !selected.resolutionLabel;
+    $('graphics-resolution').textContent = selected.resolutionLabel || '';
+    $('graphics-brightness').hidden = !selected.brightnessLabel;
+    $('graphics-brightness').textContent = selected.brightnessLabel || '';
+    const brightnessNote = $('graphics-brightness-note');
+    brightnessNote.hidden = !selected.brightnessLabel;
+    brightnessNote.replaceChildren();
+    if (selected.brightnessLabel) {
+      brightnessNote.append(make('span', 'Same design, from light to dark: '));
+      selected.brightnessVariants.forEach((variant, index) => {
+        if (index) brightnessNote.append(make('span', ' · '));
+        const link = make('a', variant.name, 'text-link'); link.href = graphicsUrl(variant.id, palette);
+        link.onclick = event => { event.preventDefault(); route(variant.id); };
+        brightnessNote.append(link);
+      });
+    }
     $('graphics-usage').textContent = (selected.unused ? 'Artwork: ' : 'Used for: ')+selected.uses.map(u => u.title).join('; ')+'.';
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
       ? 'An original sprite from the game.'

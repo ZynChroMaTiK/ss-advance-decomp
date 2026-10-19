@@ -86,9 +86,8 @@ def actor_content(resource, frame):
     return ACTORS[resource]
 
 
-def resolution_label(percent, mip):
-    name = {100:'Full resolution',75:'75% resolution',50:'Half resolution',25:'Quarter resolution'}.get(percent,f'{percent}% resolution')
-    return f'{name} (mip {mip})'
+def resolution_label(percent):
+    return {100:'Full resolution',75:'75% resolution',50:'Half resolution',25:'Quarter resolution'}.get(percent,f'{percent}% resolution')
 
 
 def actor_variant(resource, index):
@@ -105,14 +104,13 @@ def actor_variant(resource, index):
         return {'variantTitle':f'Stored variant {offset-block*len(scales)+1}'}
     mip, within = divmod(offset,block)
     view, frame = divmod(within,frames)
-    resolution = resolution_label(scales[mip],mip)
+    resolution = resolution_label(scales[mip])
     result = {'mip':mip,'resolutionPercent':scales[mip],'resolutionLabel':resolution,'view':view+1}
     parts = []
     if frames > 1 and not (32 <= resource['id'] <= 63 or resource['id'] in (96,97,98)):
         result['animationFrame'] = frame+1
         parts.append(f'Frame {frame+1}')
     if views > 1: parts.append(f'View {view+1}')
-    if len(scales)>1: parts.append(resolution)
     result['variantTitle'] = ' · '.join(parts)
     return result
 

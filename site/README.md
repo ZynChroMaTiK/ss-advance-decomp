@@ -53,9 +53,11 @@ To refresh the gallery, run `python scripts/build_site_graphics.py` after creati
 
 Use the Category filter to browse enemies, weapons, menus and other parts of the game, or choose All to see everything. Results form one continuous list, with images loaded as you scroll. Selecting a picture updates the preview without moving the page. Search also finds specific actions such as walking or firing, and each preview explains how the picture is used.
 
-Image names distinguish animation frames, viewing angles and smaller resolution variants (mips). A smaller copy of a pickup is labeled Half resolution rather than another frame. Actor sizes and views come from the original layout flags, and textures retain their full, half and quarter sizes. Some enemies start at 75% resolution; those are labeled as such. Extra stored images outside a declared layout are called stored variants instead of guessing their resolution role. Original picture IDs and links stay the same.
+Image names distinguish animation frames and viewing angles. Resolution tags such as Full resolution, Half resolution and Quarter resolution identify the different sizes (mips) on cards and previews. You can search for these tags too. Actor sizes and views come from the original layout flags; some enemies start at 75% resolution. Extra stored images outside a declared layout are called stored variants instead of guessing their resolution role. Original picture IDs and links stay the same.
 
 The Palette variants chip marks pictures with different Egypt and Rome colours. Use Sprite colours to switch between them, or search “palette variants” to find them. Pictures that look identical in both palettes don’t get the chip.
+
+Textures with the same design at different brightness levels have Light variant, Medium variant or Dark variant tags. These describe the original pictures, not a brightness adjustment made by the gallery. Search “brightness variants” to find them, or follow the preview links to compare a set at the same resolution. `scripts/graphics_brightness.py` lists the sets checked against the original pixels. Different drawings, switch states and mirrored pictures remain separate designs.
 
 Textures are split into Egypt and Rome, with walls and doors together in each set. Their setting comes from the original texture bank. Unused pictures stay with their subject, and the old interface pieces have their own Old HUD category. The Unused chip also appears in the preview with a short explanation. Searching “unused” finds these pictures within the selected category.
 

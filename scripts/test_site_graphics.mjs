@@ -43,6 +43,9 @@ for(const category of data.usageSections){
   assert.equal(card.children.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
   const images=pictures[index].images;
   assert.equal(card.children.some(child=>child.className==='graphics-palette-variant'),images.length>1&&images[0].path!==images[1].path,'only visibly different palettes receive a chip');
+  for(const [field,css] of [['resolutionLabel','graphics-resolution'],['brightnessLabel','graphics-brightness']]){
+   assert.equal(card.children.find(child=>child.className===css)?.textContent,pictures[index][field]);
+  }
  }
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
@@ -126,11 +129,30 @@ const oldHud=filterGraphics(data.entries,'','old-hud');
 assert(oldHud.length>0 && oldHud.every(e=>e.unused));
 assert.deepEqual(filterGraphics(data.entries,'unused'),data.entries.filter(e=>e.unused));
 assert.deepEqual(filterGraphics(data.entries,'palette variants'),data.entries.filter(e=>e.images.length>1&&e.images[0].path!==e.images[1].path));
+assert.deepEqual(filterGraphics(data.entries,'brightness variants'),data.entries.filter(e=>e.brightnessLabel));
+for(const category of ['textures-egypt','textures-rome']){
+ const light=filterGraphics(data.entries,'light variant',category)[0];assert(light);
+ gallery.open(light.id);
+ assert.equal($('graphics-brightness').textContent,'Light variant');
+ assert.equal($('graphics-resolution').textContent,'Full resolution');
+ assert(!$('graphics-brightness').hidden && !$('graphics-brightness-note').hidden && !$('graphics-resolution').hidden);
+ const variants=$('graphics-brightness-note').children.filter(child=>child.tag==='a');
+ assert.equal(variants.length,light.brightnessVariants.length);
+ variants.at(-1).onclick({preventDefault(){}});follow(links.at(-1));
+ assert.equal($('graphics-brightness').textContent,'Dark variant','related texture link opens the darker version');
+ assert.equal($('graphics-resolution').textContent,'Full resolution','brightness links preserve resolution');
+}
+const halfPickup=data.entries.find(e=>e.id==='actor-032-029');gallery.open(halfPickup.id);
+assert.equal($('graphics-title').textContent,'Pistol pickup');
+assert.equal($('graphics-resolution').textContent,'Half resolution');
+assert(!$('graphics-resolution').hidden && $('graphics-brightness').hidden && $('graphics-brightness-note').hidden);
+assert(filterGraphics(data.entries,'half resolution','pickups').includes(halfPickup));
 const samePalette=data.entries.find(e=>e.images.length>1&&e.images[0].path===e.images[1].path);
 assert(samePalette,'catalog includes sprites that look identical in both palettes');
 gallery.open(samePalette.id);
 assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'identical palettes clear the chip and explanation');
 gallery.open(oldHud[0].id);
+assert($('graphics-resolution').hidden && $('graphics-brightness').hidden && $('graphics-brightness-note').hidden,'ordinary artwork clears resolution and brightness tags');
 assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'single-image artwork has no palette chip');
 assert.equal($('graphics-unused').hidden,false);
 assert.equal($('graphics-unused-note').textContent,oldHud[0].unusedReason);

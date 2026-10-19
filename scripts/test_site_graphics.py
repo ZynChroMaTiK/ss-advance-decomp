@@ -1,7 +1,8 @@
 """Check unique pictures, content grouping and unchanged original artwork."""
 from pathlib import Path
 from collections import Counter
-import hashlib, json, re, struct, zipfile
+import hashlib, json, re, struct, zipfile, zlib
+from graphics_brightness import BRIGHTNESS_SETS
 from graphics_content import pixel_digest, is_sheet, actor_variant
 from graphics_usage import selected_actor_frames, referenced_textures, SECTIONS
 from export_graphics_archive import png
@@ -17,7 +18,7 @@ assert pixel_digest(a) != pixel_digest(png(1,2,b'\0\1',[0,31,123],True))
 layout={'id':4,'directions':5,'frames_per_direction':6,'resolution_flags':30}
 variant=actor_variant(layout,61)
 assert (variant['animationFrame'],variant['view'],variant['mip'],variant['resolutionPercent']) == (1,1,2,50)
-assert 'Half resolution' in variant['variantTitle'] and 'Frame 61' not in variant['variantTitle']
+assert variant['variantTitle']=='Frame 1 · View 1' and variant['resolutionLabel']=='Half resolution'
 assert actor_variant(layout,37)['view']==2
 pickup=actor_variant({'id':32,'directions':1,'frames_per_direction':28,'resolution_flags':10},29)
 assert pickup['mip']==1 and pickup['resolutionPercent']==50 and 'animationFrame' not in pickup
@@ -142,9 +143,43 @@ for entry in textures_by_path.values():
     assert {u['section'] for u in entry['uses']} <= {'textures-egypt','textures-rome'}
     assert all(u['title'] in ('Egypt textures','Rome textures') for u in entry['uses'])
     assert entry['mip']==entry['resolution'] and entry['resolutionPercent']==100//(2**entry['mip'])
-    assert entry['resolutionLabel'] in entry['title']
-assert 'Half resolution' in by_id['actor-032-029']['title'] and 'Frame' not in by_id['actor-032-029']['title']
-assert 'Half resolution' in by_id['actor-096-004']['title'] and 'Frame' not in by_id['actor-096-004']['title']
+    assert entry['resolutionLabel'] not in entry['title']
+for id in ('actor-032-029','actor-096-004'):
+    assert by_id[id]['resolutionLabel']=='Half resolution' and 'Frame' not in by_id[id]['title']
+assert all('resolution' not in e['title'].lower() and '(mip' not in e['title'].lower() for e in entries)
+
+def texture_light(raw):
+    """Read opaque indexed texture pixels for independent brightness checks."""
+    pos=8; compressed=b''
+    while pos<len(raw):
+        size,kind=struct.unpack_from('>I4s',raw,pos); payload=raw[pos+8:pos+8+size]; pos+=size+12
+        if kind==b'IHDR': width,height=struct.unpack_from('>II',payload)
+        if kind==b'PLTE': palette=[sum(payload[i:i+3])/3 for i in range(0,len(payload),3)]
+        if kind==b'IDAT': compressed+=payload
+    rows=zlib.decompress(compressed)
+    pixels=[palette[i] for y in range(height) for i in rows[y*(width+1)+1:(y+1)*(width+1)]]
+    return width,height,pixels
+
+brightness_count=0
+for family,groups in BRIGHTNESS_SETS.items():
+    indices=[i for group in groups for i in group]
+    assert len(indices)==len(set(indices))
+    for group in groups:
+        for mip in range(3):
+            variants=[by_id[f'texture-{family}-{mip}-{i:03}'] for i in group]
+            levels=['Light','Dark'] if len(group)==2 else ['Light','Medium','Dark']
+            means=[]
+            for entry,level in zip(variants,levels):
+                assert entry['brightnessLabel']==level+' variant'
+                assert [by_id[v['id']]['id'] for v in entry['brightnessVariants']]==[v['id'] for v in variants]
+                w,h,pixels=texture_light(original_bytes[Path(entry['images'][0]['path']).name])
+                means.append(sum(pixels)/len(pixels))
+                brightness_count+=1
+            assert all(a>b+3 for a,b in zip(means,means[1:])),(family,group,mip,means)
+# Similar filenames can depict different motifs, switch states or mirrored art.
+for family,indices in [(0,[25,26,27,44,45,58,59,63,64,68,69,70,96,97,98,99,100]),(1,[3,63,64,79,80])]:
+    for index in indices:
+        assert 'brightnessLabel' not in by_id[f'texture-{family}-0-{index:03}']
 usage_sources=set()
 for entry in entries:
     assert entry['uses'] and len({u['id'] for u in entry['uses']}) == len(entry['uses'])
@@ -198,4 +233,4 @@ if archive_path.exists():
             assert pixel_digest(archive.read(source)) == manifest['files'][name]['pixels_sha256'], source
     verified_originals = True
 print(json.dumps({'status':'PASS', 'entries':len(entries), 'original_pngs':len(sources),
-    'unique_files':len(delivered), 'compared_with_original_export':verified_originals}))
+    'unique_files':len(delivered), 'brightness_texture_records':brightness_count, 'compared_with_original_export':verified_originals}))
