@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createGraphicsView,filterGraphics,imageFor,groupGraphics,uniqueGraphics,graphicsUrl,PAGE_SIZE,createGraphics} from '../site/graphics.js';
+import {createGraphicsView,filterGraphics,imageFor,uniqueGraphics,graphicsUrl,PAGE_SIZE,createGraphics} from '../site/graphics.js';
 const data=JSON.parse(readFileSync(new URL('../site/data/graphics.json',import.meta.url)));
 const html=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 class Element {
@@ -16,46 +16,37 @@ let links=[];
 const gallery=createGraphicsView(data,doc,hash=>links.push(hash));
 const follow=hash=>{const parts=hash.slice(1).split('/');gallery.open(parts[1]||'',{palette:parts[2]==='rome'?1:0})};
 gallery.open();
-assert(groupGraphics(data.entries).length<data.entries.length/5,'default browsing groups related frames');
-assert.deepEqual(new Set(groupGraphics(data.entries).flatMap(g=>g.entries.map(e=>imageFor(e).path))),new Set(data.entries.map(e=>imageFor(e).path)),'every different picture remains reachable');
-assert.match($('graphics-count').textContent,/groups and pictures/);
+for(const id of ['graphics-group','graphics-view','graphics-back-group','graphics-collection'])assert(!elements.has(id),'group controls are removed');
+assert(html.includes('<label>Category<select id="graphics-category">'));
+assert.equal($('graphics-category').children[0].textContent,'All');
+assert.match($('graphics-count').textContent,/pictures$/);
 for(const query of ['colt','dual colts','shotgun'])assert(filterGraphics(data.entries,query,'weapons').length>0,query);
 assert.equal($('graphics-controls').hidden,false);
 assert.equal($('graphics-grid').children.length,PAGE_SIZE);
 assert.equal($('graphics-previous-page').disabled,true);
-const singleCard=$('graphics-grid').children.find(b=>!b.children[2].textContent.includes('Open group'));singleCard.onclick();follow(links.at(-1));
-assert($('graphics-back-group').hidden,'a single picture does not open a redundant group');
+const singleCard=$('graphics-grid').children[0];singleCard.onclick();follow(links.at(-1));
+assert.equal($('graphics-detail').hidden,false,'a picture opens directly');
 $('graphics-back-pictures').onclick();assert.equal($('graphics-grid').children.length,PAGE_SIZE);
-assert($('graphics-grid').children.some(b=>b.focused),'return to single-picture thumbnail in the grouped overview');
+assert($('graphics-grid').children.some(b=>b.focused),'return to the picture thumbnail');
 $('graphics-next-page').onclick();assert.match($('graphics-count').textContent,/61/);
 assert($('graphics-count').focused);
 $('graphics-previous-page').onclick();assert($('graphics-previous-page').disabled);
 $('graphics-category').value='weapons';$('graphics-category').onchange();
-const weaponGroup=$('graphics-grid').children.find(b=>b.children[1].textContent==='Schofield Pistol · Firing');
-assert(weaponGroup);weaponGroup.onclick();assert.equal($('graphics-back-group').hidden,false);
-assert.match($('graphics-collection').textContent,/Pistol/);
-$('graphics-back-group').onclick();assert($('graphics-back-group').hidden);
-assert($('graphics-grid').children.some(b=>b.focused),'back restores group focus');
-const sharedReady=groupGraphics(filterGraphics(data.entries,'','weapons')).find(g=>g.title.endsWith(' · Ready')&&g.entries.length===1&&g.entries[0].uses.length>1);
-assert(sharedReady);
-$('graphics-grid').children.find(b=>b.children[1].textContent===sharedReady.title).onclick();follow(links.at(-1));
-assert($('graphics-back-group').hidden,'a shared ready frame stays in the single-picture use, not a firing group');
-$('graphics-back-pictures').onclick();
-assert($('graphics-grid').children.find(b=>b.children[1].textContent===sharedReady.title).focused,'return to the usage that was clicked');
-$('graphics-view').value='frames';$('graphics-view').onchange();
+const weaponPictures=uniqueGraphics(filterGraphics(data.entries,'','weapons'));
+for(const [index,card] of $('graphics-grid').children.entries()){
+ card.onclick();follow(links.at(-1));
+ assert.equal($('graphics-preview').src,imageFor(weaponPictures[index]).path,'each weapon card opens its picture directly');
+ $('graphics-back-pictures').onclick();
+}
 for(const category of data.usageSections){
  $('graphics-category').value=category.id;$('graphics-category').onchange();
  const pictures=uniqueGraphics(filterGraphics(data.entries,'',category.id));
  assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,pictures.length));
- assert.equal($('graphics-group-label').hidden,false);
- assert($('graphics-group').children.slice(1).every(option=>data.entries.some(e=>e.uses.some(u=>u.id===option.value&&u.section===category.id))));
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
 gallery.open(actor.id,{focus:true});
 assert.equal($('graphics-category').value,actor.uses[0].section);assert($('graphics-title').focused);
 assert($('graphics-detail').scrolled);assert.equal($('graphics-preview').src,actor.images[0].path);
-$('graphics-group').value=actor.uses[0].id;$('graphics-group').onchange();
-assert(filterGraphics(data.entries,'',actor.uses[0].section,actor.uses[0].id).every(e=>e.uses.some(u=>u.id===actor.uses[0].id)));
 $('graphics-palette').value='1';$('graphics-palette').onchange();
 assert.equal(links.at(-1),graphicsUrl(actor.id,1),'palette persists in the URL');
 follow(links.at(-1));
@@ -97,7 +88,6 @@ for(const palette of [0,1]) {
  const paths=unique.map(e=>imageFor(e,palette).path);
  assert.equal(new Set(paths).size,paths.length,'one thumbnail per visible image');
  assert.deepEqual(new Set(paths),new Set(data.entries.map(e=>imageFor(e,palette).path)),'all different images remain reachable');
- for(const group of groupGraphics(data.entries,palette)) assert.equal(new Set(group.entries.map(e=>imageFor(e,palette).path)).size,group.entries.length);
 }
 const duplicate={id:'test-duplicate',images:data.entries[0].images};
 assert.deepEqual(uniqueGraphics([data.entries[0],duplicate],0,duplicate),[duplicate],'keep a directly linked picture selected when its pixels are shared');
@@ -109,16 +99,12 @@ assert.equal($('graphics-not-found').hidden,true,'old duplicate links resolve');
 assert.match($('graphics-usage').textContent,/Pistol/,'preview explains actual game usage');
 const soldier=data.entries.find(e=>e.uses.some(u=>u.title==='Methug soldier · Attacking')&&e.uses.some(u=>u.title==='Methug soldier · Taking damage'));
 assert(soldier,'shared poses retain both confirmed uses');
-for(const title of ['Methug soldier · Attacking','Methug soldier · Taking damage']) {
- const use=soldier.uses.find(u=>u.title===title);
- $('graphics-category').value='enemies';$('graphics-category').onchange();
- $('graphics-group').value=use.id;$('graphics-group').onchange();
- $('graphics-view').value='groups';$('graphics-view').onchange();
- assert.equal($('graphics-grid').children.length,1);
- $('graphics-grid').children[0].onclick();
- gallery.open(soldier.id);
- assert.equal($('graphics-collection').textContent,title,'opening a shared frame retains the chosen use');
-}
+$('graphics-category').value='enemies';$('graphics-category').onchange();
+gallery.open(soldier.id);
+assert.match($('graphics-usage').textContent,/Attacking/);
+assert.match($('graphics-usage').textContent,/Taking damage/);
+assert.equal($('graphics-grid').children.filter(b=>b.children[0].children[0].src===imageFor(soldier).path).length,1,'shared poses appear once');
+for(const action of ['attacking','taking damage'])assert(filterGraphics(data.entries,`Methug soldier ${action}`,'enemies').includes(soldier),'usage remains searchable');
 const texture=data.entries.find(e=>e.category==='textures');
 assert(filterGraphics(data.entries,texture.title.toUpperCase(),texture.uses[0].section).some(e=>e.id===texture.id));
 assert.equal(filterGraphics(data.entries,'<script>not markup</script>').length,0);
@@ -127,4 +113,4 @@ assert(!html.includes('data-route="wiki"'),'NETRICSA navigation stays removed');
 assert(html.includes('European')&&html.includes('enable in Options → Extras'));
 assert(html.includes('secret-sources.html')&&html.includes('/issues/new'));
 globalThis.fetch=async()=>({ok:false});await assert.rejects(createGraphics,/unavailable/);
-console.log(JSON.stringify({status:'PASS',groups:groupGraphics(data.entries).length,checks:'game-use filters, shared-frame context, usage descriptions, deduplication in both palettes, complete browsing, bounded pages, old links, restored scroll/focus, original downloads, zoom, retry'}));
+console.log(JSON.stringify({status:'PASS',checks:'Category and All labels, direct picture browsing, game-use filters and search, usage descriptions, deduplication in both palettes, complete browsing, bounded pages, old links, restored scroll/focus, original downloads, zoom, retry'}));

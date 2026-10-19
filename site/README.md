@@ -51,9 +51,9 @@ These commands reuse the maps and artwork already in the repo, so you won’t ne
 
 To refresh the gallery, run `python scripts/build_site_graphics.py` after creating `build/exports/ssa-graphics.zip` with the graphics exporter. It keeps the original PNGs unchanged and compares their visible pixels to remove duplicates. Generated contact sheets and tile overviews are left out; different sizes and colours stay available. The source archive is unchanged and stays out of the website.
 
-Groups follow how the game uses each picture. `scripts/graphics_usage.py` maps animation sequences to their callers, expands the selected frames across viewing directions and sizes, and reads wall/door uses from the exported levels. This separates walking from dying, weapon-ready frames from firing, muzzle flashes from projectiles, and HUD roles from pickup artwork. `scripts/graphics_content.py` still supplies picture descriptions.
+Use the Category filter to browse enemies, weapons, menus and other parts of the game, or choose All to see everything. Pictures open directly, without a second layer of groups. Search also finds specific actions such as walking or firing, and each preview explains how the picture is used.
 
-Shared pictures keep every confirmed use, with one copy per group. Individual pictures shows the images without repeats. Pictures without a confirmed use remain under Other stored graphics. Old picture links still work, and links ending in `/rome` keep the Rome colours. The gallery does not claim that every stored animation is reached in a playthrough.
+`scripts/graphics_usage.py` supplies those uses from animation callers and exported level walls and doors. `scripts/graphics_content.py` supplies picture descriptions. Shared pictures appear once in the results and keep every confirmed use in their description. Pictures without a confirmed use remain under Other stored graphics. Old picture links still work, and links ending in `/rome` keep the Rome colours. The gallery does not claim that every stored animation is reached in a playthrough.
 
 Run `python scripts/build_site_sources.py` to refresh the readable secret-source page from the existing map records. Website instructions should describe the download; label newer work as development progress until a release includes it.
 
