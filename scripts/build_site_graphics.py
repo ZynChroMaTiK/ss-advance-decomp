@@ -114,7 +114,7 @@ def main():
             brightness = texture_brightness(texture,texture_records)
             entries.append({'id': f'texture-{texture["family"]}-{texture["mip"]}-{texture["index"]:03}',
                 'title': f'{texture["name"].strip()} · {family}', 'category': 'textures', 'family': family, **brightness,
-                'resolution': texture['mip'], 'mip':texture['mip'], 'resolutionLabel':resolution,
+                'resolution': texture['mip'], 'mip':texture['mip'], 'mipCount':3, 'resolutionLabel':resolution,
                 'resolutionPercent':100//(2**texture['mip']), 'tags': f'{family} {resolution} mip {texture["mip"]}',
                 'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
                 'collectionTitle': f'{texture["name"]} · {family}',

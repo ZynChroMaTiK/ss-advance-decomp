@@ -104,8 +104,8 @@ def actor_variant(resource, index):
         return {'variantTitle':f'Stored variant {offset-block*len(scales)+1}'}
     mip, within = divmod(offset,block)
     view, frame = divmod(within,frames)
-    resolution = resolution_label(scales[mip])
-    result = {'mip':mip,'resolutionPercent':scales[mip],'resolutionLabel':resolution,'view':view+1}
+    resolution = resolution_label(scales[mip]) if len(scales)>1 else 'Single resolution'
+    result = {'mip':mip,'mipCount':len(scales),'resolutionPercent':scales[mip],'resolutionLabel':resolution,'view':view+1}
     parts = []
     if frames > 1 and not (32 <= resource['id'] <= 63 or resource['id'] in (96,97,98)):
         result['animationFrame'] = frame+1

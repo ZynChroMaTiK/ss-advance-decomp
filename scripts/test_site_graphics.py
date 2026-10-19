@@ -25,6 +25,13 @@ assert pickup['mip']==1 and pickup['resolutionPercent']==50 and 'animationFrame'
 assert 'Frame' not in pickup['variantTitle']
 assert actor_variant({'id':6,'directions':5,'frames_per_direction':5,'resolution_flags':28},1)['resolutionPercent']==75
 assert actor_variant({'id':15,'directions':5,'frames_per_direction':1,'resolution_flags':2},6)=={'variantTitle':'Stored variant 1'}
+for index in range(1,6):
+    rocket=actor_variant({'id':15,'directions':5,'frames_per_direction':1,'resolution_flags':2},index)
+    assert rocket['mipCount']==1 and rocket['resolutionLabel']=='Single resolution' and rocket['view']==index
+    assert 'animationFrame' not in rocket
+for index in range(1,6):
+    effect=actor_variant({'id':92,'directions':1,'frames_per_direction':5,'resolution_flags':2},index)
+    assert effect['mipCount']==1 and effect['mip']==0 and effect['animationFrame']==index
 
 # Texture reachability must include the unused-looking switch-on image and
 # multiplayer maps, but exclude spare descriptors and later duplicate names.
@@ -69,6 +76,8 @@ assert not set(sources).intersection(manifest['excluded'])
 assert len({info['pixels_sha256'] for info in manifest['files'].values()}) == len(manifest['files'])
 for entry in entries:
     assert entry['title'] and entry['images']
+    if entry['category'] not in ('actors','textures'):
+        assert not any(k in entry for k in ('mip','mipCount','resolutionLabel')),'screen artwork is not distance mipmapped'
     assert entry['collection'] and entry['collectionTitle']
     assert len(entry['images']) == (2 if entry['category'] == 'actors' else 1)
     pair = tuple(dict.fromkeys(i['path'] for i in entry['images']))
@@ -142,7 +151,7 @@ for source, name in sources.items():
 for entry in textures_by_path.values():
     assert {u['section'] for u in entry['uses']} <= {'textures-egypt','textures-rome'}
     assert all(u['title'] in ('Egypt textures','Rome textures') for u in entry['uses'])
-    assert entry['mip']==entry['resolution'] and entry['resolutionPercent']==100//(2**entry['mip'])
+    assert entry['mipCount']==3 and entry['mip']==entry['resolution'] and entry['resolutionPercent']==100//(2**entry['mip'])
     assert entry['resolutionLabel'] not in entry['title']
 for id in ('actor-032-029','actor-096-004'):
     assert by_id[id]['resolutionLabel']=='Half resolution' and 'Frame' not in by_id[id]['title']
@@ -204,11 +213,30 @@ assert 'Rome chapter' in uses('story-story-03')
 assert 'Ending' in uses('story-story-04')
 archive_path = ROOT/'build/exports/ssa-graphics.zip'
 verified_originals = False
+audited_layouts = Counter()
 if archive_path.exists():
     with zipfile.ZipFile(archive_path) as archive:
         assert set(sources)|set(manifest['excluded']) == {p for p in archive.namelist() if p.endswith('.png')}
         assert hashlib.sha256(archive.read('manifest.json')).hexdigest() == manifest['source_manifest_sha256']
         original=json.loads(archive.read('manifest.json'))
+        # Independently flatten EVERY original layout, including aliases, rather
+        # than validating only the resource that survived picture deduplication.
+        for resource in original['actor_resources']:
+            if not resource['images']: continue
+            scales=[percent for flag,percent in [(1,150),(2,100),(4,75),(8,50),(16,25)] if resource['resolution_flags']&flag]
+            stride=(len(resource['images'])//resource['directions']//len(scales))&255
+            audited_layouts['resources']+=1
+            for image in resource['images']:
+                offset=image['index']-1
+                entry=by_id[f'actor-{resource["id"]:03}-{image["index"]:03}']
+                if offset>=stride*resource['directions']*len(scales):
+                    assert 'mip' not in entry and 'resolutionLabel' not in entry
+                    audited_layouts['outside_layout']+=1
+                    continue
+                mip=offset//(stride*resource['directions'])
+                assert (entry['mip'],entry['mipCount'],entry['resolutionPercent'])==(mip,len(scales),scales[mip]),(resource['id'],image['index'])
+                assert (entry['resolutionLabel']=='Single resolution')==(len(scales)==1)
+                audited_layouts['single_resolution' if len(scales)==1 else 'multiple_resolutions']+=1
         for entry in entries:
             if entry['category']!='actors': continue
             resource,index=map(int,entry['id'].split('-')[1:])
@@ -233,4 +261,4 @@ if archive_path.exists():
             assert pixel_digest(archive.read(source)) == manifest['files'][name]['pixels_sha256'], source
     verified_originals = True
 print(json.dumps({'status':'PASS', 'entries':len(entries), 'original_pngs':len(sources),
-    'unique_files':len(delivered), 'brightness_texture_records':brightness_count, 'compared_with_original_export':verified_originals}))
+    'unique_files':len(delivered), 'brightness_texture_records':brightness_count, 'actor_layout_audit':dict(audited_layouts), 'compared_with_original_export':verified_originals}))

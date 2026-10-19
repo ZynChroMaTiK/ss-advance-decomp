@@ -1,6 +1,11 @@
 export function hasPaletteVariants(entry) {
   return entry.images.length > 1 && entry.images[0].path !== entry.images[1].path;
 }
+export function resolutionDescription(entry) {
+  if (!entry.mipCount) return '';
+  if (entry.mipCount === 1) return 'One stored resolution. Animation frames and viewing angles are not extra mip levels.';
+  return `Mip level ${entry.mip} · ${entry.resolutionPercent}% scale. There are ${entry.mipCount} stored sizes for different distances.`;
+}
 export function filterGraphics(entries, query = '', category = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(e => e.uses.some(u => category === 'all' || u.section === category)
@@ -76,7 +81,10 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
         const chip = make('span', 'Palette variants', 'graphics-palette-variant');
         chip.title = 'Different Egypt and Rome colours. Use Sprite colours to switch.'; chips.append(chip);
       }
-      if (entry.resolutionLabel) chips.append(make('span', entry.resolutionLabel, 'graphics-resolution'));
+      if (entry.resolutionLabel) {
+        const chip = make('span', entry.resolutionLabel, 'graphics-resolution');
+        chip.title = resolutionDescription(entry); chips.append(chip);
+      }
       if (entry.brightnessLabel) chips.append(make('span', entry.brightnessLabel, 'graphics-brightness'));
       if (chips.children.length) button.append(chips);
       button.onclick = () => route(entry.id);
@@ -108,6 +116,9 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-palette-note').hidden = !hasPaletteVariants(selected);
     $('graphics-resolution').hidden = !selected.resolutionLabel;
     $('graphics-resolution').textContent = selected.resolutionLabel || '';
+    $('graphics-resolution').title = resolutionDescription(selected);
+    $('graphics-resolution-note').textContent = resolutionDescription(selected);
+    $('graphics-resolution-note').hidden = !selected.mipCount;
     $('graphics-brightness').hidden = !selected.brightnessLabel;
     $('graphics-brightness').textContent = selected.brightnessLabel || '';
     const brightnessNote = $('graphics-brightness-note');

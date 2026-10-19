@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createGraphicsView,filterGraphics,imageFor,uniqueGraphics,graphicsUrl,createGraphics} from '../site/graphics.js';
+import {createGraphicsView,filterGraphics,imageFor,uniqueGraphics,graphicsUrl,createGraphics,resolutionDescription} from '../site/graphics.js';
 const data=JSON.parse(readFileSync(new URL('../site/data/graphics.json',import.meta.url)));
 const html=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 class Element {
@@ -148,12 +148,26 @@ assert.equal($('graphics-title').textContent,'Pistol pickup');
 assert.equal($('graphics-resolution').textContent,'Half resolution');
 assert(!$('graphics-resolution').hidden && $('graphics-brightness').hidden && $('graphics-brightness-note').hidden);
 assert(filterGraphics(data.entries,'half resolution','pickups').includes(halfPickup));
+for(const id of ['actor-015-001','actor-090-001','actor-092-002','actor-095-001','actor-131-001']){
+ const projectile=data.entries.find(e=>e.id===id);assert(projectile);
+ gallery.open(id);
+ assert.equal($('graphics-resolution').textContent,'Single resolution');
+ assert.match($('graphics-resolution-note').textContent,/One stored resolution/);
+ assert(!$('graphics-resolution-note').hidden);
+ assert.equal(resolutionDescription(projectile),$('graphics-resolution').title);
+}
+gallery.open('actor-096-004');
+assert.equal($('graphics-resolution').textContent,'Half resolution');
+assert.match($('graphics-resolution-note').textContent,/Mip level 1 · 50% scale.*2 stored sizes/);
+gallery.open('actor-015-006');
+assert($('graphics-resolution').hidden && $('graphics-resolution-note').hidden,'unselected stored rocket pictures do not invent mip levels');
 const samePalette=data.entries.find(e=>e.images.length>1&&e.images[0].path===e.images[1].path);
 assert(samePalette,'catalog includes sprites that look identical in both palettes');
 gallery.open(samePalette.id);
 assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'identical palettes clear the chip and explanation');
 gallery.open(oldHud[0].id);
 assert($('graphics-resolution').hidden && $('graphics-brightness').hidden && $('graphics-brightness-note').hidden,'ordinary artwork clears resolution and brightness tags');
+assert($('graphics-resolution-note').hidden,'screen artwork has no distance mip description');
 assert($('graphics-palette-variant').hidden && $('graphics-palette-note').hidden,'single-image artwork has no palette chip');
 assert.equal($('graphics-unused').hidden,false);
 assert.equal($('graphics-unused-note').textContent,oldHud[0].unusedReason);
