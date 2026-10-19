@@ -35,6 +35,14 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
   }
   $('graphics-total').textContent = `Browse ${data.uniqueFiles.toLocaleString()} unique pictures by their role in the game, including different sizes and Egypt and Rome colours.`;
   $('graphics-controls').hidden = false; $('graphics-status').hidden = true;
+  // Keep the preview and scroll targets below the filters as they wrap or resize.
+  if (typeof ResizeObserver !== 'undefined') {
+    const controls = $('graphics-controls');
+    new ResizeObserver(() => {
+      const height = controls.getBoundingClientRect().height;
+      if (height) $('graphics').style.setProperty('--graphics-filter-height', `${height}px`);
+    }).observe(controls);
+  }
   const frames = () => uniqueGraphics(filtered, palette, selected);
   const route = (id = '', replace = false) => navigate(graphicsUrl(id, palette), {replace});
   function renderGrid() {
@@ -131,7 +139,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       page = Math.floor(frames().indexOf(selected)/PAGE_SIZE);
     }
     renderGrid(); renderSelection();
-    if ((focus || changed) && selected) { $('graphics-title').focus({preventScroll:true}); $('graphics-detail').scrollIntoView({block:'nearest'}); }
+    if ((focus || changed) && selected) { $('graphics-title').focus({preventScroll:true}); $('graphics-detail').scrollIntoView({block:'start'}); }
   }
   return {open};
 }

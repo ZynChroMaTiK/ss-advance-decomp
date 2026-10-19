@@ -1,7 +1,8 @@
 .graphics-page{max-width:1560px;margin:auto;padding:35px 4.2% 65px}
 .graphics-heading h1{font-family:'Serious Advance White',Segoe UI,sans-serif;font-size:40px;font-weight:400;letter-spacing:0;line-height:1.25}
 .graphics-heading .eyebrow{margin-bottom:12px}.graphics-heading p{max-width:760px;color:var(--muted)}
-.graphics-controls{display:flex;align-items:end;gap:14px;flex-wrap:wrap;padding:20px;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:24px 0}
+.graphics-controls{position:sticky;top:8px;z-index:5;display:flex;align-items:end;gap:14px;flex-wrap:wrap;padding:20px;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:24px 0;max-height:45dvh;overflow:auto;box-shadow:0 8px 20px #0005}
+.graphics-card,#graphics-count,#graphics-detail,#graphics-title{scroll-margin-top:calc(var(--graphics-filter-height,110px) + 24px)}
 .graphics-controls label,.graphics-preview-controls label{display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--muted)}
 .graphics-controls input,.graphics-controls select,.graphics-preview-controls select{font:14px Segoe UI,sans-serif;background:#101611;color:var(--ink);border:1px solid #52634b;border-radius:5px;padding:10px;min-height:42px;max-width:100%}
 .graphics-search-label{flex:1;min-width:180px}.graphics-controls select{max-width:290px}.graphics-controls button{min-height:42px}
@@ -13,7 +14,7 @@
 .graphics-thumb img{object-fit:contain;max-width:100%;max-height:100%;width:auto;height:auto;image-rendering:pixelated}
 .graphics-card strong,.graphics-card small{display:block;padding:10px 12px 0;overflow-wrap:anywhere}
 .graphics-card strong{font-size:15px;line-height:1.4}.graphics-card small{font-size:14px;color:var(--muted);padding-bottom:12px;line-height:1.5}
-.graphics-inspector{position:sticky;top:18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:18px;min-width:0}
+.graphics-inspector{position:sticky;top:calc(var(--graphics-filter-height,110px) + 24px);max-height:calc(100dvh - var(--graphics-filter-height,110px) - 40px);overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:18px;min-width:0}
 .graphics-inspector h2{font-size:23px;line-height:1.4;overflow-wrap:anywhere}.graphics-inspector .eyebrow{margin-bottom:8px}
 .graphics-preview-area{height:360px;overflow:auto;display:grid;align-items:safe center;justify-items:safe center;border:1px solid #52634b;background:repeating-conic-gradient(#1b281e 0 25%,#314737 0 50%) 0/20px 20px;margin:15px 0}
 .graphics-preview-area[data-background=dark]{background:#080e0a}.graphics-preview-area[data-background=light]{background:#eee}
@@ -25,6 +26,6 @@
 .graphics-pagination span{font-size:12px;color:var(--muted)}.graphics-image-nav button{font-size:12px}
 .graphics-page button:disabled{opacity:.4;cursor:default}.graphics-page details{font-size:12px;color:var(--muted)}
 @media(max-width:1150px){.site-header{gap:16px}.site-header nav{gap:15px}.brand span{display:none}.graphics-layout{grid-template-columns:minmax(0,1fr) 310px}}
-@media(max-width:800px){.graphics-layout{display:flex;flex-direction:column}.graphics-inspector{position:static;width:100%}.graphics-browse{width:100%}.graphics-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.graphics-preview-area{height:280px}.graphics-heading h1{font-size:32px}}
+@media(max-width:800px){.graphics-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}.graphics-controls label{min-width:0}.graphics-controls input,.graphics-controls select{width:100%;min-width:0}.graphics-layout{display:flex;flex-direction:column}.graphics-inspector{position:static;width:100%;max-height:none;overflow:visible}.graphics-browse{width:100%}.graphics-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.graphics-preview-area{height:280px}.graphics-heading h1{font-size:32px}}
 .graphics-back{margin-bottom:18px}.graphics-controls label,.graphics-preview-controls label,.graphics-pagination span,.graphics-image-nav button,.graphics-page details{font-size:14px}
 @media(prefers-reduced-motion:reduce){.graphics-page *{scroll-behavior:auto}}
