@@ -1,6 +1,41 @@
 # Native port findings
 
+Technical audit follow-up: save-read failure handling, locked audio status, a
+shared decal atlas, separate scene/HUD link targets, centralized runtime settings,
+and focused incremental tests are implemented. See [technical-refactors.md](technical-refactors.md)
+for scope, measurements, and validation; frontend separation remains incremental.
+
 Current milestone: all twelve campaign levels are enabled through `play-native.cmd`.
+Extras now offers a saved Original/Classic HUD choice, defaulting to Original.
+Classic reconstructs the retained green interface with live health, armor, ammo,
+score, saved/live high score, time, unread NETRICSA entries and boss health in both renderers. It adds a transient weapon
+selector, health/ammo palette flashes and static white localized notices.
+New dossiers blink the retained analyzing sprite in HUD green without backing near the upper
+center for2s, then teleport the green/white inbox inward, hold2s and teleport
+back. Duplicate entries do not retrigger it.
+Classic's other anchors now follow the Serious Engine layout with2px edge
+insets, spaced armor/health, separate finite/infinite weapon positions and a
+higher selector. The former top-center timer panel now shows max(saved high
+score,current score), inset2px vertically; the timer sits immediately below.
+Weapons and crosshair keep their existing behavior. See [classic-hud.md](classic-hud.md).
+The shared original sprite compositor now accepts mixed priorities, including
+transparent-sample priority promotion, instead of rejecting the frame. Both
+renderers benefit; see [display.md](display.md) for the bounded hardware-model
+evidence and native/Windows checks.
+The Main-menu Scores screen now includes original ranking/name entry and saved
+records, with keyboard typing, original cycling and record highlighting. Pause
+Quit and campaign-ending handoffs offer qualifying scores; see [scores.md](scores.md).
+Death now consumes a life and automatically retries from the level-entry snapshot.
+Retries skip NETRICSA and the map, starting directly at the normal black-to-level
+fade with the ready weapon, HUD and movement available.
+The final life runs the original Game Over message/music before the black fade
+and Main return. A stale pause bit cannot stall the death controller.
+See [run-exit.md](run-exit.md).
+The automap now opens with M in both renderers, gated by the saved Automap
+On/Off option in Extras (default Off; explicit saved choices retained). Mouse wheel or held
+plus/minus zooms; live geometry, markers, contacts, palette and scanlines run in
+native C. Tab retains NETRICSA. See [automap.md](automap.md).
+Jump now defaults to Off in Extras. Existing explicit saved choices are preserved.
 Native NETRICSA now toggles during gameplay with Tab; N opens/closes and Esc returns.
 It also precedes every pre-level map view. In-game NETRICSA overlays a frozen
 full-resolution game frame; only pre-level NETRICSA uses the animated background.
@@ -9,7 +44,15 @@ The in-game blend removes HUD sprites except the weapon
 while darkening and tinting the frozen level green; closing reverses the blend.
 Original weapon/enemy illustrations, localized descriptions, two scrolling panels,
 strategic/tactical records and live/campaign-session statistics are connected.
-NETRICSA freezes gameplay and uses its original music cue. See [netricsa.md](netricsa.md).
+Enemy dossiers unlock only after a kill. A campaign-session journal tracks
+weapon/enemy discoveries and individual read status across levels and retries;
+Classic's top-right panel displays the combined unread count.
+Every level's starting equipment is familiar: viewable, automatically read,
+without a new-message count or notification. Actual in-level discoveries still
+alert, and carried unread messages retain their status across level changes.
+NETRICSA freezes gameplay. Pre-level briefings use the original music cue;
+in-game opening/closing preserves the current music's uninterrupted playback.
+See [netricsa.md](netricsa.md).
 On2026-10-17 the user explicitly requested manual campaign validation rather
 than gating levels on automated playthroughs. The final map, Caesar's Palace,
 now participates in normal advancement, passwords and saved level selection.

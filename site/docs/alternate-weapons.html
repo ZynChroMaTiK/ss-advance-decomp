@@ -1,5 +1,45 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PC alternate weapons — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="alternate-weapons.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="pc-alternate-weapons">PC alternate weapons</h1>
-<p>Options &gt; Extras &gt; Alternate weapons enables dual Colts and the requested double-shotgun pellet pattern.
+<p>Options &gt; Extras &gt; Alternate weapons enables dual Colts and the requested double-shotgun pellet pattern.</p>
+<p>The separate Extras &gt; Weapon bobbing toggle defaults Off and works with all
+ten weapons, including both Colt hands. It offsets weapon render copies and
+fixed-screen muzzle flashes together along an arch spanning0..6 GBA pixels to
+the right and0..2 pixels down, scaled by movement amplitude. Both Colts and
+their flashes share the same offset and move in parallel. The phase is exactly
+the recovered footstep phase (camera counter times1872): sound13 lands bottom
+left, sound14 bottom right, and the weapon rises to the normal baseline between
+steps. Jump height adds up to4px of dip, including stationary jumps, returning
+on landing. The baseline never moves upward past the art's original crop.
+Original weapon and muzzle-flash sizes are preserved. Original positions are
+the upper-left bounds of the movement; both sprites only shift further
+right/down. Only the left-hand artwork itself is mirrored. There
+is no edge filling, resampling or viewport strip extension.
+At rest offsets are zero, preserving the original image and positions.
+Weapon bob amplitude reaches full strength at normal straight speed8, rather
+than diagonal speed: the original camera's squared-speed amplitude was half
+strength when walking straight, leaving vertical offsets below one native
+pixel. Only weapon/flash presentation is normalized; camera/footsteps remain
+the original recovered behavior.
+All display entry points retain the original strict OBJ cycle budget.
+In native-aspect software output, bobbing weapon pixels may extend past the
+centered3:2 canvas. PC-only OAM snapshots separate unshifted original weapon art
+from the HUD; output-space translation applies bobbing before clipping at the
+actual viewport edge. No border pixels are invented or stretched. Both Colt
+hands stay together, while HUD anchors and reticle remain fixed. The reference
+renderer and exactly3:2 output retain the existing OAM composition path, and
+zero-offset idle rendering bypasses the separate weapon pass.
+It does not move the crosshair or modify canonical weapon coordinates, aim,
+firing, magazines or reload timing. Standing still on the ground has no sway;
+automap, death and third-person views suppress it. Pause holds the current phase. Repeated
+rendering never advances it. Software uses the same viewport scale for flash
+offsets as the weapon; GBA flashes use the corresponding120x120 raster offset.
+Original actor projection entry points retain zero offsets; the new PC collect
+entry point mirrors the artwork before applying the shared screen offset.
+Settings version11 retains the preference introduced in version10; versions1..9
+default it Off.</p>
+<p>The native PC pickup rules also accept ammo without weapon ownership and owned
+weapons for their normal ammo grant, with ordinary capacity limits. This applies
+even when Alternate weapons is Off. The second-Colt acquisition has priority
+over duplicate-ammo handling, so it still unlocks duals with a full ammo pool.
 It defaults to Off and persists in Settings v6 (16 bytes, byte9 bit7, existing
 CRC). Versions1..5 keep their previous preferences and migrate with it Off.
 Extras retains its grid-aligned labels/values; the new row is at y120 and Back
@@ -37,7 +77,7 @@ shots still obey the magazine, reload and shot deadlines. Changing weapon or
 variant, death, pause, lost focus and disabled input cancel unstarted shots;
 an already started shot still commits normally. Single Colts keep one-shot clicks.</p>
 <p>Each hand tracks six shots separately from the original infinite reserve ammo/HUD.
-Reload is required only when the next hand in the alternating sequence is empty.
+Automatic reload begins only when the next hand in the alternating sequence is empty.
 The newly emptied right gun does not block the left gun's sixth shot: full duals
 fire12shots before reloading. Unequal magazines still respect hand order and
 never fire an empty gun or skip its turn. Once recoil finishes, the right Colt reloads;
@@ -54,6 +94,12 @@ and the left-only tail. Each hand refills and finishes its projection independen
 Fractional deadlines carry across ticks; rendering frequency
 does not change the average rate. Each event is quantized to the next60Hz update.
 The policy is absent when Alternate weapons is Off, preserving original behavior.
+Press R to reload partially used single or dual Colts manually. This enters the
+same recoil wait, right/left animation, sound and timing path as automatic reload;
+both selected hands refill without changing reserve ammo. Full magazines, other
+weapons, weapon/variant transitions and automap ignore the request. Reload is a
+one-press action: OS repeats cannot restart it, and pause/focus loss consumes
+pending requests. It never restarts the level.
 Re-equipping a gun resets its six-shot counter. A full switch back to Colts
 refills the right gun and the left if duals are selected; a single-to-dual
 transition refills only the newly drawn left gun. The right counter is retained
@@ -89,14 +135,29 @@ quirk remains only with the option Off. All pellets retain unlimited PC range,
 wall/floor/ceiling stops, impact effects and the original two-shell consumption,
 single trigger statistic and firing animation/sound.</p>
 <p>Its alternate firing interval is1.75seconds (105simulation ticks). The original
-17drawable sequence entries are distributed evenly over that cycle, with6/7tick
-holds; the last-shell six-entry sequence uses17/18tick holds across the same105.
+17drawable sequence entries plus the idle frame are distributed evenly over that
+cycle, with5/6tick holds. Idle is the final timed slot within the105ticks, before
+another shot or a queued weapon change can start. The last-shell six-entry
+sequence already ends on idle and uses17/18tick holds without duplicating it.
 Weapon runtime consumes completion before the next controller admission, avoiding
 an extra idle tick. Native game_runtime routes only an active alternate shotgun's
 sprite-animation stage through weapon_runtime_animate; other objects retain the
 original animation path. Pause freezes the cycle. Queued weapon changes wait for
 the full animation, and pending quick clicks survive until the next shot.
 Switching the option Off restores the original animation clock on the next update.</p>
+<p>Alternate shotgun reload audio: on first entering the shell-insertion artwork
+(sprite23 in sequence12), play the original mechanism cue0x28 once, centered
+on the protected local player source. A separate runtime edge latch prevents
+repeats across its three sequence entries or during pause/resume. The cue is
+emitted after animation advances, on the same tick as the insertion frame.
+The last-shell sequence22 has no shell insertion and emits no reload cue.
+Original mode and the105tick shot interval remain unchanged.
+The existing timing fixture verifies eight insertion cues across software
+and GBA third-person runs, no replay while paused on insertion, and no cue
+for the last-shell case. GCC ASan/UBSan/leaks and MSVC agree on2318869checks/
+5881frames; Windows number/wheel routes and original switch regression pass.
+Static125libraries/frontend rebuild passes. See the current alternate-weapons
+validation JSON reports; no physical listening or campaign playthrough.</p>
 <p>The original damage routine rejects repeated damage calls on an enemy in the
 same frame. The alternate blast therefore traces/impacts all14pellets, groups
 damage per entity and applies each group once through native combat. Per-pellet

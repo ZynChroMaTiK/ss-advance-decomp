@@ -1,0 +1,40 @@
+{
+    "result":  "pass",
+    "scope":  "Pause heading Y40; Classic Continue/Quit and quit-confirmation Yes/No atY72/88; matching pointer targets; Original choicesY56/72",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  145940,
+                      "completion_starts":  36,
+                      "tally_frames":  69917,
+                      "languages":  3,
+                      "pause_paths":  6
+                  },
+    "classic_windows":  {
+                            "result":  "pass",
+                            "checks":  1666,
+                            "paths":  2,
+                            "music_continuity_cycles":  4,
+                            "hidden_window":  true
+                        },
+    "intermission_windows":  {
+                                 "result":  "pass",
+                                 "checks":  6205,
+                                 "completion_routes":  6,
+                                 "pause_paths":  12,
+                                 "main_menu_quits":  6,
+                                 "renderers":  2,
+                                 "languages":  3,
+                                 "hidden_window":  true
+                             },
+    "preview":  "build/pause-row-tests/screen.classic-pause0.bmp",
+    "preview_inspected":  true,
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "executable_sha256":  "a0205d9803582f7e1d3ebe767a0252cee5dd20df13c34bf8816f2b4a6a626ca1",
+    "source_sha256":  {
+                          "src/intermission.c":  "0ccb238eacb4a431ceeb43b410162b5c7bdc238e50865593363f9176da56ca92",
+                          "tests/test_intermission.c":  "abacff36e818e59aef4ac11f220629c831ad87ae7e1c1c499a14e24d1795e647",
+                          "tests/test_intermission_win32.c":  "0e80f628a5d40f28eb76cd58346e32abc5c546517220ea95a636188c9c30ed8a",
+                          "tests/test_classic_hud_win32.c":  "b60fa8121124cfd642a05a56bfe48593a80830210b0c014cf199ca2e0a1552a0"
+                      }
+}

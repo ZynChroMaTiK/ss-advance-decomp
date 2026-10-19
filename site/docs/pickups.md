@@ -16,6 +16,28 @@ has different cap behavior from smaller additions. Unknown items follow the
 original generic sound/message-and-remove path; item 63 emits sound only.
 The exact meaning of stat C4 versus C6 is not yet named without further evidence.
 
+PC pickup policy (2026-10-19): the playable native game enables
+`SsaPickupRuntime.pc_pickups` and dispatches through `ssa_pickup_touch_pc`.
+Loose ammo and ammo-filling packs can store reserves before the matching weapon
+is owned; this does not grant the weapon. Duplicate owned weapon pickups add
+the same half-capacity ammunition as acquiring that weapon normally, without
+queueing acquisition or forcing a weapon switch. Ammo caps still apply; loose
+ammo and duplicate guns remain on the ground if their pool is full. The second
+Colt retains its alternate dual-acquisition path, including when Colt ammo is
+already full. These rules apply with Alternate weapons both Off and On.
+Original entry points and inventory helpers retain their ROM behavior; only
+the PC pickup call uses the ownership-independent ammo eligibility. Actual
+multiplayer request/replay gates and pickup trigger/effect/removal order stay
+unchanged. Existing carry snapshots already preserve reserves for unowned guns.
+Focused verification: GCC ASan/UBSan/leaks and MSVC agree on2320339checks,
+6507frames and123pickup contacts in the extended alternate-weapons fixture.
+It covers all eight finite ammo/gun pairs, stored ammo surviving carry and
+first weapon acquisition, duplicate grants without switching, caps/refusals
+and ammo packs in both alternate modes. The original dispatcher still passes
+5420 ROM comparisons; Windows input and original switch regressions pass.
+125libraries/frontend rebuilt. See pc-pickup-policy-validation.json and the
+current native-pickup/alternate-weapons reports. No campaign playthrough.
+
 An entity trigger bit 0x100 causes the low-byte script ID to be dispatched and
 then clears that bit, even if inventory subsequently refuses the pickup. The
 callback may change the trigger; the mask applies to its updated value.

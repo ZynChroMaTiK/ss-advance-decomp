@@ -91,7 +91,7 @@ int ssa_win32_input_message(SsaWin32Input *b,HWND window,UINT message,
         b->focused=0;ssa_pc_input_runtime_focus(b->runtime,0);return 1;
     case WM_KEYDOWN:case WM_KEYUP:
         if(wparam!='W' && wparam!='A' && wparam!='S' && wparam!='D' &&
-           wparam!=VK_SPACE && wparam!='H' && wparam!='E')return 0;
+           wparam!=VK_SPACE && wparam!='H' && wparam!='E' && wparam!='R')return 0;
         if(!b->focused)return 1;
         result=ssa_pc_input_runtime_key(b->runtime,(int)wparam,message==WM_KEYDOWN,
             message==WM_KEYDOWN && (((ULONG_PTR)lparam>>30)&1u)!=0);

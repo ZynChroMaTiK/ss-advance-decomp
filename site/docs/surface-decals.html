@@ -1,0 +1,182 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Optional floor and ceiling decals — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="surface-decals.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="optional-floor-and-ceiling-decals">Optional floor and ceiling decals</h1>
+<p>Extras &gt; Surface decals is saved and defaults Off. It adds new native artwork,
+not recovered GBA content. Floors now have very subtle connected dirt/stain
+tiles; ceilings use a different, lighter water-stain pattern. The old cracks,
+gouges and chipped plaster are removed. One toggle controls both. Sky remains
+undecorated.</p>
+<p><code>surface_decals.c</code> builds four fixed texture banks of49 tiles per surface, each
+128x128. They sample at two
+world units per texel, matching the base wall textures' sampling density.
+Each tile now spans256 world units, twice its earlier width and height, without
+changing texel density. The set contains an empty tile plus47 occupied pieces:
+single stains, caps, straights, inner/outer corners, edges, junctions and a full
+interior tile. Diagonal neighbors connect internal corners without introducing
+tile seams; both floor and ceiling layouts include full connecting pieces.
+Diagonal support blends into the curved shoulders with a smooth two-axis weight.
+The former hard whole-quadrant fill caused rectangular density steps inside
+the tile artwork; it is removed. The smooth corner artwork is independent of
+placement probabilities and bank selection.
+The tile library is fixed across levels. Each map cell selects one of four
+texture banks, varying contours, interior gaps and speckles. All banks share
+border pixels; differences fade in over16 texels inside a piece, preserving
+exact joins for every neighboring bank combination. Fixed cluster stamps, with seeded random
+selection and orientation, place stains on a64x64 tile grid. Cluster activation
+is now100% for floors and95% for ceilings, increased from90%/70%, so more stain
+pieces replace empty cells. These are cluster probabilities, not the fraction of
+all tiles covered by stains. Matching
+corner/edge/full pieces are chosen from occupied neighbors. There are no ellipse
+fields, coordinate warping, bilinear masks or per-pixel generated shapes.
+Sampling reads the selected tile directly at its original texel coordinates.
+The grid repeats after16384 world units; ceiling placement is less dense.</p>
+<p>All tile pixels are binary: unchanged surface or one darker original-palette
+shade, targeting6% attenuation. This gives at most two colors per underlying
+surface, including feathered edges, noise and distance fading. Soft outlines are
+baked into the tiles with unordered full-tile random thresholds. The former
+16x16 ranked dither lattice is removed: random speckles allow natural neighboring
+clusters instead of favoring alternating pixels. The feather spans
+the full edge profile instead of saturating into a fill at low coverage. Wider
+profiles soften exposed boundaries. Periodic negative noise cuts irregular clean
+patches through the interiors, and interior dithering leaves the underlying
+surface visible even in full connecting pieces. There are no solid stain fills.
+The latest density adjustment doubles the scale of the erosion detail and lowers
+its strength: openings are fewer and larger, with denser remaining stain marks.
+The curved shoulders are inset farther from exposed corners for rounder outlines.
+No intermediate shade levels or interpolated colors are added. Palette matching
+retains fractional targets; the actual darker color depends on the chapter palette.
+Matching now requires a genuinely darker, distinct opaque palette color rather
+than accepting an unchanged surface color. This makes the artwork visible on
+every solid campaign floor/ceiling material, including dark ceilings. A pure
+black plane uses the nearest distinct opaque shade if no darker color exists.
+Blue-dominant floor colors used for water exclude stains and noise; ceiling
+colors remain eligible. Water classification uses the original unfaded palette
+so damage flashes and fades cannot change eligibility. Sky remains excluded.</p>
+<p>An additional faint noise tile is selected for approximately one quarter of
+otherwise empty grid cells. Its sparse speckles cover about1.5% of the floor tile
+and1% of the ceiling tile, using the same single decal shade. Its borders are
+clean and it never replaces a stain tile. Other empty cells remain undecorated.
+Each bank contains49 tiles (48 stain/empty pieces plus noise).
+All artwork and thresholds are stationary and independent of level/game RNG.
+Original palette effects still apply; shading never substitutes transparent/sky index0.
+Coordinates include negative world positions and stay fixed as the camera moves.
+Stain intensity fades after768 units and disappears beyond1536 units to
+limit minification noise. No actors, collision bodies, gameplay timers or RNG
+state are allocated or advanced by rendering.</p>
+<p>The software renderer samples within its existing floor/ceiling passes. Looking
+up/down uses world-space UVs interpolated with reciprocal depth. Depth and
+occlusion stay unchanged; this is not a screen-space overlay. The reference GBA
+renderer reuses its original visible plane intervals before actors, reconstructing
+floor/ceiling world coordinates at the120x120 scene resolution. Original plane
+rendering functions are untouched. With the option Off, original rendering is
+retained in both paths.</p>
+<p>Water uses randomly placed, animated glints instead of stains when Surface decals
+is enabled. Four fixed8x8 star sprites pulse over24 game ticks, with independent
+position, phase and eligibility per64-world-unit patch and128-tick epoch. The
+game clock freezes them on pause; rendering does not consume gameplay RNG.
+Glints fade after768 units and disappear at1536.</p>
+<p>Water also has non-glint animated decals: expanding broken ripple rings and
+short wavelets, using two fixed banks of six16x16 frames in water_ripples.inc.
+They sample at two world units per texel. Independently seeded64-unit patches
+choose their position, variant, orientation and phase; two thirds are eligible
+per256-tick epoch. Each decal animates for72 game ticks,12 ticks per frame,
+then disappears before its next randomized appearance. A darker water-palette
+shade targets20% attenuation, distinct from the bright glints. Surface decals
+controls both water animation types, with no new setting or save-format change.
+Ripples use the same pause-safe game clock and768..1536 distance fade, without
+advancing game RNG or entities.</p>
+<p>Extras &gt; Water reflections is a separate saved toggle, default Off. Both the
+software and GBA display modes now use a second render of the3D scene. The old
+reflection ray tracer and its world-grid cache are removed. The camera eye is
+mirrored across each visible water height, pitch is reversed, and the resulting
+scene image is flipped vertically into the visible-water stencil. Geometry
+crossing the water plane is clipped in3D before near clipping and projection;
+the water plane itself is excluded. The shared polygon scene pass renders current
+walls, ceilings, sky and world actor sprites, including their current animation
+and vertical offsets. HUD, first-person weapon/flash sprites and recursive
+reflections are excluded. This renders an independent scene from the mirrored
+eye; it does not flip or reuse the primary framebuffer. One scene pass runs per
+distinct visible water height, with no pass when no water is visible.
+The reflection multiplies the original water
+RGB555 color; GBA output selects the nearest opaque original-palette color.
+Glints and ripple decals bypass multiplication and retain their palette colors. Reflections
+fade after768 units and disappear at1536. Static stain artwork retains its
+existing two-color limit; the separate water shading layer does not alter it.
+The software pass uses the output resolution. GBA output reuses this native
+polygon renderer at240x160 projection, sampling into the original120x120 visible
+plane spans with nearest original-palette colors. Its ordinary original world
+and actor passes remain unchanged. The reflection backend is shared through the
+native-core/PC-renderer static-library component rather than duplicating geometry
+rendering. Each owner frees its water stencil and private reflection renderer
+before map teardown. Buffers and geometry caches persist between frames, and
+the second pass does not change gameplay entities or the main depth buffer.</p>
+<p>Settings version12 retains the16-byte CRC format and all previous flags. Byte8
+bit4 stores Water reflections, bit5 Surface decals, bit6 bobbing, bit7 aspect
+and bits0..3 version. Versions1..11 migrate with reflections Off; versions1..10
+also default decals Off. Extras has nine logical rows, eight visible at
+Y16..128 with a16px stride, title Y0 and Back144. Selection scrolls by one row
+to reveal Water reflections; arrow clicks and mouse targets follow the scroll.
+Each localized row overlays its own font batch so the original128-glyph limit
+cannot clip the final value or Back label in longer languages.</p>
+<p><code>tests/test_surface_decals.c</code> checks binary tile pixels, the two-color rendering
+limit, a fixed library across levels, distinct and randomly selected texture
+banks, compatible ports across all bank pairs, and clean exposed edges. Tests
+also require diagonal pieces to match their unfilled counterparts along
+both internal midlines, guarding against rectangular quadrant fills. Threshold
+histograms and neighbor alternation check uniform, unordered speckling. It checks
+lower coverage in the broad edge band, rounded exposed corners, porous yet denser
+interiors in every8x8 patch, increased stain placement with empty areas remaining,
+actual single/corner/edge/full pieces, diagonal-aware
+joins, random noise tile frequency and sparse speckle density. It checks direct
+stored-tile sampling across the whole layout period, negative coordinates and
+integer limits, distance fading, palette validity and sky rejection. Reference
+checks distinguish blue floors from identically colored ceilings. Asset-only
+checks decode all twelve campaign maps and verify every floor/ceiling material
+against the two chapter palettes, including dark shades and water exclusions.
+Reference visibility, output guards, stable repeated draws and unchanged depth/gameplay
+are checked in both renderers and three pitch views on Egypt/Rome fixtures.
+Water checks use render-only blue floor fixtures, verify actual second scene
+passes with no reflection rays, multiple water heights, visible reflected actor
+pixels and removing actors from render snapshots, multiply attenuation, bright glints unaffected by
+reflection, animation and distance limits, stable repeated draws and unchanged
+depth/inventory. Non-glint checks cover independent animation, darker retained
+palette colors, the shared toggle, reflection exclusion and distance rejection;
+render captures verify stable paused frames and animation advancing with the
+game clock. The suite now makes57 primary draws. Settings checks cover the new
+Extras row, live application, persistence and legacy save migration.
+A synthetic visibility fixture is placed beside actual stains; a starting view
+may legitimately be clear. These are render fixtures, not campaign playthrough
+validation. See surface-decals-validation.json and
+windows-surface-decals-validation.json. Original ROM files are unchanged.</p>
+<p>Slave Compound pale pool correction (2026-10-19): map3 sector9 is the large
+pool (floor96, palette120, RGB5 27/30/31). Its blue-green difference is only1,
+so the saturated-blue heuristic missed it. Sectors38/39 share palette120 but
+are smaller stair treads at144/128. The shared material predicate therefore
+adds only level3/color120/height96, retaining the original color and geometry.
+PC flat/pitched shading, reflection-pass stains, GBA stain exclusion and GBA
+water overlays use that predicate. Other levels, same-colored steps and ceilings
+retain their existing behavior; the two Extras toggles retain their meanings.
+The fixture verifies the original three sector records, real pool rendering at
+two pitches, one reflection height, and separate GBA pool/stair visibility spans.
+Captures: build/surface-decals/slave-pool-flat-3.bmp and slave-pool-pitched-3.bmp.</p>
+<p>Water decal density (2026-10-20): glints and ripples share a seeded64-unit
+tile occupancy mask, leaving approximately half the tiles permanently empty.
+The remaining tiles retain the existing per-epoch appearance probabilities,
+sprite placement and animation timing. This roughly halves overall decal
+density and creates persistent clear areas. Empty tiles still show the original
+water color or reflection; both renderer paths use the same layout.</p>
+<p>Caesar's Palace dry floor correction (2026-10-20): the U.M.T at (-192,-448)
+stands in sector43. This floor and its connected sectors44/62 use palette36
+at height0. Treat that material as dry on level11, overriding the blue-color
+heuristic. The original color and geometry remain intact; glints, ripples and
+water reflections no longer apply, and optional ordinary stain decals can.
+Other levels retain their palette classification, including Slave Compound's
+pale pool exception. The surface fixture verifies the ROM sectors and U.M.T
+location, dry software/GBA shading, and unchanged classification in Rome level6.</p>
+<p>Extras layout update (2026-10-20): all nine options now fit on one page at
+Y16..80 with an8px stride. This supersedes the eight-row scrolling layout
+described above; Water reflections no longer requires scrolling.</p>
+<p>Forum of Mars dry floor correction (2026-10-20): level6 sector21 uses palette130
+at height0. It is dry stone, so this level's material classification overrides
+the blue heuristic. Both renderers omit water reflections, glints and ripples;
+ordinary optional stain decals apply. Other levels keep their existing rules.
+The ROM-backed surface fixture checks the sector record and dry predicate.</p>
+</main></body></html>

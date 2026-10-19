@@ -6,13 +6,20 @@ Select Level after beating map10. No save migration or progress reset is needed.
 `play-native.cmd --level 11` starts Caesar's Palace directly with its original
 standalone loadout. The user requested manual campaign validation on2026-10-17;
 automated playthrough success is no longer an admission gate.
+M now opens the recovered in-level automap in either renderer, gated by the
+saved Extras -> Automap option (default Off), with wheel or
+held plus/minus zoom, original walls/markers/palette and scanline animation.
+Pause and Tab NETRICSA return to the map. See [automap.md](automap.md).
 Original chapter/ending panels now run natively: Egypt before New Game,
 Rome on advancement into map6, and the ending after the final bonus tally.
-The ending returns to Main; R retains entry-state replay during play. Esc/P now
+Finite lives now follow original death timing and automatic retries, preserving
+the remaining5/3/2 difficulty allowance across levels; permanent death offers
+saved high-score entry. See [death/retry/game over](run-exit.md).
+The ending offers high-score entry before Main. Esc/P now
 opens Continue/Quit with a Yes/No warning. Completion renders original localized
 notice sprites, live score and time/ammo bonus digits; held fire/Enter/Space
 accelerates counting. Bonus score commits once before advancement. See
-[pause and completion](completion.md). High-score/name entry remains unfinished. Preview the ending with
+[pause and completion](completion.md) and [saved high scores/name entry](scores.md). Preview the ending with
 `play-native.cmd --story 12`. See [campaign-story.md](campaign-story.md).
 
 Run `play-native.cmd` from the workspace. It opens the supplied, identity-checked
@@ -103,7 +110,7 @@ a separate click-to-capture mode or prototype text overlay. Use WASD to move, mo
 aim vertically, left mouse to fire, Space to jump, H to toggle first/third-person view,
 E to use doors, and number keys 1–0 to select an owned weapon. Picked-up weapons
 also select through the original acquisition logic. Esc/P opens Pause and frees the cursor;
-R is unbound. Enter advances after the first
+R reloads Colts when Alternate weapons is enabled. Enter advances after the first
 eleven exits and shows the ending after the twelfth exit; otherwise it restarts. Mouse aiming uses
 the original vertical auto-aim until the first vertical mouse input. Vertical
 input enables direct free aim, including full yaw precision, sector-plane hits
@@ -145,11 +152,12 @@ remain centered. This spatial model is a native PC addition.
 Positioned sounds now fade continuously with distance, including nearby doors,
 using the same falloff as enemy effects. Pickups bypass distance attenuation
 and positional panning, using the same local playback path as player sounds.
-Death selects the original game-over music, and the real scripted exit selects
-the original level-clear cue once. End-screen transitions clear old effect
-loops; the death voice still plays. Restart restores level music. `--no-music`
-keeps these transitions effects-only. The PC death/restart shell uses this cue
-at its death notice; the original continue/menu timing remains unfinished.
+The last life selects the original game-over music at the recovered GAME OVER
+notice, while ordinary deaths retain level music and sound17. The real scripted
+exit selects the original level-clear cue once. End-screen transitions clear
+old effect loops. Restart restores level music. `--no-music` keeps these
+transitions effects-only. The death lifecycle and automatic finite-life handoff
+are now connected; see [run-exit.md](run-exit.md).
 
 This is a **twelve-level prototype**, with campaign playthrough validation left
 to the user. The completion tally UI, score/name entry, remaining
@@ -196,8 +204,9 @@ The PC shell handles restart and completion explicitly; it does not claim a
 recovered full original menu dispatcher. The production frontend exposes levels
 0 through 10 (`--level 0..10`); the final campaign map remains unsupported.
 The recovered difficulty menu now also selects original easy/hard damage rules
-and initial continue values5/3/2. Continue screens and finite continue progression
-are still unfinished; Enter retains the documented PC level-entry restart policy.
+and initial continue values5/3/2. The later finite-life integration now performs
+automatic retries and final game-over/high-score handoff. Enter restart remains
+available only to the explicit startup/transition diagnostic, not ordinary play.
 
 ## Level advancement and restart
 

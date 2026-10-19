@@ -26,6 +26,10 @@ static int decode(SsaNetricsa *s,uint32_t address,uint8_t *out,size_t bytes)
 }
 static void command(SsaNetricsa *s,unsigned id){if(s->command_count<8)s->commands[s->command_count++]=id;}
 static unsigned lines(const char *p){unsigned n=1;while(*p)if(*p++==10)++n;return n;}
+static int enemy_available(const SsaNetricsaData *d,unsigned i)
+{return d->show_all || d->rows.enemies[i].kills || (d->enemy_entries&(1u<<i));}
+static int weapon_available(const SsaNetricsaData *d,unsigned i)
+{return d->rows.weapons[i].owned || (d->weapon_entries&(1u<<i));}
 static int32_t signed32(uint32_t n){return n<=INT32_MAX?(int32_t)n:-1-(int32_t)(UINT32_MAX-n);}
 static int format(SsaNetricsa *s,unsigned panel,unsigned id,const uint32_t *args,unsigned count,const char *word)
 {
@@ -95,7 +99,8 @@ static int records(SsaNetricsa *s)
 int ssa_netricsa_init(SsaNetricsa *out,const uint8_t *rom,size_t size,unsigned language,const SsaNetricsaData *snapshot)
 {
     SsaNetricsa *s;uint8_t map[1200];unsigned i;uint32_t count=0;int result=-1;
-    if(!out || out->loaded || !rom || size!=0x800000 || language>=3 || !snapshot || snapshot->level>=12 || snapshot->show_all>1)return -1;
+    if(!out || out->loaded || !rom || size!=0x800000 || language>=3 || !snapshot || snapshot->level>=12 || snapshot->show_all>1 ||
+       snapshot->weapon_entries>0x3ffu || snapshot->enemy_entries>0xfffu || snapshot->opening_entry>22)return -1;
     s=calloc(1,sizeof(*s));if(!s)return -1;
     s->rom=rom;s->rom_size=size;s->language=language;s->data=*snapshot;s->loaded=1;
     if(!decode(s,0x080a8368,s->tiles,sizeof(s->tiles)) || !decode(s,0x080aaf38,s->frame_tiles,sizeof(s->frame_tiles)) ||
@@ -104,12 +109,15 @@ int ssa_netricsa_init(SsaNetricsa *out,const uint8_t *rom,size_t size,unsigned l
     for(i=0;i<256;++i)s->palette[i]=(uint16_t)u16(rom+0xa8168+i*2);
     for(i=0;i<600;++i){s->frame_map[i]=(uint16_t)u16(map+i*2);if((s->frame_map[i]&1023)>=54)goto done;}
     s->palette[60]=0x1fe0;for(i=61;i<64;++i)s->palette[i]=0x1280;
-    for(i=0;i<12;++i)count+=snapshot->rows.enemies[i].spawned;
+    for(i=0;i<12;++i)count+=enemy_available(snapshot,i)!=0;
     s->has_enemies=snapshot->show_all || count!=0;
-    for(i=0;i<12;++i)if(snapshot->rows.enemies[i].spawned || snapshot->show_all){s->enemy=i;break;}
-    for(i=0;i<10;++i)if(snapshot->rows.weapons[i].owned){s->weapon=i;break;}
+    for(i=0;i<12;++i)if(enemy_available(snapshot,i)){s->enemy=i;break;}
+    for(i=0;i<10;++i)if(weapon_available(snapshot,i)){s->weapon=i;break;}
     if(i==10)goto done; /* Avoid the original infinite unavailable-weapon scan. */
     s->category=4;s->focus=1;s->fade_volume=0xf00;s->fade_step=-64;
+    if(snapshot->opening_entry){unsigned id=snapshot->opening_entry;
+        if(id<=10){if(!weapon_available(snapshot,id-1))goto done;s->weapon=id-1;s->category=2;}
+        else{if(!enemy_available(snapshot,id-11))goto done;s->enemy=id-11;s->category=1;}}
     if(records(s)!=1)goto done;
     command(s,7);*out=*s;
     /* Repair pointers to embedded formatted text after the transactional copy. */
@@ -122,7 +130,7 @@ static void change_record(SsaNetricsa *s,int direction)
     unsigned i,limit=s->category==1?12:10,*index=s->category==1?&s->enemy:&s->weapon;
     if(s->category!=1 && s->category!=2)return;
     for(i=0;i<limit;++i){*index=(*index+limit+(direction<0?-1:1))%limit;
-        if(s->category==1?(s->data.show_all || s->data.rows.enemies[*index].spawned):s->data.rows.weapons[*index].owned)break;
+        if(s->category==1?enemy_available(&s->data,*index):weapon_available(&s->data,*index))break;
     }
     s->scroll[0]=s->scroll[1]=0;command(s,12);
 }
@@ -206,7 +214,16 @@ int ssa_netricsa_row(const SsaNetricsa *s,const char *p,unsigned row,unsigned wi
 }
 static int record_available(const SsaNetricsa *s,unsigned index)
 {
-    return s->category==1?(s->data.show_all || s->data.rows.enemies[index].spawned!=0):s->data.rows.weapons[index].owned!=0;
+    return s->category==1?enemy_available(&s->data,index):weapon_available(&s->data,index);
+}
+int ssa_netricsa_viewed(const SsaNetricsa *s,unsigned *weapons,unsigned *enemies)
+{
+    if(!s || s->loaded!=1 || !weapons || !enemies)return -1;
+    *weapons=*enemies=0;
+    if(s->closing || s->done || s->fade_volume)return 1;
+    if(s->category==1 && s->enemy<12 && enemy_available(&s->data,s->enemy))*enemies=1u<<s->enemy;
+    if(s->category==2 && s->weapon<10 && weapon_available(&s->data,s->weapon))*weapons=1u<<s->weapon;
+    return 1;
 }
 enum { SELECTOR_LEFT=90,SELECTOR_STRIDE=8,SELECTOR_TOP=17,SKIP_LEFT=134,SKIP_TOP=9 };
 static int skip_width(const SsaNetricsa *s)

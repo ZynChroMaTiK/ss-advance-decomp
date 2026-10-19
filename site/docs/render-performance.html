@@ -1,4 +1,40 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rendering performance and frame presentation — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="render-performance.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="rendering-performance-and-frame-presentation">Rendering performance and frame presentation</h1>
+<p>October19 rendering update:</p>
+<ul>
+<li>Flat views decode wall endpoints and camera-relative ray numerators once per
+draw, reusing them across screen columns. The scratch storage grows with the
+map and is released with the renderer. Refreshing every draw preserves live
+map edits and reloads at reused addresses.</li>
+<li>Power-of-two texture wrapping uses a mask after the original signed floor
+conversion; other dimensions retain signed modulo wrapping.</li>
+<li>Each water reflection still renders the mirrored 3D scene at full resolution
+every presented frame. It now clears/rasterizes only rows that visible water
+at that height can sample. Projection, scanline interpolation, clipping and
+depth tests remain unchanged. Compositing traverses rows and skips coordinate
+divisions for equal-size software output; GBA retains its original sampling.</li>
+<li>Water glints/ripples share coordinate conversion and reject inactive animation
+phases before computing their randomized sprite placement. Art, placement,
+animation timing, distance fade and reflection ordering are unchanged.</li>
+</ul>
+<p><code>ssa_renderer_bench orig/SSA.gba</code> (source <code>tests/bench_renderer.c</code>) measures12
+frozen render fixtures across Egypt/Rome, flat/downward views, dry/water materials,
+960x640 and1920x1080. Water fixtures change floor colors solely to exercise the
+effect; they do not run or validate campaign progression. Each case warms up,
+then reports the median of three12-frame timings and final color/depth hashes.
+Before/after executables run sequentially without concurrent builds. Results,
+hash comparisons and source fingerprints are in
+<code>analysis/renderer-optimization-validation.json</code>. These are local render times,
+not whole-game FPS guarantees.</p>
+<p>Two paired MSVC runs measured30–34% less render time in the flat dry fixtures
+and11–23% less in the water fixtures. Dry pitched views ranged from3% slower
+to7% faster, so no consistent gain is claimed there. All12 final color buffers
+and primary depth buffers match the preserved baseline exactly. Full-HD water
+fixtures still take approximately62–89ms per render on this machine; these
+changes do not make full-resolution software reflections a guaranteed60FPS.</p>
+<p>The final build passes52,135,255 surface/decal checks in GCC ASan/UBSan/leak
+checking and MSVC, plus11,169,540 general renderer checks under sanitizers
+(seven framebuffer sizes and24 chase/jump frames). Both software and GBA
+Windows startup smokes pass. No campaign playthrough was run.</p>
 <p>The original crosshair has replaced the temporary PC glyph. The playable game
 now routes the original type18 HUD controller and original sprite art without
 suppressing them during vertical aiming. Its placement, target/no-target

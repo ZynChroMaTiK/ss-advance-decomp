@@ -14,6 +14,19 @@ static int sound(SsaNativeGame *g,unsigned id){
     else if(g->audio_ops.play)g->audio_ops.play(g->audio_ops.context,id);
     g->last_sound=id;return (int)++g->sound_serial;
 }
+static void audio_netricsa_cancel(SsaNativeGame *g){
+    if(g->hud_netricsa_repeat==2 && g->audio_ops.source)
+        g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_CANCEL_REPEAT,0x0b,1,NULL);
+    g->hud_netricsa_repeat=0;
+}
+static void audio_netricsa_start(SsaNativeGame *g){
+    audio_netricsa_cancel(g);
+    if(g->hud_style!=SSA_HUD_CLASSIC || g->players[0].inventory.health<=0 || g->finished)return;
+    if(g->audio_ops.source){
+        g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_CUE_TWICE,0x0b,1,NULL);
+        g->hud_netricsa_repeat=2;g->last_sound=0x0b;++g->sound_serial;
+    }else{g->hud_netricsa_repeat=1;(void)sound(g,0x0b);}
+}
 static void audio_player_begin(SsaNativeGame *g){
     g->audio_player_before=g->players[0].entity.body;
     g->audio_player_health=g->players[0].inventory.health;
@@ -186,6 +199,7 @@ static void audio_world_sync(SsaNativeGame *g){unsigned i;
         SsaAudioPoint p={b->x,b->y,b->z};g->audio_ops.move(g->audio_ops.context,0x3a,&p);}
 }
 static void audio_unbind(SsaNativeGame *g){unsigned i;
+    audio_netricsa_cancel(g);
     if(g->audio_weapon_loop)stop_sound(g,g->audio_weapon_loop);
     if(g->audio_ops.source){g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_STOP,SSA_AUDIO_SONGS,1,NULL);
         for(i=0;i<25;++i)g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_STOP,SSA_AUDIO_SONGS,2+i,NULL);}

@@ -5,11 +5,11 @@ For the current download, European ROM requirement, controls and setup, start wi
 [the player README](README.md). Older counts and limitations below describe the
 work at the time; they are not a current release checklist.
 
-**Windows x64 prerelease: [download v0.8.0-alpha.1](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.1).**
+**Windows x64 prerelease: [download v0.8.0-alpha.2](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.2).**
 Extract the ZIP to a writable folder, put your own ROM at `orig/SSA.gba`, and run
 `play-native.cmd`. The package includes the native executable; no build tools are
 needed. ROMs and SoundFont banks are not included. See the
-[release notes](releases/v0.8.0-alpha.1.md) for features and known limitations.
+[release notes](releases/v0.8.0-alpha.2.md) for features and known limitations.
 
 [Project website, features and roadmap](https://zynchromatik.github.io/ss-advance-decomp/)
 · [3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
@@ -37,8 +37,12 @@ choose **Original / SoundFont / MIDI** music and
 adjust **Music volume** and **Sounds volume** with bars and percentages.
 The separate Music On/Off option is removed; set Music volume to0% to silence music.
 Options lists Settings, Extras, Language, Clear Data, then Credits at the bottom.
-**Extras** contains **Jump**, **Third-person**, **In-game NETRICSA** and **Alternate weapons**.
-The first three default to On; Alternate weapons defaults to Off. All persist with your settings.
+**Extras** contains Jump, Third-person, In-game NETRICSA, Alternate weapons,
+Automap, HUD, Weapon bobbing, Surface decals and Water reflections. All nine
+items fit on one page. HUD defaults to Original; the added visual effects and
+automap default to Off. Press M for an enabled automap and F11 for display mode.
+R reloads alternate Colts rather than restarting the level.
+Jump and Alternate weapons default to Off; Third-person and In-game NETRICSA default to On. All persist with your settings.
 With Alternate weapons On, a new campaign starts with one Colt; picking up another unlocks and
 equips dual Colts. Each Colt fires every 0.45 seconds; duals alternate hands at 0.225 seconds.
 A click fires two alternating shots even when released quickly; holding fire continues the sequence.

@@ -1,0 +1,120 @@
+# Finite lives and game over
+
+Latest user correction (2026-10-19): restore retries until all lives are lost,
+then the original Game Over sequence before Main. This supersedes the earlier
+request to return to Main on every death. After the original death animation
+and black fade, the Windows frontend now honors SSA_RUN_RETRY, consumes one
+life and rebuilds the level from its entry snapshot. The last life runs original
+Game Over text/music and returns directly to Main after the terminal fade.
+Retries now skip NETRICSA and the map, entering the normal black-to-level reveal
+directly. Initial starts and level advancement retain their pre-level screens.
+No restart confirmation or death name-entry prompt is added. Pause Quit and
+campaign ending retain their existing high-score flows.
+
+A reproducible stuck-death case was added: lethal combat damage with frame pause
+bit1 retained skips entity updates, so06154 never advances its death timer or
+requests terminal mode4. The frontend now clears that bit for a dead player until
+mode4. Actual pause/NETRICSA screens still own their separate event-loop branches;
+the terminal fade still deliberately freezes the completed death frame. This is
+a demonstrated cause of the reported symptom, not a claim that the user's exact
+prior session state was captured.
+
+New Game, passwords and selected-level starts receive5/3/2 lives on Easy/Normal/
+Hard, including the current life. Both the recovered native helpers and Windows
+frontend now retry with level-entry equipment/score. Remaining lives carry through ordinary level advancement
+and the Egypt-to-Rome chapter transition. Starting a new run resets the allowance.
+Existing progress, settings and score-file formats are unchanged.
+
+The previous frontend restored the difficulty allowance on every reload and
+paused indefinitely at death. It also allowed Enter to restart without consuming
+a life. Death now has an automatic retry/final-menu handoff; Enter retains
+its explicit startup/transition-diagnostic behavior only. R reloads alternate
+Colts; it never restarts the level.
+
+The shared game runtime and gameplay adapter now both receive the initial life
+count. Previously, setting only the gameplay projection after runtime creation
+let the first entity update overwrite Easy/Hard with Normal's value3.
+
+Original HUD life-digit correction (2026-10-19): the native HUD projection now
+copies game.life_game.continue_flag into hud.game_value before each controller.
+The retained type16 controller selects its digit with animation6B+game_value;
+the projection previously left that field zero. It now shows the same live count
+as Classic:5/3/2 at difficulty starts, reduced counts after retries, and0 after
+the last life is consumed. Original controller/artwork/animation behavior stays
+intact. Native death/retry checks inspect the HUD digit before each death and
+on the first death frame, including the final1->0 transition.
+
+## Original boundaries
+
+`06154` still owns the full death sequence, camera collapse, notices and audio.
+With more than one life it submits localized `B5` (YOU ARE TOAST) and sound17,
+then requests input mode4 after301 ticks at the native60Hz simulation clock.
+The last life is consumed immediately: the timer starts at500, requests music
+command10 and localized `B4` (GAME OVER) after91 ticks, then requests mode4 after
+another301 ticks. The ordinary death voice is omitted on this final-life path,
+as in the ROM. Music10 no longer starts on every ordinary retry boundary.
+
+The frontend freezes that completed death frame, releases gameplay input, and
+runs the original black-fade rate, `15614(0,64,31)`: visual volume0..0xF00 in
+64-unit steps. `08E74(7)` is a music/effects fade interval, not sound7. The audio
+worker stays independent of the display. The terminal black frame must reach
+presentation before returning to Main. No restart key is required.
+
+`ssa_run_exit` recovers the terminal mode4/mode5 state projection after that
+fade. It clears the notice timer, decrements a nonzero life count and requests
+initialization mode0, or requests menu mode7/name entry when the count is zero.
+The original mode5 Main-menu destination is retained in this helper too. Final
+game flags are2. Unsupported modes fail without changes. Completion/advance
+continues through the existing tally and record pipeline; this helper does not
+replace it or pretend to implement network sessions.
+
+On a retry, the completed black death frame remains active until the normal
+outer-loop reload constructs the new level. Catch-up ticks cannot consume a
+second life or briefly show an unfaded dead scene. Reload preserves the reduced
+life count after applying difficulty/settings and starts the normal level reveal
+without NETRICSA, map or chapter story. The shared reveal helper restarts gameplay
+audio, prepares the ready weapon/HUD, and starts a fresh60tick fade clock after
+black is presented. Movement runs during the reveal. It restores the entry
+snapshot rather than the inventory/score at the instant of death.
+
+The final Windows permanent-death name-entry route remains replaced by the requested
+direct Main return after Game Over. Pause Quit and the ending retain the rank/name editor. Existing
+score-file merge, failure and Clear Data behavior remains intact.
+
+## Validation
+
+- `decomp.ps1 test-run-exit-rom`:2,048 comparisons against the actual original
+  exit fragment, all256 life-byte values, both terminal modes,1..4 player-count
+  projections, randomized flags/timers and9 invalid-input checks. UBSan enabled.
+- `decomp.ps1 test-run-exit`:26,453 ASan/UBSan/leak checks over9,879 native frames:
+  30 complete deaths,21 retries and9 permanent deaths in all3 difficulties and
+  languages. It verifies exact death timing,21 death voices,9 game-over music
+  changes, life counts and restored entry inventory/score.
+- `scripts/test-run-exit.ps1 -SkipBuild`: GCC/MSVC core agreement plus24 lethal
+  combat deaths (12 retries and12 final Main returns), both HUD styles/renderers, all three
+  languages/difficulties, ordinary/final-life timing and24 black presentations.
+  Half the cases inject the stale pause bit; this failed before the guard.
+  Four additional tests run the real Windows wall clock, event loop, rendering,
+  muted live audio worker, automatic retry and final menu return. Each supplies
+  two lethal hits with stale pause bits, verifying2->1->0 lives. The ordinary
+  pre-level NETRICSA/map screens appear only on initial startup; retries must
+  bypass them and enter a new level reveal, with no restart confirmation.
+  Windows are briefly shown without activation for
+  the presentation paths. No user save is touched.
+- Existing native/Windows pause, completion, score-entry and persistence suites
+  pass. Localized GAME OVER and partial-fade captures were visually inspected.
+
+Current counts/source hashes are in `run-exit-rom-validation.json`,
+`run-exit-validation.json` and `windows-run-exit-validation.json`. Full campaign
+playthroughs remain manual. ARM execution is test-only; runtime uses native C.
+Latest focused retry-reveal validation (2026-10-19): MSVC26453 native core
+checks pass. Windows4697889 checks cover24 deaths,12 direct retries,12 final
+Main returns and four real wall-clock retry/Game-Over loops in both HUD styles
+and renderers. They verify no extra NETRICSA/map starts, fresh fade clocks,
+presented black, ready weapons and movement during fade. Initial briefings/maps
+still run. Existing Classic560 and intermission6205 Windows checks also pass.
+Static125libraries/frontend rebuilt. See retry-reveal-validation.json. No broad
+sanitizer or campaign replay was performed for this Windows-only routing change.
+This pass adds no exact byte match and does not modify the ROM. Full original
+feature parity, multiplayer and disk storage of campaign-session totals remain
+unfinished.

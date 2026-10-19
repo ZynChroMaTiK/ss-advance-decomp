@@ -59,9 +59,13 @@ password-setting counter reset. The new [completion adapter](completion.md)
 preserves original capture/accumulate/checkpoint ordering, the setting policy and
 bonus-adjusted score. The frontend now commits campaign-session totals and
 checkpoint rows after the visible bonus tally, and carries the resulting score
-to the next level and its R entry snapshot. See [pause/tally integration](completion.md).
-Disk persistence of campaign totals, continue/death orchestration and high-score/
-name entry remain pending. All twelve campaign maps are enabled for manual validation.
+to the next level and its entry snapshot. See [pause/tally integration](completion.md).
+High-score/name entry and scores.dat persistence now connect at Quit-run/ending;
+see [scores.md](scores.md). Finite-life death/retry/game-over orchestration now
+connects too; see [run-exit.md](run-exit.md). Campaign totals currently remain
+within the run. An original SRAM/disk format for those totals has not been
+established by this recovery, so their persistence should not be assumed from
+the older TODO alone. All twelve campaign maps are enabled for manual validation.
 
 ## Verification
 

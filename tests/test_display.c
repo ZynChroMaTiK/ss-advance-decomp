@@ -69,7 +69,26 @@ int main(int argc,char **argv)
     o.entries[0].attribute0=0x2800;reject(-2);
     o.entries[0].attribute0=0x3000;r.mosaic=0x1100;reject(-2);r.mosaic=0;
     CHECK(compose()==1);o.entries[0].attribute0=0x2000;o.entries[0].attribute2=0x800;
-    o.entries[1].attribute0=0x2000;o.entries[1].attribute2=0x400;reject(-2);
+    o.entries[1].attribute0=0x2000;o.entries[1].attribute2=0x400;CHECK(compose()==1);++frames;
+    /* All two-sprite priority orders and transparent-sample combinations,
+     * against both an opaque world pixel and the transparent backdrop. */
+    for(i=0;i<128;++i) {
+        unsigned first=i&3,second=(i>>2)&3,mask=(i>>4)&3,bg_index=i>>6;
+        unsigned index=mask&1?1:0,priority=first;
+        hide();memset(tiles,0,sizeof(tiles));memset(world,(int)bg_index,sizeof(world));
+        for(j=0;j<2;++j){o.entries[j].attribute0=0x2000|60;o.entries[j].attribute1=100;
+            o.entries[j].attribute2=(uint16_t)(j*2+((j?second:first)<<10));
+            if(mask&(1u<<j))memset(tiles+j*64,(int)j+1,64);}
+        if(!index){if(mask&2){index=2;priority=second;}}
+        else if(second<first){priority=second;if(mask&2)index=2;}
+        CHECK(compose()==1);++frames;
+        CHECK(output[60*240+100]==((index && (!bg_index || priority<=1)?assets.palette[index]:assets.background_palette[0][bg_index])&32767));
+    }
+    hide();memset(tiles,0,sizeof(tiles));memset(tiles,1,64);memset(tiles+128,2,64);
+    for(i=0;i<3;++i){static const unsigned priorities[3]={3,0,1};
+        o.entries[i].attribute0=0x2000|60;o.entries[i].attribute1=100;
+        o.entries[i].attribute2=(uint16_t)(i*2+(priorities[i]<<10));}
+    CHECK(compose()==1);CHECK(output[60*240+100]==(assets.palette[1]&32767));++frames;
     hide();for(i=0;i<20;++i){o.entries[i].attribute0=0x2000;o.entries[i].attribute1=0xc000;}reject(-2);
     hide();
 #define BAD(call) do{memcpy(before,output,sizeof(before));CHECK((call)==-1);CHECK(!memcmp(before,output,sizeof(before)));++guards;}while(0)

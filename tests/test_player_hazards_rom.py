@@ -40,6 +40,7 @@ for name,args in {
  'ssa_math_tables_load':[C.POINTER(Tables),C.c_void_p,C.c_size_t],
  'ssa_player_hazard_sample':[C.POINTER(Map),EP,C.POINTER(Game)],
  'ssa_player_interaction_query':[C.POINTER(Collision),EP,C.c_uint8,C.POINTER(Tables)],
+ 'ssa_player_interaction_query_at':[C.POINTER(Collision),EP,C.c_int32,C.c_int32],
  'ssa_player_hazards_apply':[C.POINTER(Hazards),C.POINTER(Map),C.POINTER(Game)],
  'ssa_player_hazards_step':[C.POINTER(Hazards),C.POINTER(Collision),C.POINTER(Tables),C.POINTER(Game),C.POINTER(Ops)],
 }.items(): getattr(lib,name).argtypes=args
@@ -195,6 +196,16 @@ for level in range(16):
    assert lib.ssa_player_interaction_query(C.byref(c),h.entity,iteration,C.byref(tables))==0
    assert list(c.special_lines[:c.special_count])==expected_lines
    report['query_cases']+=1
+   # Original automap0429C destination uses the body-facing64-unit vector
+   # multiplied by its current zoom. Verify that generalized sweep too.
+   zoom=(4096,8192,32768,65536)[iteration%4]
+   zx=C.c_int32(x+((C.c_int32(nx-x).value*zoom)>>16)).value
+   zy=C.c_int32(y+((C.c_int32(ny-y).value*zoom)>>16)).value
+   run(0x0800429c,ENTITY,zx,zy)
+   expected_lines=[(get(0x03004620+4*i,'<I')-BASE-m.lines)//40 for i in range(get(0x03004458,'<I'))]
+   assert lib.ssa_player_interaction_query_at(C.byref(c),h.entity,zx,zy)==0
+   assert list(c.special_lines[:c.special_count])==expected_lines
+   report['automap_query_cases']=report.get('automap_query_cases',0)+1
  # Isolated sampler arithmetic on wrapped coordinates/radii and signed halves.
  for n in range(256):
   ent=Entity(); ent.body.x=C.c_int32(rng.getrandbits(32)).value; ent.body.y=C.c_int32(rng.getrandbits(32)).value
@@ -222,7 +233,7 @@ for level in range(16):
  assert lib.ssa_player_interaction_query(C.byref(c),h.entity,0,C.byref(tables))==-1
  c.line_capacity=old; report['native_guards']+=1
  lib.ssa_map_collision_free(C.byref(c)); lib.ssa_map_assets_free(C.byref(m))
-report['rom_comparisons']=sum(report[k] for k in ('whole_frames','sample_cases','query_cases'))
+report['rom_comparisons']=sum(report[k] for k in ('whole_frames','sample_cases','query_cases','automap_query_cases'))
 report['source_sha256']=hashlib.sha256((ROOT/'src/player_hazards.c').read_bytes()).hexdigest()
 (ROOT/'analysis/native-player-hazards-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2),flush=True)

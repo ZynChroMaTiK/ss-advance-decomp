@@ -9,9 +9,23 @@ Both volumes show a bar and percentage, bounded0..100. Up/Down selects a row;
 Left/Right changes volume by5 points or toggles a choice. Enter toggles a choice or
 raises a volume. Click a bar to set its value. Back/Esc returns to Options.
 Extras contains Jump (On / Off), Third-person (On / Off), In-game NETRICSA
-(On / Off), Alternate weapons (On / Off), and Back. Alternate weapons defaults
+(On / Off), Alternate weapons (On / Off), Automap (On / Off), HUD (Original / Classic),
+Weapon bobbing (On / Off), Surface decals (On / Off), and Back. Bobbing defaults Off, moves the first-person
+weapon and muzzle flashes together, and leaves the crosshair steady. Settings
+version10 stores it in byte8 bit6; bit7 retains aspect, and the lower six bits
+hold the version. Version11 adds default-Off Surface decals in bit5 and uses
+the lower five bits for the version, retaining16 bytes and the existing CRC.
+Versions1..10 load with Surface decals Off. Versions1..9
+load with bobbing Off while retaining other preferences. Alternate weapons defaults
 to Off; existing Settings versions1..5 migrate with that preference disabled.
-Settings version6 uses byte9 bit7 while retaining the16-byte CRC-protected file.
+Settings version6 introduced byte9 bit7 while retaining the16-byte CRC-protected file.
+Version7 adds Automap in byte10 bit7; music volume0..100 occupies its lower seven
+bits. Version8 adds HUD style in byte11 bit7; sound volume occupies its lower seven
+bits. Version1..7 files default to Original HUD, preserving their other choices.
+Version1..6 files decode with Automap Off; explicit version7/8 choices are
+preserved. Options -&gt; Extras exposes the
+saved toggle; M opens/closes the overhead map during gameplay instead of muting
+audio. Other option bit positions, style values and music levels are unchanged.
 See <a href="alternate-weapons.html">alternate-weapons.md</a> for the Colt variant behavior.
 Its toggles accept Left/Right, Enter or a click; Back/Esc returns to Extras'
 row in Options. Settings returns to its own row.
@@ -22,7 +36,7 @@ Synth device. No missing-SoundFont choice or installation error is shown during
 ordinary cycling. The default file is <code>soundfonts/SC-55.sf2</code>; <code>--soundfont</code> can
 override it. Banks are loaded at launch; restart after adding a missing file.
 Saved unavailable styles fall back to Original without changing volume values.</p>
-<p>Defaults are borderless Fullscreen, Software, Jump On, Third-person On, In-game NETRICSA On,
+<p>Defaults are borderless Fullscreen, Software, Jump Off, Third-person On, In-game NETRICSA On,
 Original,100%,100%. Renderer selects the actual
 full-resolution PC renderer or native240x160 GBA reference renderer. Settings
 apply immediately; --original-renderer overrides a saved choice at launch.
@@ -55,7 +69,8 @@ A linked-stereo peak guard reduces either music mix only when needed to avoid
 output overflow at 32760/32767, recovering toward unity in100ms. Quiet passages
 retain their dynamics; this does not continuously normalize every note to peak.
 Sound effects retain their existing balance in both music styles. Sound volume
-also controls menu clicks. M remains a separate mute shortcut.
+also controls menu clicks. M is a mute shortcut on non-game screens; during
+gameplay it toggles the Extras-enabled automap.
 Settings apply immediately. Changing style preserves the sequence position,
 tempo, music command and screen transition state; currently held notes restart
 their instrument envelope when entering SoundFont mode if they are PSG.
@@ -66,7 +81,8 @@ to Fullscreen while preserving their existing fields. Version4 added
 in-game NETRICSA at byte9 bit4 and third-person permission at bit5,
 retaining renderer/jump/audio values. Versions1/2 migrate with in-game NETRICSA
 On; versions1..3 migrate with third-person permission On. Version1 also defaults
-to Software and Jump On. Invalid data leaves caller defaults intact.
+to Software and Jump Off. Explicit jump choices in versions2..6 are preserved.
+Clear Data restores Jump Off along with the other defaults. Invalid data leaves caller defaults intact.
 Style values
 0/1 remain Original/SoundFont; 2 adds MIDI without changing the file layout or
 invalidating existing preferences. Progress in
@@ -77,12 +93,13 @@ leave defaults intact and show a notice. Failed writes retain session values.
 Clear Data retains these preferences; its existing warning covers
 progress and language only.</p>
 <p>Settings and Extras now align to the original8-pixel background grid. Both
-pages use label X32 and value X144. Settings rows are Display mode Y32,
-Renderer48, Music style64, Music volume80, Sounds volume112 and Back152.
-Slider borders run from X32 through176 at Y96..104 and128..136; percentages
+pages use label X32 and value X144. Settings rows are Display mode Y24,
+Renderer40, Aspect ratio56, Music style72, Music volume88, Sounds volume112
+and Back144. The Sounds label and slider moved up one8-pixel tile on2026-10-19.
+Slider borders run from X32 through176 at Y96..103 and120..127; percentages
 start at X184 on each slider's top row. Click normalization uses those same
-endpoints, so the border extremes reach0/100%. Extras rows sit at Y48/72/96,
-with Back136. Titles and Back text also snap their centered X anchors to the
+endpoints, so the border extremes reach0/100%. Extras' eight rows sit at
+Y16/32/48/64/80/96/112/128, title Y0, with Back144. Titles and Back text also snap their centered X anchors to the
 grid. Keyboard and mouse share these positions. Labels are composed per row to preserve
 the original128-glyph batch limit in all three languages.</p>
 <p>Fullscreen uses a borderless WS_POPUP window sized to the current monitor's
@@ -91,6 +108,14 @@ Windowed restores the prior window style, placement and size within the
 session. Saved mode applies before the initial window is shown. DPI/display
 changes refit fullscreen bounds; existing input confinement follows resizing.
 Hidden validation windows retain their visibility when toggling modes.</p>
+<p>F11 toggles borderless Fullscreen / Windowed globally, before individual screen
+key routing. The hotkey updates the existing display preference, mirrors it into
+the menu and persists it with the same settings file. Held-key repeats and key-up
+do not toggle again. Window geometry restoration, focus/confinement and failure
+rollback use the same display_mode_apply path as the Settings row. Windows
+message tests cover both renderer selections and menu/gameplay/NETRICSA/pause/
+story routing flags, repeated key-down suppression, unchanged simulation/input,
+geometry, visibility and disk persistence. Physical F11 delivery is not automated.</p>
 <p>Display-mode integration passes38852 sanitized portable Settings checks and
 21179 Windows Settings checks, including defaults, v4 migration, persistence,
 keyboard and real mouse routes, monitor/client bounds, restored resizable
@@ -242,4 +267,9 @@ the GS device. Timing results and hashes are in
 <code>windows-midi-sync-validation.json</code>; the compensated tolerance is 15 ms.
 The original menu, profile and audio checks also pass. No automated campaign
 playthrough or physical listening test was performed for this feature.</p>
+<p>Extras compact rows (2026-10-20): each option now occupies one8-pixel grid
+row, at Y16..80. All nine choices are visible together; the old scrolling
+state and arrows are removed. Pointer hit regions follow the same8-pixel rows.
+The title remains at Y0 and Back at Y144. Existing keyboard order, values,
+localized labels and settings serialization are unchanged.</p>
 </main></body></html>

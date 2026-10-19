@@ -20,8 +20,8 @@ and callback reentry. Presentation callbacks observe committed prefix effects;
 failures preserve those effects and release the update guard. This controller
 does not own artwork, text formatting, audio playback or the outer dispatcher.
 The new <code>campaign_screen.c</code> supplies that presentation composition and now runs
-in the Windows frontend. Score/name entry and the original completion tally UI
-remain separate unfinished work.</p>
+in the Windows frontend. The original completion tally UI and subsequent
+score/name entry now connect through <a href="completion.html">completion.md</a> and <a href="scores.html">scores.md</a>.</p>
 <h2 id="native-screen-and-windows-integration">Native screen and Windows integration</h2>
 <p>New Game now shows the three original Egypt panels before its map. Advancing
 from map5 to map6 shows the Rome panel before the next map. Password/selected

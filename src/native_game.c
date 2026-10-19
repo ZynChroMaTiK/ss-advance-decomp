@@ -1,10 +1,18 @@
 #include "ssa/native_game.h"
+#include "ssa/pc_renderer.h"
+#include <stdlib.h>
 #include "ssa/weapon_progress.h"
 #include <stdio.h>
 #include <string.h>
 
 #include "native_audio.inc"
 static int select_variant(SsaNativeGame *,unsigned,unsigned);
+static void hud_health_update(SsaNativeGame *g)
+{
+    int16_t health=g->players[0].inventory.health;
+    if(health<g->hud_health_before)g->hud_health_flash=40;
+    g->hud_health_before=health;
+}
 static void alternate_before(SsaNativeGame *);
 static void alternate_after(SsaNativeGame *);
 #include "native_alternates.inc"
@@ -238,6 +246,7 @@ static void hud_state(SsaNativeGame *g)
     g->hud.weapon_flags=g->gameplay.weapon.flags;g->hud.aim_marker=g->weapon.controller.aim.marker;
     g->hud.health=i->health;g->hud.armor=i->stat_c4;
     g->hud.score=g->score;g->hud.time=g->frame_game.elapsed;g->hud.game_flags=g->frame_game.flags;
+    g->hud.game_value=g->game.life_game.continue_flag;
     g->hud.notice_timer=(int16_t)g->game.life_game.message_ticks;
     memcpy(g->hud.ammo,i->ammo,sizeof(g->hud.ammo));
 }
@@ -262,14 +271,14 @@ static int external(void *p,SsaGameRuntime *r,SsaFrameStage stage)
     if(stage==SSA_FRAME_POLL)return ssa_pc_input_runtime_poll(&g->input_runtime);
     if(stage==SSA_FRAME_DISTRIBUTE)return ssa_pc_input_runtime_distribute(&g->input_runtime);
     if(stage==SSA_FRAME_CONTROL){
-        /* PC shell uses a direct restart/next-level command. Original death
-         * and VM modes still gate simulation input through shared state. */
+        /* The frontend owns the original terminal fade and level/menu handoff.
+         * Freeze here if a headless caller has not consumed that boundary. */
         if(r->life_game.input_state==3){
             if(!g->finished){music(g,9);notice(g,g->level+1<SSA_NATIVE_CAMPAIGN_LEVELS?
                 "Level complete. Press Enter for the next level.":"Final level complete. Press Enter for the ending.");}
             g->finished=1;g->frame_game.flags|=1;
         }
-        if(r->life_game.input_state==4){music(g,10);g->frame_game.flags|=1;}
+        if(r->life_game.input_state==4)g->frame_game.flags|=1;
         return 0;
     }
     if(stage==SSA_FRAME_PREPARE_SPRITES){
@@ -285,13 +294,19 @@ static int external(void *p,SsaGameRuntime *r,SsaFrameStage stage)
     return -1;
 }
 static int stage_before(void *p,const SsaGameRuntime *r,SsaFrameStage stage)
-{SsaNativeGame *g=p;(void)r;g->error_stage=(uint32_t)stage;
+{SsaNativeGame *g=p;(void)r;g->error_stage=(uint32_t)stage;hud_health_update(g);
     if(stage==SSA_FRAME_ENTITIES)audio_player_begin(g);
     else if(stage==SSA_FRAME_MOVERS)audio_player_motion(g);
-    else if(stage==SSA_FRAME_SPRITE_CONTROLLERS)alternate_before(g);
+    else if(stage==SSA_FRAME_SPRITE_CONTROLLERS){
+        alternate_before(g);
+        /* Pickups have already run. Compare after weapon controllers so a
+         * same-frame pickup cannot mask actual ammo consumption. */
+        memcpy(g->hud_ammo_before,g->players[0].inventory.ammo,sizeof g->hud_ammo_before);
+        if(g->players[0].motion.movement.flags&8)g->weapon.fire_inhibited=1;
+    }
     return 0;}
 static int entity_before(void *p,const SsaEntityRuntime *r,uint32_t entry,unsigned slot)
-{SsaNativeGame *g=p;(void)r;g->error_entry=entry;g->error_slot=slot;
+{SsaNativeGame *g=p;(void)r;g->error_entry=entry;g->error_slot=slot;hud_health_update(g);
     if(slot<100 && g->spawn.actors[slot].owned && g->spawn.actors[slot].entity.type>=0xcd &&
        g->spawn.actors[slot].entity.type<=0xd8)(void)audio_entity_source(g,slot);
     return 0;}
@@ -309,6 +324,10 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
     if(!g || !g->loaded || g->game.updating ||
        ssa_render_view_pose(&g->render_view,&g->player.pose,g->players[0].motion.movement.heading,&g->map)<0)return -1;
     g->pc_camera=g->render_view.camera;g->render_pitch=g->player.pitch;g->pc_pose=g->player.pose;
+    weapon_bob_update(g);
+    /* Reference world pixels expand2x horizontally and4/3 vertically. */
+    g->actor_scene.screen_x=g->weapon_bob_x>=0?(g->weapon_bob_x+256)/512:-(-g->weapon_bob_x+256)/512;
+    g->actor_scene.screen_y=g->weapon_bob_y>=0?(g->weapon_bob_y*3+512)/1024:-(-g->weapon_bob_y*3+512)/1024;
     if(g->player.pose.third_person){
         /* Camera convergence uses a common unlimited sight ray. Short melee reach
          * must not tilt the chase view when switching weapons. Attack queries
@@ -359,23 +378,239 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
 int ssa_native_game_draw(SsaNativeGame *g)
 {
     SsaRenderViewOps ops={render_event,g};const uint8_t *pixels;unsigned n;
+    if(g && g->loaded && (g->players[0].motion.movement.flags&8)){
+        SsaAutomapView map={0};SsaAutomapPoint points[100];uint8_t image[38400];unsigned i;
+        const SsaEntity *body=&g->players[0].entity;int32_t sine,cosine,ex,ey;
+        if(g->game.updating || g->error_line)return -1;
+        map.x=map.player_x=body->body.x;map.y=map.player_y=body->body.y;
+        map.heading=g->players[0].motion.movement.heading;map.facing=g->players[0].motion.facing;
+        map.zoom=g->automap_zoom;map.scanline=g->automap_scanline;
+        ssa_sincos(&g->math,(uint16_t)((unsigned)map.facing<<8),&sine,&cosine);
+        ex=(int32_t)((int64_t)body->body.x+((int64_t)sine*64*map.zoom>>16));
+        ey=(int32_t)((int64_t)body->body.y+((int64_t)cosine*64*map.zoom>>16));
+        if(ssa_player_interaction_query_at(&g->automap_query,body,ex,ey)<0)return -1;
+        map.contacts=g->automap_query.special_lines;map.contact_count=g->automap_query.special_count;
+        map.entities=points;
+        for(i=0;i<g->spawn.pool.active_count;++i){unsigned slot=g->spawn.pool.active_slots[i];
+            SsaEntity *e=ssa_script_spawn_entity(&g->spawn,g->combat.reserved,slot);
+            if(!e)return -1;
+            points[map.entity_count++]=(SsaAutomapPoint){e->body.x,e->body.y};}
+        if(ssa_automap_draw(image,sizeof image,&g->map,&g->math,&map)<0)return -1;
+        for(i=0;i<38400;++i){unsigned at=0x46265c+2*image[i];g->rgb555[i]=(uint16_t)(g->rom[at]|(unsigned)g->rom[at+1]<<8);}
+        return ssa_display_rgb888(g->rgb555,38400,g->rgb888,38400)<0?-1:1;
+    }
     if(ssa_native_game_prepare_view(g)<0){fprintf(stderr,"Native view preparation failed.\n");return -1;}
     if(ssa_render_view_step(&g->render_view,&ops)<0){fprintf(stderr,"Native reference world rendering failed.\n");return -1;}
     pixels=ssa_world_scene_pixels(&g->world_scene);if(!pixels)return -1;
+    if(g->surface_decals_enabled && ssa_surface_decals_reference(&g->surface_decals,&g->world_scene.planes,
+        &g->render_view.camera,g->world_scene.framebuffer+SSA_SCENE_FRAME_PREFIX,SSA_SCENE_FRAME_BYTES)<0)return -1;
+    if(g->surface_decals_enabled || g->water_reflections){
+        if(ssa_water_begin(&g->water_render,&g->water_scene,&g->surface_decals,g->palette_effect.colors,
+            g->render_view.camera.x/65536.0,g->render_view.camera.y/65536.0,g->render_view.camera.z/65536.0,
+            g->frame_game.counter,g->surface_decals_enabled,g->water_reflections,120,120)<0)return -1;
+        if(ssa_water_reference(&g->water_render,&g->world_scene.planes,&g->render_view.camera,
+            g->world_scene.framebuffer+SSA_SCENE_FRAME_PREFIX,SSA_SCENE_FRAME_BYTES)<0)return -1;
+        if(ssa_pc_renderer_reflect(&g->water_renderer,g,&g->render_view.camera,0,&g->water_render,NULL,
+            g->world_scene.framebuffer+SSA_SCENE_FRAME_PREFIX)<0)return -1;}
     n=g->spawn.pool.active_count;
     if(ssa_actor_scene_draw_offsets(&g->actor_scene,&g->render_view.camera,g->frame_game.flags,g->sources,n,g->source_z_offsets)<0){fprintf(stderr,"Native reference actor rendering failed (%u sources).\n",n);return -1;}
     if(ssa_display_compose_gameplay(&g->registers,pixels,14400,
        g->palette_effect.colors,g->sprite_assets.palette,
        &g->oam,g->cache.tiles,sizeof(g->cache.tiles),g->rgb555,SSA_DISPLAY_PIXELS,
        g->players[0].inventory.health,g->players[0].inventory.stat_c4)<0){fprintf(stderr,"Native display composition failed.\n");return -1;}
+    if(g->hud_style==SSA_HUD_CLASSIC && !g->hud_suppressed){uint8_t canvas[38400],background[38400];unsigned i;
+        if(ssa_native_game_classic_hud_layers(g,canvas,background,sizeof canvas)!=1)return -1;
+        for(i=0;i<38400;++i){if(canvas[i])g->rgb555[i]=ssa_classic_hud_blend555(g->sprite_assets.palette[canvas[i]]&0x7fff,g->rgb555[i],
+                ssa_classic_hud_alpha(i%240,i/240,g->hud_netricsa_ticks,g->hud.boss_present && g->hud.boss_health>0));
+            else if(background[i])g->rgb555[i]=ssa_classic_hud_darken555(g->rgb555[i]);}}
     return ssa_display_rgb888(g->rgb555,SSA_DISPLAY_PIXELS,g->rgb888,SSA_DISPLAY_PIXELS)<0?-1:1;
+}
+int ssa_native_game_classic_hud(const SsaNativeGame *g,uint8_t *canvas,size_t capacity)
+{return ssa_native_game_classic_hud_layers(g,canvas,NULL,capacity);}
+static void netricsa_weapons(SsaNetricsaJournal *next,const SsaNativeGame *g)
+{
+    unsigned owned=g->players[0].inventory.weapons&0x3ffu;
+    /* Entry loadouts are familiar. Preserve unread discoveries already in
+     * the carried journal instead of acknowledging all carried equipment. */
+    if(!g->frame_game.counter)next->read_weapons|=(uint16_t)(owned&~next->weapons);
+    next->weapons|=(uint16_t)owned;
+    /* The first-level Schofield remains familiar even when picked up there. */
+    if(g->level==0)next->read_weapons|=next->weapons&3u;
+}
+static int netricsa_history(SsaNetricsaJournal *j)
+{
+    uint32_t known,seen=0;unsigned i;
+    if(j->order_count>22 || (j->weapons&~0x3ffu) || (j->enemies&~0xfffu) ||
+       (j->read_weapons&~j->weapons) || (j->read_enemies&~j->enemies))return -1;
+    known=(uint32_t)j->weapons|((uint32_t)j->enemies<<10);
+    for(i=0;i<j->order_count;++i){unsigned id=j->order[i];uint32_t bit;
+        if(id<1 || id>22)return -1;
+        bit=UINT32_C(1)<<(id-1);
+        if(!(known&bit) || (seen&bit))return -1;
+        seen|=bit;
+    }
+    /* Snapshot-only discoveries join the end without changing live state.
+     * Simultaneous discoveries have a stable weapon-then-enemy ID tie order. */
+    for(i=0;i<22;++i)if((known&~seen)&(UINT32_C(1)<<i))j->order[j->order_count++]=(uint8_t)(i+1);
+    return 1;
+}
+int ssa_native_game_netricsa_entries(SsaNetricsaJournal *out,const SsaNativeGame *g)
+{
+    SsaNetricsaJournal next;unsigned i;
+    if(!out || !g || !g->loaded || g->game.updating)return -1;
+    next=g->journal;netricsa_weapons(&next,g);
+    for(i=0;i<12;++i)if(g->damage.enemy_kills[i])next.enemies|=(uint16_t)(1u<<i);
+    /* Drains/hazards can kill without the ordinary damage statistics call. */
+    for(i=0;i<100;++i){const SsaScriptActor *a=&g->spawn.actors[i];
+        if(a->owned && a->entity.type>=0xcd && a->entity.type<=0xd8 &&
+           a->activation.health<=0 && (a->entity.body.flags&0x20))next.enemies|=(uint16_t)(1u<<(a->entity.type-0xcd));}
+    if(netricsa_history(&next)!=1)return -1;
+    *out=next;return 1;
+}
+int ssa_native_game_netricsa_unread(const SsaNativeGame *g)
+{
+    SsaNetricsaJournal next;unsigned bits,count=0;
+    if(ssa_native_game_netricsa_entries(&next,g)!=1)return -1;
+    bits=(unsigned)(next.weapons&~next.read_weapons)|((unsigned)(next.enemies&~next.read_enemies)<<10);
+    while(bits){count+=bits&1u;bits>>=1;}
+    return (int)count;
+}
+int ssa_native_game_netricsa_latest(const SsaNativeGame *g)
+{
+    SsaNetricsaJournal j;uint32_t unread;unsigned i;
+    if(ssa_native_game_netricsa_entries(&j,g)!=1)return -1;
+    unread=(uint32_t)(j.weapons&~j.read_weapons)|((uint32_t)(j.enemies&~j.read_enemies)<<10);
+    for(i=j.order_count;i>0;--i)if(unread&(UINT32_C(1)<<(j.order[i-1]-1)))return j.order[i-1];
+    return 0;
+}
+static void netricsa_store(SsaNativeGame *g,const SsaNetricsaJournal *next)
+{
+    unsigned weapons=next->weapons&~next->read_weapons;
+    unsigned enemies=next->enemies&~next->read_enemies;
+    if((weapons&~g->journal.weapons) || (enemies&~g->journal.enemies)){
+        g->hud_netricsa_ticks=300;
+        audio_netricsa_start(g);
+    }
+    if(!(weapons|enemies)){g->hud_netricsa_ticks=0;audio_netricsa_cancel(g);}
+    g->journal=*next;
+}
+int ssa_native_game_netricsa_read(SsaNativeGame *g,unsigned weapons,unsigned enemies)
+{
+    SsaNetricsaJournal next;
+    if(weapons>0x3ffu || enemies>0xfffu || ssa_native_game_netricsa_entries(&next,g)!=1)return -1;
+    next.read_weapons|=(uint16_t)(weapons&next.weapons);next.read_enemies|=(uint16_t)(enemies&next.enemies);
+    netricsa_store(g,&next);return 1;
+}
+int ssa_native_game_classic_hud_layers(const SsaNativeGame *g,uint8_t *canvas,uint8_t *background,size_t capacity)
+{
+    SsaHudSpriteState state;unsigned i,flashing=0;int unread;
+    if(!g || !g->loaded || !canvas || capacity<38400)return -1;
+    if(g->hud_style!=SSA_HUD_CLASSIC || g->hud_suppressed){memset(canvas,0,38400);
+        if(background)memset(background,0,38400);
+        return 1;}
+    unread=ssa_native_game_netricsa_unread(g);if(unread<0)return -1;
+    state=g->hud;state.local_flags=g->players[0].motion.movement.flags;
+    state.health=g->players[0].inventory.health;state.armor=g->players[0].inventory.stat_c4;
+    state.score=g->score;state.time=g->frame_game.elapsed;state.current_weapon=g->gameplay.weapon.requested;
+    state.weapon_action=g->gameplay.weapon.current;
+    memcpy(state.ammo,g->players[0].inventory.ammo,sizeof state.ammo);
+    for(i=2;i<10;++i)if(g->hud_ammo_flash[i])flashing|=1u<<i;
+    if(ssa_classic_hud_draw(&g->sprite_assets,&g->weapon_animations,&state,&g->inventory_rules,
+        flashing,g->hud_health_flash,g->high_score,canvas,background,capacity)!=1)return -1;
+    if(!(state.local_flags&8) &&
+       ssa_classic_hud_netricsa(&g->sprite_assets,&g->weapon_animations,(unsigned)unread,
+           state.health>0 && !g->finished?g->hud_netricsa_ticks:0,
+           state.boss_present && state.boss_health>0,canvas,background,capacity)!=1)return -1;
+    if(!(state.local_flags&8) && state.health>0 && !g->finished && g->hud_use_available &&
+       ssa_classic_hud_use(&g->sprite_assets,canvas,capacity)!=1)return -1;
+    if(!(state.local_flags&8) && g->game.life_game.message_ticks && g->hud_notice.length &&
+       ssa_classic_hud_text(&g->hud_text,&g->sprite_assets,(const char *)g->hud_notice.text,
+           g->hud_notice.id>=0x8c && g->hud_notice.id<=0xab?127:g->hud_notice.base_y,
+           canvas,background,capacity)!=1)return -1;
+    if(g->hud_weapon_ticks && !(state.local_flags&8) && state.health>0 && !g->finished)
+        return ssa_classic_hud_weapon_wheel(&g->sprite_assets,&g->players[0].inventory,
+            g->gameplay.weapon.requested,canvas,background,capacity);
+    return 1;
+}
+int ssa_native_game_hud_style(SsaNativeGame *g,unsigned style)
+{
+    unsigned previous;
+    if(!g || !g->loaded || g->game.updating || g->error_line || style>SSA_HUD_CLASSIC)return -1;
+    if(g->hud_style==style)return 1;
+    previous=g->hud_style;g->hud_style=style;
+    /* Pre-level menus have no sprite-controller/animation/cache frame yet.
+     * In particular the alternate starting Colt still has previous_frameFFFF.
+     * Save the choice now; the first normal frame builds its complete OAM. */
+    if(!g->frame_game.counter){if(style==SSA_HUD_ORIGINAL)audio_netricsa_cancel(g);return 1;}
+    if(ssa_native_game_build_oam(g,&g->oam,&g->sprites)!=1){g->hud_style=previous;return -1;}
+    if(style==SSA_HUD_ORIGINAL)audio_netricsa_cancel(g);
+    return 1;
+}
+int ssa_native_game_automap(SsaNativeGame *g,unsigned enabled)
+{
+    uint8_t counter;
+    if(!g || !g->loaded || g->error_line || g->game.updating || enabled>1 ||
+       (enabled && (g->finished || g->players[0].inventory.health<=0 || (g->frame_game.flags&1))))return -1;
+    if(enabled){if(!(g->players[0].motion.movement.flags&8))g->automap_zoom=8192;
+        g->players[0].motion.movement.flags|=8;}
+    else g->players[0].motion.movement.flags&=(uint16_t)~8u;
+    g->players[0].vertical.flags=g->players[0].motion.movement.flags;
+    g->weapon.fire_inhibited=enabled;g->weapon.fire_pending_weapon=g->weapon.colt_pair_pending=0;
+    /* Mode changes can present before the next simulation tick. Switch its
+     * palette now, retaining the simulation-owned flash clock. */
+    counter=g->palette_effect.counter;
+    if(ssa_palette_effect_step(&g->palette_effect,&g->damage.hurt_flash,g->players[0].motion.movement.flags)<0)return -1;
+    g->palette_effect.counter=counter;
+    return 1;
+}
+int ssa_native_game_automap_zoom(SsaNativeGame *g,int steps)
+{
+    int64_t count=steps<0?-(int64_t)steps:steps;
+    if(!g || !g->loaded || g->game.updating || g->error_line || !(g->players[0].motion.movement.flags&8) ||
+       (g->frame_game.flags&1) || g->players[0].inventory.health<=0)return -1;
+    if(count>256)count=256;
+    while(count--){if(steps>0){g->automap_zoom+=g->automap_zoom>>4;if(g->automap_zoom>65536)g->automap_zoom=65536;}
+        else{g->automap_zoom-=g->automap_zoom>>4;if(g->automap_zoom<4096)g->automap_zoom=4096;}}
+    return 1;
+}
+static int update_use_prompt(SsaNativeGame *g)
+{
+    size_t i,j;g->hud_use_available=0;
+    if(g->players[0].inventory.health<=0 || g->finished || (g->players[0].motion.movement.flags&8))return 1;
+    if(ssa_player_interaction_query(&g->use_query,&g->players[0].entity,g->players[0].motion.facing,&g->math)<0)return -1;
+    for(i=0;i<g->use_query.special_count;++i)for(j=0;j<g->level_runtime.switches.count;++j){
+        const SsaSwitchEntry *s=&g->level_runtime.switches.entries[j];
+        if(s->line==g->use_query.special_lines[i] && !(s->flags&1)){g->hud_use_available=1;return 1;}}
+    return 1;
 }
 int ssa_native_game_tick(SsaNativeGame *g)
 {
-    SsaGameRuntimeInput in={0};const SsaEntity *peers[1];unsigned old_weapon,old_variant;int16_t old_health;
+    SsaGameRuntimeInput in={0};const SsaEntity *peers[1];unsigned old_weapon,old_variant,old_request,old_requested_variant,i;
+    SsaNetricsaJournal journal;
+    uint32_t shots_before[10];int16_t old_health;
     if(!g || !g->loaded || g->error_line)return -1;
+    /* Commit the entry baseline before this frame can collect a new weapon.
+     * Pre-level snapshots apply the same rule without mutating the game. */
+    if(!g->frame_game.counter)netricsa_weapons(&g->journal,g);
+    memcpy(g->hud_ammo_before,g->players[0].inventory.ammo,sizeof g->hud_ammo_before);
+    memcpy(shots_before,g->weapon_game.shots,sizeof shots_before);
+    if(!(g->frame_game.flags&1))g->hud_health_flash=g->hud_health_flash>g->frame_game.ticks?
+        (uint8_t)(g->hud_health_flash-g->frame_game.ticks):0;
+    if(!(g->frame_game.flags&1))g->hud_netricsa_ticks=g->hud_netricsa_ticks>g->frame_game.ticks?
+        (uint16_t)(g->hud_netricsa_ticks-g->frame_game.ticks):0;
+    hud_health_update(g);
+    if(!(g->frame_game.flags&1))g->hud_weapon_ticks=g->hud_weapon_ticks>g->frame_game.ticks?
+        (uint16_t)(g->hud_weapon_ticks-g->frame_game.ticks):0;
+    if(!(g->frame_game.flags&1))for(i=2;i<10;++i)
+        g->hud_ammo_flash[i]=g->hud_ammo_flash[i]>g->frame_game.ticks?
+            (uint8_t)(g->hud_ammo_flash[i]-g->frame_game.ticks):0;
+    if(g->players[0].inventory.health<=0 && (g->players[0].motion.movement.flags&8)){
+        g->players[0].motion.movement.flags&=(uint16_t)~8u;
+        g->players[0].vertical.flags=g->players[0].motion.movement.flags;g->weapon.fire_inhibited=0;
+    }
     if(g->gba_view){g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;}
     old_weapon=g->gameplay.weapon.current;old_variant=g->alternates.variant;old_health=g->players[0].inventory.health;
+    old_request=g->gameplay.weapon.requested;old_requested_variant=g->alternates.requested_variant;
     peers[0]=&g->players[0].entity;
     g->footstep_x=peers[0]->body.x;g->footstep_y=peers[0]->body.y;
     in.entities.players[0].motion=(SsaMotionFrame){peers,1,1,0,0};
@@ -384,10 +619,32 @@ int ssa_native_game_tick(SsaNativeGame *g)
     in.entities.enemies.ticks=1;in.entities.enemies.speed_factor=65536;
     in.entities.enemies.level_counter=(uint16_t)g->frame_game.counter;
     if(ssa_game_runtime_step(&g->game,&in,&g->game_ops)<0){g->error_line=__LINE__;return -1;}
+    if(update_use_prompt(g)<0){g->error_line=__LINE__;return -1;}
+    if(ssa_native_game_netricsa_entries(&journal,g)!=1){g->error_line=__LINE__;return -1;}
+    netricsa_store(g,&journal);
+    if(g->players[0].inventory.health<=0 || g->finished)g->hud_netricsa_ticks=0;
+    if(!g->hud_netricsa_ticks || g->hud_style!=SSA_HUD_CLASSIC)audio_netricsa_cancel(g);
+    /* Legacy sinks round .1075s of sound plus a half-duration gap to10
+     * frames. Windows measures the sound and gap in output samples. */
+    if(!(g->frame_game.flags&1) && g->hud_netricsa_repeat==1 && g->hud_netricsa_ticks<=290){
+        g->hud_netricsa_repeat=0;(void)sound(g,0x0b);
+    }
+    hud_health_update(g);
+    for(i=2;i<10;++i)if(g->players[0].inventory.ammo[i]<g->hud_ammo_before[i])g->hud_ammo_flash[i]=40;
+    if(g->players[0].motion.movement.flags&8)g->automap_scanline=(uint8_t)(g->automap_scanline+g->frame_game.ticks);
     if(old_health>0 && g->players[0].inventory.health>0 && old_weapon>=1 && old_weapon<=10 &&
        (old_weapon!=g->gameplay.weapon.current || old_variant!=g->alternates.variant)){
         g->previous_weapon=old_weapon;g->alternates.previous_variant=g->alternates.dual_colts?old_variant:0;
+        if(!g->hud_weapon_dismissed)g->hud_weapon_ticks=180;
     }
+    if(old_request!=g->gameplay.weapon.requested || old_requested_variant!=g->alternates.requested_variant){
+        g->hud_weapon_ticks=180;g->hud_weapon_dismissed=0;
+    }
+    /* Consume the sampled click even between shots or during a queued switch.
+     * Shot counters also catch attacks delivered from the buffered-fire path. */
+    if((g->input_runtime.sample.enabled && ((g->input_runtime.sample.held|g->input_runtime.sample.pressed)&1)) ||
+       memcmp(shots_before,g->weapon_game.shots,sizeof shots_before) ||
+       g->players[0].inventory.health<=0 || g->finished){g->hud_weapon_ticks=0;g->hud_weapon_dismissed=1;}
     if(g->players[0].inventory.health<=0){g->previous_weapon=0;g->alternates.previous_variant=0;}
     if(ssa_palette_effect_step(&g->palette_effect,&g->damage.hurt_flash,g->players[0].motion.movement.flags)<0){g->error_line=__LINE__;return -1;}
     audio_listener(g);
@@ -409,6 +666,9 @@ static int select_variant(SsaNativeGame *g,unsigned weapon,unsigned variant)
 {
     if(!(g->players[0].inventory.weapons&(1u<<(weapon-1))) || !g->players[0].inventory.ammo[weapon-1])return 0;
     if(variant && (!g->alternates.enabled || !g->alternates.dual_colts || weapon!=2))return 0;
+    if(g->gameplay.weapon.requested!=weapon || g->alternates.requested_variant!=variant){
+        g->hud_weapon_ticks=180;g->hud_weapon_dismissed=0;
+    }
     g->gameplay.weapon.requested=(uint16_t)weapon;
     g->alternates.requested_variant=variant;
     if(g->alternates.enabled && weapon==2 && g->gameplay.weapon.current==2){
@@ -472,6 +732,8 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_weapon_animations_load(&g->weapon_animations,rom,size)==1);INIT(ssa_weapon_loadouts_load(&g->loadouts,rom,size)==1);
     INIT(ssa_pickup_respawn_data_load(&g->pickup_data,rom,size)==1);INIT(ssa_particle_rules_load(&g->particle_rules,rom,size)==1);
     INIT(ssa_world_init(&g->world,&g->map,100));INIT(ssa_slide_init(&g->slide,&g->map));
+    INIT(ssa_map_collision_init(&g->automap_query,&g->map));g->automap_zoom=8192;
+    INIT(ssa_map_collision_init(&g->use_query,&g->map));
     INIT(ssa_weapon_aim_init(&g->camera_trace,&g->world,&g->math)==1);
     INIT(ssa_spawn_plan_load(&g->plan,&g->map,&g->definitions,level,1,99));INIT(ssa_spawn_plan_insert(&g->plan,&g->world));
     INIT(ssa_players_spawn(g->players,&g->world,&g->plan,1,0));INIT(g->players[0].active);
@@ -490,6 +752,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_combat_runtime_init(&g->combat,&g->spawn,reserved,n+1,players,1,&g->damage,&g->score)==0);
     g->touch_ops=(SsaPickupRuntimeOps){pickup_event,g};
     INIT(ssa_pickup_runtime_init(&g->pickup,&g->combat,&g->inventory_rules,&g->touch_ops)==0);
+    g->pickup.pc_pickups=1;
     INIT(ssa_enemy_queries_init(&g->queries,&g->spawn,&g->math,reserved,n+1)==0);
     INIT(ssa_projectile_runtime_init(&g->projectiles,&g->combat,&g->math)==0);
     INIT(ssa_projectile_runtime_bind_particles(&g->projectiles,&g->particle_rules,particle_sound,g)==0);
@@ -517,8 +780,10 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->weapon.finish_fire_before_switch=1;
     INIT(ssa_hud_sprites_create(&g->sprite_pool,1,0,level)==74);
     INIT(ssa_hud_glyphs_load(&g->hud,rom,size)==1);INIT(ssa_hud_notice_init(&g->hud_notice,rom,size,0)==1);
+    INIT(ssa_classic_hud_text_load(&g->hud_text,rom,size)==1);
     INIT(ssa_sprite_cache_init(&g->cache)==1);
     INIT(ssa_palette_effect_init(&g->palette_effect,rom,size,level)==1);
+    INIT(ssa_surface_decals_init(&g->surface_decals,g->palette_effect.colors,level)==1);
     INIT(ssa_sprite_oam_init(&g->oam,rom,size)==1);INIT(ssa_display_registers_default(&g->registers)==1);
     INIT(ssa_actor_animation_set(&g->player_animation,g->players[0].animation,g->players[0].animation_ticks)==1);
     INIT(ssa_actor_animation_runtime_init(&g->actor_runtime,&g->spawn,&g->actor_animations,reserved,states,n+1)==0);
@@ -550,6 +815,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->game_ops.external=external;g->game_ops.before=stage_before;g->game_ops.context=g;
     INIT(ssa_pc_input_init(&g->input,64)==1);INIT(ssa_pc_input_runtime_init(&g->input_runtime,&g->input,&g->game,0)==0);
     INIT(ssa_map_texture_bindings_init(&g->bindings,&g->map,&g->textures,(unsigned)ssa_texture_assets_family(level))==1);
+    INIT(ssa_water_scene_init(&g->water_scene,&g->bindings,&g->math,&g->sky,g->palette_effect.colors)==1);
     INIT(ssa_world_scene_init(&g->world_scene,&g->bindings,&g->math,&g->visibility_tables,&g->wall_tables,&g->sky,level)==1);
     INIT(ssa_actor_scene_init(&g->actor_scene,&g->world_scene,&g->world,&g->actor_assets,&g->math)==1);
     g->render_view.math=&g->math;g->render_view.players[0].flags=4;g->render_view.ticks=1;
@@ -559,14 +825,17 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
 }
 static int carry_valid(const SsaNativeCarry *s)
 {
-    unsigned i;
+    unsigned i;SsaNetricsaJournal journal;
     if(!(s && s->inventory.health>0 && s->inventory.pending_count<=SSA_PENDING_WEAPON_CAPACITY &&
         (s->inventory.weapons&1) && !(s->inventory.weapons&~0x3ffu) && s->weapon>=1 && s->weapon<=10 &&
         (s->inventory.weapons&(1u<<(s->weapon-1))) && s->inventory.ammo[s->weapon-1]>0 && s->third_person<=1 &&
         s->previous_weapon<=10 && s->alternate_weapons<=1 && s->dual_colts<=1 &&
         s->weapon_variant<=1 && s->previous_variant<=1 && s->colt_rounds[0]<=6 && s->colt_rounds[1]<=6 &&
         (!s->weapon_variant || (s->weapon==2 && s->dual_colts && s->alternate_weapons)) &&
-        (!s->previous_variant || (s->previous_weapon==2 && s->dual_colts))))return 0;
+        (!s->previous_variant || (s->previous_weapon==2 && s->dual_colts)) &&
+        !(s->journal.weapons&~0x3ffu) && !(s->journal.enemies&~0xfffu) &&
+        !(s->journal.read_weapons&~s->journal.weapons) && !(s->journal.read_enemies&~s->journal.enemies)))return 0;
+    journal=s->journal;if(netricsa_history(&journal)!=1)return 0;
     for(i=0;i<s->inventory.pending_count;++i)if(s->inventory.pending_weapons[i]<1 || s->inventory.pending_weapons[i]>10)return 0;
     return 1;
 }
@@ -592,6 +861,7 @@ int ssa_native_game_carry_capture(SsaNativeCarry *out,const SsaNativeGame *g)
     next.weapon_variant=saved.requested==2?g->alternates.requested_variant:0;
     next.previous_variant=g->alternates.previous_variant;
     memcpy(next.colt_rounds,g->alternates.rounds,sizeof next.colt_rounds);
+    if(ssa_native_game_netricsa_entries(&next.journal,g)!=1)return -1;
     if(next.weapon<1 || next.weapon>10 || !(next.inventory.weapons&(1u<<(next.weapon-1))) || next.inventory.ammo[next.weapon-1]<=0){
         next.weapon=1;next.weapon_variant=0;
         for(i=1;i<=10;++i)if((next.inventory.weapons&(1u<<(i-1))) && next.inventory.ammo[i-1]>0)next.weapon=i;
@@ -606,6 +876,7 @@ int ssa_native_game_carry_apply(SsaNativeGame *g,const SsaNativeCarry *s)
        g->combat.updating || g->spawn.updating || g->player.updating || g->weapon.updating ||
        g->frame_game.counter || !carry_valid(s))return -1;
     g->players[0].inventory=s->inventory;g->score=s->score;
+    g->journal=s->journal;
     saved.current=s->weapon;saved.requested=(uint16_t)s->weapon;saved.weapons=s->inventory.weapons;
     memcpy(saved.ammo,s->inventory.ammo,sizeof saved.ammo);
     g->player.view.third_person=(uint8_t)s->third_person;
@@ -642,7 +913,7 @@ int ssa_native_game_init_campaign(SsaNativeGame *g,const uint8_t *rom,size_t siz
     if(level>=12 || difficulty>=3 || (progress && !carry_valid(progress)))return -1;
     if(ssa_native_game_init_loadout(g,rom,size,level,!progress && level?difficulty*12+level+1:0)!=1)return -1;
     g->damage.difficulty=(uint8_t)difficulty;
-    g->gameplay.life_game.continue_flag=continues[difficulty];
+    g->gameplay.life_game.continue_flag=g->game.life_game.continue_flag=continues[difficulty];
     return progress?ssa_native_game_carry_apply(g,progress):1;
 }
 void ssa_native_game_free(SsaNativeGame *g)
@@ -667,8 +938,12 @@ void ssa_native_game_free(SsaNativeGame *g)
     if(g->player.player)(void)ssa_player_runtime_free(&g->player);
     if(g->spawn.world)(void)ssa_script_spawn_free(&g->spawn);
     ssa_world_free(&g->world);ssa_slide_free(&g->slide);
+    ssa_map_collision_free(&g->automap_query);
+    ssa_map_collision_free(&g->use_query);
     (void)ssa_spawn_plan_free(&g->plan);
     if(g->level_runtime.map)(void)ssa_level_runtime_free(&g->level_runtime);
+    if(g->water_renderer){ssa_pc_renderer_free(g->water_renderer);free(g->water_renderer);}
+    ssa_water_free(&g->water_render);ssa_water_scene_free(&g->water_scene);
     ssa_map_texture_bindings_free(&g->bindings);ssa_texture_assets_free(&g->textures);
     ssa_sprite_assets_free(&g->sprite_assets);ssa_actor_assets_free(&g->actor_assets);ssa_map_assets_free(&g->map);
     memset(g,0,sizeof(*g));

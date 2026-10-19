@@ -1,0 +1,26 @@
+{
+    "result":  "pass",
+    "scope":  "Classic ammo meters overlay only filled pixels; empty space preserves the underlying ammo icon",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  382094,
+                      "draws":  409,
+                      "paths":  2
+                  },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  560,
+                    "paths":  2,
+                    "hidden_window":  true
+                },
+    "preview":  "build/classic-ammo-transparency-tests/classic-low-bars-gba-0.bmp",
+    "preview_inspected":  true,
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "executable_sha256":  "749243972d47b054e2756b6008b973a6c64e35d64d40a929f008a2d1e3710147",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "e8a650dccab2e7be0661ec7e4936d4aca7437a5792dd3de8eafb0a61f3375bcb",
+                          "tests/test_classic_hud.c":  "32ba58da366f24ffe92ccbb30a409cc0a5d05435381a9c612bb6c21a84910de1",
+                          "tests/test_classic_hud_win32.c":  "268d25eef53f3f5ec225cbf83a5d66aa8d2c0aa73615ced332a1be564c98ccb6"
+                      }
+}

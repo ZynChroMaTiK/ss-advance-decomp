@@ -47,7 +47,8 @@ remain stable for existing Settings/Clear Data return paths. The row removal
 and reordering are requested PC UI changes; historical original Options-callback
 comparisons below describe the earlier layout, not this five-row screen.
 Extras holds Jump (moved from Settings), Third-person, and In-game NETRICSA toggles.
-All default to On, persist in settings.dat, and accept keyboard or mouse changes.
+Jump defaults to Off; Third-person and In-game NETRICSA default to On.
+They persist in settings.dat and accept keyboard or mouse changes.
 Disabling in-game NETRICSA leaves pre-level briefings enabled. See
 [Settings and Extras](audio-settings.md).
 Enter, click or Right cycles English/German/French in place; Left cycles
@@ -96,6 +97,13 @@ the documented PC checkpoint policy. Language affects menus and map screens;
 existing simple host gameplay notices remain English.
 
 ## Recovery and boundaries
+
+The Main-menu Scores destination now runs the original1737C viewer natively.
+It displays the18 original seeded entries in three localized groups, with the
+original scrolling, arrow blink, fonts and colors. Arrow keys and mouse arrows
+change group; Enter/Esc or a center click leaves. Original16F70 ranking and16F98
+name entry now connect Quit-run/campaign-ending records, keyboard typing and
+the separate scores.dat file. See [scores.md](scores.md).
 
 `src/menu.c` reconstructs the1862C outer loop and page callbacks16A34 (main),
 17BBC (language),17CD0 (title),17DB8 (difficulty),17F7C (single-player) and180D4

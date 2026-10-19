@@ -20,13 +20,30 @@ single-player presentation owner.
 
 `intermission.c` owns a separate84-slot sprite pool/cache/OAM, borrows frozen
 game assets/math, and renders the original E914/E9D4 localized notice glyphs,
-ECF8 score digits and EE60-compatible bonus spacing. Pending digits use Y88/120;
+ECF8 score digits and EE60-compatible bonus spacing in Original HUD mode. Pending digits use Y88/120;
 score remains at Y8. It uses the original30-entry text blend table. The PC layer
 darkens the captured world over30ticks and marks the selected pause row white;
 those composition choices are host adaptations, not pixel-equivalence claims.
 Draws never tick gameplay or the tally. The high-resolution software scene is
 retained; GBA remains240x160. Private OAM copies remove old notices from pause's
 backdrop and remove all old HUD sprites from completion's backdrop.
+
+Classic HUD uses the same ROM fonts and palettes as the main menu for pause,
+quit confirmation, completion labels, score/bonus values and final greetings.
+Labels/greetings, the Game Paused heading and inactive choices are green;
+scores and selected choices are white. The quit-confirmation heading remains
+white. Classic pause adds a blank16px row after its heading: Continue/Quit
+are at Y72/88 with matching mouse hitboxes. All pause text, including the quit
+warning and both HUD styles, moved up one16px row: heading Y40 and Original
+choices Y56/72. Classic quit-confirmation Yes/No now use Y72/88,
+one row below their former positions, with matching mouse hitboxes. Its heading
+stays at Y40. Completion text retains its existing positions.
+Other text uses the original
+localized notices and row positions; exceptionally wide lines use the menu's
+smaller font. Only glyphs
+are overlaid on the frozen level, including opaque black outlines. Original
+sprite updates still supply notice readiness, blending and the final readable
+hold; this font selection does not change tally/input/audio behavior.
 
 Completion starts automatically from the living native input-state3 boundary.
 The host calls the original tally once per60Hz presentation tick. Held mouse
@@ -46,10 +63,11 @@ once, stores totals/checkpoint rows for the campaign session, and puts the final
 score into the next-level carry/entry snapshot. Reload does not accumulate the
 same counters again. Password/standalone setting-byte policy reaches record
 capture; carried campaign starts use setting0. Ammo is retained. Chapter6 and
-ending12 routes run after recording; R on the next map restores that bonus score.
-Existing progress unlock/save behavior remains separate. High-score lists and
-name entry are still pending, and campaign-session totals are not a new disk-save
-format.
+ending12 routes run after recording; the next map's entry snapshot retains that bonus score.
+Existing progress unlock/save behavior remains separate. After the ending,
+qualifying final scores now enter the original name editor and persist in
+scores.dat; confirmed Pause Quit offers the current run score. See [scores.md](scores.md).
+Campaign-session totals themselves are not a new disk-save format.
 
 Audio commands4/5 now suspend/resume existing native music/effect instances and
 their envelope/sample/sequence clocks. New menu cues remain independent; quit's

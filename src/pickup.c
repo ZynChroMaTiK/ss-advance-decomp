@@ -4,19 +4,22 @@ static void event(SsaPickupGame *g, enum SsaPickupEvent kind, unsigned a, unsign
     g->ops.event(g->ops.context,kind,a,b);
 }
 
-int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
-                     uint32_t override_item,unsigned repeat_weapon) {
+static int touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
+                     uint32_t override_item,unsigned repeat_weapon,unsigned pc_pickups) {
     static const uint8_t weapons[10]={2,3,4,6,0,5,10,8,9,7};
     static const uint8_t ammo_weapons[10]={2,3,8,0,6,10,4,5,9,7};
     static const uint8_t amounts[10]={10,10,1,0,5,5,50,50,5,5};
     SsaInventory *inv;
     uint32_t item;
-    unsigned sound=0x35,message=0;
+    unsigned sound=0x35,message=0,ammo_players;
     int local,accepted=1;
     if (repeat_weapon>SSA_WEAPON_COUNT || !g || !p || !g->rules || !(inv=p->inventory) || !g->ops.event ||
         !g->ops.remove || (!override_item && !pickup) ||
         (override_item && !g->ops.nearest)) return -1;
     if ((uint16_t)(p->entity_type-0xc9u)>3u) return 0;
+    /* Use the original capacity/addition policy without its single-player
+     * ownership gate. Network contact/request rules still use the real count. */
+    ammo_players=pc_pickups?2:g->player_count;
     local=p->body_player_index==g->local_player;
     if (!local && g->player_count>1 && !override_item) return 0;
     if (pickup && (pickup->trigger&0x100)) {
@@ -36,8 +39,12 @@ int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPick
     if (item>=0x20 && item<=0x29 && weapons[item-0x20]) {
         unsigned weapon=weapons[item-0x20];
         accepted=ssa_inventory_queue_weapon(inv,weapon);
-        if(!accepted && weapon==repeat_weapon && inv->pending_count<SSA_PENDING_WEAPON_CAPACITY){
-            inv->pending_weapons[inv->pending_count++]=weapon;accepted=1;
+        if(!accepted && weapon==repeat_weapon){
+            if(inv->pending_count<SSA_PENDING_WEAPON_CAPACITY){
+                inv->pending_weapons[inv->pending_count++]=weapon;accepted=1;
+            }
+        }else if(!accepted && pc_pickups){
+            accepted=ssa_inventory_add_ammo(inv,g->rules,weapon,g->rules->ammo_capacity[weapon-1]>>1,ammo_players);
         }
         message=0x8b+weapon;
         if (weapon==8) sound=0x1d;
@@ -56,12 +63,12 @@ int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPick
         if (accepted) ssa_inventory_add_health(inv,n==0 ? 25 : n==1 ? 50 : 100);
         sound=0x32+n; message=n==2 ? 0xa0 : 0x9d+n;
     } else if (item==0x33 || item==0x37) {
-        if (ssa_inventory_fill_ammo(inv,g->rules,g->player_count)<0) return -1;
+        if (ssa_inventory_fill_ammo(inv,g->rules,ammo_players)<0) return -1;
         if (item==0x37) ssa_inventory_add_health(inv,100);
         message=item==0x33 ? 0x96 : 0xa4;
     } else if (item>=0x34 && item<=0x3d) {
         unsigned n=(unsigned)item-0x34;
-        accepted=ssa_inventory_add_ammo(inv,g->rules,ammo_weapons[n],amounts[n],g->player_count);
+        accepted=ssa_inventory_add_ammo(inv,g->rules,ammo_weapons[n],amounts[n],ammo_players);
         message=0xa1+n;
         if (n<2) sound=0x2a;
     } else if (item!=0x3f) {
@@ -79,5 +86,11 @@ int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPick
     }
     return 1;
 }
+int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
+                     uint32_t override_item,unsigned repeat_weapon)
+{return touch(g,p,pickup,override_item,repeat_weapon,0);}
+int ssa_pickup_touch_pc(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
+                     uint32_t override_item,unsigned repeat_weapon)
+{return touch(g,p,pickup,override_item,repeat_weapon,1);}
 int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,uint32_t override_item)
 {return ssa_pickup_touch_alternate(g,p,pickup,override_item,0);}

@@ -13,7 +13,8 @@ gameplay, boss and end cues. Menu clicks and player/enemy/world effects retain
 their existing levels. The recovered note volumes, sample-to-wave balance,
 timing, fades and channel ownership are unchanged; the reduction is applied at
 the music output before effect headroom mixing.
-M toggles mute. `--mute` starts silently; `--no-music` keeps effects while disabling
+M toggles the automap during gameplay; mute remains available through volume
+controls and M on non-game screens. `--mute` starts silently; `--no-music` keeps effects while disabling
 the background song. Start/restart shows the original pre-level map with its
 start cue (command3). Fire confirms the map; its screen fade completes before
 gameplay begins with the level soundtrack (command2). Restart clears active sounds while
@@ -617,3 +618,13 @@ Windows device startup/restart passes with music enabled and disabled, output
 muted. An initial report write hit a Windows sharing lock; rerunning the standard
 check completed successfully. See audio-validation.json and
 windows-native-audio-validation.json.
+
+M-key mute removal (2026-10-19): M no longer changes mute in menus, NETRICSA,
+chapter screens or pause/completion. During gameplay it remains automap-only;
+password/name text input remains intact. Volume sliders and the CLI mute option
+keep their behavior. The existing startup audio diagnostic/JSON/script now
+checks audio_m_key_preserves_mute rather than expecting a mute toggle.
+Static125libraries/frontend rebuilt; automap Windows1053 checks/four paths/two
+renderers/two chapters pass with mute preserved. Build/automap-tests/m-key-route.json
+contains the focused result. Full audio startup/campaign were not rerun.
+Executable SHA256: 41c695c3977b3f6b7b56f396816f06732b1507bad0db7e4daa5b66260a0d52c3

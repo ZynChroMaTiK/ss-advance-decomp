@@ -1,5 +1,44 @@
 # Rendering performance and frame presentation
 
+October19 rendering update:
+
+- Flat views decode wall endpoints and camera-relative ray numerators once per
+  draw, reusing them across screen columns. The scratch storage grows with the
+  map and is released with the renderer. Refreshing every draw preserves live
+  map edits and reloads at reused addresses.
+- Power-of-two texture wrapping uses a mask after the original signed floor
+  conversion; other dimensions retain signed modulo wrapping.
+- Each water reflection still renders the mirrored 3D scene at full resolution
+  every presented frame. It now clears/rasterizes only rows that visible water
+  at that height can sample. Projection, scanline interpolation, clipping and
+  depth tests remain unchanged. Compositing traverses rows and skips coordinate
+  divisions for equal-size software output; GBA retains its original sampling.
+- Water glints/ripples share coordinate conversion and reject inactive animation
+  phases before computing their randomized sprite placement. Art, placement,
+  animation timing, distance fade and reflection ordering are unchanged.
+
+`ssa_renderer_bench orig/SSA.gba` (source `tests/bench_renderer.c`) measures12
+frozen render fixtures across Egypt/Rome, flat/downward views, dry/water materials,
+960x640 and1920x1080. Water fixtures change floor colors solely to exercise the
+effect; they do not run or validate campaign progression. Each case warms up,
+then reports the median of three12-frame timings and final color/depth hashes.
+Before/after executables run sequentially without concurrent builds. Results,
+hash comparisons and source fingerprints are in
+`analysis/renderer-optimization-validation.json`. These are local render times,
+not whole-game FPS guarantees.
+
+Two paired MSVC runs measured30–34% less render time in the flat dry fixtures
+and11–23% less in the water fixtures. Dry pitched views ranged from3% slower
+to7% faster, so no consistent gain is claimed there. All12 final color buffers
+and primary depth buffers match the preserved baseline exactly. Full-HD water
+fixtures still take approximately62–89ms per render on this machine; these
+changes do not make full-resolution software reflections a guaranteed60FPS.
+
+The final build passes52,135,255 surface/decal checks in GCC ASan/UBSan/leak
+checking and MSVC, plus11,169,540 general renderer checks under sanitizers
+(seven framebuffer sizes and24 chase/jump frames). Both software and GBA
+Windows startup smokes pass. No campaign playthrough was run.
+
 The original crosshair has replaced the temporary PC glyph. The playable game
 now routes the original type18 HUD controller and original sprite art without
 suppressing them during vertical aiming. Its placement, target/no-target

@@ -1,4 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native camera and display-local view selection — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="render-view.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-camera-and-display-local-view-selection">Native camera and display-local view selection</h1>
+<p>The later native-game integration now has the recovered normal automap renderer
+and PC M/zoom controls, with a saved Extras toggle. See <a href="automap.html">automap.md</a>. The callback tests and
+low-level display boundaries described below retain their original scope.</p>
 <p><code>render_view.c</code> recovers the whole original02B88 routine. It clears through07C94,
 scans all four players for active4/automap8 flags, updates their unsignedA8 zoom
 from held1/2 and GAMEticks, then selects the display-local player's automap or

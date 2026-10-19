@@ -108,7 +108,7 @@ int main(int argc,char **argv){
     CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);
     for(i=0;i<10;++i){d.rows.weapons[i].owned=1;d.rows.weapons[i].ammo=(int32_t)i*10;
         d.rows.weapons[i].shots=100;d.rows.weapons[i].hits=i*3;}
-    for(i=0;i<12;++i){d.rows.enemies[i].spawned=i+1;d.rows.enemies[i].hits=i*2;d.rows.enemies[i].kills=i;}
+    for(i=0;i<12;++i){d.rows.enemies[i].spawned=i+1;d.rows.enemies[i].hits=i*2;d.rows.enemies[i].kills=i+1;}
     d.totals.elapsed=125*60;d.totals.health=75;d.totals.score=123000;d.totals.spawned=78;d.totals.kills=43;
     d.lives=3;d.random=5;
     for(language=0;language<3;++language)for(level=0;level<12;++level){
@@ -182,15 +182,39 @@ int main(int argc,char **argv){
     CHECK(ssa_netricsa_row(s,"ABC",0,18,row,1)==-1);
     CHECK(ssa_netricsa_pointer(s,-10,-10,1)==0);
     memset(s,0,sizeof(*s));d.rows.enemies[3].spawned=1;
+    CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==1 && !s->has_enemies);
+    CHECK(ssa_netricsa_pointer(s,12,61,1)==0 && s->category==4);
+    memset(s,0,sizeof(*s));d.rows.enemies[3].kills=1;
     CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==1);
     CHECK(ssa_netricsa_pointer(s,12,61,1)>=0 && s->enemy==3);
     CHECK(ssa_netricsa_pointer(s,92,20,1)==0 && s->enemy==3 && !s->hover);
+    {unsigned weapons,enemies;
+        CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1 && !weapons && !enemies);
+        s->fade_volume=0;
+        CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1 && !weapons && enemies==8);
+        s->closing=1;CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1 && !weapons && !enemies);s->closing=0;
+        CHECK(ssa_netricsa_pointer(s,12,49,1)>=0);
+        CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1 && weapons==2 && !enemies);
+        CHECK(ssa_netricsa_pointer(s,12,61,1)>=0);}
     s->data.show_all=1;
     CHECK(ssa_netricsa_pointer(s,180,20,1)==1 && s->enemy==11);
     CHECK(overlay(s)==0);
-    memset(s,0,sizeof(*s));memset(d.rows.enemies,0,sizeof(d.rows.enemies));d.rows.enemies[11].spawned=1;
+    memset(s,0,sizeof(*s));memset(d.rows.enemies,0,sizeof(d.rows.enemies));d.enemy_entries=1u<<11;
     CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==1 && s->has_enemies && s->enemy==11);
     CHECK(ssa_netricsa_pointer(s,12,61,1)==1 && s->category==1 && s->image==21);
+    for(language=0;language<3;++language)for(i=1;i<=22;++i){unsigned weapons,enemies;
+        memset(s,0,sizeof(*s));memset(&d,0,sizeof(d));d.level=6;d.weapon_entries=0x3ff;d.enemy_entries=0xfff;d.opening_entry=i;
+        CHECK(ssa_netricsa_init(s,rom,0x800000,language,&d)==1);
+        CHECK(s->category==(i<=10?2u:1u) && s->image==i-1 && s->focus==1 && !s->scroll[0] && !s->scroll[1]);
+        CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1 && !weapons && !enemies);
+        for(j=0;j<15;++j)CHECK(ssa_netricsa_pc_step(s,0)==1);
+        CHECK(ssa_netricsa_viewed(s,&weapons,&enemies)==1);
+        CHECK(weapons==(i<=10?1u<<(i-1):0) && enemies==(i>10?1u<<(i-11):0));
+        CHECK(ssa_netricsa_draw(s,pixels,38400)==1);
+    }
+    memset(s,0,sizeof(*s));d.opening_entry=23;CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==-1 && !s->loaded);
+    d.opening_entry=3;d.weapon_entries=1;CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==-1 && !s->loaded);
+    d.opening_entry=11;d.enemy_entries=0;CHECK(ssa_netricsa_init(s,rom,0x800000,0,&d)==-1 && !s->loaded);
     printf("{\"result\":\"pass\",\"checks\":%u,\"runs\":%u,\"frames\":%u,\"languages\":3,\"levels\":12}\n",checks,runs,frames);
     free(s);free(rom);return 0;
 }

@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Technical audit follow-up, 2026-10-20 — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="technical-refactors.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="technical-audit-follow-up-2026-10-20">Technical audit follow-up, 2026-10-20</h1>
+<p>The audit fixes are implemented without intentional changes to gameplay,
+rendered artwork, audio balance, or save formats. The remaining large frontend
+state-machine redesign is deliberately staged; the original transition order
+and ownership flags still govern the application.</p>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><strong>Profile errors.</strong> <code>ssa_win32_profile_store</code> checks the reread under its file
+lock. A transient read failure retains the pending in-memory change and
+leaves the disk file intact. Missing/corrupt files can be repaired from known
+session data; explicit Clear Data still clears, and another writer's valid
+cleared profile wins over stale session bits. This follows the existing
+score-table writer's policy.</li>
+<li><strong>Audio status.</strong> The UI obtains device availability, MIDI error and music
+activity through <code>ssa_win32_audio_status</code>, taking the worker's mutex.
+Open/close remain UI-thread lifecycle operations. Music modes, gains, delay,
+voices and sound-effect mixing are unchanged.</li>
+<li><strong>Shared decal atlas.</strong> Immutable masks/thresholds are initialized once per
+process. Windows uses InitOnce; portable builds use acquire/release C11
+atomics. Level instances retain their own palette and layout, and never free
+the shared atlas. Sampling coordinates, tile generation and texels are
+unchanged. Tests retain a live instance while another is reinitialized and
+freed, in addition to checking complete atlas hashes and rendered pixels.</li>
+<li><strong>Renderer dependency.</strong> <code>ssa_pc_scene</code> owns geometry, world/actor drawing,
+allocation and mirrored-scene rendering. <code>ssa_pc_renderer</code> composes the HUD
+over that scene. Core depends on the scene backend, which calls no native
+lifecycle or HUD functions; it no longer links back to the PC compositor.
+The backend still reads the prepared <code>SsaNativeGame</code> structure. A narrower
+prepared-view data API can be introduced separately if that coupling becomes
+a maintenance problem. The missing portable <code>libm</code> dependency is explicit.</li>
+<li><strong>Frontend organization.</strong> <code>game_screens.inc</code> contains screen entry/exit and
+NETRICSA controller code; <code>game_diagnostics.inc</code> contains scripted audio,
+menu and story inputs plus the NETRICSA pointer diagnostic. App ownership and
+presentation-boundary assertions remain in <code>game.c</code>. This is a first
+separation of responsibilities, not a claim that every diagnostic or screen
+flag has been removed from the loop.</li>
+<li><strong>Settings.</strong> One field catalogue generates native storage, validation and
+comparison. The version-12, 16-byte disk encoder stays explicit. Shared
+runtime application is used for live changes and level setup; it validates
+before modifying state and does not reconfigure alternate weapons when the
+mode is unchanged. Display/audio/input policy remains in the platform layer.</li>
+<li><strong>Focused test builds.</strong> CTest registers eight non-playthrough checks against
+production libraries. The three portable rendering/HUD Python runners share
+a content-addressed GCC sanitizer object/archive cache instead of rebuilding
+every C source independently. Toolchain flags, headers, includes and source
+content participate in cache keys. Failed builds never publish cache entries;
+an interprocess lock protects concurrent builders. Other historical ROM
+differential runners retain their specialized build paths.</li>
+</ol>
+<h2 id="evidence">Evidence</h2>
+<ul>
+<li>Full Windows Release build passed, including the frontend with <code>/W4 /WX</code>.</li>
+<li>Eight CTest checks passed: settings fields, runtime settings, profile I/O,
+audio status, surface decals, PC renderer, classic HUD, frontend intermission.</li>
+<li>Profile I/O: 21 assertions covering sharing violations, retained progress,
+retry, concurrent clear, corrupt-file repair and failed replacement.</li>
+<li>Audio snapshot stress: 50,000 reads with a concurrent writer, no audio device.</li>
+<li>GCC ASan/UBSan with leak checking passed surface decals (52,224,732 checks),
+PC renderer (11,169,540), and classic HUD (382,453). MSVC agrees with the
+surface suite.</li>
+<li>The 12 pre/post renderer benchmark cases have identical pixel/depth hashes;
+all 25 saved decal screenshots are byte-identical.</li>
+<li>Windows Settings UI passed 23,656 checks, muted, including all three music
+modes. The audio/settings codec suite passed 39,044 checks over 26 sequences.</li>
+<li>Muted normal startup/menu/restart, GBA startup/audio/restart, and Egypt story
+handoff passed. No automated campaign playthrough was run.</li>
+</ul>
+<p>Measured x64 sizes: <code>SsaNativeGame</code> decreased from 8,451,768 to 1,767,112 bytes;
+per-level decals decreased from 6,701,680 to 17,016 bytes. The process still owns
+one 6,684,672-byte atlas. The first atlas bake measured 45.6 ms during this run;
+subsequent level initialization measured 0.258 and 0.249 ms, versus approximately
+38–40 ms for each initialization before sharing. These are initialization and
+memory measurements, not a claim of higher rendering FPS.</p>
+<p>Reproduce focused Windows checks:</p>
+<pre><code class="language-powershell">.\scripts\test-focused.ps1
+# Reuse an existing build:
+.\scripts\test-focused.ps1 -SkipBuild
+</code></pre>
+<p>CTest writes artifacts under <code>build/native-windows/test-output</code> and JUnit output
+to <code>build/native-windows/focused-tests.xml</code>. It never runs campaign completion or
+the audible MIDI synchronization diagnostic. WSL sanitizer entry points remain
+<code>tests/test_surface_decals.py</code>, <code>tests/test_pc_renderer.py</code> and
+<code>tests/test_classic_hud.py</code>. CMake also exposes <code>SSA_SANITIZERS</code> for GCC/Clang;
+that CMake configuration was not run here because WSL has no CMake installed.</p>
+<p>The machine-readable summary is <code>technical-refactors-validation.json</code>. Existing
+feature-specific validation files retain their own scope. Manual control feel,
+audio listening, and full campaign parity were not evaluated by this refactor.</p>
+</main></body></html>

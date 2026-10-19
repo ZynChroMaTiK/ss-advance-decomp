@@ -1,0 +1,681 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Optional Classic HUD — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="classic-hud.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="optional-classic-hud">Optional Classic HUD</h1>
+<p>Options -&gt; Extras -&gt; HUD cycles Original / Classic with Left/Right, Enter or a
+mouse click. Original remains the default. The choice applies immediately and
+persists through the existing CRC-protected settings file. Version8 uses byte11
+bit7 for HUD style and its lower seven bits for sound volume; all version1..7
+files load as Original without losing other preferences. Automap and Jump remain
+Off by default. Clear Data restores those defaults.</p>
+<p>Original HUD preserves the original GBA constructor/controller coordinates and
+transparent sprite padding: lives top-left, weapon icon top-right, score/clock
+top-center, status bottom-left and ammo bottom-right. No margin normalization
+or rearrangement applies to its240x160 OAM. Software rendering anchors those
+same groups to the viewport, preserving their native distance from each edge.
+The Serious Engine positioning below describes Classic only.</p>
+<h2 id="serious-engine-positioning">Serious Engine positioning</h2>
+<p>The current layout follows the <a href="https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L767">Serious Engine HUD anchors</a>
+with the retained GBA art at its original size. The reference's6px edge inset
+rounds to2px on the240x160 HUD canvas. Armor/health follow its40:32 row spacing;
+finite weapons use the175/640 horizontal anchor, infinite weapons205/640, the
+selector sits near70% view height and pickup text near82%. Pixel-art dimensions
+and the requested1px ammo/selector gaps are preserved, so this is an adaptation
+of the positions rather than an exact rendering of the PC textures.
+The latest user correction identifies the old top-center panel as HIGH SCORE.
+It now stays at X88, inset2px from above, showing max(saved high score,current
+run score), following <a href="https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L1218">the reference high-score logic</a>.
+Windows level setup supplies the leading record from the loaded score table;
+the timer sits immediately underneath as a separate small counter.
+This supersedes the earlier request to leave the timer panel at88,0.</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Current native position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Score</td>
+<td>Frame2,2; digits14,4</td>
+</tr>
+<tr>
+<td>High score</td>
+<td>Frame88,2; shaded podium89,3; digits100,4</td>
+</tr>
+<tr>
+<td>Timer</td>
+<td>Backing104,13 (26x7); digits105,14 and120,14, colon117,15/17</td>
+</tr>
+<tr>
+<td>Unread NETRICSA</td>
+<td>Idle215,2; attention108,28 (108,40 with boss); digits atX+10/Y+2</td>
+</tr>
+<tr>
+<td>Boss bar</td>
+<td>Frame91,26; skull92,27; health101,29 up to47x4</td>
+</tr>
+<tr>
+<td>Analyzing</td>
+<td>Sprite100,28;100,40 with boss; no backing</td>
+</tr>
+<tr>
+<td>Armor</td>
+<td>Icon2,121; counter frame18,120; digits21,123</td>
+</tr>
+<tr>
+<td>Health</td>
+<td>Icon2,141; counter frame18,140; digits21,143</td>
+</tr>
+<tr>
+<td>Finite weapon</td>
+<td>Icon66,141; counter84,141, digits87,143</td>
+</tr>
+<tr>
+<td>Finite weapon with eight ammo badges</td>
+<td>Icon58,141; counter76,141, digits79,143</td>
+</tr>
+<tr>
+<td>Chainsaw/Colts</td>
+<td>Icon77,141; no ammo counter</td>
+</tr>
+<tr>
+<td>Ammo badges</td>
+<td>Rightmost223,142; visible frame ends237,157</td>
+</tr>
+<tr>
+<td>Weapon selector</td>
+<td>Centered row atY103..119</td>
+</tr>
+<tr>
+<td>Pickup text</td>
+<td>Centered atY127..134</td>
+</tr>
+</tbody>
+</table>
+<p>The eight-badge case shifts only the finite-weapon group left8px to leave6px
+between its counter backing and the first ammo badge. This accommodates the
+GBA's full-size badges; the reference instead scales its ammo row to80%.
+Both renderers use the same adjusted native layout. The software renderer
+anchors score/armor/health to the left edge and inbox/ammo to the right edge of
+the actual viewport. Their vertical edge insets also hold in4:3 windows. It
+keeps sprites uniformly scaled, centers the boss bar/selector/notices, and puts
+the weapon group at its screen-width anchor, applying clearance only if needed.
+This avoids an inset3:2 HUD box on wide screens. High score and timer now both
+follow the top edge. Inbox movement interpolates between the right-edge anchor
+and the upper-center analysis anchor; it never leaves a second panel behind.
+Boss/analysis rows leave clearance for the high-score/timer stack.
+The selector clears the armor row even with all ten weapons. Sprites, shading,
+flash durations, equipment and gameplay are unchanged.
+<code>src/pc_renderer.c</code> classifies the disjoint atlas regions in <code>classic_region</code>;
+future layout changes must update those region boundaries together with the
+native positions. No extra frame allocations or world resampling are needed.</p>
+<p>Classic uses retained ROM sprites and the OBJ palette: green panels63..65,
+status icons80..88, meters89..98, weapon icons67..75, and digit sets110..129. It displays health,
+armor and selected-weapon ammunition below, score inside the top-left frame,
+with the entire armor icon/frame/counter hidden when armor is zero,
+and high score/time/unread NETRICSA dossiers above. Eight finite ammunition slots run along
+the bottom right, with no counters or bars above them. Each icon overlays a
+retained three-pixel-wide vertical meter on its right side, inside its frame.
+The ammo icon and its frame hide when its
+count is zero and reappear when ammo is acquired. Visible icons pack against
+the right edge, in weapon order, with one clear pixel between their frames.
+Boss encounters add a green health bar below
+the central header. Infinite-ammo weapons (chainsaw and single/dual Colts) hide
+the selected ammo counter and its frame; the weapon icon remains visible.
+Counters suppress padding zeros and remain right-aligned; meaningful zeros
+(100 health, for example) remain, and clock seconds retain two digits.
+Spending finite ammo flashes that pool's meter and the selected ammo digits
+with a green-to-neutral palette swap for40 simulation ticks (about0.67s), then
+green again. Matching brightness levels preserve the original numeral shading,
+black and transparency; the glyphs are never flattened to one white color.
+Meters use the same green artwork and palette swap, keeping identical shapes
+throughout the flash. Repeat use refreshes the
+flash, pickups do not trigger it, and pause freezes it. Comparing inventory
+after pickups and before/after weapon controllers handles same-frame pickups.
+Draw calls never age or reset the feedback. Original HUD behavior is unchanged.
+New weapon/enemy dossiers show retained green analyzing sprite79 for120
+simulation ticks (2s), without a backing rectangle. It keeps its ROM pixels and
+spelling near20% view height. The inbox then travels from215,2 to108,28 over30
+ticks, holds120 ticks, and returns over30 ticks. With a boss, text and inbox
+attention move down12px to clear the boss bar. The full timeline lasts300 ticks
+(5s). Green65/white66 artwork and shaded digits blink every15 ticks during it.
+The reference uses the same2s analysis and .5s/2s/.5s inbox movement timing;
+the existing requested green/white blink and retained GBA art remain native
+adaptations. A genuinely new unread type refreshes the timer; repeated kills, repeated
+acquisitions, rendering and old carried dossiers do not. Reading every entry
+clears it. Pause freezes the timer; automap, death, completion and clean overlay
+captures omit the effect. The inbox retains its translucent backing; analysis has none.
+No unread entries means no inbox panel. Both counter digits fit inside the
+retained frame; the corner panel is absent while the inbox is moved inward.
+Positions follow the <a href="https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L1228">reference HUD's upper-right inbox</a>
+and <a href="https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Player.es#L2393">upper-center analysis text</a>.
+The requested green/white blink is native presentation policy, not a claim that
+the PC reference or the original GBA retail HUD uses this exact color animation.
+The selected weapon's ammo icon stays white inside its square frame through
+the same shade-preserving palette swap. Only its13x13 interior is recolored;
+frame and spacing remain green/transparent. The highlight follows the requested
+weapon immediately, including during a pending switch. The meter is composited afterward
+and retains its separate consumption flash.
+Taking damage flashes only the health digits through the same shaded neutral
+palette for40 ticks (~0.67s). Repeat damage refreshes it, healing does not, and
+pause freezes it. Health is sampled at frame/entity boundaries; once observed,
+damage feedback survives a later pickup restoring health.</p>
+<p>Changing weapons opens a horizontal selector centered at the bottom half of
+the view (native Y103), above the permanent status row. Available weapons follow
+weapon order, with one single-Colt icon shared by both single/dual variants,
+as requested in the First Encounter style. Retained weapon icons keep their
+shaded green palette; the requested
+weapon, including its complete frame, swaps to matching neutral shades. The
+Colt entry highlights for either equipped variant.
+Weapon and ammo highlights update as soon as selection changes, before the
+store/draw animation completes or the new weapon can fire. Rapid selection
+changes immediately move the highlight again; gameplay switching/firing timing
+is unchanged. The read-only Classic projection uses the requested weapon rather
+than the currently committed controller weapon for this presentation.
+Items have16px footprints and17px spacing, leaving a1px gap.
+The supplied Time Strike artwork retains its exact pixels. Individual backings
+use the same transparency as the rest of Classic, with clear gaps between items.
+Selection and completed changes refresh a180-tick (3s) timer. Pause freezes it;
+rendering does not advance it. Fire clicks, including very short or buffered
+clicks and infinite-ammo weapons, dismiss it immediately. A pending handoff
+cannot reopen a selector dismissed by firing. Original HUD, automap and clean
+NETRICSA/completion captures omit the selector.</p>
+<p>The old type5 health-digit controller
+selects the health animations; the remaining missing data bindings are native
+presentation code using canonical current game state.
+The top-right number counts unread NETRICSA weapon and enemy dossiers (up to22),
+as corrected by the user. Each weapon/enemy type contributes at most one entry.
+Weapon ownership unlocks a dossier. Starting equipment on every level is
+familiar and creates no new unread entries or alerts, including password/level
+selection and alternate loadouts. The first simulation tick commits this
+baseline before pickups; weapons discovered during play still notify. Existing
+unread dossiers carry through level changes without being acknowledged. The
+earlier first-level Schofield familiarity also remains. All owned dossiers stay
+browsable; read status survives levels/retries.
+Enemies unlock only after a kill, never merely from spawning or attacking.
+A fully visible dossier is marked read
+only after its frame is presented. Opening a briefing/statistics page or fading
+does not mark unseen dossiers read. Discovery/read masks carry across levels
+and retries, and reset for a fresh run; no save-file format changes are needed.
+Original HUD's life counter continues to show remaining lives independently.</p>
+<p>Classic notice text uses the original static8px menu font, decoded once from
+ROM0B7A60 with original character mapping/metrics and shaded white palette tones.
+Pickup text (original IDs8C..AB) is centered at native Y127, below the selector's
+Y103..119 row and above the bottom status row. It stays there when the selector
+is hidden. Boss/death notices retain their original vertical placement. All
+notices keep the original localized strings and shared timer. The old animated type13 glyphs and type14
+backdrop are omitted only from Classic's OAM snapshot; controllers, animation
+and cache state still run normally, preserving immediate Original restoration.
+Classic composes the static text and its translucent backing into both renderer
+layers without changing the source sprites or their palette.</p>
+<p>Classic panels and icons now have black backings with45% transparency (55% black
+opacity). A separate coverage mask follows visible score/time/unread panels,
+health, positive armor, weapon, finite selected-ammo counter, nonempty ammo icons
+and boss panel. Ammo backings cover15 pixels of each16-pixel slot, keeping the
+one-pixel gaps transparent. Hidden elements produce no backing. The indexed foreground stays
+fully opaque, with its original palette, pixel layout and shading. Backings blend
+once above the world/weapon layer and below the HUD art: RGB555 in GBA mode and
+RGB888 at the actual software-renderer resolution, retaining45% of each source
+channel with rounding. Automap, clean captures and Original HUD suppress this
+mask along with Classic. Pause and NETRICSA use their existing capture/fade flows.</p>
+<p>The initial layout followed visible panels/icons in the user's
+<a href="https://www.youtube.com/watch?v=VUotqe5A75k">May16,2002 prototype footage reference</a>.
+YouTube's public135x90 storyboard frames were inspected, including gameplay
+previews. They establish the broad panel arrangement, but do not establish exact
+pixel positions or all counters' meanings. The time binding, boss display and
+the new ammo-indicator layout are explicit
+reconstructions. This is a usable optional presentation, not proof of recovery of
+the missing old constructor or the unidentified original GAME+34C field. See
+<a href="legacy-hud.html">legacy-hud.md</a> for the separate original-code audit.</p>
+<p>The score stays inside the first frame, without its former health fill.
+The selected weapon/ammo panel makes room for up to eight original-size16pixel
+ammo icons at Y142. Visible15px frames end at X237; with all eight present the
+first starts at X111. The old
+meter sprites89..98 sit at icon X+10, bottom-aligned at Y+12, three pixels wide
+with up to11 filled pixels (one pixel up/left from the preceding layout). A black
+backing keeps the meter readable over the icon, entirely inside the frame.
+The green set has no four-pixel image, so that level composes its retained
+three-pixel and one-pixel images. The white99..109 sprite set is not used for
+feedback. Ratios use the original per-weapon
+capacity records at0844BC8C, not invented shared ammunition pools. Tommygun and
+minigun therefore have separate indicators even though their old bullet artwork
+is shared. The retail HUD handlers F1C0/F27C select animations42..4B/DF..E8 from
+the requested weapon at player+78;40 whole original-routine calls verify those
+bindings and automap visibility. The green art is associated by visual identity:</p>
+<table>
+<thead>
+<tr>
+<th>Weapon</th>
+<th>Green weapon image</th>
+<th>Ammo image</th>
+<th>Original capacity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chainsaw</td>
+<td>68</td>
+<td>Infinite</td>
+<td>999</td>
+</tr>
+<tr>
+<td>Colt</td>
+<td>67</td>
+<td>Infinite</td>
+<td>999</td>
+</tr>
+<tr>
+<td>Shotgun</td>
+<td>69</td>
+<td>84</td>
+<td>100</td>
+</tr>
+<tr>
+<td>Tommygun</td>
+<td>70</td>
+<td>83</td>
+<td>300</td>
+</tr>
+<tr>
+<td>Minigun</td>
+<td>71</td>
+<td>83</td>
+<td>300</td>
+</tr>
+<tr>
+<td>Rocket launcher</td>
+<td>72</td>
+<td>85</td>
+<td>25</td>
+</tr>
+<tr>
+<td>Prion Gun</td>
+<td>74</td>
+<td>New green biohazard</td>
+<td>10</td>
+</tr>
+<tr>
+<td>UMT</td>
+<td>73</td>
+<td>86 (radioactive)</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Time Strike</td>
+<td>Supplied framed PNG, recolored green</td>
+<td>New green clock</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Cannon</td>
+<td>75</td>
+<td>88</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>There is no retained green Time Strike weapon icon. The replacement now uses the
+actual user file, copied unchanged from <code>C:\Users\brian\Desktop\download.png</code> to
+<code>assets/classic-hud/time-strike-reference.png</code>. It is16x24, with its framed device
+in the top17 rows and transparent padding below. The icon blits at X66/Y141
+(X58 when all eight ammo badges are present)
+without resizing, cropping or fitting: its frame and all opaque/transparent pixels
+keep their supplied positions. <code>scripts/import-classic-time-strike.ps1</code> embeds its
+RGB555 pixels in <code>src/classic_time_strike.inc</code>. Runtime changes colors only:
+maximum RGB brightness maps to the original green OBJ ramp, opaque black stays
+opaque, and saturated-green frame pixels match the HUD's bright green. The
+original palette and user PNG remain unchanged. The former reduced world-sprite
+lookup is removed; it did not match the supplied artwork.</p>
+<p>The latest user-directed ammo symbols assign the original radioactive image86
+to UMT. Prion Gun now has a biohazard and Time Strike an analog clock with hands
+pointing up/right. The corrected variants copy the actual shaded circle image88,
+including its frame, round silhouette and original highlight pattern. The circular
+interior expands from11x11 to13x13 with centered sampling, enlarging the green face
+to11x11 to match UMT. The16x16 icon frame stays fixed, and the symbols remain
+centered. Dark inset symbols sit on the face, lifted halfway toward maximum green through the
+existing OBJ ramp for contrast; the template and palette stay unchanged.
+The biohazard uses a9x9 coverage mask of the standard three crescents and center
+hole, with contrast hinting to retain the fine tips and openings. Its public-domain
+vector reference and sampling details are kept in <a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/assets/classic-hud/README.md">assets/classic-hud</a>.
+The clock uses hands and four hour marks on the circular face. Both keep the
+same16x16 slot and frame alignment; neither uses the former empty frame87 layout.
+These symbols are new UI artwork, not recovered ROM images. No ROM assets are
+modified. Original source does not establish the missing old full-layout
+constructor or gauge behavior; the indicator presentation follows the user's
+request while counts, limits and retail fallback bindings use original data.</p>
+<p><code>classic_hud.c</code> draws a transparent240x160 indexed foreground plus an optional
+backing mask. Both the GBA renderer and software renderer composite it through the
+original palette and existing HUD scaling. Classic hides retail statistics in a
+private OAM snapshot, retaining weapons, crosshair and transient
+sprites. Original controllers, pool objects and cache continue normally; toggling
+does not reset weapons, inventory or simulation. Dual-Colt presentation still uses
+the existing mirrored weapon path. Automap hides Classic. NETRICSA captures remove
+it with the other HUD while preserving the weapon, and completion captures remove
+the entire HUD/weapon. Pause keeps and darkens the frozen HUD.</p>
+<p>Validation commands:</p>
+<pre><code class="language-powershell">wsl -d Ubuntu --exec /mnt/c/SeriousEngine/Coding/ss-advance-decomp/.venv-linux/bin/python /mnt/c/SeriousEngine/Coding/ss-advance-decomp/tests/test_classic_hud.py
+.\scripts\test-classic-hud.ps1 -SkipBuild
+.\scripts\test-audio-settings.ps1 -SkipBuild
+.\scripts\test-intermission.ps1 -SkipBuild
+.\scripts\test-native-startup.ps1 -SkipBuild
+</code></pre>
+<p>Pre-level switching fix (2026-10-19): the reported session log
+<code>build/logs/launch-21297-16128-9372/stderr.log</code> was empty. The exit was reproduced
+with Alternate weapons On, as in the saved settings. The menu's native HUD setter
+tried to build OAM while the starting Colt still had unresolved previous_frameFFFF;
+the alternate weapon builder rejected that image, and settings_change marked the
+app failed without a diagnostic. Before the first simulation frame, the setter
+now records the style and leaves OAM untouched. The ordinary first-frame sprite/
+animation/cache stages construct it. No dummy ticks, item grants or cache resets
+are added. A failed later rebuild restores the previous style; the frontend now
+logs a HUD-application failure rather than exiting silently.</p>
+<p>The focused GCC sanitizer test and matching MSVC test pass121,632 checks over368
+draws, including Egypt/Rome, both renderers, all ten weapon projections, live
+counters, boss health, automap/suppression, dual Colts and exact same-frame
+Original restoration. Additional checks isolate score changes to the top-left
+frame. Original-mode captures also verify the live life digit (Normal3) in both
+renderers, after fixing the missing native game_value projection. Separate
+native death/retry checks cover5/3/2 starts, reduced counts and final0. Other
+checks verify all nine retained green weapon images, isolate each ammo pool's
+changes to its own slot and verify empty/full/low meters inside the frame.
+An actual Tommygun shot checks shaded neutral digits and the same three-pixel
+meter geometry, read-only redraws, paused feedback, all39 intervening ticks and
+the40th-tick return to green, with both renderer captures.
+Backing checks verify the45% source-color retention in both real compositors,
+opaque foreground colors, hidden armor and disabled backing in suppressed and
+automap views. Original same-frame restoration still passes.
+Weapon-selector checks cover the centered ten-entry row, shaded white frames,
+the shared Colt icon before/after a dual toggle, read-only draws, pause, the
+180th-tick timeout, mouse-wheel/Q handoffs, and both an infinite-ammo shot and
+a short buffered click during a pending finite-weapon switch. Fire dismissal
+survives the later handoff. Both renderer captures were visually checked.
+Immediate-selection checks queue Tommygun, Rocket Launcher and Tommygun again
+while the committed weapon is still dual Colts, without advancing simulation.
+Each read-only draw highlights the latest requested weapon/frame and matching
+ammo interior; other ammo art and frames preserve their source indices. The
+pending-switch captures show white Tommygun selection while Colt models remain
+drawn in both renderers.
+Damage checks apply actual native combat damage and verify shaded white health
+digits, read-only draws, pause,40-tick expiry and no healing flash. Notice checks
+exercise all three localized pickup strings through the static white font below
+the visible selector and original timer; Classic omits type13/14 OAM art.
+They also check white Game Over text at its original central Y64.
+Software/reference text captures and the
+right-aligned single-ammo capture were inspected. Sparse ammo fixtures verify
+the rightmost frame ends at X237, with empty pools omitted.
+Notification checks compare all640 sprite pixels directly against the decoded
+ROM image and verify its backing is empty. Captures cover analysis and the
+centered inbox in both renderers and widescreen. Checks verify120-tick analysis,
+30-tick travel,120-tick hold,30-tick return, blink, pause, no duplicate refresh
+and read cancellation. High-score checks isolate record changes, verify
+max(record,current score), isolate timer updates, and bind a real frontend score
+table. The suite also verifies screen-edge/weapon anchors in854x480 and640x480,
+with separate high-score/timer, boss and analysis rows. Whole-layout
+captures include all ten selector entries, armor, score, boss and eight ammo
+badges in both chapters. See the current check/draw counts in
+classic-hud-validation.json and windows-classic-hud-validation.json.
+The current focused sanitizer/MSVC result is124,829 checks/383 draws, with286
+Windows presentation checks and768 direct supplied-PNG comparisons. Native,
+software, widescreen and4:3 whole-layout captures were visually inspected.
+Starter checks verify all36 campaign level/difficulty loadouts are silent before
+and after their first tick, plus alternate starts on all12 maps. They retain
+normal later weapon/kill alerts and carried unread messages. Windows reading
+presents a genuinely new shotgun
+dossier and retains its read mask after retry.
+Journal checks reject spawn-only discoveries, perform actual combat kills,
+acquire another weapon, verify one entry per type, check that unread changes
+affect only the Classic top-right panel, and preserve read masks through a
+campaign carry. Windows276 checks include presenting the selected weapon
+dossier to clear its unread flag and retaining that read flag through retry
+reload, in both renderers. Original HUD continues to display actual lives.
+The Time Strike case checks the supplied full-width frame, shadow, original
+transparent hole, larger device detail and multiple green shades. The Windows
+script additionally compares every visible icon pixel directly against the user
+PNG after palette conversion, and verifies that the clipped padding is transparent.
+A cold-start regression also verifies repeated changes
+with the starting alternate Colt, unchanged inventory/OAM/counter and successful
+first-frame rendering. Windows frontend checks cover keyboard and mouse changes
+before gameplay with Alternate weapons Off/On in both renderers, disk round
+trips, and pause, NETRICSA and clean
+completion captures in both renderers. Settings/localization/audio regression
+checks pass38,922 native assertions and23,381 Windows assertions, including saved
+style changes and version7 migration. Existing intermission tests pass143,825
+native checks and all12 Windows pause/six completion routes.</p>
+<p>Reports: <code>classic-hud-validation.json</code>, <code>windows-classic-hud-validation.json</code>,
+<code>audio-settings-validation.json</code>, <code>windows-audio-settings-validation.json</code>,
+<code>intermission-validation.json</code>, <code>windows-intermission-validation.json</code> and
+<code>windows-native-startup-validation.json</code>. Captures under <code>build/classic-hud-tests</code>
+and the three localized Extras captures were visually inspected. The static
+Windows executable and125 libraries are rebuilt. These are focused checks;
+physical input and a full campaign playthrough were not performed. The original
+ROM is unchanged, and this presentation work adds no exact matching claims.</p>
+<p>HUD refinements (2026-10-19): Classic timer backing is now26x7 pixels at105,14
+(previously29x10). Analyzing keeps sprite79 and its green shading but pulses
+opacity using TFE Player.es2393..2398's sin(seconds*10)*127+128 formula. The
+notification's simulation clock supplies phase, so pause freezes it. RGB555 and
+software RGB888 blend over the current scene, without a black text rectangle.
+Inbox travel, its separate green/white blink and starter/unread rules remain.
+Reference: https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Player.es#L2393</p>
+<p>Classic now shows retained Use sprite77 at112,92 while an unlatched button is in
+the original64-unit interaction sweep. Its olive source ramp now shares the
+Analyzing palette mapping, matching the HUD's bright green while preserving shaded pixels,
+black and transparency. A separately owned use_query refreshes a
+presentation cache after simulation; it does not activate buttons, share scratch
+with gameplay/world/camera or change the world's blocking entity. Activation
+removes the prompt on that tick; death, completion and automap omit it. The
+Tommygun badge uses a new shaded box magazine inside the original15px frame,
+with the original OBJ palette. Minigun retains83. Ammo meters, flashing and
+selection palette swaps apply to both independently. This is new native UI art,
+not recovered ROM artwork.</p>
+<p>Original HUD now groups score upper-left, lives upper-right, status bars
+lower-left and selected weapon/ammo lower-right, keeping clock centered above.
+Private sprite copies relocate the layout; original controllers, live object
+coordinates, art and animations are retained. Status Y coordinates stay native
+so the original scanline health/armor/boss palette changes remain correct.
+Six cached OAM snapshots separate corners, top-center clock and central weapon/
+reticle/notices. PC output anchors only their appropriate axes to the viewport;
+weapon models and reticle remain centered. Native240x160 uses the same corner
+layout. Pause/NETRICSA captures save/restore these snapshots with the full OAM,
+including failure paths; completion keeps its clean scene.</p>
+<p>Validation: GCC ASan/UBSan/leaks=1 and matching MSVC pass133,104 checks/395 draws
+across both renderers. This includes a real map button before/after actual
+activation, all source Use pixels, genuine RGB555/RGB888 opacity blending,
+and every visible Original corner/clock pixel at854x480 and640x480. Captures
+for both chapters, Use, ammo, analysis and both aspect ratios were inspected.
+Windows Classic menu/overlay checks pass286 assertions plus768 supplied Time
+Strike PNG comparisons. Additional hidden-window intermission regression:
+6,205 checks,12 pause paths,6 completion routes and6 Main-menu quits, two
+renderers/three languages (build/intermission-tests/hud-regression.json).
+125 static Windows libraries and frontend rebuilt; executable SHA256:
+b07c3e0e16b122ad01680491511fda73516ea30ce3294bcdf1381d8b2e4ac53a.
+ROM SHA1 remains4ff48d8c18b70a5184758f1917343ae85a70858e.
+No campaign playthrough, physical input validation or new exact-match claim.
+Launcher verification also passes on this executable: normal software/GBA startup,
+raw-input registration, repaint/restart, map transitions, error logging and two
+concurrent launches. See windows-native-startup-validation.json. No full replay.</p>
+<p>Classic resource alert colors (2026-10-19): checked Croteam's Common/HUD.cpp
+GetCurrentColor and DrawHUD health/armor/ammo sections, especially778..845 and
+898..914. Apply the requested red/gray alerts while retaining Classic green for
+other resource amounts: health below25 is red; positive armor below25 is light
+gray; selected ammo count below15% of its own capacity is red; each small ammo
+meter below25% of its own capacity is red. All comparisons are strict, as in
+GetCurrentColor: exactly25 health/armor,15% count and25% meter are not low.
+No difficulty-dependent health/armor normalization is added (the reference
+explicitly uses100). Keep the existing independent GBA ammo capacities; one UMT
+round out of its three-round capacity is above both alert thresholds.
+References:
+https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L778
+https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L898
+https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/Engine/Graphics/Color.h#L21</p>
+<p>Recolor the original green shading ramp through existing OBJ palette indices,
+not flat silhouettes or changed assets. Red uses the nearest retained red shades;
+armor gray scales the ramp by23/31 (TFE light gray0xBF), so it remains distinct
+from the white flash. Black/shadows, transparency, glyph geometry, badge/frame
+colors, selected icon highlights and zero/empty hiding policies are preserved.
+The user's existing40-tick white health/ammo consumption cues override alert
+colors; on expiry the current resource value determines the resulting color.
+Original HUD and gameplay rules are unaffected.</p>
+<p>Final focused GCC sanitizer and matching MSVC result:170,256 checks/403 draws,
+two renderers. Tests cover health/armor0,1,24,25,50,100,200; all eight real ammo
+capacities at zero and immediately below/at/above15% and25%, full and overfull;
+white priority over low values, omitted empty badges, read-only draws, and actual
+RGB555/RGB888 palette output. Existing actual-damage/shot tests retain pause and
+40-tick expiry, now returning low ammo to red instead of green. Egypt/Rome low
+resource and separated counter/meter threshold captures were visually inspected.
+The static Windows frontend and125 libraries are rebuilt. Executable SHA256:
+a8c889df55809079a0f68492ea3028c6ccbd21459282bf6330e7a68ca619ae7a.
+ROM SHA1 remains4ff48d8c18b70a5184758f1917343ae85a70858e. No campaign replay,
+new exact matching or fresh full launcher suite was needed for this palette edit.</p>
+<p>Timer backing offset (2026-10-19): move only the Classic clock's26x7 backing
+from105,14 to105,13. Minute/second digits remain105,14 and120,14; colon remains
+117,15/17. Shared native/software layers apply the same one-GBA-pixel offset.</p>
+<p>Tommygun drum icon (2026-10-19): replace the box-magazine pattern with a
+front-facing round drum, short feed neck, concentric rim and central winding
+hub. Reference is the actual Tommygun ammo pickup animation0x3A: frame word25,
+resource58/image26 (exported frame-026.png), not resource58/image1's shared Colt
+art. Keep the established9x11 art area inside the15px green badge, original OBJ
+shades, right-side meter, selected white palette swap and low/flash meter colors.
+Minigun artwork remains unchanged. New HUD pixels are native UI art; the original
+ROM/pickup sprite is not modified. Compare build/classic-tommy-drum-preview.png.
+Rebuilt125static Windows libraries/frontend. Existing MSVC HUD checks pass171315
+checks/403draws/two renderer paths; atlas and in-game captures inspected at native
+and enlarged size. See classic-tommy-drum-validation.json for current source and
+binary hashes. Full sanitizer/launcher suites were not repeated for this icon edit.</p>
+<p>Original HUD GBA-layout restoration (2026-10-19): supersedes the earlier Original
+corner rearrangement described above. Remove original_corner_offsets entirely
+and remove the weapon icon's104px downward shift. Original HUD uses its unmodified
+recovered constructor/controller coordinates, full transparent sprite padding,
+original variable-width score centering, scanline palette boundaries and OAM
+composition. There is no forced2px margin. GBA/reference rendering uses the full
+raw OAM, preserving its native240x160 layout pixel for pixel.</p>
+<p>Retain six isolated OAM snapshots for software anchoring only:0 central weapon/
+reticle/notices;1 top-center score+clock;2 top-left lives;3 bottom-left status;
+4 top-right weapon icon;5 bottom-right ammo. Each snapshot also retains native
+coordinates. PC renderer changes only the relevant viewport origin: left-edge
+zeroX, right-edge2<em>letterboxX, centered letterboxX, top zeroY, bottom2</em>letterboxY.
+This preserves each group's original GBA padding instead of measuring/cropping
+its bounds. Native full-OAM and private pause/NETRICSA capture ownership are intact.</p>
+<p>New independent Original layout checks bypass the HUD adapter and feed untouched
+live sprite coordinates directly into recovered FCE4/ssa_sprite_oam_build, then
+the native display. All raw OAM entries and153,600 RGB555 pixels across four
+Egypt/Rome equipment fixtures match. Cases include default chainsaw and finite
+Tommygun ammo, armor75, health150, an eight-digit score and real remaining lives.
+Widescreen854x480 and portrait640x480 checks compare visible source art at the
+correct anchors. Native/default/equipped/widescreen captures were inspected.
+GCC ASan/UBSan/leaks=1 and MSVC333,649 checks/405 counted draws/two paths pass;
+Windows560 overlay/menu/reopen checks plus768 user-PNG checks pass. Additional
+original-HUD intermission regression passes6,205 checks/12pause/6completion/
+6menu-quit paths in both renderers (build/intermission-tests/original-hud-regression.json).
+Static frontend/125libraries rebuilt; SHA256:
+4647317503861ea2e4a9f6539a24ed1d6274a6b6e587d0b1e25c47470202e7b7.
+Current source/binary evidence: classic-hud-validation.json and
+windows-classic-hud-validation.json. Original ROM unchanged. No full campaign
+replay, new exact matching claim or full launcher rerun was made for this fix.</p>
+<p>Latest analysing text correction (2026-10-19): supersedes the earlier sinusoidal
+opacity behavior. Analysing is fully visible/invisible in alternating15-tick
+phases (0.25s per phase), starting visible. It retains the2s analysis interval,
+upper-center/boss-adjusted position, no backing, pause behavior and inbox timing.
+Sprite79 is recolored to the existing HUD's green ramp: its brightest shade
+matches the HUD's bright green, with lighter/darker lettering shades preserved.
+For the current ROM this maps green24/19 to green29/24; black/transparency and
+all sprite pixels stay intact. RGB555 and RGB888 compositors share the same
+binary alpha and palette mapping. The two Classic-only audio cues are unchanged.
+Validation for the latest blink/palette change: native ASan/UBSan/leaks=1 and
+MSVC each pass337601 checks/409 counted draws/two renderer paths. Checks cover
+all120 analysis ticks including boss placement, exact recolored sprite pixels,
+full-strength on pixels and unchanged scene pixels when off in both outputs.
+The prior double-cue/audio, unread and Original layout checks still pass.
+Windows frontend560 checks and768 supplied Time Strike pixels pass. On/off PC
+captures were visually inspected. Static125libraries/frontend rebuilt; SHA256:
+42c166bfdd988592784727387d544dbaec04c9b36a4bdf9a78102d1a6e6a1e11
+Current reports: classic-hud-validation.json/windows-classic-hud-validation.json.
+Original ROM unchanged; no full campaign replay or physical-input test.</p>
+<p>Latest Tommygun ammo artwork (2026-10-19): supersedes the drum design. Use two
+upright cartridges in the same9x11 interior, each3px wide and11px long, with
+pointed tips, neck bands, shaded cases and base rims. This is fewer, longer and
+thicker rounds than Minigun's five short horizontal bullets. Retain image83's
+15px frame, right ammo meter, original green ramp, selection/flash white swap
+and alert colors. Minigun/world pickup/ROM artwork unchanged. Existing MSVC HUD
+checks357231/409draws/two paths pass. Side-by-side enlarged native-pixel preview
+inspected: build/classic-tommy-bullets-preview.png. Static125libraries/frontend
+rebuilt; SHA256 63b406c7bec3424271e6086b61987b55da767632d9ab386d305cff8b2b7f4c49.
+See classic-tommy-bullets-validation.json. No new tests or broad sanitizer/
+launcher/campaign rerun was added for this small code-native sprite adjustment.</p>
+<p>User-edited Tommygun icon (2026-10-19): the final selected image is the existing
+assets/classic-hud/tommygun-ammo.png, explicitly provided by local path after
+superseding the first attachment. Its SHA256 is
+e5ae9c9e20c6667cbe9f701ff4cce41295749ffe30af15c87775c2692364f071.
+The16x16 PNG replaces the prior two-cartridge procedural pattern. A dedicated
+importer writes exact original-palette indices and transparent0 to
+classic_tommy_ammo.inc; no resizing, cropping, color replacement or approximated
+pixels. It rejects dimensions, alpha or colors outside the expected format.
+The unchanged PNG remains the editable source. Runtime blits it directly and
+then draws the separate ammo meter; existing selected/flash/low-ammo behavior
+remains. Minigun and world pickup sprites remain original.
+Validation: existing MSVC390399 HUD checks/409 draws/two paths pass. A direct
+comparison against the supplied PNG matches446 pixels across Egypt/Rome,
+excluding only the dynamic3x11 meter. Side-by-side rendered preview inspected.
+The source PNG SHA256 stayse5ae9c9e20c6667cbe9f701ff4cce41295749ffe30af15c87775c2692364f071.
+Static125libraries/frontend rebuilt; executable SHA256:
+bbad6918a6e4414c67b20be73c7dcc3ea2135a9e493fdba6115d242ac5fc7655
+See classic-tommy-import-validation.json. No new tests or full sanitizer/
+launcher/campaign rerun were added for this exact sprite replacement.</p>
+<p>Classic pause/completion typography (2026-10-19): <code>intermission.c</code> now uses the
+main-menu ROM font/palettes for pause and its quit confirmation, end-level
+labels, score/bonus values and localized Sam greetings. Inactive choices,
+labels and greetings are green; the pause heading, selected choices and numeric
+values are white. Existing row positions, frozen backdrop and black glyph
+outlines remain. Original HUD's animated glyph sprites and all tally/input/
+audio/readable-hold timing are unchanged.</p>
+<p>Validation: GCC ASan/UBSan/leaks and MSVC agree on145940 intermission checks,
+36 original completion starts/69917 tally frames, plus Classic pause and
+first/final-level completion fixtures in all three languages. Actual Windows
+routes pass12pause/6completion/6Main-menu Quit paths in both renderers; the
+Classic hidden-window frontend passes560checks/two renderer paths. Pause,
+bonus and localized final greeting captures were visually checked. Static125
+libraries/frontend build passes; executable SHA256:
+a7c0f66357c9111e0c66bdebdc531919aecd1f95bbeb6a1276d44c218bc0ea6a
+See intermission-validation.json and windows-intermission-validation.json.
+These are focused presentation checks, not a campaign playthrough or physical
+input/listening validation.</p>
+<p>Instant inbox movement and green pause heading (2026-10-19): GAME PAUSED and
+its translations now use green in Classic mode; selected choices remain white.
+The inbox teleports inward immediately after2s analysis, holds2s, and returns
+instantly to the top-right corner. The existing5s notification lifetime and
+blink remain; the final second is spent at the corner. Shared attention is
+only0/30, so native-resolution PC anchors snap as well as GBA positions. The
+green-sprite palette swap and half-duration audio gap remain unchanged.
+Existing MSVC checks pass382206 HUD/409draws and145940 intermission assertions;
+hidden-window checks pass560 Classic and6205 pause/completion assertions over
+both renderers and all three languages.125libraries/frontend rebuilt. Pause
+and inbox previews inspected; no broad sanitizer/campaign rerun. See
+classic-hud-snap-validation.json.</p>
+<p>Transparent empty ammo meters (2026-10-19): meters no longer erase their full
+3x11 area to black before drawing. Only the filled original meter art overlays
+the ammo icon, preserving its pixels where the bar is not full. Selected icon
+palettes, red low-ammo fill, white consumption flash, frames and HUD backings
+remain. Existing meter checks now compare exposed space with the bare icon and
+inspect alert/flash colors only within the filled part. MSVC382094checks/
+409draws and Windows560checks/two renderers pass;125libraries/frontend rebuilt.
+Low-ammo preview inspected. See classic-ammo-transparency-validation.json.
+No broad sanitizer or campaign rerun for this small presentation change.</p>
+<p>Panel icons (2026-10-19): the high-score/leaderboard panel now has a7x7 podium
+inside its left square, and the boss panel a7x7 skull. Both are code-native
+pixel glyphs shaded with the retained HUD green ramp (29/19/9 brightness), lit
+from above/left. The podium's center step is tallest, then left, then right.
+Existing frame/divider pixels
+and transparent gaps intact. Boss fill now starts at101,29 and spans at most
+47x4, wholly inside the right rectangle with padding; it never crosses the
+divider or skull. Existing full-health checks verify the skull eye remains
+open and the fill stays within its rectangle. MSVC382452checks/409draws and
+Windows1666checks/two renderers pass;125libraries/frontend rebuilt. GBA and
+4:3 PC previews inspected. See classic-bar-icons-validation.json. No broad
+sanitizer/campaign replay for this small HUD change.</p>
+<p>Use prompt green (2026-10-19): sprite77's olive source colors RGB555(12,21,3)
+and(11,17,2) now map to the HUD's retained green ramp, peaking at(0,29,0).
+The shared lettering helper preserves the original shading, black pixels,
+transparency and112,92 position; Analyzing retains its green-only mapping.
+The existing real-button capture checks the prompt's silhouette and green hue.
+Both GBA and software previews were inspected. Windows HUD integration passes
+1666 checks/two renderers and the rebuilt frontend passes30 startup frames.
+No campaign replay or gameplay changes.</p>
+</main></body></html>

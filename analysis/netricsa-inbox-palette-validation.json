@@ -1,0 +1,26 @@
+{
+    "result":  "pass",
+    "scope":  "Classic NETRICSA inbox uses sprite65 in both blink phases; green-to-neutral palette swap for white",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  382477,
+                      "draws":  409,
+                      "paths":  2
+                  },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  560,
+                    "paths":  2,
+                    "hidden_window":  true
+                },
+    "preview":  "build/netricsa-inbox-palette-tests/classic-inbox-center-gba-0.bmp",
+    "preview_inspected":  true,
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "executable_sha256":  "5f8c023f6a5faea3460d7a8f323751ccaff77e3ce92d3c7fd0a066cb456fa339",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "0adf07bfe2a574b347eb7f782411d83bd8934c2ddbb73b7575f670c35a1f7684",
+                          "tests/test_classic_hud.c":  "c8cbbba111b31e553aa666a9a9f112fe2dfc6b532b2fe2a9c83380ca0d0ba8b1",
+                          "tests/test_classic_hud_win32.c":  "268d25eef53f3f5ec225cbf83a5d66aa8d2c0aa73615ced332a1be564c98ccb6"
+                      }
+}

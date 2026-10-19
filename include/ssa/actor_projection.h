@@ -31,6 +31,9 @@ int ssa_actor_project(SsaActorProjector *,const SsaActorSource *,int fixed_scree
 /* PC variant of collect_offsets: honor SCREEN_MIRROR on fixed-screen sources.
  * The original project/collect entry points continue to ignore that flag. */
 int ssa_actor_collect_mirrored(SsaActorProjector *,const SsaWorld *,const SsaActorSource *,size_t,const int32_t *z_offsets);
+/* PC screen presentation: mirror art optionally, then apply shared offsets; flag2000 only.
+ * Coordinates are120x120 raster pixels. Original entry points stay unchanged. */
+int ssa_actor_collect_screen(SsaActorProjector *,const SsaWorld *,const SsaActorSource *,size_t,const int32_t *z_offsets,unsigned mirror,int x,int y);
 /* D2D0/D338: ascending visited sectors, then original sector-list order;
  * flag10 draws the second resource animation+5*(owner+1). Sources must cover
  * every encountered body exactly once. Unvisited bodies need no source.

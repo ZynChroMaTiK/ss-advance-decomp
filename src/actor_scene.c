@@ -44,8 +44,7 @@ int ssa_actor_scene_draw_offsets(SsaActorScene *s,const SsaRenderCamera *camera,
     if(ssa_actor_queue_bind_clips(&s->queue,s->geometry->results,
        s->geometry->visibility.wall_count,&s->geometry->wall_renderer,s->assets)<0)goto done;
     s->projector.camera=camera;s->projector.game_flags=game_flags;
-    if((s->screen_mirrors?ssa_actor_collect_mirrored(&s->projector,s->world,sources,count,z_offsets):
-        ssa_actor_collect_offsets(&s->projector,s->world,sources,count,z_offsets))<0)goto done;
+    if(ssa_actor_collect_screen(&s->projector,s->world,sources,count,z_offsets,s->screen_mirrors,s->screen_x,s->screen_y)<0)goto done;
     if(ssa_actor_queue_draw(&s->queue,s->assets,
        s->geometry->framebuffer+SSA_SCENE_FRAME_PREFIX,SSA_SCENE_FRAME_BYTES)<0)goto done;
     result=1;

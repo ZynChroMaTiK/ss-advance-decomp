@@ -509,14 +509,20 @@ int ssa_weapon_runtime_animate(SsaWeaponRuntime *r,uint16_t flags,unsigned ticks
     if(!idle(r) || ticks>255) return -1;
     if(r->alternate_shotgun && r->shotgun_animating && r->player->weapon.current==3 &&
        (r->object.animation==12 || r->object.animation==22)){
-        unsigned count,position;
+        unsigned drawable,count,position;uint16_t idle_frame;
         if((flags&1) && r->object.type==2)return 0;
-        count=r->animations->lengths[r->object.animation]-1u;
-        if(!count)return -1;
+        drawable=r->animations->lengths[r->object.animation]-1u;
+        if(!drawable)return -1;
+        idle_frame=r->animations->words[r->animations->offsets[2]]&0x3fff;
+        count=drawable+(unsigned)((r->animations->words[r->animations->offsets[r->object.animation]+drawable-1]&0x3fff)!=idle_frame);
         r->shotgun_elapsed=r->shotgun_elapsed+ticks>105?105:r->shotgun_elapsed+ticks;
-        position=r->shotgun_elapsed==105?count-1:r->shotgun_elapsed*count/105;
-        r->object.frame_index=(uint16_t)position;r->object.elapsed=0;
+        position=(r->shotgun_elapsed?r->shotgun_elapsed-1:0)*count/105;
+        /* Include idle as the final timed slot, without ending the controller's
+         * firing state early. The last-shell sequence already ends on idle.
+         * Keep a valid sequence index if the option is disabled mid-cycle. */
+        r->object.frame_index=(uint16_t)(position<drawable?position:drawable-1);r->object.elapsed=0;
         r->object.done=(uint8_t)(r->shotgun_elapsed==105);
+        if(position==drawable){r->object.frame=(uint16_t)((r->object.frame&0xc000)|idle_frame);return 0;}
         return ssa_weapon_animation_resolve(&r->object,r->animations)<0?-1:0;
     }
     if(r->shotgun_animating){

@@ -27,21 +27,18 @@ int ssa_display_registers_default(SsaDisplayRegisters *r)
 }
 static int validate(const SsaDisplayRegisters *r,const SsaSpriteOam *o)
 {
-    unsigned i,y,previous=0,budget=(r->dispcnt&32)?954:1210;
+    unsigned i,y,budget=(r->dispcnt&32)?954:1210;
     if((r->dispcnt&~32u)!=0x1441 || (r->bg2cnt!=0x6085 && r->bg2cnt!=0x6089) ||
        (r->bldcnt&0xc0))return -2;
     if(r->x < -134217728 || r->x>134217727 || r->y < -134217728 || r->y>134217727)return -1;
     if(!o)return 1;
     if(o->loaded!=1 || o->updating || o->count>128 || o->affine_count>32)return -1;
     for(i=0;i<128;++i) {
-        const SsaSpriteOamEntry *p=&o->entries[i];unsigned priority;
+        const SsaSpriteOamEntry *p=&o->entries[i];
         if(hidden(p))continue;
         if((p->attribute0>>14)==3 || (p->attribute0&0xc00)==0xc00)return -1;
         if(!(p->attribute0&0x2000) || (p->attribute0&0xc00) ||
            ((p->attribute0&0x1000) && (r->mosaic&0xff00)))return -2;
-        priority=(p->attribute2>>10)&3;
-        if(priority<previous)return -2;
-        previous=priority;
     }
     /* Conservative bound includes the complete128-entry scan, offscreen X,
      * and un-clipped affine boxes. Never pretend an overloaded line is exact. */
@@ -81,14 +78,14 @@ static int compose(const SsaDisplayRegisters *r,const uint8_t *world,size_t worl
     for(y=0;y<160;++y) {
         uint8_t indices[240]={0},priorities[240]={0};
         if(o)for(i=0;i<128;++i) {
-            const SsaSpriteOamEntry *p=&o->entries[i];unsigned w,h,bw,bh,dy,dx,affine;
+            const SsaSpriteOamEntry *p=&o->entries[i];unsigned w,h,bw,bh,dy,dx,affine,priority;
             if(hidden(p))continue;
-            dimensions(p,&w,&h);bw=w;bh=h;affine=(p->attribute0>>8)&1;
+            dimensions(p,&w,&h);bw=w;bh=h;affine=(p->attribute0>>8)&1;priority=(p->attribute2>>10)&3;
             if(affine && (p->attribute0&0x200)){bw*=2;bh*=2;}
             dy=(y-(p->attribute0&255))&255;if(dy>=bh)continue;
             for(dx=0;dx<bw;++dx) {
                 unsigned screen=(dx+(p->attribute1&511))&511,offset;int sx,sy;uint8_t color;
-                if(screen>=240 || indices[screen])continue;
+                if(screen>=240 || (indices[screen] && priority>=priorities[screen]))continue;
                 if(affine) {
                     unsigned matrix=((p->attribute1>>9)&31)*4;
                     int a=signed_half(o->entries[matrix].affine),b=signed_half(o->entries[matrix+1].affine);
@@ -103,7 +100,12 @@ static int compose(const SsaDisplayRegisters *r,const uint8_t *world,size_t worl
                 offset=(p->attribute2&1023)*32+
                     ((unsigned)sy/8*(w/8)+(unsigned)sx/8)*64+((unsigned)sy&7)*8+((unsigned)sx&7);
                 color=tiles[offset&32767];
-                if(color){indices[screen]=color;priorities[screen]=(uint8_t)((p->attribute2>>10)&3);}
+                /* OBJ pixels are reduced before BG composition. Equal priority
+                 * keeps the earlier OAM entry. A later higher-priority sample
+                 * replaces its color when opaque; transparent samples retain
+                 * the earlier color but promote its priority (GBA anomaly). */
+                if(color || indices[screen])priorities[screen]=(uint8_t)priority;
+                if(color)indices[screen]=color;
             }
         }
         for(x=0;x<240;++x) {

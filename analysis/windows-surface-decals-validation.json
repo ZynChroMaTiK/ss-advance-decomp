@@ -1,0 +1,35 @@
+{
+    "result":  "pass",
+    "native":  {
+                   "result":  "pass",
+                   "checks":  52224785,
+                   "draws":  57,
+                   "software_changed_pixels":  27592,
+                   "renderers":  2,
+                   "pitch_views":  3
+               },
+    "default":  "off",
+    "settings_version":  12,
+    "settings_bytes":  16,
+    "physical_input_tested":  false,
+    "source_sha256":  {
+                          "src/surface_decals.c":  "a955ffebc1a4bf10bf6fce026ed28b87c30fda93c11db24eac121e5cae08071c",
+                          "include/ssa/surface_decals.h":  "c37eb665712f910e5d56030e7f91fa9ae3ad08c7dc1dc60111c2ba7a5614641b",
+                          "src/water.c":  "88c68e2fd61d5861aa34fab1b884fcbca0f267cb553c001e1336027fde4f9dc1",
+                          "src/water_ripples.inc":  "ca1124a92cfeb7466adcf0f658d0081349a280ecdcd753558a00c7284c22d3ec",
+                          "include/ssa/water.h":  "8ceca925532c22f1f8eff8a8be25bc4255b949271ba1e2ebe94107f9c444b14d",
+                          "src/pc_renderer.c":  "03613c3f3ed7178034a581fed36bb54fce19c574baff26f48324ef1b57cb6dbd",
+                          "src/pc_scene.c":  "411b835f3c2ddea230e7d24f25910321d0af282514f15ee9eefff597ec35c67f",
+                          "include/ssa/pc_scene.h":  "07578d96f76bc062f989050f721635e4a881126dd854e2d38514091c44ba0369",
+                          "include/ssa/pc_renderer.h":  "68557c9cd58d21dec2948b0871cca8d2c211e97863bfae5408e13f722065adb2",
+                          "src/pc_renderer_pitch.inc":  "fb0b062be4adc5058312b0c56a88549ef49b82f82182c0d27b6b355123c9d971",
+                          "src/native_game.c":  "3601ff4f0cc22569fb147c41f08195fa7148bf3a3ccae528d9580ab6a181d21a",
+                          "include/ssa/native_game.h":  "906fcc9efd11c242ea9863e39d68ac558f6486ae0f55c6ef5e606cff42a9269b",
+                          "src/menu.c":  "eaacdf1916620a62cf86e3e930064937add1c193cf111677452c97e46dce8234",
+                          "src/settings.c":  "b7fa1b7599ac3ff8f203afb0d2b45fe6cca70590c092b6007ebcbdab11408f45",
+                          "include/ssa/settings.h":  "9d57d74e518332c115aece9b369dbe54626600f32c3600527d376e012059e57b",
+                          "platform/win32/game.c":  "d8bf60ed6b12d26617a2a54210411310e0fd6ceb4fbbf10553f5efb29be304a4",
+                          "tests/test_surface_decals.c":  "92d481d1e654d56dd0242666b5ec8c8afaec4a6508ff484bf374743bd0c99ee1"
+                      },
+    "executable_sha256":  "ec36c8a220fbd784ed68bba9ca4649eeef3a5d09bf3252bc23fe3cb65f58fa36"
+}

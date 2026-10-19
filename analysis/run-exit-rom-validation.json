@@ -1,0 +1,14 @@
+{
+  "result": "pass",
+  "original_exit_cases": 2048,
+  "guards": 9,
+  "sanitizers": "UBSan",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "scope": "Original02564 death/quit exit fragment, ARM execution as a test oracle only.",
+  "source_sha256": {
+    "src/run_exit.c": "2e3a2091ad1913f53c6d831ec58049c6195c09683681804258b652aad8e5a1f7",
+    "include/ssa/run_exit.h": "ca43374965f6ef2d77a7f9973ee26a4ca54e86c4210f8cf71426aa6503aacc6b",
+    "include/ssa/player_lifecycle.h": "688e309a4c382d7ab9a4518120198145f592286ac99dcab7c9a3e9d1cc8e67ab",
+    "tests/test_run_exit_rom.py": "a500b362e5d730aa465ccb1b776fe4dba0679dc28f5f6b4916f3f85f94af4d33"
+  }
+}

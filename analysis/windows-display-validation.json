@@ -1,0 +1,33 @@
+{
+    "result":  "pass",
+    "scope":  "MSVC native display and full-resolution HUD integration. Synthetic mixed-priority OAM, original assets, seven output sizes and 24 live chase/jump frames; no campaign playthrough.",
+    "checks":  {
+                   "display":  {
+                                   "assertions":  418538,
+                                   "guards":  39,
+                                   "native_frames":  1438,
+                                   "real_images":  311
+                               },
+                   "pc_renderer":  {
+                                       "result":  "pass",
+                                       "checks":  11169528,
+                                       "sizes":  7,
+                                       "different_from_upscale":  257587,
+                                       "chase_jump_frames":  24,
+                                       "third_person_frames":  24,
+                                       "collision_fallback_frames":  0
+                                   }
+               },
+    "source_sha256":  {
+                          "src/display.c":  "1ed9568cb33dd908e2f2d5394582f50d86821b65fa5f6f168f9a26b1ceeac0d5",
+                          "include/ssa/display.h":  "b3ea75ce0ee1ed4785b0d4c6449020bd389d208139d8f8f60f99d1c9de8096e9",
+                          "tests/test_display.c":  "2089a40bad72c1568bab1a35d87790e596e2f82d9da9ae68bf1cd326b385c994",
+                          "src/pc_renderer.c":  "0a219d124ef39413a7bab14152ee972f765086bdc5f2bcb9114aa40135dde331",
+                          "src/pc_renderer_pitch.inc":  "586a3520d92b4db6b8f36a57df7247bdb50ac3e18b4e9bbfe2d2d2706e537dd6",
+                          "tests/test_pc_renderer.c":  "14c27b177d3190a41b16f2c443acceac8bb7248ddf8e427f54c2824bd0e93515",
+                          "scripts/test-display.ps1":  "281c7f34d2aff5f3dd7947c37c3d789a7f3c5e5de932d8d4e1e77100e50d011b",
+                          "CMakeLists.txt":  "127376f6dffb270490d91534c125f87acdbcf3c214d011c30fe74c033900e57f"
+                      },
+    "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e",
+    "executable_sha256":  "ee4ae26af51a3d5303e00a7495d78882f6d74a113acc3f877b5d91a3762a9d0f"
+}

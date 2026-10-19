@@ -1,6 +1,6 @@
 {
-    "assertions":  3215,
-    "window_messages":  23,
+    "assertions":  3229,
+    "window_messages":  27,
     "raw_payloads":  1035,
     "relative_cases":  1025,
     "physical_device_test":  false,
@@ -9,13 +9,13 @@
     "toolchain":  "MSVC x64, Visual Studio 2022 BuildTools, C11 Release; backend/tests /W4 /WX",
     "scope":  "Real Win32 message-only windows, keyboard/focus messages and raw-mouse payload parsing through the actual PC runtime event adapters. Registration takeover/restoration, unchanged capture/clipping, malformed input and wrong-thread guards. No physical device, successful WM_INPUT handle, game frame, renderer or ROM execution is claimed.",
     "source_sha256":  {
-                          "platform/win32/input_win32.c":  "13f9fa9b0b37f0c52ec1ffc9399b071481aaa82002ac8f625c09ed8862ebc5cc",
+                          "platform/win32/input_win32.c":  "030eaae14693fbd2ada1594ed0f6c8702c6ac20e7decfa4b3954add2b810fc7c",
                           "platform/win32/input_win32.h":  "39acb7384cc03e6b0fdd97a40573610bac5e3dd341966268b56e31a3a2f78446",
-                          "tests/test_win32_input.c":  "a6f4e64bf42af67bffbc15bfccd216d1dcc6fc033a416d8dbfa85b8564d86218",
-                          "src/pc_input.c":  "073422978e62f5286b65899655780ef4a1efa9db79241bcc94d03d343da1acce",
-                          "src/pc_input_runtime.c":  "f8cd045351bae85300dd82b82e075642f06fdbefe4f0ab49fe1d102bc19c36d1",
+                          "tests/test_win32_input.c":  "e3496f9b8b4f8162a89d020c9e17552bd8edc753105a27aa62aebd1cdc2a9c9a",
+                          "src/pc_input.c":  "e88b6dfe8c0a23059d137bcf22ba55443ccfe93d226f9d177aed0dc7e258f38e",
+                          "src/pc_input_runtime.c":  "4170dbf0bbc5ae27b53698bc856d30563f2144f19fc28305364c3926a736edcf",
                           "src/input_dispatch.c":  "e716c1ac859ad100e979411cd30bd2137ac33f3d14b95e84422bc68eec423a8a",
-                          "src/player_runtime.c":  "44fc6941407dd7cf1af5243501d33f847a2c4a4353fcb0a3d86d7718a3b6f72b",
-                          "src/view.c":  "3f167641d4f5cf0872b67778f25e99239d9bfb61c42585c280a0cffdb0a2faf5"
+                          "src/player_runtime.c":  "047bb4cbf25a2ecf2255187962707d3f26fc183044fe2b19ca4e42ad70a787c6",
+                          "src/view.c":  "cac771a6266378e03afc87939414028467c64a553b70e539cd19c6ede9a9b8e6"
                       }
 }

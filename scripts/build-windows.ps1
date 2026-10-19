@@ -53,6 +53,9 @@ $report.source_sha256['platform/win32/audio_win32.c'] = (Get-FileHash -Algorithm
 $report.source_sha256['platform/win32/audio_win32.h'] = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'platform/win32/audio_win32.h')).Hash.ToLowerInvariant()
 $report.source_sha256['platform/win32/profile_win32.c'] = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'platform/win32/profile_win32.c')).Hash.ToLowerInvariant()
 $report.source_sha256['platform/win32/profile_win32.h'] = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'platform/win32/profile_win32.h')).Hash.ToLowerInvariant()
+foreach ($source in @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'platform/win32') -Filter '*.inc')) {
+    $report.source_sha256['platform/win32/' + $source.Name] = (Get-FileHash -Algorithm SHA256 -LiteralPath $source.FullName).Hash.ToLowerInvariant()
+}
 $json = $report | ConvertTo-Json -Depth 5
 [System.IO.File]::WriteAllText((Join-Path $projectRoot 'analysis\windows-native-build-validation.json'), $json + [Environment]::NewLine)
 Write-Output ('Built ' + $libraries.Count + ' native Windows libraries, playable frontend, completion check and viewer in ' + (Join-Path $buildRoot 'Release'))

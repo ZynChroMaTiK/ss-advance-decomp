@@ -11,7 +11,8 @@ typedef struct SsaPcGeometry {
 static void geometry_free(SsaPcRenderer *r)
 {if(r->geometry){free(r->geometry->planes);free(r->geometry->sky_axes);free(r->geometry);r->geometry=NULL;}}
 typedef struct PitchMaterial {
-    const uint8_t *pixels;unsigned width,height,color,transparent,actor,sky;
+    const uint8_t *pixels;unsigned width,height,color,transparent,actor,sky,decals;
+    double height_z;
 } PitchMaterial;
 static PitchVertex pitch_vertex(const Camera *c,double x,double y,double z,double u,double v)
 {
@@ -41,6 +42,9 @@ static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchV
     if(dy>maxy)maxy=dy;
     if(maxx<=0 || minx>=r->width)return;
     top=edge(miny,r->height);bottom=edge(maxy,r->height);
+    if(top<(int)c->top)top=(int)c->top;
+    if(bottom>(int)c->bottom)bottom=(int)c->bottom;
+    if(top>=bottom)return;
     qx=((by-dy)*(aq-dq)+(dy-ay)*(bq-dq))/area;
     ux=((by-dy)*(au-du)+(dy-ay)*(bu-du))/area;
     vx=((by-dy)*(av-dv)+(dy-ay)*(bv-dv))/area;
@@ -65,14 +69,29 @@ static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchV
             color=m->pixels[(size_t)wrap(u,m->width)*m->height+wrap(v,m->height)];
             if(m->transparent && !color)continue;
         }
-        if(!m->sky)r->pixels[at]=c->palette[color];
+        if(c->water && at<c->water->capacity)c->water->mask[at]=0;
+        if(m->decals==1 && c->water && ssa_surface_decals_water(c->water->decals,color,m->height_z))
+            r->pixels[at]=rgb(ssa_water_rgb(c->water,(uint8_t)color,uq*z,vq*z,m->height_z,z,at));
+        else {if(m->decals && c->decals && !(m->decals==1 && ssa_surface_decals_water(c->decals,color,m->height_z)))
+                color=ssa_surface_decals_sample(c->decals,m->decals-1,(uint8_t)color,uq*z,vq*z,z);
+            if(!m->sky)r->pixels[at]=c->palette[color];}
         r->depth[at]=(float)z;
         if(m->actor)++r->actor_pixels;else if(m->pixels)++r->wall_pixels;
     }}
 }
 static void pitch_polygon(SsaPcRenderer *r,const Camera *c,const PitchVertex *v,unsigned n,const PitchMaterial *m)
 {
-    PitchVertex clipped[10];unsigned i,count=0;
+    PitchVertex clipped[10],above[10];unsigned i,count=0;
+    if(c->clip){
+        for(i=0;i<n;++i){PitchVertex a=v[i],b=v[(i+1)%n];
+            double da=c->z+a.y*c->pc+a.z*c->ps-c->clip_z,db=c->z+b.y*c->pc+b.z*c->ps-c->clip_z;
+            int ai=da>=0,bi=db>=0;
+            if(ai)above[count++]=a;
+            if(ai!=bi){double t=da/(da-db);
+                above[count++]=(PitchVertex){a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,a.z+(b.z-a.z)*t,
+                    a.u+(b.u-a.u)*t,a.v+(b.v-a.v)*t};}}
+        v=above;n=count;count=0;
+    }
     /* Input is a triangle or quad. Clipping before division also covers walls
      * and actors crossing the camera, and pitch views past the old horizon. */
     for(i=0;i<n;++i){PitchVertex a=v[i],b=v[(i+1)%n];int ai=a.z>=0.05,bi=b.z>=0.05;
@@ -96,8 +115,8 @@ static int flat_sky(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c)
     /* Independent axes keep texture rows/columns straight at every pitch.
      * Refresh both lookups without reallocating as yaw/pitch change. */
     for(x=0;x<r->width;++x)cache->sky_axes[x]=sky_column(g,r,x);
-    for(y=0;y<r->height;++y)cache->sky_axes[r->width+y]=sky_row(r,y,c->sky_shift)*768;
-    for(y=0;y<r->height;++y){const uint8_t *row=sky+cache->sky_axes[r->width+y];
+    for(y=c->top;y<c->bottom;++y)cache->sky_axes[r->width+y]=sky_row(r,y,c->sky_shift)*768;
+    for(y=c->top;y<c->bottom;++y){const uint8_t *row=sky+cache->sky_axes[r->width+y];
         for(x=0;x<r->width;++x)r->pixels[(size_t)y*r->width+x]=c->palette[row[cache->sky_axes[x]]];}
     return 1;
 }
@@ -181,9 +200,11 @@ static void pitched_planes(SsaPcRenderer *r,const SsaNativeGame *g,const Camera 
     for(i=0;i<r->geometry->count;++i){const PitchPlane *p=&r->geometry->planes[i];
         const uint8_t *sector=g->map.data+g->map.sectors+(size_t)p->sector*20;
         for(j=0;j<2;++j){int height=s16(sector+j*2);PitchVertex tri[3];
+            if(c->clip && height<=c->clip_z)continue;
             if((!j && c->z<height) || (j && c->z>height))continue;
             material.color=sector[10+j];material.sky=!material.color;
-            for(k=0;k<3;++k)tri[k]=pitch_vertex(c,p->p[k].x,p->p[k].y,height,0,0);
+            material.decals=(c->decals || c->water) && material.color?j+1:0;material.height_z=height;
+            for(k=0;k<3;++k)tri[k]=pitch_vertex(c,p->p[k].x,p->p[k].y,height,p->p[k].x,p->p[k].y);
             pitch_polygon(r,c,tri,3,&material);
         }}
 }

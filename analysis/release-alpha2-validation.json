@@ -1,0 +1,131 @@
+{
+  "version": "0.8.0-alpha.2",
+  "date": "2026-10-20",
+  "result": "pass",
+  "build": {
+    "platform": "Windows x64",
+    "configuration": "Release",
+    "static_runtime": true,
+    "warnings_as_errors": true
+  },
+  "archive": {
+    "name": "ss-advance-v0.8.0-alpha.2-windows-x64.zip",
+    "sha256": "070bcfd82d9b261b26a38ff454f15d58c13f820ec139aecaabf69be06539f696",
+    "rom_included": false,
+    "soundfont_included": false
+  },
+  "focused_ctest": {
+    "passed": 8,
+    "failed": 0
+  },
+  "regressions": {
+    "ssa_native_alternate_weapons_check": {
+      "result": "pass",
+      "checks": 2326859,
+      "frames": 7890,
+      "pickups": 125,
+      "alternating_shots": 12,
+      "left_hand_transitions": 6,
+      "loadout_cases": 72,
+      "reloads": 9,
+      "reload_sounds": 17,
+      "reequips": 4,
+      "paired_clicks": 9,
+      "shotgun_cases": 8,
+      "pellets_checked": 84,
+      "shotgun_timing_cases": 3,
+      "shotgun_interval_ms": 1750,
+      "colt_shot_ms": 450,
+      "colt_reload_ms": 1070,
+      "dual_reload_ms": 1400
+    },
+    "ssa_native_automap_win32_check": {
+      "result": "pass",
+      "checks": 1053,
+      "paths": 4,
+      "renderers": 2,
+      "chapters": 2,
+      "hidden_window": true
+    },
+    "ssa_native_classic_hud_win32_check": {
+      "result": "pass",
+      "checks": 1666,
+      "paths": 2,
+      "music_continuity_cycles": 4,
+      "hidden_window": true
+    },
+    "ssa_native_run_exit_win32_check": {
+      "result": "pass",
+      "checks": 4697889,
+      "native_frames": 8316,
+      "deaths": 24,
+      "retries": 12,
+      "main_returns": 12,
+      "black_presentations": 24,
+      "clock_paths": 4,
+      "renderers": 2,
+      "hud_styles": 2,
+      "languages": 3,
+      "output_muted": true
+    },
+    "ssa_native_scores_win32_check": {
+      "result": "pass",
+      "checks": 754,
+      "name_paths": 6,
+      "quit_run_paths": 6,
+      "ending_paths": 6,
+      "new_run_paths": 6,
+      "renderers": 2,
+      "languages": 3,
+      "hidden_window": true
+    }
+  },
+  "website": [
+    {
+      "name": "test_site.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_routes.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_viewer_loading.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_explorer_controls.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_wiki.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_graphics.mjs",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_graphics.py",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_http.py",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_audit.py",
+      "result": "pass"
+    },
+    {
+      "name": "test_site_documents.py",
+      "result": "pass"
+    }
+  ],
+  "packaged_launch": {
+    "missing_rom_rejected": true,
+    "software_smoke_frames": 30,
+    "gba_smoke_frames": 30
+  },
+  "campaign_playthrough": "Not rerun; manual campaign validation remains with the user."
+}

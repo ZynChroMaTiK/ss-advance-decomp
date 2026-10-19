@@ -1,5 +1,39 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native port findings — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="porting.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-port-findings">Native port findings</h1>
+<p>Technical audit follow-up: save-read failure handling, locked audio status, a
+shared decal atlas, separate scene/HUD link targets, centralized runtime settings,
+and focused incremental tests are implemented. See <a href="technical-refactors.html">technical-refactors.md</a>
+for scope, measurements, and validation; frontend separation remains incremental.</p>
 <p>Current milestone: all twelve campaign levels are enabled through <code>play-native.cmd</code>.
+Extras now offers a saved Original/Classic HUD choice, defaulting to Original.
+Classic reconstructs the retained green interface with live health, armor, ammo,
+score, saved/live high score, time, unread NETRICSA entries and boss health in both renderers. It adds a transient weapon
+selector, health/ammo palette flashes and static white localized notices.
+New dossiers blink the retained analyzing sprite in HUD green without backing near the upper
+center for2s, then teleport the green/white inbox inward, hold2s and teleport
+back. Duplicate entries do not retrigger it.
+Classic's other anchors now follow the Serious Engine layout with2px edge
+insets, spaced armor/health, separate finite/infinite weapon positions and a
+higher selector. The former top-center timer panel now shows max(saved high
+score,current score), inset2px vertically; the timer sits immediately below.
+Weapons and crosshair keep their existing behavior. See <a href="classic-hud.html">classic-hud.md</a>.
+The shared original sprite compositor now accepts mixed priorities, including
+transparent-sample priority promotion, instead of rejecting the frame. Both
+renderers benefit; see <a href="display.html">display.md</a> for the bounded hardware-model
+evidence and native/Windows checks.
+The Main-menu Scores screen now includes original ranking/name entry and saved
+records, with keyboard typing, original cycling and record highlighting. Pause
+Quit and campaign-ending handoffs offer qualifying scores; see <a href="scores.html">scores.md</a>.
+Death now consumes a life and automatically retries from the level-entry snapshot.
+Retries skip NETRICSA and the map, starting directly at the normal black-to-level
+fade with the ready weapon, HUD and movement available.
+The final life runs the original Game Over message/music before the black fade
+and Main return. A stale pause bit cannot stall the death controller.
+See <a href="run-exit.html">run-exit.md</a>.
+The automap now opens with M in both renderers, gated by the saved Automap
+On/Off option in Extras (default Off; explicit saved choices retained). Mouse wheel or held
+plus/minus zooms; live geometry, markers, contacts, palette and scanlines run in
+native C. Tab retains NETRICSA. See <a href="automap.html">automap.md</a>.
+Jump now defaults to Off in Extras. Existing explicit saved choices are preserved.
 Native NETRICSA now toggles during gameplay with Tab; N opens/closes and Esc returns.
 It also precedes every pre-level map view. In-game NETRICSA overlays a frozen
 full-resolution game frame; only pre-level NETRICSA uses the animated background.
@@ -8,7 +42,15 @@ The in-game blend removes HUD sprites except the weapon
 while darkening and tinting the frozen level green; closing reverses the blend.
 Original weapon/enemy illustrations, localized descriptions, two scrolling panels,
 strategic/tactical records and live/campaign-session statistics are connected.
-NETRICSA freezes gameplay and uses its original music cue. See <a href="netricsa.html">netricsa.md</a>.
+Enemy dossiers unlock only after a kill. A campaign-session journal tracks
+weapon/enemy discoveries and individual read status across levels and retries;
+Classic's top-right panel displays the combined unread count.
+Every level's starting equipment is familiar: viewable, automatically read,
+without a new-message count or notification. Actual in-level discoveries still
+alert, and carried unread messages retain their status across level changes.
+NETRICSA freezes gameplay. Pre-level briefings use the original music cue;
+in-game opening/closing preserves the current music's uninterrupted playback.
+See <a href="netricsa.html">netricsa.md</a>.
 On2026-10-17 the user explicitly requested manual campaign validation rather
 than gating levels on automated playthroughs. The final map, Caesar's Palace,
 now participates in normal advancement, passwords and saved level selection.

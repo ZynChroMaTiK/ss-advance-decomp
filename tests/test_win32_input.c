@@ -79,6 +79,9 @@ int main(void) {
     key(window,'S',0,0);key(window,'D',0,0);
     key(window,VK_SPACE,1,0);key(window,VK_SPACE,0,0);s=sample(&input);CHECK(s.jump_down);
     s=sample(&input);CHECK(!s.jump_down);
+    key(window,'R',1,0);key(window,'R',0,0);s=sample(&input);CHECK(s.reload_pressed && !s.packed);
+    CHECK(!sample(&input).reload_pressed);
+    key(window,'R',1,1);CHECK(!sample(&input).reload_pressed);key(window,'R',0,0);
     key(window,'H',1,0);key(window,'H',1,1);s=sample(&input);CHECK(s.view_toggle);
     s=sample(&input);CHECK(!s.view_toggle);key(window,'H',0,0);
     key(window,'H',1,1);s=sample(&input);CHECK(!s.view_toggle);key(window,'H',0,0);

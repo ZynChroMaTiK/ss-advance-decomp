@@ -18,6 +18,12 @@ typedef struct SsaWin32Audio {
     SsaSoundFont *soundfont;
     wchar_t *soundfont_path;SsaWin32Midi *midi;unsigned music_style;
 } SsaWin32Audio;
+typedef struct SsaWin32AudioStatus {
+    unsigned soundfont_available,midi_available,last_error,midi_error,music_active;
+} SsaWin32AudioStatus;
+/* UI-thread snapshot; all worker-owned fields are read under the mixer lock.
+ * Open/close and backend replacement remain UI-thread lifecycle operations. */
+SsaWin32AudioStatus ssa_win32_audio_status(SsaWin32Audio *);
 int ssa_win32_audio_open(SsaWin32Audio *,const uint8_t *,size_t,unsigned level,unsigned mute,unsigned no_music);
 int ssa_win32_audio_load_soundfont(SsaWin32Audio *,const wchar_t *);
 int ssa_win32_audio_soundfont_available(const SsaWin32Audio *);

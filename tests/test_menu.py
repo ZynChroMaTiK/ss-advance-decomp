@@ -1,7 +1,7 @@
 from pathlib import Path
 import hashlib,json,os,subprocess
 r=Path(__file__).resolve().parents[1];b=r/'build/native-tests';b.mkdir(parents=True,exist_ok=True)
-sources=[r/'src/menu.c',r/'src/map_view.c',r/'src/map_assets.c',r/'tests/test_menu.c']
+sources=[r/'src/menu.c',r/'src/scores.c',r/'src/map_view.c',r/'src/map_assets.c',r/'tests/test_menu.c']
 subprocess.run(['gcc','-std=c11','-O2','-g','-Wall','-Wextra','-Werror','-pedantic',
  '-fsanitize=address,undefined','-fno-sanitize-recover=all','-no-pie','-I',str(r/'include'),
  *map(str,sources),'-o',str(b/'test_menu')],check=True)

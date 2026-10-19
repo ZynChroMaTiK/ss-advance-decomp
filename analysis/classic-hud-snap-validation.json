@@ -1,0 +1,48 @@
+{
+    "result":  "pass",
+    "scope":  "Classic Game Paused heading green; NETRICSA snaps inward after analysis, holds two seconds, snaps back",
+    "classic_core_msvc":  {
+                              "result":  "pass",
+                              "checks":  382206,
+                              "draws":  409,
+                              "paths":  2
+                          },
+    "intermission_core_msvc":  {
+                                   "result":  "pass",
+                                   "checks":  145940,
+                                   "completion_starts":  36,
+                                   "tally_frames":  69917,
+                                   "languages":  3,
+                                   "pause_paths":  6
+                               },
+    "classic_windows":  {
+                            "result":  "pass",
+                            "checks":  560,
+                            "paths":  2,
+                            "hidden_window":  true
+                        },
+    "intermission_windows":  {
+                                 "result":  "pass",
+                                 "checks":  6205,
+                                 "completion_routes":  6,
+                                 "pause_paths":  12,
+                                 "main_menu_quits":  6,
+                                 "renderers":  2,
+                                 "languages":  3,
+                                 "hidden_window":  true
+                             },
+    "previews_inspected":  [
+                               "build/classic-hud-snap-tests/screen.classic-pause0.bmp",
+                               "build/classic-hud-snap-tests/classic-inbox-center-gba-0.bmp"
+                           ],
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "executable_sha256":  "f046983ad0b324287a2cf72d37b734be2643960fd47a345539ab03f2ad712798",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "5e6b593a9f6f197e052a896a48191158761519c0324a4b69ee3fc23b7d827900",
+                          "src/intermission.c":  "87218e650c727574ac04d0d7ec905154eca9c4caa5ee09c890f2ea2e00c7d107",
+                          "include/ssa/classic_hud.h":  "33c1ef029a6d18f5804757a846c0411ccc21561d676b0c9b245e1346a775a6a7",
+                          "tests/test_classic_hud.c":  "eeb8153ffb97db0115098ac5a7372b5bdabfc24c36a9987d7c63791307e604c6",
+                          "tests/test_intermission.c":  "5945ce3cbddd225e41eeeca3b49334d24771ecdb35978e2a5db30d7abbbfec1e"
+                      }
+}

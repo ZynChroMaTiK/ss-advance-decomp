@@ -91,13 +91,17 @@ int main(int argc,char **argv){
    step(m,SSA_MENU_CONFIRM);CHECK(m->leaving && m->level==level && m->loadout==difficulty*12+level+1);++starts;
   }
   memset(m,0,sizeof(*m));CHECK(ssa_menu_init(m,rom,0x800000,1)==1);m->language=language;m->completed_levels=0x555;
+  m->settings.music_volume=25;m->settings.jump_enabled=m->settings.alternate_weapons=1;
+  CHECK(ssa_scores_insert(&m->scores,4000000,"RESET_TEST__")==0);
   m->page=m->draw_page=SSA_MENU_OPTIONS;m->selection=3;step(m,SSA_MENU_CONFIRM);
   CHECK(m->page==SSA_MENU_CLEAR_DATA && m->selection==1);step(m,0);preview(m,"clear-data",language);
   step(m,SSA_MENU_CONFIRM);CHECK(m->page==SSA_MENU_OPTIONS && m->completed_levels==0x555 && m->language==language && !m->clear_requested);
+  CHECK(m->settings.music_volume==25 && m->settings.jump_enabled && m->scores.entries[0].score==4000000);
   step(m,SSA_MENU_CONFIRM);step(m,SSA_MENU_UP);step(m,SSA_MENU_BACK);
   CHECK(m->completed_levels==0x555 && m->language==language && !m->clear_requested);
   step(m,SSA_MENU_CONFIRM);step(m,0);CHECK(ssa_menu_pointer(m,120,118,1)==SSA_MENU_CONFIRM && !m->selection);
   step(m,SSA_MENU_CONFIRM);CHECK(m->clear_requested && !m->language && !m->completed_levels && m->selection==3);
+  CHECK(m->settings.music_volume==100 && !m->settings.jump_enabled && !m->settings.alternate_weapons && m->scores.entries[0].score==2000000);
   step(m,0);CHECK(!m->clear_requested);
  }
  free(m);free(rom);printf("{\"result\":\"pass\",\"checks\":%u,\"frames\":%u,\"level_starts\":%u,\"campaign_names\":12,\"languages\":3}\n",checks,frames,starts);return 0;

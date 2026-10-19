@@ -94,10 +94,10 @@ dispatch.active_count=1;dispatch.active[0]=0
 base=[assets.background_palette[0][world[(y*3//4)*120+x//2]]&32767 for y in range(160) for x in range(240)]
 shapes=[[(8,8),(16,16),(32,32),(64,64)],[(16,8),(32,8),(32,16),(64,32)],[(8,16),(8,32),(16,32),(32,64)]]
 def reference(entries,tiles):
-    # Independent painter: reverse OAM, visit bounding rectangles, paint opaque
-    # samples. Priority is carried separately, then compared with actual BG.
+    # Independent full-rectangle painter, with floating-point affine samples.
+    # Reduce the OBJ layer separately before comparing it with the world BG.
     pixels={}
-    for p in reversed(entries):
+    for p in entries:
         if p.a0&0x300==0x200:continue
         width,height=shapes[p.a0>>14][p.a1>>14];affine=bool(p.a0&0x100)
         bw=width*(2 if affine and p.a0&0x200 else 1);bh=height*(2 if affine and p.a0&0x200 else 1)
@@ -113,7 +113,11 @@ def reference(entries,tiles):
                     if not(0<=sx<width and 0<=sy<height):continue
                 else:sx=width-1-lx if p.a1&0x1000 else lx;sy=height-1-ly if p.a1&0x2000 else ly
                 tile=(sy//8)*(width//8)+sx//8;index=tiles[((p.a2&1023)*32+tile*64+(sy%8)*8+sx%8)%32768]
-                if index:pixels[oy*240+ox]=(index,(p.a2>>10)&3)
+                at=oy*240+ox;priority=(p.a2>>10)&3
+                prior=pixels.get(at)
+                if prior and prior[1]<=priority:continue
+                if index:pixels[at]=(index,priority)
+                elif prior:pixels[at]=(prior[0],priority)
     expected=base.copy()
     for offset,(index,priority) in pixels.items():
         y,x=divmod(offset,240)
@@ -151,12 +155,54 @@ for priority in range(4):
     for j in range(4):o.entries[j].a0=0x2000|60;o.entries[j].a1=100;o.entries[j].a2=j*2|(priority<<10)
     assert lib.ssa_display_compose(C.byref(r),world_buffer,14400,assets.background_palette[0],assets.palette,C.byref(o),tile_buffer,32768,output,38400)==1
     assert list(output)==reference(o.entries,tiles);report['independent_pixel_frames']+=1
+# Every pair of priorities, with opaque/transparent samples in each order.
+# Explicit color assertions catch ordinary sorting or ignoring transparent OBJ
+# samples: a later transparent priority0 promotes the earlier priority3 color,
+# preventing an intervening-priority opaque sprite from replacing it.
+report['mixed_priority_frames']=0
+for first in range(4):
+    for second in range(4):
+        for mask in range(4):
+            for e in o.entries:e.a0=0x200;e.a1=e.a2=0
+            data=bytearray(32768)
+            for j,priority in enumerate((first,second)):
+                o.entries[j].a0=0x2000|60;o.entries[j].a1=100;o.entries[j].a2=j*2|(priority<<10)
+                if mask&(1<<j):data[j*64:(j+1)*64]=bytes([j+1])*64
+            buf=C.create_string_buffer(bytes(data))
+            assert lib.ssa_display_compose(C.byref(r),world_buffer,14400,assets.background_palette[0],assets.palette,C.byref(o),buf,32768,output,38400)==1
+            assert list(output)==reference(o.entries,data),(first,second,mask)
+            report['independent_pixel_frames']+=1;report['mixed_priority_frames']+=1
+for transparent in (False,True):
+    for e in o.entries:e.a0=0x200;e.a1=e.a2=0
+    data=bytearray(32768)
+    for j,priority in enumerate((3,0,1)):
+        o.entries[j].a0=0x2000|60;o.entries[j].a1=100;o.entries[j].a2=j*2|(priority<<10)
+        data[j*64:(j+1)*64]=bytes([0 if j==1 and transparent else j+1])*64
+    buf=C.create_string_buffer(bytes(data))
+    assert lib.ssa_display_compose(C.byref(r),world_buffer,14400,assets.background_palette[0],assets.palette,C.byref(o),buf,32768,output,38400)==1
+    assert output[60*240+100]==assets.palette[1 if transparent else 2]&32767
+    assert list(output)==reference(o.entries,data)
+    report['independent_pixel_frames']+=1;report['mixed_priority_frames']+=1
+# Mixed affine/normal OAM, wrapping tile addresses, flips and transparent holes.
+for case in range(192):
+    for e in o.entries:e.a0=0x200;e.a1=e.a2=e.affine=0
+    data=bytes(rng.choice((0,0,0,1,2,139,143,255)) for _ in range(32768))
+    for j in range(8):
+        affine=(case+j)%3==0
+        o.entries[j].a0=0x2000|(0x100 if affine else 0)|((56+rng.randrange(16))&255)
+        o.entries[j].a1=(96+rng.randrange(16))|(0 if affine else rng.randrange(4)*0x1000)
+        o.entries[j].a2=rng.randrange(1024)|(rng.randrange(4)<<10)
+    for e,v in zip(o.entries,(128,64,-64,256)):e.affine=v&65535
+    buf=C.create_string_buffer(data)
+    assert lib.ssa_display_compose(C.byref(r),world_buffer,14400,assets.background_palette[0],assets.palette,C.byref(o),buf,32768,output,38400)==1
+    assert list(output)==reference(o.entries,data),case
+    report['independent_pixel_frames']+=1;report['mixed_priority_frames']+=1
 subprocess.run(['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-pedantic','-fsanitize=address,undefined','-fno-sanitize-recover=all','-no-pie','-I',str(ROOT/'include'),str(ROOT/'tests/test_display.c'),*[str(ROOT/'src'/s) for s in sources],'-o',str(B/'test_display')],check=True)
 env=os.environ.copy();env['ASAN_OPTIONS']='detect_leaks=0'
 run=subprocess.run([str(B/'test_display'),str(ROOT/'orig/SSA.gba')],capture_output=True,text=True,env=env)
 if run.returncode:print(run.stderr,end='');run.check_returncode()
 report['sanitizers']=json.loads(run.stdout)
-report['scope']='Normal mode1 BG2 hardware presentation, complete original074F0/06E30/0750C and ARM264 transfer (BIOS/DMA copies controlled), actual311nativeFCE4 sprite images, independent VRAM/map and pixel references. Hardware sprite mixed-priority anomaly, blend/window/mosaic/budget overflow explicitly rejected. No game CPU execution in native library.'
+report['scope']='Normal mode1 BG2 hardware presentation, complete original074F0/06E30/0750C and ARM264 transfer (BIOS/DMA copies controlled), actual311nativeFCE4 sprite images, independent VRAM/map and mixed-priority pixel references including transparent priority promotion. Blend/window/mosaic/budget overflow explicitly rejected. Pixel priority checks are a hardware-model reference, not ROM CPU or physical hardware comparisons. No game CPU execution in native library.'
 report['source_sha256']={s:hashlib.sha256((ROOT/'src'/s).read_bytes()).hexdigest() for s in sources}
 report['header_sha256']={s:hashlib.sha256((ROOT/'include/ssa'/s).read_bytes()).hexdigest() for s in ('display.h','sprite_oam.h','sprite_assets.h')}
 report['hardware_references']=['https://raw.githubusercontent.com/mgba-emu/gbatek/master/gba.md','https://github.com/mgba-emu/mgba/blob/master/src/gba/renderers/software-obj.c','https://github.com/mgba-emu/mgba/blob/master/src/gba/memory.c']

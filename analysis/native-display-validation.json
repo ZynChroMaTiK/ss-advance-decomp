@@ -4,24 +4,25 @@
   "rom_defaults": 64,
   "rom_tilemaps": 64,
   "rom_transfers": 64,
-  "independent_pixel_frames": 635,
+  "independent_pixel_frames": 893,
   "real_images": 311,
   "affine_frames": 128,
+  "mixed_priority_frames": 258,
   "sanitizers": {
-    "assertions": 418281,
-    "guards": 40,
-    "native_frames": 1308,
+    "assertions": 418538,
+    "guards": 39,
+    "native_frames": 1438,
     "real_images": 311
   },
-  "scope": "Normal mode1 BG2 hardware presentation, complete original074F0/06E30/0750C and ARM264 transfer (BIOS/DMA copies controlled), actual311nativeFCE4 sprite images, independent VRAM/map and pixel references. Hardware sprite mixed-priority anomaly, blend/window/mosaic/budget overflow explicitly rejected. No game CPU execution in native library.",
+  "scope": "Normal mode1 BG2 hardware presentation, complete original074F0/06E30/0750C and ARM264 transfer (BIOS/DMA copies controlled), actual311nativeFCE4 sprite images, independent VRAM/map and mixed-priority pixel references including transparent priority promotion. Blend/window/mosaic/budget overflow explicitly rejected. Pixel priority checks are a hardware-model reference, not ROM CPU or physical hardware comparisons. No game CPU execution in native library.",
   "source_sha256": {
-    "display.c": "25362cd8c23983aa5e672283919ae16a34faf15d713776da5f9a150105336302",
+    "display.c": "eaa602294c2a2b7c554642eeae8a501835d21fb001f9b2aae516a2c6c97746f8",
     "sprite_assets.c": "f5cb43ba66ee1d0399fb92ff185794d8203aa73bd0204d31f052c165c7c341a5",
     "sprite_oam.c": "8205d9f0071a6cc2aae5ae3ab53bd387ade6b94ab6fdbea1ab92972f7ac0b411",
     "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193"
   },
   "header_sha256": {
-    "display.h": "22dad1d6e7d0846eeb530fc6460db508d5fd28922d28725dd1929129b354e6ab",
+    "display.h": "ffef74e003a7bd0e4c14c15531a80e997481d83ed58633a0ca83e529d9a095d8",
     "sprite_oam.h": "3d566c0be819af7e2274f6590ceaecb9485f9168545d0dd59f9ea2d4e6ac48da",
     "sprite_assets.h": "03434415ef48be02dd50996b894adaf92e2b9afdb8b266bc5ea28461692f1e6f"
   },
@@ -31,7 +32,7 @@
     "https://github.com/mgba-emu/mgba/blob/master/src/gba/memory.c"
   ],
   "test_sha256": {
-    "test_display.py": "9fd846e7657f579d3e557c2b1a9f677e528a0ed360b8773d0cb6017445ce1f5a",
-    "test_display.c": "a954e4d4a5cc95b3805a14d49392cc3fe0417a4f22c2bf6e1dfc6634338ed7a8"
+    "test_display.py": "b9683114ec941f8bdf20dca1c2db4dff69cb2839b880dce6b9c93bef4dab4f3d",
+    "test_display.c": "2089a40bad72c1568bab1a35d87790e596e2f82d9da9ae68bf1cd326b385c994"
   }
 }

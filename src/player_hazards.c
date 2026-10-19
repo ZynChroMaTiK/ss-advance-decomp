@@ -21,18 +21,22 @@ static const uint8_t *record(const SsaMapAssets *m,uint32_t offset,size_t i,size
 
 int ssa_player_interaction_query(SsaMapCollision *c,const SsaEntity *e,
                                   uint8_t facing,const SsaMathTables *tables) {
+    int32_t sine,cosine;
+    if(!e || !tables)return -1;
+    ssa_sincos(tables,(uint16_t)((unsigned)facing<<8),&sine,&cosine);
+    return ssa_player_interaction_query_at(c,e,add(e->body.x,bits((uint32_t)sine<<6)),
+        add(e->body.y,bits((uint32_t)cosine<<6)));
+}
+int ssa_player_interaction_query_at(SsaMapCollision *c,const SsaEntity *e,int32_t x,int32_t y) {
     const SsaMapAssets *m;
     const uint8_t *blocks;
     SsaBounds b;
-    int32_t sine,cosine,x,y,r,ox,oy;
+    int32_t r,ox,oy;
     int width,height,left,right,bottom,top,bx,by;
     size_t words;
-    if (!c || !(m=c->map) || !e || !tables || !c->visited || !c->special_lines ||
+    if (!c || !(m=c->map) || !e || !c->visited || !c->special_lines ||
         m->line_count>c->line_capacity || e->radius<0 || m->size<0x48 ||
         !(blocks=record(m,m->blockmap,0,8))) return -1;
-    ssa_sincos(tables,(uint16_t)((unsigned)facing<<8),&sine,&cosine);
-    x=add(e->body.x,bits((uint32_t)sine<<6));
-    y=add(e->body.y,bits((uint32_t)cosine<<6));
     /* 0429C computes destination-sector heights, but no caller uses them.
      * Validate that lookup, while exposing only the contacts as our contract. */
     if (ssa_map_sector(m,x,y)<0) return -1;

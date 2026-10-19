@@ -66,8 +66,8 @@ int wmain(int argc,wchar_t **argv){
         key(a,VK_DOWN);CHECK(intermission_tick(a));key(a,VK_RETURN);CHECK(intermission_tick(a));
         CHECK(a->intermission->pause.selection==3);key(a,VK_ESCAPE);CHECK(intermission_tick(a) && !a->intermission->pause.selection);
         key(a,VK_ESCAPE);CHECK(intermission_tick(a) && !a->screen_active);++pause_paths;
-        key(a,'P');CHECK(a->screen_active);pointer(a,120,96);CHECK(a->intermission->pause.selection==3);
-        pointer(a,120,80);CHECK(!a->screen_active && a->menu_active && a->menu->page==SSA_MENU_MAIN);++pause_paths;
+        key(a,'P');CHECK(a->screen_active);pointer(a,120,80);CHECK(a->intermission->pause.selection==3);
+        pointer(a,120,64);CHECK(!a->screen_active && a->menu_active && a->menu->page==SSA_MENU_MAIN);++pause_paths;
         a->running=1;
         for(t=0;t<40;++t){CHECK(menu_frozen(a));CHECK(ssa_menu_step(a->menu,0)==1);CHECK(menu_action(a));}
         CHECK(a->running && IsWindow(a->window) && a->game->frame_game.counter==counter);

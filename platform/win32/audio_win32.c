@@ -77,6 +77,18 @@ int ssa_win32_audio_load_soundfont(SsaWin32Audio *a,const wchar_t *path)
     free(a->soundfont_path);a->soundfont_path=saved_path;
     LeaveCriticalSection(&a->mutex);return 1;
 }
+SsaWin32AudioStatus ssa_win32_audio_status(SsaWin32Audio *a)
+{
+    SsaWin32AudioStatus s={0};
+    if(!a)return s;
+    if(a->synchronized)EnterCriticalSection(&a->mutex);
+    s.soundfont_available=ssa_win32_audio_soundfont_available(a);
+    s.midi_error=a->midi?a->midi->error:0;
+    s.midi_available=a->midi && !s.midi_error;
+    s.last_error=a->last_error;s.music_active=a->mixer.players[0].active;
+    if(a->synchronized)LeaveCriticalSection(&a->mutex);
+    return s;
+}
 int ssa_win32_audio_settings(SsaWin32Audio *a,const SsaSettings *settings)
 {
     int result=1;SsaAudioSynth synth={0};

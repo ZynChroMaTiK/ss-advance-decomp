@@ -35,7 +35,7 @@ try {
         if ($item.result -ne 'pass' -or $item.audio_device -ne 1 -or
             $item.audio_buffers -lt 6 -or $item.audio_recycled -lt 1 -or $item.audio_position -lt 1 -or
             $item.audio_notes -lt 1 -or $item.audio_errors -ne 0 -or $item.restarts -ne 1 -or
-            $item.audio_worker_progress -ne 1 -or $item.audio_mute_toggle -ne 1 -or $item.audio_footsteps -ne 2 -or $item.audio_spatial -ne 2 -or $item.audio_music -ne 3 -or $item.audio_level_starts -ne 2 -or $item.audio_fade -ne 2 -or
+            $item.audio_worker_progress -ne 1 -or $item.audio_m_key_preserves_mute -ne 1 -or $item.audio_footsteps -ne 2 -or $item.audio_spatial -ne 2 -or $item.audio_music -ne 3 -or $item.audio_level_starts -ne 2 -or $item.audio_fade -ne 2 -or
             $item.map_views -ne 2 -or $item.map_starts -ne 2 -or $item.map_frozen_ticks -ne 140 -or $item.map_music_checks -ne 18 -or $item.level_music_checks -ne 2 -or
             $item.menu_starts -ne 1 -or $item.menu_frozen_ticks -ne 187) {
             throw ('Windows audio startup/output/restart validation failed: ' + ($item | ConvertTo-Json -Compress))

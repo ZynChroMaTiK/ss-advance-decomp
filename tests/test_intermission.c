@@ -13,6 +13,15 @@ static void bitmap(const char *path,const uint32_t *pixels){
     for(i=0;i<38400;++i)word(f,pixels[i],4);
     CHECK(fclose(f)==0);
 }
+static void menu_colors(const uint32_t *pixels,unsigned top,unsigned bottom,unsigned want_green,unsigned want_white){
+    unsigned i,green=0,white=0,bad=0;
+    for(i=top*240;i<bottom*240;++i){unsigned c=pixels[i],r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+        if(!r && !b && g)++green;
+        else if(r==g && g==b){if(r)++white;}
+        else ++bad;
+    }
+    CHECK(!bad && (!want_green || green>10) && (!want_white || white>10));
+}
 int main(int argc,char **argv){
     uint8_t *rom=malloc(0x800000);FILE *f;unsigned lang,map,i,t;char path[512];
     SsaNativeGame *g=calloc(1,sizeof(*g)),*before=malloc(sizeof(*g));SsaIntermission *s=calloc(1,sizeof(*s));
@@ -59,10 +68,24 @@ int main(int argc,char **argv){
         CHECK(ssa_intermission_step(s,0,0x10000,1)==0 && s->pause.input_state==0);
         CHECK(!memcmp(before,g,sizeof(*g)));
         CHECK(ssa_intermission_init(s,g,lang,0)==1);
-        CHECK(ssa_intermission_pointer(s,120,88,1)==0x10000 && s->pause.selection==1);
+        CHECK(ssa_intermission_pointer(s,120,72,1)==0x10000 && s->pause.selection==1);
         CHECK(ssa_intermission_step(s,0,0x10000,1)==1 && s->pause.selection==3);
-        CHECK(ssa_intermission_pointer(s,120,72,1)==0x10000 && s->pause.selection==2);
+        CHECK(ssa_intermission_pointer(s,120,56,1)==0x10000 && s->pause.selection==2);
         CHECK(ssa_intermission_step(s,0,0x10000,1)==0 && s->pause.input_state==5);
+        CHECK(!memcmp(before,g,sizeof(*g)));
+        CHECK(ssa_native_game_hud_style(g,SSA_HUD_CLASSIC)==1);memcpy(before,g,sizeof(*g));
+        CHECK(ssa_intermission_init(s,g,lang,0)==1 && s->classic);
+        for(t=0;t<20;++t)CHECK(ssa_intermission_step(s,0,0,1)==1);
+        memset(repeat,0,38400*4);CHECK(ssa_intermission_overlay(s,repeat,240,160,out)==1);
+        menu_colors(out,40,104,1,1);menu_colors(out,72,88,0,1);menu_colors(out,88,104,1,0);
+        CHECK(ssa_intermission_overlay(s,back,240,160,out)==1);
+        snprintf(path,sizeof path,"%s.classic-pause%u.bmp",argv[2],lang);bitmap(path,out);
+        CHECK(ssa_intermission_pointer(s,120,88,0)==0 && s->pause.selection==1);
+        CHECK(ssa_intermission_overlay(s,repeat,240,160,out)==1);
+        menu_colors(out,72,88,1,0);menu_colors(out,88,104,0,1);
+        CHECK(ssa_intermission_step(s,0,0x10000,1)==1 && s->notice.id==0xb2);
+        for(t=0;t<20;++t)CHECK(ssa_intermission_step(s,0,0,1)==1);
+        CHECK(ssa_intermission_overlay(s,repeat,240,160,out)==1);menu_colors(out,40,104,1,1);
         CHECK(!memcmp(before,g,sizeof(*g)));ssa_native_game_free(g);
         for(map=0;map<12;++map){SsaCompletionRecord record;SsaStatisticsTotals totals={0};uint32_t expected;
             CHECK(ssa_native_game_init(g,rom,0x800000,map)==1);CHECK(ssa_native_game_tick(g)==1);
@@ -117,6 +140,30 @@ int main(int argc,char **argv){
                 CHECK(i<500 && s->final_visible_ticks==180 && s->tally.running);
                 CHECK(ssa_intermission_step(s,0,0,0)==1);
                 CHECK(ssa_intermission_step(s,0,0,1)==0);
+            }
+            if(!map || map==11){unsigned seen=0;
+                CHECK(ssa_native_game_hud_style(g,SSA_HUD_CLASSIC)==1);memcpy(before,g,sizeof(*g));
+                CHECK(ssa_intermission_init(s,g,lang,1)==1 && s->classic);
+                for(i=0;i<1000;++i){unsigned stage=s->tally.stage;
+                    unsigned skip=(stage==1 || stage==4) && s->tally.hold==0;
+                    int active=ssa_intermission_step(s,0,skip,1);
+                    CHECK(active>=0);
+                    stage=s->tally.stage;
+                    if((stage==1 || stage==4 || stage==6) && (s->hud.game_flags&0x200) &&
+                       (stage!=6 || (s->notice.id==0xb9u+map && s->final_visible_ticks)) &&
+                       !(seen&(1u<<stage)) && s->frame>=30){
+                        memset(repeat,0,38400*4);
+                        CHECK(ssa_intermission_overlay(s,repeat,240,160,out)==1);
+                        menu_colors(out,0,160,1,1);
+                        CHECK(ssa_intermission_overlay(s,back,240,160,out)==1);
+                        snprintf(path,sizeof path,"%s.classic-complete%u-%u-%u.bmp",argv[2],lang,map,stage);bitmap(path,out);
+                        seen|=1u<<stage;
+                    }
+                    if(!active)break;
+                }
+                CHECK(i<1000 && (seen&(1u<<4)) && (seen&(1u<<6)) &&
+                    (map || (seen&(1u<<1))) && s->tally.score==expected && s->final_visible_ticks==180);
+                CHECK(!memcmp(before,g,sizeof(*g)));
             }
             ssa_native_game_free(g);
         }

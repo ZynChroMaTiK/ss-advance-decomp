@@ -35,7 +35,7 @@ int main(int argc,char **argv)
     wheel(a.window,-120);requested(&a,1); /* Uncaptured wheels do nothing. */
     a.captured=1;
     SendMessageW(a.window,WM_KEYDOWN,'R',0);SendMessageW(a.window,WM_KEYUP,'R',0);
-    CHECK(!a.reload && !a.advance); /* R is unbound during gameplay. */
+    CHECK(!a.reload && !a.advance); /* R must never restart the level. */
     wheel(a.window,-60);requested(&a,1);CHECK(a.wheel_remainder==-60);
     wheel(a.window,-60);requested(&a,3);CHECK(!a.wheel_remainder);
     CHECK(a.game->gameplay.weapon.current==1); /* Still lowering: next event uses requested3. */
@@ -93,6 +93,13 @@ int main(int argc,char **argv)
     wheel(a.window,-120);requested(&a,3);
     wheel(a.window,120);requested(&a,2);CHECK(a.game->alternates.requested_variant==1);
     wheel(a.window,120);requested(&a,2);CHECK(!a.game->alternates.requested_variant);
+    for(i=0;i<70;++i)CHECK(ssa_native_game_tick(a.game)==1);
+    a.game->alternates.rounds[0]=2;
+    SendMessageW(a.window,WM_KEYDOWN,'R',0);SendMessageW(a.window,WM_KEYUP,'R',0);
+    CHECK(ssa_native_game_tick(a.game)==1);
+    CHECK(a.game->alternates.reload_phase==2 && !a.reload && !a.advance);
+    for(i=0;i<70;++i)CHECK(ssa_native_game_tick(a.game)==1);
+    CHECK(!a.game->alternates.rounds[0] && !a.game->alternates.reload_phase);
     CHECK(ssa_native_game_alternate_weapons(a.game,0,0)==1);
     a.captured=0;DestroyWindow(a.window);CHECK(UnregisterClassW(wc.lpszClassName,wc.hInstance));
     ssa_native_game_free(a.game);free(a.game);free(a.rom);

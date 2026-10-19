@@ -1,0 +1,37 @@
+{
+    "result":  "pass",
+    "cue_id":  11,
+    "play_count":  2,
+    "timing":  "First audible burst, silence half its measured output-frame duration rounded up, second burst",
+    "cue_duration_seconds_approx":  0.108,
+    "gap_duration_seconds_approx":  0.054,
+    "gap_fraction_of_first_burst":  0.5,
+    "sample_rates":  [
+                         24000,
+                         48000
+                     ],
+    "core":  {
+                 "result":  "pass",
+                 "checks":  382477,
+                 "draws":  409,
+                 "paths":  2
+             },
+    "sanitizers":  "ASan/UBSan/leaks=1",
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  560,
+                    "paths":  2,
+                    "hidden_window":  true
+                },
+    "physical_listening_tested":  false,
+    "executable_sha256":  "08dea067a07ece158c2fe8283ea517ddccfe704c98681a276588091f09ba4368",
+    "source_sha256":  {
+                          "src/audio.c":  "f9c6f70e44a35cc5bedf0e8dcecf508c8c1b788ba315e91f957957a3707d675e",
+                          "include/ssa/audio.h":  "44dae8bac2d73609d7d25a8495f2d7cde141888f2a8f782a34636c882ad04945",
+                          "src/native_audio.inc":  "055d1b39cabec82ef00123805528ab53577b9cfb2ca399800392ff259afec12b",
+                          "src/native_game.c":  "52e3b85a217a0af5c981afd76853699cbf9368607474472480f8e1a6046ecd98",
+                          "include/ssa/native_game.h":  "4ef6d27e845e13f18cb59923de9eaca4fe1cbfc4411a88be00adf619d5654369",
+                          "tests/test_classic_hud.c":  "c8cbbba111b31e553aa666a9a9f112fe2dfc6b532b2fe2a9c83380ca0d0ba8b1",
+                          "tests/test_classic_hud.py":  "b511f2b0b97573d9a5b4791a69de15f0a5a4eb459e6ff1b0ef4c897bf8119691"
+                      }
+}

@@ -194,7 +194,7 @@ static unsigned select_voice(SsaAudio *a,unsigned player,unsigned track){
     ++a->voice_recycles;return best;
 }
 static int player_busy(const SsaAudio *a,unsigned player){unsigned i;
-    if(a->players[player].active)return 1;
+    if(a->players[player].active || a->players[player].cue_repeats)return 1;
     for(i=SSA_AUDIO_MUSIC_VOICES;i<SSA_AUDIO_VOICES;++i)
         if(a->voices[i].active && a->voices[i].player==player)return 1;
     return 0;
@@ -397,13 +397,13 @@ static int track_tick(SsaAudio *a,unsigned player,unsigned track){
     }
     return error(a,player,0x101); /* Malformed zero-time loop, never hang audio. */
 }
-static int play_instance(SsaAudio *a,unsigned song,const SsaAudioPoint *position){
+static int play_instance(SsaAudio *a,unsigned song,const SsaAudioPoint *position,unsigned reuse){
     SsaAudioPlayer *p;uint32_t h,bank;unsigned player,i;
     if(!a || !a->loaded || song>=SSA_AUDIO_SONGS)return -1;
     h=offset(u32(a->rom+SONG_TABLE+song*8));if(!span(a,h,4))return -1;
     if(!a->rom[h])return 0;
     if(song>=0x6e && !a->music_enabled)return 0;
-    player=song>=0x6e?0:effect_player(a,song,position==NULL);
+    player=reuse?reuse:song>=0x6e?0:effect_player(a,song,position==NULL);
     if(song<0x6e && !player)return 0;
     p=&a->players[player];
     stop_player(a,player);p->song=song;p->count=a->rom[h];p->priority=a->rom[h+2];p->tempo=75;p->active=1;
@@ -420,10 +420,10 @@ static int play_instance(SsaAudio *a,unsigned song,const SsaAudioPoint *position
     }
     return 1;
 }
-int ssa_audio_play(SsaAudio *a,unsigned song){return play_instance(a,song,NULL);}
+int ssa_audio_play(SsaAudio *a,unsigned song){return play_instance(a,song,NULL,0);}
 int ssa_audio_play_at(SsaAudio *a,unsigned song,const SsaAudioPoint *position){
     if(!position || song>=0x6e)return -1;
-    return play_instance(a,song,position);
+    return play_instance(a,song,position,0);
 }
 int ssa_audio_move(SsaAudio *a,unsigned song,const SsaAudioPoint *position){SsaAudioPlayer *p=NULL;unsigned i;
     if(!a || !a->loaded || song>=SSA_AUDIO_SONGS || !position)return -1;
@@ -441,8 +441,8 @@ int ssa_audio_stop(SsaAudio *a,unsigned song){unsigned player;
 }
 int ssa_audio_source(SsaAudio *a,SsaAudioSourceCommand command,unsigned song,
     uint64_t source,const SsaAudioPoint *position){unsigned i,count=0;int result;
-    if(!a || !a->loaded || !source || (unsigned)command>SSA_AUDIO_SOURCE_RETIRE)return -1;
-    if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_LOOP){
+    if(!a || !a->loaded || !source || (unsigned)command>SSA_AUDIO_SOURCE_CANCEL_REPEAT)return -1;
+    if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_LOOP || command==SSA_AUDIO_SOURCE_CUE_TWICE){
         if(song>=0x6e)return -1;
         if(command==SSA_AUDIO_SOURCE_LOOP)for(i=1;i<SSA_AUDIO_PLAYERS;++i){SsaAudioPlayer *p=&a->players[i];
             if(p->source==source && p->song==song && p->source_loop && player_busy(a,i)){
@@ -450,21 +450,25 @@ int ssa_audio_source(SsaAudio *a,SsaAudioSourceCommand command,unsigned song,
                 spatialize(a,p);return 1;
             }
         }
-        result=play_instance(a,song,position);if(result!=1)return result;
+        result=play_instance(a,song,position,0);if(result!=1)return result;
         for(i=1;i<SSA_AUDIO_PLAYERS;++i)if(a->players[i].serial==a->starts){
-            a->players[i].source=source;a->players[i].source_loop=command==SSA_AUDIO_SOURCE_LOOP;return 1;}
+            a->players[i].source=source;a->players[i].source_loop=command==SSA_AUDIO_SOURCE_LOOP;
+            a->players[i].cue_repeats=command==SSA_AUDIO_SOURCE_CUE_TWICE;return 1;}
         return -1;
     }
     if(command==SSA_AUDIO_SOURCE_MOVE && !position)return -1;
-    if(command==SSA_AUDIO_SOURCE_STOP && song>SSA_AUDIO_SONGS)return -1;
+    if((command==SSA_AUDIO_SOURCE_STOP || command==SSA_AUDIO_SOURCE_CANCEL_REPEAT) && song>SSA_AUDIO_SONGS)return -1;
     for(i=1;i<SSA_AUDIO_PLAYERS;++i){SsaAudioPlayer *p=&a->players[i];
         if(p->source!=source)continue;
         if(command==SSA_AUDIO_SOURCE_MOVE){if(!p->positioned || !player_busy(a,i))continue;
             p->position=*position;spatialize(a,p);++count;
         }else if(command==SSA_AUDIO_SOURCE_RETIRE){
+            p->cue_repeats=0;
             if(p->source_loop)stop_player(a,i);else p->source=0;
             ++count;
-        }else if(song==SSA_AUDIO_SONGS || p->song==song){stop_player(a,i);++count;}
+        }else if(song==SSA_AUDIO_SONGS || p->song==song){
+            if(command==SSA_AUDIO_SOURCE_CANCEL_REPEAT)p->cue_repeats=0;else stop_player(a,i);
+            ++count;}
     }
     return (int)count;
 }
@@ -655,6 +659,22 @@ int ssa_audio_render(SsaAudio *a,int16_t *out,size_t frames){size_t n;unsigned p
         a->psg_clock+=64;
         if(a->psg_clock>=a->sample_rate){a->psg_clock-=a->sample_rate;psg_envelope_tick(a);}
         for(p=0;p<SSA_AUDIO_PLAYERS;++p){SsaAudioPlayer *player=&a->players[p];unsigned active=0;
+            if(player->cue_repeats && !player->paused){unsigned voices=0;
+                if(player->cue_started!=2){
+                    for(i=SSA_AUDIO_MUSIC_VOICES;i<SSA_AUDIO_VOICES;++i)
+                        voices|=a->voices[i].active && a->voices[i].player==p;
+                    if(voices){player->cue_started=1;++player->cue_frames;}
+                    else if(player->cue_started){player->cue_started=2;player->cue_gap=(player->cue_frames+1)/2;}
+                    else if(!player->active)player->cue_repeats=0;
+                }
+                if(player->cue_started==2 && player->cue_gap)--player->cue_gap;
+                else if(player->cue_started==2){unsigned song=player->song,repeats=player->cue_repeats-1;
+                    uint64_t source=player->source;SsaAudioPoint position=player->position;
+                    unsigned positioned=player->positioned;
+                    if(play_instance(a,song,positioned?&position:NULL,p)<0)return -1;
+                    player->source=source;player->cue_repeats=repeats;
+                }
+            }
             player->left+=(player->target_left-player->left)*(100.0/a->sample_rate);
             player->right+=(player->target_right-player->right)*(100.0/a->sample_rate);
             if(!player->active || player->paused)continue;

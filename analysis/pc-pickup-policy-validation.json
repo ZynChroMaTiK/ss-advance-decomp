@@ -1,0 +1,50 @@
+{
+    "result":  "pass",
+    "scope":  "Native PC accepts ammo before weapon ownership and duplicate weapons for normal ammo grants, retaining caps and second-Colt upgrade",
+    "core":  {
+                 "result":  "pass",
+                 "checks":  2320339,
+                 "frames":  6507,
+                 "pickups":  123,
+                 "alternating_shots":  12,
+                 "left_hand_transitions":  6,
+                 "loadout_cases":  72,
+                 "reloads":  9,
+                 "reload_sounds":  11,
+                 "reequips":  4,
+                 "paired_clicks":  9,
+                 "shotgun_cases":  8,
+                 "pellets_checked":  84,
+                 "shotgun_timing_cases":  3,
+                 "shotgun_interval_ms":  1750,
+                 "colt_shot_ms":  450,
+                 "colt_reload_ms":  1070,
+                 "dual_reload_ms":  1400
+             },
+    "sanitizers":  "ASan/UBSan/leaks=1",
+    "original_pickup_comparisons":  5420,
+    "windows_input":  {
+                          "result":  "pass",
+                          "checks":  172,
+                          "physical_input":  false,
+                          "real_window_messages":  true
+                      },
+    "original_switch":  {
+                            "result":  "pass",
+                            "checks":  3295,
+                            "switch_cases":  20,
+                            "waiting_frames":  506,
+                            "weapons":  10,
+                            "views":  2
+                        },
+    "physical_input_tested":  false,
+    "executable_sha256":  "73332845110e316a455b79a1d96f5cc51f0df595e6f51ee85dc4eb248996fca1",
+    "source_sha256":  {
+                          "src/pickup.c":  "ae5b6c76d86bc769ef480b58643ff379dd53cfd158aa07c41a52294ef582cf1e",
+                          "src/pickup_runtime.c":  "865123d34540c2ccff0a31221be04a0084812ffb2a5667c92b5b75c9931fa3ee",
+                          "src/native_game.c":  "231ca432f76131fdc096f1b2f3b94243826c0716ddc5e1d41fbaea7d9cd47dea",
+                          "include/ssa/pickup.h":  "dc9a64f9850f8b1f3c70f250aa0d3d682d4bfce376fbcb8476678f3a238fe318",
+                          "include/ssa/pickup_runtime.h":  "42ab05c2f9a92e7eae3e74cf8c1c23b50a69160d954184a398f8bb4812e761e9",
+                          "tests/test_alternate_weapons.c":  "dbbcb259b2e26de0a81e5d3b2df450a8445ca6b8ded82a75d1863befa5506a84"
+                      }
+}

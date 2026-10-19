@@ -1,5 +1,12 @@
 # Project instructions
 
+Latest technical refactor (2026-10-20): read analysis/technical-refactors.md.
+Decal texels are process-owned immutable atlas data; do not free per level.
+Core links ssa_pc_scene, not ssa_pc_renderer; keep HUD composition out of scene.
+Use the locked audio status snapshot and centralized native settings application.
+Focused regressions: scripts/test-focused.ps1; no campaign playthroughs included.
+
+
 Latest music options: SoundFont is selectable only with a successfully loaded
 bank whose file is present. Style2 adds Microsoft GS Wavetable Synth via WinMM,
 independent of SF2; keep Original/SoundFont style values0/1 and settings layout.
@@ -4756,3 +4763,1343 @@ and distant ROM sprites remain unchanged for both renderers. Laurel source/art
 files and their old report are historical only. Windows rebuild (121 libraries)
 and hidden Rome map6 launches in software/GBA modes pass. ROM SHA1 unchanged.
 See analysis/rome-ankh-restoration-validation.json. No campaign replay.
+
+Jump now defaults to Off in SSA_SETTINGS_DEFAULT (Extras); Clear Data and
+version1 migration use Off. Versions2..6 retain their explicit saved choice.
+The existing settings/audio and actual Windows Space/toggle/persistence tests
+pass with the new default. Do not overwrite an existing user's saved On choice.
+
+Main Scores now runs the native1737C list viewer:18 original default entries,
+3localized groups, two-pixel/tick scroll and original16/-160/-336 stops, arrow
+blink, glyphs/palettes and menu music continuity. Mouse arrow areas page;
+Enter/Esc/center click leaves. Original15530 initializer uses scores0844C144
+and name pointers0844C18C in reverse template order. IMPORTANT:0xCC00C is a
+name-template block with placeholder score0x10BEEF, not the initialized list.
+Tests execute the actual initializer and compare1545viewer frames/2534400pixels.
+New command: decomp.ps1 test-scores. New score/name entry and persistence remain
+next work; the viewer currently shows original defaults only. See analysis/scores.md.
+Native menu sanitizer76171checks/10699frames; sanitized settings/audio38874;
+Windows23349checks including6Scores input routes/18previews.121Windows libraries
+and frontend rebuilt (existing static runtime retained); startup/restart/both
+renderers/concurrent launches pass. Current source/report/executable hashes verified.
+The historical full test-menu-rom was attempted but its Main fixture still
+expects4original rows atY82 versus current5PCrows atY74, so it stops there;
+no passing full-menu ROM comparison is claimed. Focused Scores/native menus pass.
+Ranking16F70 candidate recovered/high_score_rank.c is NOT exact after2manual
+attempts (68.2% second attempt; extra return sequence); claim released with notes,
+including corrected initialization facts. No new exact match or ROM modification.
+No campaign replay. Current executable SHA256:
+397dfee788a3f378a870a45dffb6f38e90fc5bd2d4d031423fc736d889b4c575.
+
+Latest native progress (2026-10-19): high-score name entry and persistence.
+Scores16F70/16F98 now preserve unsigned tie-before-existing ranking,12slots,
+character cycles, repeat bytes255->32, Down priority, underscore->space commit,
+original prompt/selected glyph and1737C auto-scroll/blink for the new record.
+Menu first entry tick shifts to reserve the slot; ONLY score_submitted commits.
+Do not flush the intermediate editor table or insert twice. PC name typing has
+Backspace/Delete/Home/End and suppresses WASD/M navigation/mute while editing.
+
+SsaScores in scores.c/scores.h owns18records plus remembered editor name.
+Separate scores.dat is320bytes/version1/little-endian/CRC32. Existing save.dat
+and settings.dat formats stay16bytes. Custom --save-file PATH uses PATH.scores.
+Win32 score store locks/reloads latest/merges ONE event/flushes/atomic replaces;
+loading a missing/corrupt file never writes. Failure keeps session record and
+shows notice; explicit submission can repair a corrupt file. scores.dat and
+its lock/temp names are ignored by git. No user score data is published.
+
+Frontend offers qualifying current score on confirmed Pause Quit, and final
+bonus-adjusted completed_carry.score AFTER the ending. Explicit score arguments
+prevent stale completed-carry use on ordinary quit. finish_menu resets tally,
+completion and reload/advance flags for each fresh run. New-run totals reset;
+score table persists. Confirmed Clear Data now ALSO actually resets Settings
+(previously only progress/language were reset) and the score file; Cancel keeps
+all of them. Jump defaults Off and existing saved explicit choices still load.
+
+test-scores:8192original rank cases,2886editor frames,6111viewer frames and
+10252800composed pixels,3languages,30original submissions. New test-score-entry
+checks10339ASan/UBSan/leak assertions and54typed submissions/all18positions.
+scripts/test-scores.ps1:754Windows checks with6each name/quit-run/ending/new-run
+paths in both renderers/3languages, reopened files, stale writer merge, readonly
+atomic replacement failure, corrupt-load preservation/repair and Clear Data.
+Native menu76171, profile590241, settings/audio38874, intermission143825 checks
+pass; Windows intermission6205 and settings/input/audio pass. Full122library
+Windows static-runtime build, launcher/restart/both renderers/concurrency pass.
+A pause regression exposed stale tally selection and was fixed/rechecked;
+stale intermission source baseline was regenerated by rerunning sanitizers.
+Current reports/source hashes verified; original ROM SHA1 remains unchanged.
+No full campaign replay. Full legacy menu-ROM fixture remains outdated for
+PC Main rows, as previously documented. No new exact byte match: live78/526,
+2816/87648catalogued bytes(3.21%),551attempts. Decomp.wtf16F98 notes updated.
+Current executable SHA256:
+a538c5241bc47343a1c4b8e4f9a334a8c837784d1d250067d480a374ce6be7bb.
+
+Next original single-player work: finite continue/game-over presentation and
+handoff; permanent-death high-score submission is NOT wired yet. Disk storage
+of full campaign-session totals and multiplayer also remain unfinished. Do not
+claim complete original-feature parity. See analysis/scores.md and reports.
+
+Latest alternate double-shotgun correction (2026-10-19): the 1.75-second cycle
+now distributes the17original drawable entries plus idle evenly over105ticks
+(5/6ticks each), with idle as the last timed slot. The six-entry last-shell
+sequence already ends on idle and is not duplicated (17/18ticks each).
+Completion, held-shot cadence, pause and deferred switching remain105ticks.
+Native ASan/UBSan/leak and Windows alternate-weapons checks pass2,318,845checks;
+Windows key/wheel and original switching regressions also pass. Static Windows
+frontend rebuilt. ROM SHA-1 unchanged; no campaign replay.
+
+Latest native progress (2026-10-19): finite lives and permanent-death score handoff.
+Original06154 still drives death. More-than-one-life: B5/sound17, mode4 at301
+native60Hz ticks. Last life becomes0 immediately, music10/B4 at91ticks, then
+mode4 after301more. Do not start game-over music on ordinary retry boundaries.
+run_exit.c recovers02564's02A7A..02B52 non-completion handoff: clear message timer,
+mode4 with count>0 decrements/retries through mode0; zero->mode7/name entry;
+mode5->Main. Final flags2. Invalid input leaves state unchanged.
+Frontend freezes the completed death image, releases controls, fades0..0xF00 by64
+per presentation tick and waits for actual black presentation. 08E74(7) means
+audio fade interval7, NOT sound7. Keep black while reload is queued; resetting
+its owner before rebuilding caused an old-world flash and is now guarded/tested.
+Retry restores level-entry inventory/score, and remaining lives survive ordinary
+and5->6 chapter advancement. Difficulty5/3/2 includes the current life. Initial
+count MUST set both game.life_game and gameplay.life_game: setting only the
+latter let the shared runtime overwrite Easy/Hard with3 at its first update.
+Ordinary Enter no longer gives free level resets; explicit startup/transition
+diagnostics retain their existing route. R remains disabled. Final death uses
+current game.score (not stale completed_carry) through original name entry and
+saved scores.dat. Retries never submit records; nonqualifying death returns Main.
+New commands: decomp.ps1 test-run-exit-rom and test-run-exit; Windows:
+scripts/test-run-exit.ps1 -SkipBuild. Actual decomp.wtf0244C notes updated.
+2048 original fragment comparisons/all256life values/both terminal modes pass;
+26273ASan/UBSan/leak assertions,9879frames,30deaths,21retries,9gameovers across
+3difficulties/3languages. Windows3278892checks,6586frames,20deaths,14reloads,
+6persisted gameovers,20black presentations and12controlled level/chapter handoffs
+pass in both renderers. Native/Windows pause/completion and score tests pass.
+123Windows libraries and static frontend built. Localized game-over/fade captures
+visually inspected. No full campaign replay, ROM modification or new byte match.
+Current matching remains78/526,2816/87648incomplete catalogue bytes,551attempts.
+See analysis/run-exit.md and current hash-bearing reports. Current executable:
+e33a40bd26eb27a8d2d753d9b9efc2e508ea354b35e7c4ea771768f19bfe130f.
+Remaining work includes original campaign-session totals on disk, multiplayer
+and other documented parity gaps; do not call the complete port finished.
+
+Latest native progress (2026-10-19): in-level automap. F toggles originalBC8;
+wheel and held +/- zoom, with original8192 entry value from validated08B28,
+clamps4096..65536 and1/16-per-tick steps. Outside-map wheel/number/Q behavior
+retained. Tab remains NETRICSA. Map world simulation/movement continue, new
+firing/selection are suppressed and existing automatic fire stops. Pause and
+NETRICSA overlay/return, focus-held zoom cleanup and death exit are covered.
+F updates framebuffer ownership/dimensions/palette before queued WM_PAINT can
+present, avoiding stale full-resolution dimensions over the240x160 map buffer.
+Keep the flash clock unchanged during immediate palette changes.
+
+src/automap.c ports07FDC clipping/OR raster and normal08420 geometry, nearby
+contacts, body sight segment, heading triangle, active crosses and original
+scan rows14/12/10/8/6. Zero-length neighboring-byte and endpoint quirks retained.
+Native game owns automap_query scratch and zoom/scanline state; drawing is pure
+for player/cache/world blocker. Scanline clock advances only with native ticks.
+Generalized ssa_player_interaction_query_at preserves original0429C traversal;
+its old64-unit facing wrapper remains. Do not share weapon/movement/view scratch.
+Original optional debug ray-list mutation is explicitly outside normal map scope.
+Automap is a separate indexed canvas; generic display compositor mode4 remains
+outside its earlier contract. Both Windows renderers scale the same map canvas.
+
+New commands: decomp.ps1 test-automap and test-automap-rom, plus
+scripts/test-automap.ps1 -SkipBuild. 3000original line cases/115200000pixels,
+384scene cases/166680ordered segments,16complete map frames/614400pixels pass.
+Scene contacts/multiply are controlled boundaries; full-frame tests have empty
+debug rays. 4096new zoom-contact comparisons plus24576prior hazard cases pass.
+Native ASan/UBSan/leak test1749checks/638frames/672draws on16maps includes a
+controlled firing-minigun fixture (not a campaign playthrough). Windows1037checks,
+4Egypt/Rome+renderer paths cover actual F/wheel/held zoom, immediate bitmap mode,
+pause/NETRICSA return and focus/death. Visual map captures checked.
+Native/Windows run-exit, pause/completion, alternate weapons and Scores pass;
+all124Windows libraries/static frontend rebuilt. Current reports/source hashes
+verified and ROM SHA1 unchanged. No full campaign replay or new exact match.
+Live decomp78/526,2816/87648incomplete catalogue bytes,551attempts;08420notes
+updated through requested actual engine. Current executable SHA256:
+4657e6cbfeefd68ca742537c1b81e1d4b62f8043f2c015bb9e011e8b556717e6.
+
+See analysis/automap.md. Older campaign-total disk-persistence TODO is not proof
+of an original SRAM format; that policy requires further recovery. No new
+campaign autosave/resume feature was invented. Original-feature parity and
+multiplayer remain ongoing; do not present the whole port as complete.
+
+Latest native progress (2026-10-19): mixed sprite priorities now render through
+the shared display compositor instead of returning-2. Both GBA display and PC
+weapon/HUD use it. Equal priorities keep earlier OAM; later higher-priority
+opaque samples replace color, while transparent samples promote an already
+occupied pixel's priority without replacing color. Empty/outside-source affine
+samples do not promote. This follows mGBA's normal8bpp hardware model; no physical
+GBA measurement or new exact ROM routine match is claimed. Blend/window/mosaic,
+4bpp and conservative scanline overflow remain explicitly unsupported.
+893 independent display frames include258mixed-priority cases/all311images;
+418538ASan/UBSan assertions/39guards/1438frames pass. Original HUD colors retain
+32cases/64original interrupts/1228800pixels. Full-resolution renderer checks
+seven sizes/24live chase-jump frames and a directed transparent-promotion HUD
+case on GCC sanitizers and MSVC. Its old entrance-wall fixture now walks away
+before H and permits camera collision fallback; game camera is unchanged.
+scripts/test-display.ps1 -SkipBuild runs both Windows checks. Static frontend
+and124libraries rebuilt; no campaign replay or ROM edits. Live decomp remains
+78/526functions,2816/87648incomplete catalogue bytes(3.21%),551attempts.
+Actual decomp.wtf0750C notes updated. See analysis/display.md and hash-bearing
+native-display/windows-display/pc-renderer reports. Current executable SHA256:
+beeee79c599004c162e519affa750a72a0cb20e96d1168bf04be17a7801717f0.
+
+Latest user-requested automap controls (2026-10-19): M replaces F during
+gameplay, and replaces gameplay M's former mute binding. Options -> Extras now
+has a saved Automap On/Off row after Alternate weapons and before Back. Default
+On preserves existing map availability; old settings versions1..6 load On.
+Version7 retains16bytes/CRC and all prior byte9 option bits, storing Automap in
+byte10 bit7 and music volume in bits0..6. Preserve native volume0..100 validation.
+All10SsaSettings fields must be initialized in explicit aggregate literals.
+Extras has five toggles at40/64/88/112/136, Back152, matching mouse row bands.
+Disabling an open map closes it and clears held zoom/partial wheel; disabled M
+does not toggle audio. Wheel/plus/minus zoom and ordinary view/pause/NETRICSA/
+death behavior remain. Both renderers use the existing north-up player-following
+overhead map; this change does not import Doom code/assets or add new ROM matches.
+Native automap1813checks/all16maps; codec/localized Extras/audio38900sanitizer
+checks pass. Windows automap1053checks/four renderer/chapter paths and saved
+settings23363checks pass, including disabling while mapped and disk round trips.
+Extras captures visually inspected in English/German/French. Static frontend
+and124libraries rebuilt; ROM unchanged, no full campaign replay. Reports:
+analysis/automap-validation.json, windows-automap-validation.json,
+audio-settings-validation.json and windows-audio-settings-validation.json.
+Current executable SHA256:
+893f48e54bcb2d22c8c56b509222c4a01c80e1bab54ebe6e22808c51c1017ad9.
+Automap disable is permitted after completion, during pause and after death;
+these conditions restrict opening only, allowing Options to cleanly turn it off.
+
+Latest user correction (2026-10-19): Automap defaults Off in Extras. Fresh,
+missing/corrupt and legacy version1..6 settings use Off; Clear Data resets Off.
+Explicit version7 saved On/Off choices are retained. M and the Extras toggle
+otherwise retain their behavior. Updated existing settings/menu/migration tests
+pass with GCC sanitizers and MSVC; the static Windows frontend is rebuilt.
+Current executable SHA256:
+e33b6093e36d7f495e0d3afb2313d75c90120116673ec5133d16bd3ac60b4e4c.
+
+Legacy HUD audit (2026-10-19): surviving E700/type5 health digits and EFB4/typeB
+fixed eight-digit display are functional, still dispatched at F916/F93A, but
+101F4 creates neither type. E700 selects24..2D green large digits; EFB4 selects
+2E..37 small green digits, subtype0ones..7ten-millions. EFB4 reads GAME+34C,
+whose meaning is unresolved; do not call it current score (GAME+88). EE60 is the
+pending completion-bonus display, not automatically an obsolete HUD remnant.
+Old green panels/status icons use animations17..23/images63..66,80..88;
+green weapon icons67..75 have no frame reference in233animation sequences.
+scripts/audit_legacy_hud.py passes66+96whole original handler cases plus160whole
+101F4 constructors (all16maps/1..4players/all local choices), only allocation
+controlled. No complete old-layout setup or selectable mode found. Static
+immediate/reference scans are supporting evidence, not indirect-reachability
+proof. See analysis/legacy-hud.md and legacy-hud-audit.json. No game code, ROM,
+executable or matching progress changed by this inspection.
+
+Classic HUD addition (2026-10-19): Extras -> HUD cycles Original/Classic.
+Original defaults; version8 keeps16-byte CRC format, byte11 bit7 HUD style and
+low7 bits sound volume. Version1..7 files load Original, retaining other options.
+SsaSettings now has11 fields; initialize all in explicit aggregates. Extras has
+six rows at Y40/56/72/88/104/120, Back152, with corresponding mouse row bands.
+classic_hud.c reconstructs the retained green sprites/palette into an indexed
+canvas, composed by both renderers. It reads canonical health/armor/ammo/score/
+elapsed time/lives and the existing boss projection. The missing older layout,
+time/lives bindings and weapon-icon associations are reconstructed, not an exact
+old constructor recovery; GAME+34C remains unresolved. See analysis/classic-hud.md.
+Keep retail controller/cache state intact and filter statistics only in a private
+OAM copy, preserving weapons, crosshair, notices and dual Colt behavior. Save/
+restore hud_suppressed during NETRICSA weapon-only and completion clean captures;
+pause keeps the frozen HUD, automap hides it. Test-classic-hud covers both paths,
+same-frame Original restoration, all weapons and dual Colts (12,118 checks/344
+draws with GCC sanitizers and MSVC). Windows frontend capture checks, settings
+38,922 native/23,381 Windows checks, original intermission and launcher checks
+pass. Static125-library Windows build; ROM unchanged; no full campaign replay.
+Current executable SHA256:
+06d82dea4d609224c0d7e570f8a94944c01683889db696f2fe4c393c3b939924.
+
+Latest death correction (2026-10-19): user reports a frozen Original-HUD death
+scene and explicitly requests automatic return to Main, with no restart input.
+This overrides the older Windows automatic-retry/permanent-death-name route:
+after06154 and the terminal black fade, death_tick now opens Main directly even
+with lives remaining. Ending and Pause Quit still offer qualifying score entry.
+Keep native run_exit/controller behavior unchanged for ROM parity and isolated
+tests. Frame pause bit1 reproducibly holds a dead player's lifecycle indefinitely;
+game_tick clears it while health<=0 until terminal input mode4. Actual screen
+branches retain ownership of pause/NETRICSA, and mode4 freezes the fade frame.
+Windows regression supplies lethal combat damage, tests ordinary/final-life
+timing,24 automatic Main returns and black presentations across both HUD styles/
+renderers/all3 languages and difficulties. Half inject stale pause. Four real
+run() wall-clock/message/render/audio-worker paths inject stale pause and verify
+automatic Main plus30 active menu ticks without any restart input. Output muted;
+windows shown without activation; user saves untouched. Original native death
+suite remains26,273 sanitizer checks. See analysis/run-exit.md and reports.
+Static Windows game rebuilt; launcher, Classic and intermission checks pass.
+Current executable SHA256:
+bc4f0db09e750c53f36973c1240819fc52162654848a092c22d7111cc729be38.
+
+Pre-level HUD switch fix (2026-10-19): launch-21297-16128-9372/stderr.log
+was empty. Reproduced settings_change failure with Alternate weapons On and
+the new-game starting Colt before any simulation tick: previous_frameFFFF
+made immediate alternate OAM construction reject the unresolved image. Native
+HUD setter now records cold-start choices without rebuilding OAM until the
+ordinary first-frame animation/cache/build stages; no dummy simulation ticks.
+Later rebuild failure restores the old style, and frontend failure logs a
+diagnostic. Focused Classic tests pass12,134 sanitizer/MSVC checks; Windows260
+checks cover keyboard/mouse cold-start switches, alternate Off/On, both renderers,
+preference persistence, existing warm HUD/captures and dual Colts. Settings and
+normal/concurrent launcher checks pass. Static game and125 libraries rebuilt;
+user settings/ROM unchanged. See analysis/classic-hud.md and validation reports.
+Current executable SHA256:
+f80fc61caab3789a46dbe52a1d6097a1cbd7d0349497a6ee7819d4017f1884f1.
+
+F11 display toggle (2026-10-19): WM_KEYDOWN/UP handles F11 globally before
+screen-specific controls. A fresh key-down toggles the existing borderless
+Fullscreen/Windowed preference via display_mode_apply, mirrors the choice to
+menu settings and persists it when the profile is enabled. Auto-repeat and
+key-up are consumed without toggling. Failure retains the existing mode.
+Windows Settings checks now23,481, including two renderer selections/five key
+routing contexts, repeat suppression, restored window geometry, menu sync,
+unchanged simulation/input, hidden visibility and disk round trips. Physical
+F11 delivery is untested. Static125-library game rebuilt; launcher checks pass.
+See README controls and analysis/audio-settings.md. Current executable SHA256:
+6ab6b9628a696bd36495ba6c85dcfe5705e043be9bef23c8c47a5d4a531d0344.
+
+Classic HUD corrections (2026-10-19): score now sits inside top-left frame63
+at X12/Y2; remove its former health fill. Correct green weapon mapping for IDs
+1..10 is68,67,69,70,71,72,73,74,missing,75 (chainsaw,Colt,shotgun,Tommygun,
+minigun,rocket,Prion,laser,Time Strike,cannon). There is no green Time Strike
+icon: fit retail HUD image290 into frame87, preserving aspect/palette. Bottom
+right has eight independent ammo slots for weapons3..10, X112..239, original
+16px icons, counts Y130 and capacity bars Y138..142; selected border white.
+Shared old bullet art does not imply shared ammo pools. Ammo green images are
+84,83,83,85,86,missing,missing,88; missing laser/Time Strike art uses original
+retail271/276 inset in87. Current weapon/ammo panel moves left12px to fit.
+Classic draw now takes the ROM-loaded SsaInventoryRules for actual capacities:
+100,300,300,25,10,3,10,10. No changes to inventory or Original HUD behavior.
+Extended audit_legacy_hud.py executes40 original F1C0/F27C cases and verifies
+player+78 selects animations42..4B/DF..E8 and their retail images. Original
+E700/EFB4/constructor checks still pass; GAME+34C remains unresolved, and no old
+full-layout/gauge constructor is claimed. Findings recorded through decomp.wtf
+on E700. See analysis/classic-hud.md and legacy-hud-audit.json. Focused tests
+pass24,394 GCC sanitizer/MSVC checks/344 draws; Windows260 capture/menu checks
+pass. Static125-library Windows game rebuilt; ROM unchanged. Executable SHA256:
+4f6e22abd78427b56afa28356496a45b6620e636030cc74c5c6e267081418291.
+
+Latest Classic icon correction (2026-10-19): user requested swapping Prion/UMT
+weapon icons. Weapon7 now uses green image74; weapon8 (UMT) uses73. This supersedes
+the earlier visual identification above; other weapon/ammo bindings stay as-is.
+Focused HUD pixel checks updated and pass24,394 sanitizer/MSVC checks; Windows260
+checks pass. Static game rebuilt. Executable SHA256:
+cc4f237e6d1a8df16301683c1a3b96120484ff1f62ed3ca28efefce602a2a7a0.
+
+Time Strike Classic icon (2026-10-19): user requested a green variant of its
+world model. Weapon9 now uses actor resource28hex/image1 (pickup item28hex maps
+to weapon9), rather than retail HUD image290. Classic draw borrows that actor
+image, crops transparent bounds, fits it into frame87's14x14 interior and maps
+base-world-palette0 luminance to existing pure-green OBJ shades. Preserve aspect,
+transparency and shading; no source sprite/palette/ROM mutations. UMT/Time Strike
+ammo icons retain their prior retail insets. New Classic API takes the borrowed
+SsaActorImage pointer. Focused GCC sanitizer/MSVC checks24,556/344draws and Windows
+260 checks pass, including pure-green shaded output and source-byte immutability.
+HUD capture visually inspected. Static game/125 libraries rebuilt. SHA256:
+a2adc31830d97cb274a97a21ab97a79224c89040ba86c002e243a10d54b8ab6a.
+
+Correction from user's attached Time Strike sprite (2026-10-19): actor resource
+28hex is a shared pickup atlas, not a one-image resource. Its animation starts
+at frame8, selecting one-based image9, which exactly matches the attached upright
+device. Image1 is the Colt; the preceding assumption was wrong. The native HUD
+now resolves the first animation word from actor_animations instead of forcing
+image1. Fit into the empty frame87's actual12x12 interior and retain the green
+conversion. Test the animation word and upright icon silhouette inside the frame
+border, as well as source immutability and shades. Native/MSVC24,548 checks and
+Windows260 checks pass; enlarged corrected icon visually inspected. Static game
+rebuilt. Current executable SHA256:
+27f42d4120874aad13f88ab0edfaacee23c77eda93acd5b60aeb653e703532c4.
+
+Zero armor HUD correction (2026-10-19): Classic now hides the entire armor icon,
+frame and counter at zero, restoring them when armor is positive. Original HUD
+already has this behavior. Focused native/MSVC24,030 checks and Windows260
+checks pass; both renderers checked and zero-armor capture visually inspected.
+Static executable rebuilt, SHA256:
+8e9cf49eb749ad694f53f58ae5f0548e20645a3551672cc2db1056e9e01603f2.
+
+Latest Time Strike icon reference (2026-10-19): use the compact framed device
+layout, fitting the original upright image9 into10x10 centered inside frame87's
+12x12 interior. Recolor through RGB maximum rather than weighted luminance so
+blue/cyan highlights retain brightness in the original green OBJ ramp. Source
+sprite/palettes and Original HUD stay unchanged. Native sanitizer/MSVC24,008
+checks/344 draws and Windows260 checks pass; enlarged icon visually inspected.
+Static Windows executable rebuilt, SHA256:
+f08e02ff6a302b5dc04dea0fff04d35baad852935d705f8588ca4cd9990d5079.
+
+Classic ammo icon update (2026-10-19): UMT now uses the former Prion radioactive
+image86 exactly. Prion has a new biohazard pixel mask; Time Strike has a new clock
+mask. Both use supplied empty/cannon-frame styling, frame87 at original16x16
+size, black interior and original bright/dim green OBJ shades. Keep the weapon
+icons separate and unchanged. No retail ammo insets remain in Classic. These
+two masks are new native UI artwork, not recovered ROM sprites. Focused native
+sanitizer/MSVC24,456 checks/344 draws and Windows260 checks pass; all four final
+ammo icons visually inspected. Static Windows executable rebuilt, SHA256:
+d02ccbac7694c1484d2c52b22a4e1755aa3b099c979c93458016009695331dcc.
+
+Infinite-ammo HUD correction (2026-10-19): Classic hides the selected ammo
+counter and its frame for weapons1/2 (chainsaw and single/dual Colts), retaining
+the selected weapon icon and eight finite-ammo slots. No synthetic999 display.
+Original already hides those digits via its existing number controller.
+Focused native sanitizer/MSVC23,132 checks/344 draws and Windows260 checks pass;
+zero-counter chainsaw capture visually inspected. Static executable rebuilt:
+SHA256738cc4c51e7cadc18eb22346227117a4372410d2d88a193be9a1281a8afbc3ae.
+
+Empty-ammo icon visibility (2026-10-19): Classic hides each bottom-right ammo
+icon and its icon frame when that pool has zero ammo; it reappears on acquiring
+ammo. Counts/bars retain fixed positions. This applies to all eight finite pools,
+including the new biohazard/clock masks and radioactive UMT art. Focused native
+sanitizer/MSVC16,716 checks/344 draws and Windows260 checks pass; empty-ammo
+capture visually inspected. Static Windows executable rebuilt, SHA256:
+362025f6c9ca78f809d9997b10806f4ffcf9f98e4e4ce066d237b8ee8cda082a.
+
+Corrected ammo circle template (2026-10-19): Prion/Time Strike now copy actual
+circle image88, including frame, outline and shading. Lift only its green face
+halfway toward maximum green through the original OBJ ramp for dark-symbol
+contrast; keep the source untouched. Replace the unrecognizable hand biohazard
+with a9x9 coverage mask of the standard public-domain geometry (reference and
+sampling notes in assets/classic-hud). Hint coverage2..3 to4/9 darkening and4..9
+to black, preserving fine tips and openings. Clock uses dark hands/hour marks.
+Empty icons still hide. Native sanitizer/MSVC16,716 checks/344 draws and Windows
+260 checks pass; enlarged final icons visually inspected. Static exe SHA256:
+8faf4fb0f151f273871f7bf779d30a544aa15ef2b6bf53bd6676eb6074d3385b.
+
+Larger ammo circles (2026-10-19): enlarge only the Prion/Time Strike circular
+interiors11x11->13x13 with pixel-center sampling; preserve16x16 frames and
+centered symbols. Their green faces now measure11x11, matching UMT's actual
+image86 face (measured from final capture). Cannon remains original image88.
+Native sanitizer/MSVC16,716 checks/344 draws and Windows260 checks pass; final
+icons visually inspected. Static executable rebuilt, SHA256:
+02919f818b7603f010c9cc3175ae90630fa046b4bdaa3d429d8ccd5045ff1737.
+
+Exact supplied Time Strike weapon icon (2026-10-19): user gave the local file
+C:\Users\brian\Desktop\download.png. Copy unchanged to assets/classic-hud/
+time-strike-reference.png, SHA256051fa06923edaafc8b68af4441426fcd774b25d325fc24fa8076f79e27df46c8.
+It is16x24, with framed artwork in the first17 rows and transparent padding below.
+Use its exact pixel positions at X60/Y143; do not shrink/crop/fit a world sprite.
+scripts/import-classic-time-strike.ps1 reproducibly embeds RGB555+alpha in
+src/classic_time_strike.inc. Runtime only recolors to the original green OBJ ramp;
+preserve opaque black, transparency and full-width supplied frame. The original
+world-image argument is removed from Classic's draw API. Native/MSVC17,128 checks
+and Windows260 checks pass, plus768 direct source-PNG pixel/padding comparisons
+over both map fixtures. Import regeneration and unchanged source PNG verified;
+side-by-side reference/render inspected. Static executable rebuilt, SHA256:
+4cb76f665e9ac6ebf94a3ce247ffc41e08954705c0d15737a65bb622430b7be7.
+
+Classic counter/meter update (2026-10-19): suppress padding zeros in score,
+health, armor, lives and selected ammo, retaining significant zeros and two-digit
+clock seconds. Remove all numbers/bars above ammo icons. Use retained green
+meter images89..98 and white99..109 inside each icon at X+11, bottom Y+13;
+3px wide, up to11px tall, with black backing. Green's missing4px level composes
+its3px and1px images. Empty icons/meters still hide. White now means recent ammo
+consumption, not persistent weapon selection: finite pool use sets12 ticks of
+white selected digits and meter, then green; repeat fire refreshes, pause freezes.
+Snapshot ammo after pickups before sprite controllers, compare after the frame.
+SsaNativeGame owns transient before/flash arrays; Classic draw takes a flash mask
+and remains read-only. Actual Tommygun firing, redraw/pause/expiry and both
+renderer captures pass. Native sanitizer/MSVC13,726 checks/352 draws, Windows260
+checks and768 source-PNG comparisons pass. Static game rebuilt, SHA256:
+a920232dc2a2b01d6a0f0dae3758f958512f8d7704f9815efb731be409a256a7.
+
+Latest ammo feedback correction (2026-10-19): flash uses an index palette swap,
+mapping each pure-green shade to the closest original neutral shade. Preserve
+numeral shading, non-green pixels, black and transparency; no flat white ink.
+Meters always use the same green89..98 sprites through this palette swap, never
+the white99..109 geometry. Move meter/backing1px left/up: X+10, top Y+2, bottom
+Y+12, still3x11 maximum inside the icon frame. Consumption flash is now40 native
+60Hz ticks (~0.67s), with pause/repeat behavior retained. Tests verify multiple
+digit shades, all3 pixels of the1px-high meter, updated placement, the39th active
+tick and40th expiry. Native sanitizer/MSVC13,790 checks/352 draws, Windows260
+checks and768 PNG comparisons pass; both flash/settled views inspected.
+Static executable rebuilt, SHA256:
+335923ade9ecbacf695ba49c54dd6304bf88db47cb42c81fe5a29be22a07219d.
+
+Classic HUD backings (2026-10-19): add45%-transparent black (55% opacity) behind
+visible Classic panels/icons, retaining45% of each underlying color channel with
+rounding. Separate indexed foreground and backing mask: art/palette/flash colors
+stay fully opaque. New read-only ssa_native_game_classic_hud_layers returns both;
+the older foreground-only helper remains. Blend above world/weapon OAM and below
+Classic art, RGB555 in GBA mode and actual-resolution RGB888 in software. Rects
+follow score/time/lives, health, positive armor, weapon, finite ammo counter,
+nonempty ammo icons and boss panel. Hidden/suppressed/automap/Original produce no
+backing; captures retain existing behavior. Native sanitizer/MSVC13,800 checks/
+356 draws and Windows260 checks plus768 PNG comparisons pass. Real compositor
+checks verify opacity, opaque art and hidden armor; captures visually inspected.
+Static executable rebuilt, SHA256:
+c0f78a80405f39a2e1cd381ac70a9065ce75b36312eb7cdf818618337db88e64.
+
+Ammo backing gaps (2026-10-19): narrow each ammo backing from16 to15 pixels
+inside its16-pixel slot. Column15 remains transparent, matching all original
+ammo template sprites (alpha checked), so gaps between icons have no backing.
+Native sanitizer/MSVC13,800 checks/356 draws and Windows260 checks plus768 PNG
+comparisons pass. Static executable rebuilt, SHA256:
+74ca435dbe61f36ecde355c5fbdf19aa4ed1164b17e8c4e441a66902f521de3c.
+
+Equipped ammo highlight (2026-10-19): palette-swap only the13x13 interior of
+the equipped finite-ammo icon to neutral shades, preserving shading, black and
+transparency. Its square frame remains green. Follow committed weapon_action,
+not queued selection; refresh it from gameplay.weapon.current in the read-only
+Classic projection. Draw the meter afterward to retain its separate40-tick
+consumption flash and green idle state. Native sanitizer/MSVC13,800 checks/
+356 draws, Windows260 checks and768 source-PNG comparisons pass; settled real
+Tommygun capture inspected. Static executable rebuilt, SHA256:
+a699843464cde5798bf71efafc1e60f4b61d004b12aeaef05bcb7a25f184dd96.
+
+Classic weapon selector (2026-10-19): a transient horizontal row at Y108 uses
+retained weapon icons, centered with20px spacing above the bottom HUD. Show
+available owned/nonempty weapons in number order. User correction: one original
+single-Colt icon covers BOTH Colt variants, First Encounter style; no dual entry.
+The actually equipped icon AND frame palette-swap to shaded neutral colors.
+Use the exact supplied Time Strike art and separate transparent backings/gaps.
+Selections and committed switches refresh180ticks/3s; pause freezes the timer.
+Sampled fire pulses/held fire or actual shot counters dismiss it, including
+infinite ammo and buffered clicks. hud_weapon_dismissed prevents a queued commit
+from reopening it after fire. Ordinary future selection clears that latch.
+Original HUD/automap/clean captures omit it. Native sanitizer/MSVC91,342 checks/
+358 draws, Windows260 checks and768 PNG comparisons pass; both wheel captures
+inspected. Static executable rebuilt, SHA256:
+24c98dc529cafd46aa0231b74577f4b28358eb835e137734e448e7f2139c41ee.
+
+Classic refinements (2026-10-19): weapon selector uses17px spacing for16px
+icons, leaving1px clear gaps. Pack positive finite-ammo pools in weapon order
+against the right edge:15px frames,16px spacing, final frame ends X239. Empty
+pools leave no holes; meters and equipped/consumption palette behavior follow
+their pools. Health digits alone now palette-flash white for40ticks (~0.67s)
+after damage; sample canonical health across frame/entity boundaries, retain
+feedback after healing, pause freezes it. Original HUD presentation unchanged.
+Classic notices use the original static8px menu font (LZ77 at0B7A60, mapping
+44C264, metrics0B7EA8), recolored to original OBJ greens. Decode once into
+SsaClassicHudText. Keep localized strings/base Y/shared timer; hide animated
+type13 letters and type14 backdrop only in Classic's OAM snapshot. Compose
+green text/backing in both renderers. Top-right value is bound to remaining
+lives/continues (Easy5/Normal3/Hard2); PC death still returns to Main.
+Native sanitizer/MSVC114,862 checks/364 draws, Windows260 checks and768 exact
+PNG comparisons pass. Actual combat damage, health flash pause/expiry/healing,
+three-language static notices and compact sparse ammo covered. Text, selector
+and right-aligned ammo captures inspected. Static executable rebuilt, SHA256:
+c67433e5ed7c8af8b15b37e4a4a9046af8ef149ab85615aae8e9f6106a8d26bb.
+
+Latest death-flow direction (2026-10-19): user explicitly chose "Retry until all
+lives are lost". This overrides earlier requests to return to Main on every
+death. Windows death_tick now honors the original SSA_RUN_RETRY destination:
+after the original death/black fade, consume one life and reload the level-entry
+inventory/score automatically. Leave death_active/black set until outer reload
+so catch-up ticks cannot consume another life or expose an unfaded dead scene.
+Reload already preserves the reduced count after difficulty/settings, and runs
+normal pre-level NETRICSA/map/reveal without chapter replay. On the last life,
+unchanged06154 consumes1->0, issues music10/localized B4 after91ticks and exits
+at392ticks; then black fade and direct Main return, no restart/name-entry prompt.
+Pause Quit/ending score flows unchanged. Native26,273 ASan/UBSan/leak checks
+cover30 deaths/21 retries/9 Game Overs across3 difficulties/languages. Windows
+1,394,625 checks cover24 lethal deaths,12 retry snapshots,12 final Main returns,
+24 black presentations and4 actual wall-clock retry->Game Over loops across
+both HUD styles/renderers. Test timers dismiss ordinary briefing/map screens,
+never a restart confirmation. Localized Game Over captures inspected. No user
+saves touched or campaign replay run. Static executable rebuilt, SHA256:
+cef103c77ecd997cd1f98322f2f290a54b8668db60cee0f32baf13c1933fb4cf.
+
+Immediate Classic selection feedback (2026-10-19): user wants white weapon/ammo
+highlights before the weapon is ready to shoot. This overrides earlier
+committed/equipped-only highlight instructions. Feed gameplay.weapon.requested
+to the horizontal selector, and use Classic state.current_weapon (the refreshed
+requested weapon) for its ammo interior palette swap. Both update on selection,
+including rapid queued changes during lower/draw/fire/reload waits. Keep ammo
+frame green and meter consumption feedback separate; selector's whole frame
+remains white. No controller/animation/firing timing changes. Native sanitizer/
+MSVC117,747 checks/366 draws plus Windows260 checks and768 PNG comparisons pass.
+The regression selects4->6->4 before any simulation update while current2 still
+holds dual Colts; checks latest highlights, untouched other ammo pixels/frames
+and read-only rendering. Pending software/GBA captures visually inspected.
+Static executable rebuilt, SHA256:
+7f485f2b522b4b4b039e8a0c5024d1506d52eceec8cce5bab0cce38ad810ee3b.
+
+Latest Classic notice styling (2026-10-19): replace green message text with
+shaded white text. ssa_classic_hud_text now maps the original font brightness
+to neutral OBJ palette shades; preserve shape/alpha/backing and original ROM
+palette. Pickup IDs8C..AB render centered at Y128, below the selector Y108..124
+and above the bottom HUD, including when the selector is hidden. Other notices
+(boss/death/Game Over) retain their original base Y; strings/timers/controllers
+unchanged. This overrides prior green-notice/upper pickup-position instructions.
+Native sanitizer/MSVC121,593 checks/366 draws, Windows260 checks and768 exact PNG
+comparisons pass. Three languages verify white shaded pickups under a visible
+selector and cleared old position, plus white Game Over at Y64. Both renderer
+captures inspected. Static executable rebuilt, SHA256:
+b1ea3560a7ea13fc78a71202b62ddb0855e4bc4b9261da6cacad55260a93975d.
+
+Original HUD lives (2026-10-19): native hud_state now projects the authoritative
+game.life_game.continue_flag into hud.game_value each controller pass. It was
+left zero, so Original's retained type16 digit (animation6B+game_value) always
+displayed0 while Classic was correct. Original artwork/controller timing stays
+unchanged; display now follows5/3/2 starts, retry deductions and final0.
+Native sanitizer/MSVC26,453 death/life checks over30 deaths/21 retries/9 Game
+Overs inspect the original digit before each death and on its first frame.
+Focused HUD sanitizer/MSVC121,613 checks/368 draws, Windows260 checks and768 PNG
+comparisons pass; Original3 captures inspected in software/GBA modes. Windows
+native life comparison saved in build/original-hud-lives-windows-core.json;
+full wall-clock death loops were not repeated for this HUD-only binding change.
+Static executable rebuilt, SHA256:
+0ce06a81d65e922dd5a4253478345c0cdf84dfd3ef992c988ddffe9e3ea8800b.
+
+Latest NETRICSA correction (2026-10-19): Classic's top-right panel is UNREAD
+weapon/enemy dossiers, NOT lives. This overrides all earlier Classic life-panel
+bindings; Original HUD's type16 still shows real remaining lives. Add per-run
+SsaNetricsaJournal discovered/read masks (10 weapons,12 enemies) in native game
+and in-memory carry. Initial/acquired weapons create entries; enemies unlock
+only from actual kill counters or dead corpses, never from spawning or attacks.
+Each type contributes one unread entry; duplicates do not refresh it. Native
+read service acknowledges only known masks. UI availability uses kills or known
+entry masks throughout keyboard/number/illustration/wheel paths; hidden show_all
+remains diagnostic-only. SsaNetricsaData appends weapon_entries/enemy_entries;
+the ctypes oracle layout was updated. Statistical rows remain actual counts.
+On successful Windows presentation, acknowledge only a fully visible selected
+weapon/enemy dossier; fading/closing/briefing/stats acknowledge none. Simply
+opening NETRICSA does not clear all messages. Campaign carries retain the journal;
+retry reload overlays CURRENT journal onto the old entry equipment snapshot,
+preserving newly learned/read entries after death. New runs reset it. Disk
+save/settings/scores formats unchanged. Native sanitizer/MSVC121,632 HUD checks/
+368 draws include real kills, queued acquisition, repeat suppression, read flags,
+counter-only region changes and carry. NETRICSA19,561 checks/36 starts/5,292 ticks
+plus2,684 ROM text rows/174 records/405 controller calls pass. Windows276 checks
+verify presentation-based reading and retry persistence in both renderers;
+768 exact PNG comparisons still pass. Captures inspected. Static game SHA256:
+72facd3f8b0e69a0d9335edcede171e56ff51a6b7e4899f6dcde11898032e7f6.
+
+Latest Classic NETRICSA notification (2026-10-19): newly discovered unread
+weapon/enemy types start hud_netricsa_ticks180. First120 ticks draw retained
+analyzing text sprite79 at100,28 (original pixels/spelling); the top-right inbox
+at216,0 alternates original green65/white66 panels and shaded digits every15
+ticks for3s. Positions reference Croteam Serious-Engine Player.es upper-center
+analysis (20% height) and Common/HUD.cpp upper-right inbox; this requested blink
+is native policy, not recovered GBA behavior. netricsa_store compares against
+known journal masks; duplicate kills/acquisitions and old carry/retry entries
+do not retrigger. Reading all unread entries cancels. Pause freezes the timer;
+draws never mutate it. Death/completion clear it, automap/clean captures hide it.
+Timers are not carried/saved. Original HUD remains unchanged. Sanitizer/MSVC
+Classic suite passes123,666 checks/372 draws, including640 direct sprite pixels,
+both phases/renderers, exact120/180-tick boundaries, pause, duplicate suppression
+and read cancellation. Windows276 presentation checks and768 PNG checks pass;
+normal/reference and concurrent launcher startup/restart checks pass. Four
+notification captures inspected; no campaign replay or matching claim.
+All125 libraries and static Windows frontend rebuilt, SHA256:
+5039e194da356841e9cab8968895c9b9c1ee8edd6531b035d10f9e74a3e0eaad.
+
+Latest Classic HUD positioning (2026-10-19): follow Serious-Engine Common/HUD.cpp
+anchors with retained full-size GBA art and1px selector/ammo gaps. Score frame
+2,2 (digits14,4), inbox215,2 (digits228,4), health icon2,141 (digits21,143), armor
+2,121 (digits21,123), ammo rightmost223,142 ending237,157. Finite weapon66,141,
+or58,141 with all eight badges; infinite weapons77,141. Boss frame91,14.
+Selector103..119 clears armor even with ten icons; pickup text127..134 follows
+the reference's82% position. IMPORTANT user clarification: leave the top-center
+timer panel EXACTLY at its former88,0, with its old digit positions and viewport
+offset. Do not recenter/reposition it as part of subsequent HUD adjustments.
+PC renderer now treats the Classic canvas as a layout atlas: classic_region
+anchors score/status to actual left/top/bottom edges and inbox/ammo to right
+edges, preserves uniform pixel-art scale, centers selector/boss/notices and
+places weapons by screen width with ammo clearance. In taller windows boss
+clears the retained timer and analysis clears boss. Keep these region bounds
+in sync with future Classic layout moves. Original rendering is unchanged.
+Sanitizer/MSVC125,398 checks/380 draws, Windows276 presentation checks and768
+direct PNG comparisons pass. Samples verify854x480 and640x480 edge/weapon
+anchors, retained timer and boss/analysis clearance. Egypt/Rome whole-layout
+captures include all ten weapons, armor, eight ammo badges and boss; inspected
+native, software, widescreen and4:3 captures. No campaign replay/matching claim;
+ROM unchanged. Static Windows frontend/125 libraries rebuilt, SHA256:
+ec424ed99e9b101cb958b7fae9663350880f61d3727d0b75683db0a500bac6a9.
+Normal/reference and concurrent launcher startup/restart checks also pass on
+this final executable; see windows-native-startup-validation.json.
+
+Latest familiar NETRICSA weapons (2026-10-19): on map0, chainsaw and
+Schofield/Colt do not count as NEW dossiers. The native journal snapshot
+automatically acknowledges next.weapons&3 only on that map, after actual
+ownership. They remain browsable but add no unread count or analyzing/inbox
+notification. This includes the alternate-mode starting pistol; unowned Colts
+stay locked. Read masks persist through carry/retry, so familiar weapons do
+not become new on advancement. Fresh standalone later-level starts retain
+ordinary discovery rules. Other weapons and killed enemies still alert;
+no equipment, acquisition timing, UI availability or save format changed.
+Notification fixtures now acquire shotgun/Tommygun through normal pending
+weapon handoff. Journal tests cover silent first-level starters/Colt pickup,
+new weapons/kills, carry and later standalone starts; the alternate starting
+Colt is also checked. Windows tests acquire and present the shotgun dossier,
+then verify its read mask survives retry. Focused sanitizer/MSVC125,235 checks/
+380 draws, Windows282 presentation checks and768 PNG comparisons pass.
+Static Windows frontend/125 libraries rebuilt, SHA256:
+bd1edc0d6fb323859bcfaa9a18b4e32e998db22a4a368ba2f96da7fc7af98233.
+No campaign replay or full launcher suite repeated for this journal-only change;
+the prior launcher report is for the preceding executable. ROM unchanged.
+
+Latest NETRICSA starter policy (2026-10-19): ALL levels' starting equipment is
+familiar, including password/selected-level loadouts and alternate starts.
+This overrides the preceding restriction to first-level starters and the old
+claim that fresh later-level loadouts notify. netricsa_weapons acknowledges
+newly owned starter bits only while frame_game.counter==0; read-only snapshots
+apply the same rule, and native tick commits it before simulation/pickups.
+Already-known carried unread bits stay unread: do not clear them merely because
+the player carries those weapons into another map. New in-level acquisitions
+still notify. The earlier explicit first-level Schofield familiarity/pickup
+exception remains. No inventory, UI availability, gameplay timing or save-format
+changes. Focused tests cover36 level/difficulty loadouts, alternate starts on
+all12 maps, first ticks, later-map pickups, and unread carry preservation.
+Sanitizer/MSVC125,204 checks/380 draws, Windows282 presentation checks and768 PNG
+comparisons pass. Static Windows frontend/125 libraries rebuilt, SHA256:
+246eccf373350deee8c7336bf39ef5b6595c9335fc3dffb77e22b694773e51c8.
+ROM unchanged; no campaign replay or full launcher suite repeated this pass.
+
+Latest TFE HUD correction (2026-10-19): OVERRIDES the old instruction to retain
+the timer panel at88,0. That panel is now HIGH SCORE at88,2, displaying
+max(g.high_score,g.score), with the clock digits directly below at105/120,14.
+Windows level_options binds high_score from the valid saved score table's first
+record (fallback0); the score file/qualification flow is unchanged. The native
+library accepts the host record in g.high_score. High score/clock both follow
+the top edge in4:3/widescreen; the retained horizontal panel placement stays88.
+Boss panel moves to91,26; analysis/inbox attention move down12px when it is
+present to clear the new header stack. Original HUD is unchanged.
+Reference checked: Croteam Serious-Engine Common/HUD.cpp1218..1255 and
+Player.es1869..1872/3481..3489. New-entry timeline now300 ticks:120 analyze,
+30 inbox inward,120 hold,30 return. Idle inbox215,2, attention108,28 (108,40
+with boss), remaining green/white blink every15ticks as requested. Sprite79
+has NO backing rectangle; original pixels/spelling/shadows remain. Inbox
+65/66 keeps its backing and count, disappears at unread0, never leaves a copy
+at the corner while inward, and both count digits fit the retained23px frame
+(glyph area startsX+10). Existing pause, read cancellation, duplicate suppression,
+starter policy and carried unread state are preserved. Shared
+ssa_classic_hud_inbox_position drives native drawing and software anchor
+interpolation; update classic_region alongside any future layout changes.
+Sanitizer/MSVC124,829 checks/383 draws, Windows286 presentation checks and768
+PNG comparisons pass. Tests verify saved/current high-score selection, isolated
+timer updates, saved-table frontend binding, transparent640-pixel analysis,
+travel/hold/return endpoints, no duplicate corner, and two-digit counter bounds.
+Native/software/wide/4:3, actual saved-record and centered-inbox captures inspected.
+Static Windows frontend/125 libraries rebuilt, SHA256:
+20d4a85955fe8a1b6d2bd0f117d762c23d4a3a8ac26ea806968fed7d9247c5c1.
+ROM unchanged; no campaign replay, new matching claim or full launcher rerun.
+
+Latest HUD refinements (2026-10-19): Classic timer backing26x7 at105,14.
+Analyzing sprite79 now uses the TFE Player.es2393..2398 sine-opacity pulse
+(sin(seconds*10)*127+128), blended over the scene in both RGB555/888 paths.
+Phase uses notification simulation time and freezes when paused. Keep the
+separate15-tick inbox color blink and its existing travel/hold/return sequence.
+Use sprite77 at112,92 is shown for unlatched switches within original0429C's
+64-unit sweep. NativeGame owns a dedicated use_query, refreshed after simulation
+into hud_use_available; presentation is read-only. It must not activate switches
+or share world/gameplay/camera scratch. Classic Tommygun ammo has a new shaded
+box magazine badge using original83's frame/OBJ palette; Minigun stays83.
+Original HUD is now a corner layout: score TL, lives TR, status BL, weapon/ammo
+BR, clock top-center. Build from private object copies; preserve live controllers
+and original status scanline Y/palette boundaries. original_hud_oam[6] caches
+central, four corner and clock snapshots for output-space anchoring. Populate
+these only when building into g->oam; private-output calls must not replace them.
+Frontend pause/NETRICSA captures save/restore them alongside g->oam. Suppressed
+or empty-OAM captures use only the explicitly provided full OAM.
+See analysis/classic-hud.md. Sanitizer/MSVC133104checks/395draws, Windows286
+checks+768PNGpixels, hidden intermission6205checks/12pause/6completion routes
+pass. Both renderer/aspect-ratio captures inspected; static125libraries rebuilt.
+Executable SHA256 b07c3e0e16b122ad01680491511fda73516ea30ce3294bcdf1381d8b2e4ac53a.
+ROM unchanged; no campaign replay or new exact-matching claim.
+Fresh test-native-startup -SkipBuild also passes this executable in both renderers,
+including normal/restart and concurrent launcher paths; report updated.
+
+Latest Classic resource colors (2026-10-19): honor TFE Common/HUD.cpp's strict low
+thresholds while keeping normal Classic green. Health<25 red, positive armor<25
+light gray (0xBF tint), selected finite ammo<15% of its own capacity red, individual
+ammo meters<25% capacity red. Exactly25/15%/25% are not low. Health/armor use100
+normalization independent of difficulty. User-requested0.67s/40-tick white flashes
+override alert colors and expire back to the current value's color. Do not change
+badge/frame colors, selected ammo highlights, empty/zero hiding or Original HUD.
+alert_palette in classic_hud.c swaps only the retained green ramp through existing
+ROM OBJ colors, preserving shaded pixels/black/transparency and source assets.
+Note UMT capacity3:1 round is33%, not low. Other finite pools retain their own caps.
+Focused sanitizer/MSVC170256checks/403draws pass both renderers, including all
+8 capacity boundaries, health/armor boundaries, flash priority/expiry, pause,
+read-only output and actual RGB555/888 colors. Egypt/Rome captures inspected.
+Static Windows frontend/125 libraries rebuilt; executable SHA256:
+a8c889df55809079a0f68492ea3028c6ccbd21459282bf6330e7a68ca619ae7a.
+See analysis/classic-hud.md and its current validation reports. ROM unchanged.
+No campaign replay, matching claim or fresh full launcher suite for this change.
+
+Latest timer backing offset (2026-10-19): Classic plate is26x7 at105,13, one
+GBA pixel above its prior position. Numbers stay105,14/120,14 and colon117,15/17.
+
+Latest NETRICSA opening (2026-10-19): manual N/Tab opens the newest UNREAD
+weapon/enemy dossier automatically; after full presentation marks it read,
+reopening selects the next unread in reverse discovery order. No unread ->
+original default page. Automatic pre-level screen retains its briefing page.
+Do not acknowledge a dossier during its fade or early close. Existing successful
+present()/ssa_netricsa_viewed acknowledgment owns this, not opening or init.
+SsaNetricsaJournal.order[22]/order_count retains oldest-first discovery IDs
+(1..10 weapons,11..22 enemies) across carry/retry, alongside authoritative masks.
+netricsa_history validates/fills history on snapshot copies; native tick/read
+commits preserve order. Duplicate types never reorder; simultaneous discoveries
+use stable weapon-then-enemy ID order. History is session-only, no save format
+change. ssa_native_game_netricsa_latest is read-only (-1error,0none,1..22ID).
+SsaNetricsaData.opening_entry selects the available category/record in init
+before fade without changing original default0. Keep test_netricsa_rom.py's
+ctypes Data layout synchronized with this added field.
+Sanitizer/MSVC NETRICSA20950checks +2684ROMrows/174records/405controllers;
+journal/HUD170303checks/403draws; Windows560checks+768PNGpixels; full NETRICSA
+launcher briefing/overlay/control/music/resume routes pass both renderers.
+See analysis/netricsa.md/current reports. Static125libraries/frontend rebuilt,
+SHA256 fbd14808aeb4492e03ebc71b6a34d5f41b127803986e4a1fc481817cbc1e488d.
+No full campaign replay or new matching claim; original ROM unchanged.
+
+Latest NETRICSA cue (2026-10-19): play retained UI sound0x0B through ordinary
+local sound(g,...) exactly when netricsa_store starts the300-tick new-entry
+notification. Centered one-shot/source1, legacy play fallback, effects volume,
+protected local SFX priority; no music command or looping instance. New weapon
+and enemy notifications share this branch. No redraw/pulse/pause/read/duplicate/
+starter/carry retriggers. Never emit audio from read-only snapshots or drawing.
+Focused sanitizer/MSVC171315checks/403draws, Windows560checks+768PNGpixels pass.
+Tests verify both sinks, onset/duplicate suppression, live music-player state,
+real ROM-cue audio/automatic completion/no errors, and SFX volume0 with no music.
+CMake HUD checker now links ssa_audio. Static125libraries/frontend rebuilt;
+SHA256 b521f80abf30ba3e97104cd3672da2c84b181c20580d32aae9045376e9f3ece9.
+See analysis/netricsa.md/current Classic HUD validation reports. No physical
+listening, campaign replay, new matching claim or fresh full launcher suite.
+
+Latest Tommygun ammo icon (2026-10-19): tommy_ammo now draws a front-facing drum
+with feed neck/concentric rim/winding hub in its existing9x11 area. Original
+15px frame/green OBJ ramp, right meter and selection/flash/low-color behavior
+remain. Reference pickup animation3A -> frame word25 -> resource58/image26;
+image1 is the shared Colt, not the ammo sprite. Minigun and ROM unchanged.
+Static125libraries/frontend rebuilt; MSVC171315checks/403draws/two paths pass,
+with native/enlarged atlas and in-game captures inspected. Current hashes/report
+in analysis/classic-tommy-drum-validation.json. No full sanitizer/launcher rerun.
+
+LATEST Original HUD correction (2026-10-19): restore GBA layout/padding exactly.
+This OVERRIDES earlier instructions/logs that rearranged Original to match Classic.
+Lives TL, weapon icon TR, score+clock TC, health/armor/boss status BL, ammo BR.
+No bounding-box normalization/2px margin and no weapon icon104px Y shift.
+Remove original_corner_offsets; full native240x160 OAM now keeps every recovered
+constructor/controller coordinate and transparent sprite padding intact.
+Software-only original_hud_oam[6] groups are now0center weapon/reticle/notices,
+1TC score+clock,2TL lives,3BL status,4TR weapon icon,5BR ammo. Keep pc_renderer.c
+anchor origins synchronized; adjust only viewport origins, never source pixels.
+Private pause/NETRICSA snapshot save/restore remains in effect. Classic unchanged.
+Independent adapter-bypass recovered FCE4/OAM/display checks compare all raw OAM
+entries and153600 native pixels for four default/finite-ammo/armor/high-health/
+long-score Egypt/Rome fixtures. Sanitizer/MSVC333649checks/405counted draws pass;
+Windows560checks+768PNGpixels, original intermission6205checks/12pause/6completion
+paths pass. GBA/wide/portrait/equipped captures visually inspected.
+Static125libraries/frontend rebuilt; SHA256:
+4647317503861ea2e4a9f6539a24ed1d6274a6b6e587d0b1e25c47470202e7b7.
+See analysis/classic-hud.md/current validation reports. ROM unchanged; no full
+campaign replay, new exact matching claim or full launcher suite for this fix.
+
+LATEST NETRICSA cue correction (2026-10-19): new-entry notifications play the
+retained0x0B cue twice ONLY with Classic HUD. Original HUD stays silent.
+First play at analysis onset; second after75 active simulation ticks (1.25s),
+with no overlap: the real ROM cue completes by tick71 at24000Hz. Each is an
+ordinary centered source1 one-shot SFX (legacy fallback supported); preserve
+sound volume, protected local priority and music. Pause freezes the delay.
+Reading all messages, death/completion and switching to Original cancel the
+pending repeat; switching back must not replay old notifications. No sounds
+from drawing/getters; familiar starter/carried items remain silent.
+Validation for latest double-cue correction: ASan/UBSan/leaks=1 and MSVC335944
+checks/405 draws/two paths pass; Windows560 checks and768 icon pixels pass.
+Static125libraries/frontend rebuilt; SHA256:
+1f96bcf3c60678f312ee2b96e86e771136a1238d25b6e203331639b99ff8b2b8
+See analysis/netricsa.md and current Classic HUD validation reports.
+
+LATEST analysing text (2026-10-19): use full on/off blink every15 active
+simulation ticks, NOT the older sinusoidal opacity pulse. First phase visible;
+2s duration/position/boss offset/no backing and subsequent inbox travel remain.
+Recolor sprite79 from its dimmer green24/19 ramp to the existing HUD's bright
+green29/24 ramp, preserving shading, black, transparency and pixel layout.
+Both renderers use this policy. Preserve the latest double Classic-only cue
+and Original HUD silence; no audio timing changes in this visual correction.
+Validation: ASan/UBSan/leaks=1 and MSVC337601checks/409draws/two paths pass;
+Windows560checks+768PNGpixels pass. Analysing on/off captures inspected.
+Static125libraries/frontend rebuilt; SHA256:
+42c166bfdd988592784727387d544dbaec04c9b36a4bdf9a78102d1a6e6a1e11
+See analysis/classic-hud.md/current validation reports. ROM unchanged.
+
+LATEST NETRICSA cue timing (2026-10-19): supersedes the75-tick/1.25s repeat.
+The ROM0x0B sequence stays active about1.18s, but its audible burst ends near
+0.1075s; waiting for sequence completion includes roughly1s of silent padding.
+Use source CUE_TWICE to queue one immediate second burst inside the mixer.
+After the first burst's last voice finishes, restart in the same player on the
+next output sample, discarding trailing sequence rests. Never overlap copies,
+wait for gameplay frames, loop indefinitely, or restart music. This service is
+for single-burst UI cues, not multi-burst songs. Source CANCEL_REPEAT preserves
+the current sound while canceling its queued repeat. Stop/reset/retire clear it.
+Classic-only notification source1 uses this path in Windows. Original remains
+silent. Read-all, HUD switch, death/completion and unbind retain cancellation.
+Legacy sinks without a source service use the measured burst length rounded
+up to7 simulation ticks; this compatibility path has one-frame precision only.
+The Windows mixer path is sample-contiguous. Analysing blink/palette unchanged.
+Latest contiguous-cue validation: sanitizer/MSVC357231checks/409draws pass;
+Windows560checks+768PNGpixels pass. Real24/48kHz comparison proves exactly two
+sample-contiguous bursts with no sequence padding. Full MSVC audio660573checks,
+131 audible songs/zero decoder errors passes after updating its stale final-life
+Game Over fixture; no gameplay change. Static125libraries/frontend rebuilt;
+SHA256 6aa4beab75a8d8c699d2d313b9b550a309aec6245ac5ccc6d2a52bffd7dd6582
+See analysis/netricsa-cue-validation.json and analysis/netricsa.md.
+
+Latest aspect setting (2026-10-19): Settings order is Display mode, Renderer,
+Aspect ratio, Music style, Music volume, Sounds volume, Back. Native is default
+and retains full software output size. GBA fits a3:2 software viewport inside
+that size, then existing aspect-preserving presentation centers it with black
+bars. Constrain render dimensions before drawing, never stretch or crop a
+completed frame. Dynamic client sizes and explicit render-resolution bounds
+both apply the constraint. In-game overlay captures naturally keep the resulting
+viewport and existing mouse-coordinate transforms; original menus retain3:2.
+With Renderer=GBA, Aspect ratio shows disabled gray GBA, ignores mouse/activation
+and is skipped by keyboard navigation. Retain the software preference so renderer
+switching restores it. Native/GBA choices persist; Clear Data resets Native.
+Settings version9 keeps16 bytes: low7 version bits=9, byte8 bit7=aspect. Existing
+versions1..8 decode to Native and retain all other fields. Keep CRC validation
+and reject flags on older versions. SsaSettings now has12 unsigned fields;
+ctypes Menu layout must match. Settings rows/grid are8/24/40/56/72/88/120/152,
+with volume bars104/136, all aligned to the existing8px grid.
+Latest aspect validation: sanitizer/MSVC38958 core settings checks and Windows
+23614checks pass, including12 real render/present variants and persisted choices.
+HUD357231checks/409draws, Windows560checks+768PNGpixels, native menu76171checks/
+10699frames pass; localized settings and native/3:2 captures inspected.
+Additional test_menu_rom.py FAILED at the existing Quit main-menu extension
+(5 native rows/y74 vs4 original rows/y82), unrelated to Aspect; do not count it
+as passed or revert requested menu behavior. See analysis/display.md.
+Static125libraries/frontend rebuilt; SHA256:
+ccf5b4a6179aa9ca96d4b3ca1d67918a555f358e4f206ef7d13eac9b54993906
+Evidence: analysis/aspect-ratio-validation.json/current settings/HUD reports.
+ROM unchanged; no full campaign validation.
+
+Latest Back-row adjustment (2026-10-19): Settings and Extras Back labels now
+use y144 instead of152, one8px tile higher, with matching mouse regions and
+blank bottom padding. Keep Settings sound-slider hit coverage through y143;
+Back clicks use y144..151. Extras Back uses y136..151. The volume bars are now
+8 raster pixels high (height7 inclusive), ending at143, so their bottom border
+does not overwrite the raised Back text. Other rows/values and keyboard order
+are unchanged.
+Back-row verification: MSVC38958 core/Windows23614 settings checks pass;
+Settings/Extras captures inspected. Rebuilt125libraries/frontend; SHA256:
+a1f8766456f5ee024674693462ef30b6bc2fe362f07d376e25f9f25e8b69daf7
+Current evidence in analysis/windows-audio-settings-validation.json.
+
+Latest M binding (2026-10-19): removed M mute actions from main menus,
+NETRICSA, chapter screens and pause/completion. Gameplay M remains automap-only,
+gated by Extras, with no audio toggle. Password/score typing of M stays intact.
+The low-level mute service remains for diagnostics, not a keyboard binding.
+Existing audio startup diagnostic now checks audio_m_key_preserves_mute instead
+of the removed audio_mute_toggle action; its PowerShell validator matches.
+Static125libraries/frontend rebuilt; existing hidden-window automap checks
+pass1053 assertions/four paths/both renderers/Egypt+Rome, retaining mute state.
+Evidence: build/automap-tests/m-key-route.json. No full audio startup or campaign
+rerun was performed for this small binding change. SHA256:
+41c695c3977b3f6b7b56f396816f06732b1507bad0db7e4daa5b66260a0d52c3
+
+LATEST Tommygun ammo icon (2026-10-19): replace the drum with two vertical
+cartridges,3px thick/11px long in the9x11 badge interior, versus Minigun's five
+short horizontal rounds. Keep its original image83 frame, meter, green shading
+and selection/flash/alert behavior. Original ROM/Minigun/pickup art unchanged.
+Existing MSVC357231HUD checks/409draws/two paths pass; comparison preview inspected.
+Static125libraries/frontend rebuilt; SHA256:
+63b406c7bec3424271e6086b61987b55da767632d9ab386d305cff8b2b7f4c49
+See analysis/classic-tommy-bullets-validation.json and analysis/classic-hud.md.
+
+Latest Settings labels/spacing (2026-10-19): Aspect ratio's GBA choice is now
+labeled3:2, including its disabled value under the GBA renderer. This is a
+presentation-only rename; retain SSA_ASPECT_GBA and version9 saved encoding.
+Move both sliders and their percent values up one8px tile: y96/128 rather than
+104/136. Labels stay at88/120 and Back at144. Shared BAR_TOP also moves their
+mouse hit areas; existing pointer checks use y100/132. No new tests were added.
+Settings-spacing validation: existing MSVC38958 checks pass; updated Native and
+disabled3:2 captures inspected. Rebuilt125libraries/frontend; SHA256:
+8f45d96387d48665579286290a1d255e27c023238de8a5cd0669bd99c1ab0941
+Evidence in build/settings-spacing-tests/. No new tests added.
+
+LATEST NETRICSA repeat timing (2026-10-19): add silence equal to ONE audible
+cue duration BETWEEN the two plays. This supersedes back-to-back playback.
+Measure first-burst active output frames in the mixer, then wait that many
+output frames before restarting once. For0x0B the burst/gap are about0.108s;
+do not include its roughly1s trailing sequence padding. cue_started2 owns the
+gap; cue_frames records duration and cue_gap counts remaining silence. Pause
+freezes the gap, cancellation clears the queued play, reset/stop clear all.
+Pending cue instances remain busy during silence so their slots are reserved.
+Classic-only/source1 and Original silence remain. Legacy sinks approximate
+first sound+equal gap with13 simulation ticks; Windows uses exact sample counts.
+Equal-gap cue verification: sanitizer/MSVC390355checks/409draws pass; Windows560
+checks+768PNGpixels pass. Real24/48kHz first burst/equal silence/second burst
+sample comparisons and gap pause/cancel pass. Full MSVC audio660573 checks,
+131 audible songs/zero decoder errors pass. Rebuilt125libraries/frontend;
+SHA256 7278284217a42b848edce0d50912f6ba3c91d0a807a695ea5d50b7e68119a315
+See analysis/netricsa-cue-validation.json and current Classic HUD reports.
+
+Tommygun editing export (2026-10-19): user requested the sprite for manual
+editing. Created assets/classic-hud/tommygun-ammo.png,16x16 RGBA, exact current
+badge/palette/alpha without dynamic meter. This is an editing reference, not
+a new runtime dependency. Do not overwrite it on future exports: the user may
+have edited it. Game/code/build unchanged by this export.
+
+LATEST Tommygun supplied art (2026-10-19): user replaced the export at
+assets/classic-hud/tommygun-ammo.png and explicitly selected this local file
+as the final sprite, superseding the two-round code pattern and earlier image.
+SHA256 e5ae9c9e20c6667cbe9f701ff4cce41295749ffe30af15c87775c2692364f071.
+Import exact16x16 RGBA pixels with scripts/import-classic-tommy-ammo.ps1 into
+src/classic_tommy_ammo.inc; render those palette indices directly, with no
+resizing, cropping or color adjustment. Importer accepts only exact ROM OBJ
+colors and binary alpha. The meter is still rendered separately, with existing
+selected/flash palette swaps. Keep the user's PNG unchanged; it is now the
+editable source, not an export to regenerate from the old pattern. No runtime
+PNG dependency. HUD provenance includes this PNG and importer on future runs.
+Tommygun PNG import verification: existing MSVC390399 HUD checks/409 draws/two
+paths pass;446 direct source-PNG pixel comparisons/Egypt+Rome pass, excluding
+only the separate meter. Rendered preview inspected. User PNG unchanged.
+Rebuilt125libraries/frontend; SHA256 bbad6918a6e4414c67b20be73c7dcc3ea2135a9e493fdba6115d242ac5fc7655
+Evidence: analysis/classic-tommy-import-validation.json.
+
+Classic intermission fonts (2026-10-19): in Classic HUD mode, pause/quit and
+level-end labels/greetings use the original main-menu green font; scores,
+pending/settled bonus values, pause heading and selected choices use white.
+Intermission owns a menu-font canvas and overlays glyphs only on the frozen
+level. Preserve localized ROM notice text, original row positions, opaque black
+outlines, blend/readiness, tally timing and final readable/audio hold. Original
+HUD retains the original red/yellow animated glyph/number sprites unchanged.
+Focused sanitizer/leak and MSVC intermission tests agree on145940 checks,
+36 original tally starts/69917 frames plus Classic pause and first/final-level
+completion fixtures in all3languages. Windows routes pass12pause/6completion/
+6main-menu Quit paths in both renderers; Classic frontend passes560checks/two
+renderer paths. Pause, bonus and localized final-greeting previews inspected.
+Rebuilt125libraries/frontend; SHA256
+a7c0f66357c9111e0c66bdebdc531919aecd1f95bbeb6a1276d44c218bc0ea6a
+See analysis/completion.md, analysis/intermission-validation.json and
+analysis/windows-intermission-validation.json. No campaign playthrough or
+physical input/listening test was performed for this font change.
+
+LATEST NETRICSA cue timing (2026-10-19): supersedes equal-gap/back-to-back
+policies. Keep two Classic-only cue0x0B plays, separated by silence HALF the
+first audible burst's measured duration (ceil(output_frames/2), about54ms).
+Do not count the ROM sequence's trailing rests. Legacy sinks use10 simulation
+ticks from first to second start (hud_netricsa_ticks290). Preserve Original HUD
+silence, protected local source1, pause/cancel/stop/reset and exactly two plays.
+tests/test_classic_hud.c verifies exact half-gap samples at24/48kHz and retains
+gap pause/cancellation and notification integration checks.
+Half-gap validation: ASan/UBSan/leaks and MSVC382477 checks/409 draws agree;
+Windows560checks/two renderers plus768 supplied icon pixels pass. Rebuilt125
+libraries/frontend. See analysis/netricsa-cue-validation.json and Classic HUD
+reports. No physical listening or campaign replay was performed.
+
+NETRICSA inbox palette (2026-10-19): Classic green/white notification blink
+always renders green sprite65. White uses the shared green-to-neutral palette
+swap, preserving every pixel, black outline and transparency; do not switch
+to white sprite66. Count uses the same swap. Analysis text, blink/movement and
+half-duration audio gap remain unchanged. Existing MSVC382477 checks/409draws
+and Windows560checks/two renderer paths pass;125libraries/frontend rebuilt.
+Inbox preview inspected. See analysis/netricsa-inbox-palette-validation.json.
+No new tests or broad sanitizer/campaign rerun for this one-line art change.
+
+Classic HUD notification/pause correction (2026-10-19): GAME PAUSED is green,
+including localized equivalents. Selected Continue/Quit remains white; quit
+confirmation heading retains white. NETRICSA inbox no longer slides: at
+ticks180 it snaps from idle215,2 to108,28 (108,40 with boss), holds120ticks,
+then snaps back at ticks60. attention is only0/30, including PC anchor offsets.
+Keep300tick notification lifetime, analysis blink, green-sprite palette swap
+and half-cue audio gap. Existing Windows/MSVC tests pass382206 HUD checks/
+409draws,145940 intermission checks,560 Classic frontend checks/two renderers
+and6205 pause/completion frontend checks/three languages.125libraries/frontend
+rebuilt; pause/inbox previews inspected. See analysis/classic-hud-snap-validation.json.
+No broad sanitizer/campaign rerun for these small presentation changes.
+
+Alternate double-shotgun insertion cue (2026-10-19): on first entering
+sprite23 in normal reload sequence12, play existing mechanism cue0x28 once,
+centered/local protected source1. alternate_after observes the animated frame
+and uses alternates.shotgun_inserting as an edge latch, so the held frame's
+three repeated entries and pause/resume never retrigger it. Option changes
+reset the latch. Last-shell sequence22 has no insertion/cue; Original mode
+and105tick/1.75s cadence remain unchanged. Extended existing alternate timing
+fixtures verify eight insertion cues in software/GBA third-person cycles,
+pause on insertion and none in the last-shell case. GCC ASan/UBSan/leaks and
+MSVC agree on2318869checks/5881frames; Windows input routes and original switch
+regression pass.125libraries/frontend rebuilt. See analysis/alternate-weapons.md
+and current alternate-weapons-validation.json/windows-alternate-weapons-validation.json.
+No physical listening or campaign playthrough was performed.
+
+Classic ammo meter transparency (2026-10-19): remove the black3x11 clearing
+rectangle beneath ammo meters. Draw only the filled bar over the icon; empty
+space must preserve the ammo sprite rather than clearing it to black/zero.
+Keep full-bar art, low-ammo red, white flashes, icon palette swaps and existing
+HUD backings. Existing checks compare exposed pixels with a no-meter icon and
+restrict meter color checks to the filled height. MSVC382094checks/409draws and
+Windows560checks/two renderer paths pass.125libraries/frontend rebuilt; low
+ammo preview inspected. See analysis/classic-ammo-transparency-validation.json.
+No broad sanitizer/campaign rerun for this small presentation change.
+
+Classic pause heading spacing (2026-10-19): keep GAME PAUSED/localizations
+green and insert one blank16px text row beneath it, matching completion's
+title-to-time-bonus gap. Latest request shifts ALL pause text one16px row up:
+heading Y40, Classic root Continue/Quit Y72/88; Original choices Y56/72.
+Latest Classic quit-confirmation Yes/No move one row down to Y72/88 while its
+heading remains Y40. Mouse hit rows and selection colors follow the moved text.
+Completion layout is unchanged. MSVC145940 intermission checks and
+Windows1666 Classic/6205 pause-completion checks pass in both renderers/three
+languages;125libraries/frontend rebuilt. Pause preview inspected. See
+analysis/classic-pause-spacing-validation.json. No broad sanitizer/campaign
+rerun for this small layout adjustment.
+
+Death retry reveal (2026-10-19): retries with lives remaining now bypass
+NETRICSA/map and enter the same60tick black-to-level reveal as finish_map.
+reload captures death_active before clearing it; only that path skips screens.
+Shared begin_level_reveal restarts gameplay audio, clears tally flags, resets
+reveal_presented_at, bootstraps the ready weapon/HUD and enables ordinary
+movement during fade. Preserve entry inventory/score, reduced lives, journal,
+initial/advance briefings and last-life Game Over/Main. Do not count retries
+as map starts. MSVC26453 core checks and Windows4697889 checks pass:24 deaths,
+12 direct retries,12 Main returns,4 real wall-clock cycles,2 HUDs/2 renderers/
+3 languages. Existing Classic560/intermission6205 frontend checks pass.
+125libraries/frontend rebuilt. See analysis/retry-reveal-validation.json and
+analysis/run-exit.md. No broad sanitizer/campaign replay for this Windows-only
+routing change; user data untouched.
+
+In-game NETRICSA music continuity (2026-10-19): opening/closing the overlay
+must not restart/reset/fade the current level music. Only pre-level NETRICSA
+uses audio_screen command7 and the closing music fade. In-game finish leaves
+the mixer alone; netricsa_tick services UI sound commands without music
+commands. Sequencer/voices/audio worker keep running while gameplay freezes.
+Both renderers pass1666 Classic frontend checks including four repeated
+open/navigation/close cycles compared with uninterrupted reference mixer
+player0/music/master gain. Full test-netricsa.ps1 passes20950 native checks,
+two initial-briefing/overlay/resume routes and70 live level-music checks per
+renderer (zero audio errors).125libraries/frontend rebuilt. See
+analysis/netricsa-music-continuity-validation.json and windows-netricsa-validation.json.
+No physical listening or broad sanitizer/campaign replay for this Windows-only
+audio-routing change.
+
+Classic leaderboard/boss icons (2026-10-19): render7x7 green podium/skull
+glyphs inside the retained panel's left square. High-score podium is89,3;
+boss skull92,27. Both use retained green shades29/19/9 with upper-left light.
+Preserve frame and divider. Boss fill moves to101,29 with
+maximum47x4 inside the right rectangle (old93/55wide fill crossed the icon).
+Existing full-health checks retain skull eye transparency and rectangle
+padding. MSVC382452checks/409draws and Windows1666checks/two renderer paths
+pass;125libraries/frontend rebuilt. GBA/4:3 PC previews inspected. See
+analysis/classic-bar-icons-validation.json. No broad sanitizer/campaign rerun
+for this small presentation change.
+
+Classic timer backing offset (2026-10-19): backing is now X104/Y13,26x7,
+one pixel left of its previous X105. Keep digits at105,14 and120,14 and colon
+at117,15/17 unchanged.125libraries/frontend rebuilt; existing HUD checks are
+recorded in analysis/classic-timer-offset-validation.json. No new tests or
+broad sanitizer/campaign rerun for this one-pixel layout adjustment.
+
+PC ammo/duplicate pickup rules (2026-10-19): all native starts enable
+pickup.pc_pickups. Loose ammo and ammo packs can fill reserves without owning
+the gun; ammo alone must not grant it. Owned gun pickups give their normal
+half-capacity ammo directly, without queueing acquisition or changing weapon.
+Caps remain; full loose-ammo/duplicate-gun pools refuse pickup. The alternate
+second Colt keeps priority through repeat_weapon, even with full Colt ammo.
+Unowned weapon acquisition still waits for the existing animation handoff.
+ssa_pickup_touch_pc selects this policy; original touch/alternate entry points
+and inventory helpers keep ROM behavior. Real multiplayer request/replay and
+script/effect/removal order remain unchanged. Carry already preserves unowned
+reserves. New real-contact checks cover all8 finite gun/ammo types, first gun
+acquisition retaining stored ammo, duplicate grants/no switch, capacity clamp/
+refusal, ammo packs and carry restoration, with Alternate weapons Off/On.
+GCC ASan/UBSan/leaks and MSVC agree on2320339checks/6507frames/123pickups;
+original pickup5420 ROM comparisons and Windows input/switch checks pass.
+125libraries/frontend rebuilt. See analysis/pc-pickup-policy-validation.json,
+analysis/pickups.md and current alternate/pickup validation reports. No full
+campaign replay or save-format change.
+
+Manual Colt reload (2026-10-19): R requests the existing alternate-weapon
+reload for partially used single/dual Colts. Preserve recoil wait,1.07s single/
+1.40s dual timing, centered per-hand sound and unchanged reserve ammo. Full
+magazines, other weapons, weapon/variant transitions and automap ignore R.
+The portable input accumulator carries a separate reload_pressed edge, clears
+it on disable/focus loss and blocks OS repeats; original packed GBA input is
+unchanged. R never restarts the level. GCC ASan/UBSan/leaks and MSVC agree on
+2321166alternate checks/7099frames; frontend weapon messages, original switch
+regression and3229Win32 input assertions pass.125libraries/frontend rebuilt.
+See analysis/alternate-weapons.md and current alternate/input reports.
+
+First-person weapon bobbing (2026-10-19): Extras > Weapon bobbing defaults Off;
+the user confirmed one toggle must bob the weapon AND muzzle flashes together,
+not disable flashes. It applies to all10 weapons and both Colt hands, using
+render copies only (0..6px right/0..2px down on240x160). Latest user direction
+moves both Colts and their muzzle flashes in parallel with identical offsets;
+only the left artwork is mirrored. Latest motion
+uses the exact footstep phase (counter times1872): sound13 bottom-left,14
+bottom-right, center at the original baseline between them. Jump height adds
+up to4px dip even from rest and returns on landing. Never lift the original
+bottom crop. Latest user correction forbids enlarging the original sprites.
+Keep the original scales for weapons and flashes. At rest use exactly original
+positions and rendering. User direction removes all edge filling:
+original position is the upper-left movement
+bound for both hands. Do not restore mirrored bob offsets for the left Colt.
+Latest native-aspect request adds PC-only OAM snapshots for unshifted original
+weapon art, nonweapon HUD and centered nonweapon HUD. Software translates the
+weapon canvas in output space so its bobbing pixels can cross the3:2 boundary,
+clipping at the actual viewport edge. Preserve original scale/crop, no edge
+filling, and parallel Colt motion. HUD anchors/reticle do not move. Exactly3:2
+output and reference rendering retain their original composition, and zero
+bob offset bypasses the separate pass.
+Normalize weapon bob amplitude to full strength at straight walking speed8:
+the original squared-speed camera amplitude was half strength there and left
+vertical offsets below one native pixel. Camera/footstep behavior is unchanged.
+The original strict display budget and
+actor-project defaults remain unchanged.
+Preserve
+canonical weapon_action, aim, reticle, firing cadence and reload. Third-person,
+death and automap suppress offsets; ground idle has zero sway and pause
+freezes the phase. Reference
+flashes receive shared120x120 raster offsets after mirroring artwork; software flashes use the
+weapon viewport scale. New actor_collect_screen leaves original project/collect
+entry points at zero offset. Settings version11 retains bobbing in byte8 bit6,
+aspect in bit7 and decals in bit5, with low5bits version and16bytes/CRC unchanged.
+Versions1..9 default bobbing Off. Extras' eight rows use Y16..128/16 with Back144
+and aligned mouse bands.126libraries/frontend built. Current GCC ASan/UBSan/leaks
+and MSVC counts/hashes are in the alternate-weapons validation reports.
+Arch checks observe7 real footstep events
+over140 camera ticks, alternating endpoints17/18 ticks apart. See analysis/weapon-bobbing-validation.json
+and analysis/alternate-weapons.md. No full campaign replay.
+
+Surface decals (2026-10-19): latest user direction replaces cracks/patches with
+very nuanced stain tiles that connect together, including different lighter
+ceiling stains. Latest density correction increases stain tiles and reduces empty
+tiles: use empty/single/end/straight/corner/edge/junction tiles, selected
+from actual occupied neighbors. Extras > Surface decals is one default-Off
+saved toggle for both. Latest request doubles pieces to128x128 at2 world
+units/texel (256-world-unit tiles) and adds full interior stains. Latest correction
+requires the tile system, at most two colors, and noise on random non-stain tiles.
+Use the fixed binary tile library directly: four texture banks each containing48
+empty/diagonal-aware stain pieces plus one sparse noise tile per surface. Choose
+banks per map cell to vary contours, gaps and speckles. All banks share border
+pixels, with differences fading in over16 texels. The old16x16 ranked dither
+lattice is removed; unordered full-tile random thresholds provide natural
+speckles instead of favoring alternating/checker patterns. No ellipse fields, coordinate warping,
+bilinear mask interpolation or per-pixel generated coverage. Fixed cluster stamps
+are randomly selected/oriented on the64x64 selection grid; actual neighbors
+choose compatible corner/edge/full pieces. Cluster activation increases from
+90%/70% to100%/95% for floor/ceiling; these are cluster probabilities, not tile
+coverage percentages. Empty areas remain, with lower ceiling stain density.
+The grid repeats every16384 world units. Approximately
+one quarter of otherwise empty cells use the noise tile (about1.5% floor/1%
+ceiling speckle density); noise never replaces a stain. Tile art is fixed across
+levels and stationary. Use the original surface color plus one darker palette
+shade targeting6% attenuation; baked edge dithering and distance fading introduce
+no extra colors. Latest correction widens the feather profile and dithers the
+entire profile instead of saturating low coverage. Negative noise removes
+irregular interior patches, and interior dithering keeps even full connecting
+pieces porous, with no solid fills. Connected ports match and exposed edges
+are rounded farther inward. Latest request doubles the erosion-detail scale
+and reduces its strength, leaving fewer, larger openings and denser marks.
+Latest blockiness correction is confined to the tile artwork: remove the hard
+whole-quadrant fill used for diagonal support. Blend it into the curved shoulders
+with smooth axis weights, vanishing at the internal midlines and reaching full
+support at matching outer corners. Tests guard both internal midlines against
+rectangular density steps. This texture correction is independent of placement.
+Subsequent placement request increases cluster activation to100% floor/95%
+ceiling. Apply the art to every solid floor and ceiling, excluding blue water
+floors and sky. Palette matching must choose a genuinely darker distinct opaque
+shade rather than returning the original color; pure black uses the nearest
+distinct opaque fallback. Classify water from original palette RGB (blue at least
+4 above both red and green), never from flashed colors. This includes faint noise
+exclusion on water; the identical blue color remains eligible on ceilings.
+Asset-only tests inspect all twelve campaign maps' plane materials under both
+chapter palettes; no campaign playthrough is required.
+Exposed edges
+fade cleanly. Rendering only reads selected tiles and does not use game RNG.
+Original chapter palette
+is retained. Index0 is excluded when shading opaque planes. Sky is
+excluded. Software samples inside existing plane passes, including perspective
+UVs when pitched; depth is unchanged. GBA overlays original visible plane spans
+before actors. Original plane routines and Off rendering remain unchanged.
+Settings v12 stores water reflections in byte8 bit4, decals5, bobbing6/aspect7,
+low4bits version;16-byte CRC/save format retained. Versions1..11 default water
+reflections Off; versions1..10 default decals Off. Extras has nine logical rows,
+eight visible at16..128/16, title0, Back144; keyboard and clickable arrows scroll
+to reveal the last row and mouse bands follow. Each row uses an
+independent font overlay to avoid the original128-glyph limit clipping translated
+last-row values and Back.126libraries/frontend
+build. Current GCC ASan/UBSan/leaks and MSVC counts/hashes are in the surface
+decal reports (55draws/two renderers/three pitch views). Settings39044core/
+Windows persistence and382452HUD/1666Windows
+HUD checks pass. See analysis/surface-decals.md, surface-decals-validation.json,
+windows-surface-decals-validation.json and scripts/test-surface-decals.ps1.
+Only render fixtures were checked; no automated campaign playthrough.
+
+Water glints/reflections (2026-10-19): blue water floors now use randomly placed
+animated glints under the existing Surface decals toggle. Four fixed8x8 frames
+pulse over24 ticks, with seeded position/phase per64-unit patch and128-tick epoch.
+Use the game clock, never gameplay RNG; pause freezes animation. New saved Extras
+> Water reflections defaults Off independently. Latest user direction requires
+simple symmetrical3D rendering compatible with the GBA renderer. Latest correction
+requires rendering the scene another time and flipping it: the ray tracer and
+8-unit cache are removed. Mirror the camera eye across each visible water plane,
+reverse pitch, render the3D scene again, then vertically flip into the water
+stencil. Clip geometry at the water plane before near clipping/projection and
+omit the water plane itself. Both display modes now reflect walls, ceilings, sky
+and world sprites, with current animation/vertical offsets. Exclude HUD,
+first-person weapon/fixed-screen flashes and recursion. One independent scene
+pass per distinct visible water height; no pass with no visible water. Never
+flip/reuse the primary framebuffer as a substitute for a second scene render.
+Multiply RGB555 water by the reflected environment, with nearest opaque palette
+mapping in the GBA path. Animated glints bypass multiplication. Both effects fade after768
+units and disappear at1536. Existing two-color non-water stain tiles are unchanged.
+The shared native polygon renderer supplies the second pass: software uses output
+resolution; GBA uses240x160 projection sampled into its120x120 indexed plane
+stencil, while its ordinary original rendering remains unchanged. CMake's native
+core/PC-renderer static component shares the backend. Free owner water masks and
+private reflection renderers before map teardown; main depth/gameplay stay intact.
+Water fixtures cover both modes, three pitch views, actual scene passes, multiple
+water heights, reflected actor pixels, no-work dry frames, glint ordering/animation
+and unchanged state. GCC ASan/UBSan/leaks and MSVC validation reports apply;
+Windows settings persistence and full static build pass. See
+analysis/surface-decals.md and current validation reports. No campaign replay.
+
+Classic Use prompt palette (2026-10-19): retained sprite77 at112,92 must match
+the HUD green ramp. Its original olive shades are palette-swapped to bright
+green with relative shading, black and transparency preserved. Share the
+Analyzing mapping helper, retaining Analyzing's existing green-only mapping.
+Do not recolor Original HUD assets or change interaction/prompt timing.
+The existing real-button HUD fixture checks shape/transparency, green-only
+lettering and a full-bright green peak. Its save roundtrip expectation is now
+version12, matching the current settings format. See analysis/classic-hud.md
+and current Classic HUD validation reports.
+
+Non-glint water decals (2026-10-19): add expanding broken ripple rings and short
+wavelets beside the existing glints. Surface decals controls both, with no new
+setting or save change. water_ripples.inc holds two fixed banks of six16x16
+frames at2world units/texel. Independent seeded64-unit patches randomize position,
+variant, orientation and phase;2/3 eligibility per256-tick epoch,72-tick lifetime
+and12 ticks/frame. Use a darker retained water-palette shade targeting20%
+attenuation, never the glint's near-white shade. Both types of animated decal
+bypass the reflection multiply. Preserve pause-safe game-clock animation,
+768..1536 distance fading, world anchoring, depth and gameplay RNG/state.
+Focused surface checks/captures cover the shared toggle, non-glint animation,
+palette/shader order, paused repeat draws and advancing game-clock frames in
+both display modes. See analysis/surface-decals.md and current surface reports.
+
+Rendering optimizations (2026-10-19): flat PC rays share per-draw decoded line
+coordinates/numerators, refreshed even if map storage addresses are reused.
+Power-of-two texture dimensions use exact unsigned-mask wrapping after signed
+floor conversion. Reflections keep full resolution and every-frame scene passes,
+but rasterize only the reflected row interval visible in each water-height
+stencil; preserve original horizontal interpolation to avoid texel changes.
+Row compositing skips equal-size coordinate division. Water animations share
+coordinate conversion and reject inactive phases before placement hashing.
+No art, quality, simulation or settings changes. tests/bench_renderer.c compares
+12 frozen Egypt/Rome render fixtures; local paired MSVC timings save30–34% for
+flat dry views and11–23% for water views, with identical color/depth hashes.
+Dry pitched views show no consistent gain. See analysis/render-performance.md
+and analysis/renderer-optimization-validation.json. Surface checks52,135,255
+(MSVC/GCC agree), general renderer11,169,540 sanitizer checks and both Windows
+startup modes pass. test_pc_renderer.py now links libm for water samplers.
+
+Slave Compound pool (2026-10-19): classify map3/color120/floor96 as water via
+ssa_surface_decals_water. Sector9 is the large pale pool (RGB5 27/30/31), missed
+by saturated-blue detection. Same-color sectors38/39 at144/128 are dry stairs;
+do not broaden palette120 globally. SsaSurfaceDecals now retains its level.
+Use the height-aware helper in PC flat/pitched water and stain exclusion,
+reflection stains, and GBA water/stain overlays. Original palette/geometry and
+Extras controls are unchanged. Surface suite52,224,497 checks/57 draws passes
+ASan/UBSan/leaks and MSVC with matching counts; actual pool captures and GBA
+pool/stair span checks included. Both level3 frontend startup modes pass.
+See analysis/surface-decals.md and current validation reports.
+
+Water density correction (2026-10-20): both glints and non-glint decals use
+the same seeded64-unit tile occupancy gate. Approximately half the tiles stay
+empty through all animation epochs; active tiles retain their original timing,
+placement and per-epoch probabilities. Empty means plain/reflected water, not
+an opaque decal. The shared sampler applies this in PC and GBA modes. See
+analysis/surface-decals.md. Existing surface checks pass52,224,727 assertions
+in GCC ASan/UBSan/leaks and MSVC with matching counts. Windows build and
+level3 startup smoke pass. No settings or animation art changes.

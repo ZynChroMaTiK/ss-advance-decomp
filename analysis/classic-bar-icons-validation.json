@@ -1,0 +1,35 @@
+{
+    "result":  "pass",
+    "scope":  "Classic high-score podium and boss skull shaded with retained HUD green ramp; boss fill confined to right rectangle",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  382452,
+                      "draws":  409,
+                      "paths":  2
+                  },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  1666,
+                    "paths":  2,
+                    "music_continuity_cycles":  4,
+                    "hidden_window":  true
+                },
+    "boss_fill":  {
+                      "x":  101,
+                      "y":  29,
+                      "width":  47,
+                      "height":  4
+                  },
+    "previews_inspected":  [
+                               "build/classic-podium-tests/classic-reference-gba-0.bmp",
+                               "build/classic-podium-tests/classic-reference-4by3-0.bmp"
+                           ],
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "executable_sha256":  "a5a658b4a4f26a41047c1506ca85d15d2249832d4173d93ff6beb03aeae5f7dd",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "d451674d8e4b8c3271ea2f3584d654606676f6d334953e3c71e49cbfe6396adf",
+                          "tests/test_classic_hud.c":  "063805d5c23c637943c908636cabc099b9d394b9fa9abacfee4297400b6b487c",
+                          "tests/test_classic_hud_win32.c":  "a14bef98bf12d5ae546c9ca16b521a9b7fdfd59ea18d8f1340b2aa7cceac002c"
+                      }
+}

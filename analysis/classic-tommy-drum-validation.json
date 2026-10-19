@@ -1,0 +1,15 @@
+{
+    "result":  "pass",
+    "core":  {
+                 "result":  "pass",
+                 "checks":  171315,
+                 "draws":  403,
+                 "paths":  2
+             },
+    "scope":  "Tommygun drum-magazine icon, existing Windows native HUD checks, both renderer captures",
+    "executable_sha256":  "4a070d6345064c45230ee272c50940429b09482a6f29ed1e26bed0be870a246a",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "ecbf2b32fd4fa43aefbe2aee7ced1eac344c71e0268cc28a0f173fd5eaad9e1c",
+                          "tests/test_classic_hud.c":  "84100da52890580ee7b14733fb0e35bcbdeb870d5bb9164c93105f7a5964fc2f"
+                      }
+}

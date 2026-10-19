@@ -1,0 +1,23 @@
+{
+    "result":  "pass",
+    "scope":  "Final user-supplied16x16 Tommygun ammo sprite, exact OBJ palette and alpha",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  390399,
+                      "draws":  409,
+                      "paths":  2
+                  },
+    "png_pixels_compared":  446,
+    "chapters":  2,
+    "dynamic_meter_excluded":  true,
+    "preview":  "build/classic-tommy-import-tests/preview.png",
+    "source_png_sha256":  "e5ae9c9e20c6667cbe9f701ff4cce41295749ffe30af15c87775c2692364f071",
+    "executable_sha256":  "bbad6918a6e4414c67b20be73c7dcc3ea2135a9e493fdba6115d242ac5fc7655",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "9ba73c5942ec601b86240c1afff0f35db1a4bfdc3f7a2fe61a25561513c130c8",
+                          "src/classic_tommy_ammo.inc":  "fdd8cd6aec690e77e4a6642bc39de25cbfe36eb85a8b25336b326add8fdb301e",
+                          "assets/classic-hud/tommygun-ammo.png":  "e5ae9c9e20c6667cbe9f701ff4cce41295749ffe30af15c87775c2692364f071",
+                          "scripts/import-classic-tommy-ammo.ps1":  "2b0a1d2ce4299b738700fb8b1a1b64e8fd79764134fa0dc85385c8441957fa9c",
+                          "tests/test_classic_hud.py":  "b511f2b0b97573d9a5b4791a69de15f0a5a4eb459e6ff1b0ef4c897bf8119691"
+                      }
+}

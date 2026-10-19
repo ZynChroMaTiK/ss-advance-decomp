@@ -13,7 +13,8 @@ typedef struct SsaAudioPoint {int32_t x,y,z;} SsaAudioPoint;
 typedef struct SsaAudioListener {SsaAudioPoint position;int32_t right_x,right_y;} SsaAudioListener;
 typedef enum SsaAudioSourceCommand {
     SSA_AUDIO_SOURCE_PLAY,SSA_AUDIO_SOURCE_LOOP,SSA_AUDIO_SOURCE_MOVE,
-    SSA_AUDIO_SOURCE_STOP,SSA_AUDIO_SOURCE_RETIRE
+    SSA_AUDIO_SOURCE_STOP,SSA_AUDIO_SOURCE_RETIRE,
+    SSA_AUDIO_SOURCE_CUE_TWICE,SSA_AUDIO_SOURCE_CANCEL_REPEAT
 } SsaAudioSourceCommand;
 typedef struct SsaAudioTrack {
     uint32_t pc,bank,stack[3];
@@ -29,6 +30,8 @@ typedef struct SsaAudioPlayer {
     uint64_t clock,serial,source;
     SsaAudioPoint position;
     unsigned positioned,source_loop,local_priority,paused;
+    unsigned cue_repeats,cue_started;
+    uint64_t cue_frames,cue_gap;
     double left,right,target_left,target_right;
 } SsaAudioPlayer;
 typedef struct SsaAudioVoice {
@@ -109,7 +112,12 @@ int ssa_audio_stop(SsaAudio *,unsigned song);
  * source/song (SSA_AUDIO_SONGS means all its sounds). RETIRE stops its loops
  * and detaches one-shots at their last position, allowing death/impact tails.
  * PLAY/LOOP accept NULL position for local centered effects. Source must be
- * nonzero. Returns1/0 for started/empty, count for updates/stops, -1 invalid. */
+ * nonzero. CUE_TWICE plays a single-burst UI effect twice, with a silent gap
+ * half the first burst's duration (rounded up to an output frame), discarding
+ * trailing sequence rests (not for music or
+ * multi-burst effects). CANCEL_REPEAT cancels only its queued second play,
+ * preserving the current sound. STOP/reset cancel the entire pair.
+ * Returns1/0 for started/empty, count for updates/stops, -1 invalid. */
 int ssa_audio_source(SsaAudio *,SsaAudioSourceCommand,unsigned song,
     uint64_t source,const SsaAudioPoint *);
 int ssa_audio_level_music(SsaAudio *,unsigned level);

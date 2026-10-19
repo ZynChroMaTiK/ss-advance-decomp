@@ -64,12 +64,15 @@ static void pc_core(void) {
     key(&p,'H',1,0);CHECK(sample(&p).view_toggle);key(&p,'h',1,1);CHECK(!sample(&p).view_toggle);
     key(&p,'H',0,0);key(&p,'H',1,0);key(&p,'H',0,0);key(&p,'H',1,0);key(&p,'H',0,0);
     CHECK(!sample(&p).view_toggle);key(&p,'E',1,0);key(&p,'E',0,0);CHECK(sample(&p).keys&0x10000);CHECK(!(sample(&p).keys&0x10000));
+    key(&p,'r',1,0);key(&p,'R',0,0);s=sample(&p);CHECK(s.reload_pressed && !s.packed);
+    CHECK(!sample(&p).reload_pressed);
+    key(&p,'R',1,1);CHECK(!sample(&p).reload_pressed);key(&p,'R',0,0);
     /* Disable consumes pending actions, and held actions remain blocked across
      * resume. Movement may resume, because it is a continuous control. */
-    key(&p,'W',1,0);key(&p,' ',1,0);key(&p,'H',1,0);key(&p,'E',1,0);button(&p,1);
+    key(&p,'W',1,0);key(&p,' ',1,0);key(&p,'H',1,0);key(&p,'E',1,0);key(&p,'R',1,0);button(&p,1);
     CHECK(ssa_pc_input_relative(&p,12,0)==1);ssa_pc_input_enable(&p,0);s=sample(&p);
     CHECK(!s.enabled && !s.keys && !s.held && !s.pressed && !s.jump_down && !s.view_toggle && !s.yaw_delta);
-    ssa_pc_input_enable(&p,1);s=sample(&p);CHECK(s.enabled && s.keys==0x40 && !s.held && !s.pressed && !s.jump_down && !s.view_toggle);
+    ssa_pc_input_enable(&p,1);s=sample(&p);CHECK(s.enabled && s.keys==0x40 && !s.held && !s.pressed && !s.jump_down && !s.view_toggle && !s.reload_pressed);
     key(&p,' ',0,0);key(&p,' ',1,0);button(&p,0);button(&p,1);s=sample(&p);CHECK(s.jump_down && s.held==1 && s.pressed==1);
     ssa_pc_input_focus(&p,0);key(&p,'H',1,0);button(&p,1);CHECK(ssa_pc_input_relative(&p,INT32_MAX,0)==1);
     s=sample(&p);CHECK(!s.enabled && !s.keys && !s.held && !s.pressed && !s.jump_down && !s.view_toggle && !s.yaw_delta);

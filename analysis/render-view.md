@@ -1,5 +1,9 @@
 # Native camera and display-local view selection
 
+The later native-game integration now has the recovered normal automap renderer
+and PC M/zoom controls, with a saved Extras toggle. See [automap.md](automap.md). The callback tests and
+low-level display boundaries described below retain their original scope.
+
 `render_view.c` recovers the whole original02B88 routine. It clears through07C94,
 scans all four players for active4/automap8 flags, updates their unsignedA8 zoom
 from held1/2 and GAMEticks, then selects the display-local player's automap or

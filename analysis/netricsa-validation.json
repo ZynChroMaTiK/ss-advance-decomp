@@ -1,6 +1,6 @@
 {
   "result": "pass",
-  "checks": 19553,
+  "checks": 20950,
   "runs": 36,
   "frames": 5292,
   "languages": 3,
@@ -14,16 +14,17 @@
     "controller_calls": 405,
     "german_undefined_format_cases": 12,
     "source_sha256": {
-      "src/netricsa.c": "616e2af7d05b43c5ca32484c961e1bafd86bc5e7aa4586f3bafe565527f1767e",
-      "include/ssa/netricsa.h": "229cd3692665476fb2554766c619aa900a094198b6a605e12411d4abb86e0a46",
-      "tests/test_netricsa_rom.py": "8d3f2c9c23632351dc6098e0c430da4db405707c9d079d55d3c318bb476f0ea4"
+      "src/netricsa.c": "9c1ce2ae3f5d63467ac78bc527b47d3ce48dd761ad7c5e371b88ea783cda7ec9",
+      "include/ssa/netricsa.h": "aa88c2301ddba5de34ef304f5b21dded80baec63404b59e89c8e74611ff9a517",
+      "tests/test_netricsa_rom.py": "e291e162c2a56d8f6de3e7d6eb486cd013e818033ab72fa1a43619cbc8268b0a"
     }
   },
   "source_sha256": {
-    "src/netricsa.c": "616e2af7d05b43c5ca32484c961e1bafd86bc5e7aa4586f3bafe565527f1767e",
+    "src/netricsa.c": "9c1ce2ae3f5d63467ac78bc527b47d3ce48dd761ad7c5e371b88ea783cda7ec9",
     "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
-    "tests/test_netricsa.c": "4359a81351cd98f299cec6cca07354ff94edd3a037bb066721ba496a60ed431c",
-    "include/ssa/netricsa.h": "229cd3692665476fb2554766c619aa900a094198b6a605e12411d4abb86e0a46",
-    "tests/test_netricsa.py": "90e752ddc206365b84c2cf3864b2275ed373685d6a000253f7fe2a48a2486fd7"
+    "tests/test_netricsa.c": "07da44bb155e97affca6b754c6dd9137130f23545add7732261fa9566579e4ce",
+    "include/ssa/netricsa.h": "aa88c2301ddba5de34ef304f5b21dded80baec63404b59e89c8e74611ff9a517",
+    "tests/test_netricsa.py": "1a8cedc87cc182b963a07647b1cfc7e8eba99a8d2920ee966b084b620f92d00f",
+    "tests/test_netricsa_rom.py": "e291e162c2a56d8f6de3e7d6eb486cd013e818033ab72fa1a43619cbc8268b0a"
   }
 }

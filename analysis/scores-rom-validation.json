@@ -1,16 +1,21 @@
 {
   "result": "pass",
-  "score_rom_frames": 1545,
-  "composed_rom_pixels": 2534400,
+  "score_rom_frames": 6111,
+  "composed_rom_pixels": 10252800,
   "languages": 3,
   "entries": 18,
-  "scope": "Original1737C seeded Scores viewer state, commands, glyphs and pixels. New record entry/persistence are not implemented.",
+  "ranking_rom_cases": 8192,
+  "name_rom_frames": 2886,
+  "submitted_entries": 30,
+  "scope": "Original15530 initialization,16F70 ranking,16F98 name editor/entry and1737C viewer, including record auto-scroll/highlight. Persistence and PC typing have separate native tests.",
   "test_only_arm_execution": true,
   "source_sha256": {
-    "src/menu.c": "d8ec86e234568c0cc9d346b758eeb742cdbdea876f0540bd9e7134ae31264c32",
-    "include/ssa/menu.h": "1bca232b2dc1c6d6051827ab657b4b65065e119cb3bcd8fa99d27647c5433e3b",
+    "src/menu.c": "d710597c42ad61ed64fedf1675e66555e704e98e5c8d7308d3927a7fce4677f8",
+    "src/scores.c": "b5bb5db65255c8ea8d8096c50155b38e8bcd3084e5a3f360a2505ec8fbda9b9f",
+    "include/ssa/scores.h": "72654c05ad5060e4cf5bdd573e54cef1817ff7536d67cb317f04d77c8d430e35",
+    "include/ssa/menu.h": "9d0cfab776022163d65452f9de6ac0556f8733b45e3ea5c91f215f86c4bafc8c",
     "tests/test_map_view_rom.py": "38da9a77865740279ea481212f69fa87843c100130041a32f9a44793647bdf9b",
-    "tests/test_menu_rom.py": "723c65c9e66e0294a11168bf6c1c5863501b95ba47d30bce5a459bcc94d0678f",
-    "tests/test_scores_rom.py": "a6f6494d4ef01cbbc6f672bf2629539b140e27b2864823a0c92b8b265f6a8158"
+    "tests/test_menu_rom.py": "321f1b827ea0c8591df137e9268fcfa5019ae56abd9e147d9b8f052c0656f4e4",
+    "tests/test_scores_rom.py": "48ba53bb18c02bb2275b10782d1b3b35d3a2db7d554a5b707348439fadc4c9c9"
   }
 }

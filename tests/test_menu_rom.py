@@ -7,7 +7,11 @@ o=runpy.run_path(str(r/'tests/test_map_view_rom.py'));uc=o['uc'];call=o['call'];
 b=r/'build/native-tests'
 subprocess.run(['gcc','-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic','-shared','-fPIC',
  '-fsanitize=undefined','-fno-sanitize-recover=all','-I',str(r/'include'),str(r/'src/menu.c'),
- str(r/'src/map_view.c'),str(r/'src/map_assets.c'),'-o',str(b/'libssa_menu.so')],check=True)
+ str(r/'src/scores.c'),str(r/'src/map_view.c'),str(r/'src/map_assets.c'),'-o',str(b/'libssa_menu.so')],check=True)
+class ScoreEntry(C.Structure):
+ _fields_=[('score',C.c_uint32),('name',C.c_char*12)]
+class Scores(C.Structure):
+ _fields_=[('entries',ScoreEntry*18),('name',C.c_char*13)]
 class Menu(C.Structure):
  _fields_=[('canvas',View),('tiles',C.c_uint8*32768),('logo',C.c_uint8*12288),
  ('page',C.c_uint),('selection',C.c_uint),('marker',C.c_uint),('offset',C.c_uint),('language',C.c_uint),('difficulty',C.c_uint),('music_enabled',C.c_uint),
@@ -18,10 +22,13 @@ class Menu(C.Structure):
  ('level',C.c_uint),('loadout',C.c_uint),('level_limit',C.c_uint),('password',C.c_char*9),
  ('password_cursor',C.c_uint8),('password_up',C.c_uint8),('password_down',C.c_uint8),('password_typed',C.c_uint8),('grid',C.c_uint8*64),
  ('completed_levels',C.c_uint16),('level_scroll',C.c_uint),('selecting_level',C.c_uint),('clear_requested',C.c_uint),
- ('settings',C.c_uint*9),('soundfont_available',C.c_uint),('midi_available',C.c_uint),('settings_unavailable',C.c_uint),('quit_requested',C.c_uint),('score_y',C.c_int32),('score_speed',C.c_int32),('score_ticks',C.c_uint),('score_leaving',C.c_uint)]
+ ('settings',C.c_uint*12),('soundfont_available',C.c_uint),('midi_available',C.c_uint),('settings_unavailable',C.c_uint),('quit_requested',C.c_uint),('score_y',C.c_int32),('score_speed',C.c_int32),('score_ticks',C.c_uint),('score_leaving',C.c_uint),
+ ('scores',Scores),('score_candidate',C.c_uint32),('score_rank',C.c_uint),('score_highlight',C.c_uint),('score_submitted',C.c_uint),
+ ('score_cursor',C.c_uint8),('score_up',C.c_uint8),('score_down',C.c_uint8),('score_typed',C.c_uint8),('score_length',C.c_uint)]
 lib=C.CDLL(str(b/'libssa_menu.so'));lib.ssa_menu_init.argtypes=[C.POINTER(Menu),C.c_void_p,C.c_size_t,C.c_uint]
 lib.ssa_menu_step.argtypes=[C.POINTER(Menu),C.c_uint];lib.ssa_menu_draw.argtypes=[C.POINTER(Menu),C.POINTER(C.c_uint16),C.c_size_t]
 lib.ssa_menu_step_input.argtypes=[C.POINTER(Menu),C.c_uint,C.c_uint]
+lib.ssa_menu_score_begin.argtypes=[C.POINTER(Menu),C.c_uint32]
 out=(C.c_uint16*38400)();cases=pixels=credits_frames=credits_finishes=password_frames=password_starts=score_frames=0
 def setup():
  o['setup'](0,0,1)
@@ -85,6 +92,11 @@ def compare(m,input,visual=False,held=None):
   data=bytes(uc.mem_read(word(0x03006dd0),52))
   assert (m.score_y,m.score_speed,m.score_ticks,m.score_leaving)==(struct.unpack_from('<i',data,4)[0],struct.unpack_from('<i',data,24)[0],struct.unpack_from('<I',data,44)[0],struct.unpack_from('<H',data,20)[0]),('scores state',input,data.hex(),m.score_y,m.score_speed,m.score_ticks,m.score_leaving)
   score_frames+=1
+ if page==14:
+  assert bytes(m.scores.entries)==bytes(uc.mem_read(0x02000040,288))
+  assert bytes(m.scores.name)==bytes(uc.mem_read(0x0200002e,12))
+  assert (m.score_cursor,m.score_up,m.score_down)==(state[37],state[42],state[43])
+  assert m.score_highlight==state[59]
  if page==8 or m.page==8:
   assert C.string_at(C.addressof(m)+Menu.password.offset,9)==state[28:37]
   assert (m.password_cursor,m.password_up,m.password_down)==(state[37],state[42],state[43])
@@ -92,7 +104,7 @@ def compare(m,input,visual=False,held=None):
   if m.leaving:
    assert uc.mem_read(0x0200047c,1)[0]==(5,3,2)[m.difficulty]
   password_frames+=1
- assert (m.page,1 if m.page==1 and m.selection==2 else m.selection,m.marker,m.offset,m.language,m.difficulty,m.music_enabled,m.scroll,m.fade_volume,m.fading,m.leaving,m.done)==(
+ assert (14 if m.page==19 else m.page,1 if m.page==1 and m.selection==2 else m.selection,m.marker,m.offset,m.language,m.difficulty,m.music_enabled,m.scroll,m.fade_volume,m.fading,m.leaving,m.done)==(
   *struct.unpack_from('<4H',state,4),struct.unpack_from('<H',state,0)[0],state[26],state[44],scroll,fade[2],fade[4],state[25],int(done)),('state',page,input,(m.page,m.selection,m.marker,m.offset,m.language,m.difficulty,m.music_enabled,m.scroll,m.fade_volume,m.fading,m.leaving,m.done),state.hex())
  assert [(pc,arg) for pc,arg in events if pc==0x08008eb0]==[(0x08008eb0,c) for c in m.commands[:m.command_count]]
  assert [(pc,arg) for pc,arg in events if pc==0x08008e74]==([(0x08008e74,5)] if m.fade_audio else [])
@@ -204,18 +216,6 @@ if __name__=='__main__':
   compare(m,4,True);assert (m.level,m.difficulty,m.loadout)==(index%12,index//12,index+1)
   while not m.done:compare(m,4,m.fade_volume in (0,2048))
   password_starts+=1
- for language in range(3):
-  m=fixture(13,language)
-  uc.mem_write(0x02000040,rom[0xcc00c:0xcc00c+18*16])
-  for tick in range(288):compare(m,0,tick in (31,100,200,287))
-  assert m.score_y==16*65536 and not m.score_speed
-  for key in (1,2,2,1,1,2):
-   compare(m,key,True)
-   for tick in range(352):
-    if not m.score_speed:break
-    compare(m,0,tick%80==0)
-   assert not m.score_speed
-  compare(m,8,True);compare(m,0,True);assert m.page==0
  report={'result':'pass','rom_frames':cases,'composed_rom_pixels':pixels,'test_only_arm_execution':True,
   'score_frames':score_frames,
   'credits_frames':credits_frames,'credits_complete_scrolls':credits_finishes,

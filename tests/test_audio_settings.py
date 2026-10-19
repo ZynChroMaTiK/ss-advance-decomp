@@ -2,7 +2,7 @@ from pathlib import Path
 import hashlib,json,os,subprocess
 r=Path(__file__).resolve().parents[1]
 b=r/'build/audio-settings';b.mkdir(parents=True,exist_ok=True)
-sources=[r/p for p in ('src/audio.c','src/audio/soundfont.c','src/menu.c','src/map_view.c',
+sources=[r/p for p in ('src/audio.c','src/audio/soundfont.c','src/menu.c','src/scores.c','src/map_view.c',
                       'src/map_assets.c','src/settings.c','tests/test_audio_settings.c')]
 subprocess.run(['gcc','-std=c11','-O2','-g','-Wall','-Wextra','-Werror','-pedantic',
  '-fsanitize=address,undefined','-fno-sanitize-recover=all','-no-pie','-I',str(r/'include'),

@@ -1,0 +1,18 @@
+{
+  "result": "pass",
+  "checks": 10339,
+  "typed_submissions": 54,
+  "codec_bytes": 320,
+  "languages": 3,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "source_sha256": {
+    "src/scores.c": "b5bb5db65255c8ea8d8096c50155b38e8bcd3084e5a3f360a2505ec8fbda9b9f",
+    "src/menu.c": "d710597c42ad61ed64fedf1675e66555e704e98e5c8d7308d3927a7fce4677f8",
+    "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "tests/test_scores.c": "19154f84fa61c27cdfcd63f1d81edd30ca5b98f367b479e4592383df4813e88b",
+    "include/ssa/scores.h": "72654c05ad5060e4cf5bdd573e54cef1817ff7536d67cb317f04d77c8d430e35",
+    "include/ssa/menu.h": "9d0cfab776022163d65452f9de6ac0556f8733b45e3ea5c91f215f86c4bafc8c",
+    "tests/test_scores.py": "28bc71b4f38772e29c4b800a3a563b7c9138b319c9ed3902c71445485ff56133"
+  }
+}

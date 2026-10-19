@@ -4,23 +4,24 @@
 
 enum {SSA_PC_MOUSE_LEFT=1};
 enum SsaPcKeyBits {SSA_PC_W=1,SSA_PC_S=2,SSA_PC_A=4,SSA_PC_D=8,
-    SSA_PC_SPACE=16,SSA_PC_H=32,SSA_PC_E=64};
+    SSA_PC_SPACE=16,SSA_PC_H=32,SSA_PC_E=64,SSA_PC_R=128};
 typedef struct SsaPcInput {
     uint32_t down,blocked,pressed,pending_yaw;
     int32_t yaw_per_count; /* 65536 heading units/turn; default64 recommended. */
     int32_t pending_pitch;
     uint8_t left_down,left_blocked,fire_pressed,jump_pressed,use_pressed;
-    uint8_t view_toggle,focused,enabled;
+    uint8_t view_toggle,focused,enabled,reload_pressed;
 } SsaPcInput;
 typedef struct SsaPcInputSample {
     uint32_t keys,packed; /* keys: movement/use only; packed: original poll word. */
     int32_t yaw_delta;
     int32_t pitch_delta; /* Positive looks up; clamped accumulation, no wrap. */
     uint16_t held,pressed; /* Weapon fire only, separate from movement/use. */
-    uint8_t jump_down,view_toggle,enabled;
+    uint8_t jump_down,view_toggle,enabled,reload_pressed;
 } SsaPcInputSample;
 /* New PC controls, not a matched GBA routine. Initialize with sensitivity>0.
  * WASD moves/strafe; opposing keys cancel. Space jumps; H toggles; E uses.
+ * R requests a reload once per press; its PC-only edge is separate from packed.
  * Mouse-left fires; horizontal relative counts turn, positive is clockwise.
  * Vertical relative counts aim, with normal (non-inverted) mouse look.
  * All functions are single-threaded.

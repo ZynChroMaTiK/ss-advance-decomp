@@ -5,7 +5,7 @@ static int bound(const SsaPickupRuntime *r)
     const SsaCombatRuntime *c=r?r->combat:NULL;const SsaScriptSpawn *s=c?c->spawn:NULL;unsigned i;
     if(!r || !r->loaded || !c || !s || !s->world || !s->level || !s->level->map ||
        !s->world->cells || !s->world->sectors || s->world->collision.map!=s->level->map ||
-       !r->game.rules || !r->ops.event || !c->damage || !c->player_count || c->player_count>4 ||
+       !r->game.rules || !r->ops.event || r->pc_pickups>1 || !c->damage || !c->player_count || c->player_count>4 ||
        c->damage->player_count!=c->player_count || c->damage->local_player>=c->player_count ||
        c->reserved_count!=s->reserved || s->reserved>100)return 0;
     for(i=0;i<c->player_count;++i){const SsaPlayerRuntime *p=c->players[i];
@@ -86,7 +86,8 @@ int ssa_pickup_runtime_execute(void *context,const SsaEntity *current,SsaEntity 
     r->game.player_count=(uint8_t)c->player_count;r->game.local_player=c->damage->local_player;
     r->updating=1;c->updating=1;s->updating=1;level_lock=s->level->updating;s->level->updating=1;
     for(i=0;i<c->player_count;++i){locks[i]=c->players[i]->updating;c->players[i]->updating=1;}
-    result=ssa_pickup_touch_alternate(&r->game,&view,&r->current,0,r->repeat_weapon);
+    result=r->pc_pickups?ssa_pickup_touch_pc(&r->game,&view,&r->current,0,r->repeat_weapon):
+        ssa_pickup_touch_alternate(&r->game,&view,&r->current,0,r->repeat_weapon);
     if(actor->owned)actor->script.trigger=r->current.trigger;
     p->entity_health=p->inventory.health;
     for(i=0;i<c->player_count;++i)c->players[i]->updating=locks[i];

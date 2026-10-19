@@ -1,0 +1,288 @@
+{
+    "result":  "pass",
+    "date":  "2026-10-19",
+    "scope":  "Frozen render-only Egypt/Rome fixtures; water floor-material overrides; no campaign validation or whole-game FPS claim",
+    "method":  "MSVC x64 Release; QPC wall time; two sequential before/after pairs, mean of two per-case medians (each median is three samples of twelve animated frames after warmup); final color/depth exact hash comparisons",
+    "modes":  [
+                  "dry flat 960x640",
+                  "dry pitched -4096 960x640",
+                  "water+decals flat 960x640",
+                  "water+decals pitched -4096 960x640",
+                  "water+decals flat 1920x1080",
+                  "water+decals pitched -4096 1920x1080"
+              ],
+    "cases":  [
+                  {
+                      "level":  0,
+                      "mode":  0,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  6.4050,
+                      "after_ms":  4.4778,
+                      "render_time_reduction_percent":  30.09,
+                      "before_runs_ms":  [
+                                             6.4929,
+                                             6.3171
+                                         ],
+                      "after_runs_ms":  [
+                                            4.2119,
+                                            4.7437
+                                        ],
+                      "pixels_fnv1a64":  "af3882ba7766a6a8",
+                      "depth_fnv1a64":  "597789cef6158238",
+                      "identical":  true,
+                      "reflection_passes":  0
+                  },
+                  {
+                      "level":  0,
+                      "mode":  1,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  3.25095,
+                      "after_ms":  3.3575,
+                      "render_time_reduction_percent":  -3.28,
+                      "before_runs_ms":  [
+                                             3.2548,
+                                             3.2471
+                                         ],
+                      "after_runs_ms":  [
+                                            3.4046,
+                                            3.3104
+                                        ],
+                      "pixels_fnv1a64":  "9919674501ff2adf",
+                      "depth_fnv1a64":  "7061c31b7a5044da",
+                      "identical":  true,
+                      "reflection_passes":  0
+                  },
+                  {
+                      "level":  0,
+                      "mode":  2,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  23.20575,
+                      "after_ms":  17.80355,
+                      "render_time_reduction_percent":  23.28,
+                      "before_runs_ms":  [
+                                             22.6518,
+                                             23.7597
+                                         ],
+                      "after_runs_ms":  [
+                                            17.5771,
+                                            18.0300
+                                        ],
+                      "pixels_fnv1a64":  "9e4fe4991e3637ef",
+                      "depth_fnv1a64":  "597789cef6158238",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  0,
+                      "mode":  3,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  31.37305,
+                      "after_ms":  26.9219,
+                      "render_time_reduction_percent":  14.19,
+                      "before_runs_ms":  [
+                                             31.3629,
+                                             31.3832
+                                         ],
+                      "after_runs_ms":  [
+                                            26.9118,
+                                            26.9320
+                                        ],
+                      "pixels_fnv1a64":  "278f42fda7e8a54e",
+                      "depth_fnv1a64":  "7061c31b7a5044da",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  0,
+                      "mode":  4,
+                      "width":  1920,
+                      "height":  1080,
+                      "before_ms":  75.51105,
+                      "after_ms":  64.73805,
+                      "render_time_reduction_percent":  14.27,
+                      "before_runs_ms":  [
+                                             77.7910,
+                                             73.2311
+                                         ],
+                      "after_runs_ms":  [
+                                            65.6319,
+                                            63.8442
+                                        ],
+                      "pixels_fnv1a64":  "67840b367c56eb81",
+                      "depth_fnv1a64":  "cbc42b22291a7db1",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  0,
+                      "mode":  5,
+                      "width":  1920,
+                      "height":  1080,
+                      "before_ms":  104.24895,
+                      "after_ms":  89.47555,
+                      "render_time_reduction_percent":  14.17,
+                      "before_runs_ms":  [
+                                             106.9466,
+                                             101.5513
+                                         ],
+                      "after_runs_ms":  [
+                                            86.0925,
+                                            92.8586
+                                        ],
+                      "pixels_fnv1a64":  "051c27ad18d11694",
+                      "depth_fnv1a64":  "9f21e315d16ed59b",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  6,
+                      "mode":  0,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  6.6155,
+                      "after_ms":  4.34875,
+                      "render_time_reduction_percent":  34.26,
+                      "before_runs_ms":  [
+                                             6.8433,
+                                             6.3877
+                                         ],
+                      "after_runs_ms":  [
+                                            4.2873,
+                                            4.4102
+                                        ],
+                      "pixels_fnv1a64":  "6dd099dd84bbe518",
+                      "depth_fnv1a64":  "72b9fae50e0cee3d",
+                      "identical":  true,
+                      "reflection_passes":  0
+                  },
+                  {
+                      "level":  6,
+                      "mode":  1,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  3.4425,
+                      "after_ms":  3.20195,
+                      "render_time_reduction_percent":  6.99,
+                      "before_runs_ms":  [
+                                             3.5458,
+                                             3.3392
+                                         ],
+                      "after_runs_ms":  [
+                                            3.3418,
+                                            3.0621
+                                        ],
+                      "pixels_fnv1a64":  "56680b9d242cce6a",
+                      "depth_fnv1a64":  "176810f169f8286e",
+                      "identical":  true,
+                      "reflection_passes":  0
+                  },
+                  {
+                      "level":  6,
+                      "mode":  2,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  20.86915,
+                      "after_ms":  16.76195,
+                      "render_time_reduction_percent":  19.68,
+                      "before_runs_ms":  [
+                                             21.2061,
+                                             20.5322
+                                         ],
+                      "after_runs_ms":  [
+                                            16.5094,
+                                            17.0145
+                                        ],
+                      "pixels_fnv1a64":  "3fa82ea43614cd02",
+                      "depth_fnv1a64":  "72b9fae50e0cee3d",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  6,
+                      "mode":  3,
+                      "width":  960,
+                      "height":  640,
+                      "before_ms":  31.38855,
+                      "after_ms":  26.3437,
+                      "render_time_reduction_percent":  16.07,
+                      "before_runs_ms":  [
+                                             30.7549,
+                                             32.0222
+                                         ],
+                      "after_runs_ms":  [
+                                            25.9967,
+                                            26.6907
+                                        ],
+                      "pixels_fnv1a64":  "e4b05eb5ebda9da0",
+                      "depth_fnv1a64":  "176810f169f8286e",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  6,
+                      "mode":  4,
+                      "width":  1920,
+                      "height":  1080,
+                      "before_ms":  68.9751,
+                      "after_ms":  61.6506,
+                      "render_time_reduction_percent":  10.62,
+                      "before_runs_ms":  [
+                                             67.2221,
+                                             70.7281
+                                         ],
+                      "after_runs_ms":  [
+                                            66.6050,
+                                            56.6962
+                                        ],
+                      "pixels_fnv1a64":  "8c97f54e5c3cce0d",
+                      "depth_fnv1a64":  "156c136e1a0639cd",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  },
+                  {
+                      "level":  6,
+                      "mode":  5,
+                      "width":  1920,
+                      "height":  1080,
+                      "before_ms":  104.86155,
+                      "after_ms":  87.5738,
+                      "render_time_reduction_percent":  16.49,
+                      "before_runs_ms":  [
+                                             97.4917,
+                                             112.2314
+                                         ],
+                      "after_runs_ms":  [
+                                            93.5909,
+                                            81.5567
+                                        ],
+                      "pixels_fnv1a64":  "5d90644949cb7e41",
+                      "depth_fnv1a64":  "43ed94740fc9db7a",
+                      "identical":  true,
+                      "reflection_passes":  1
+                  }
+              ],
+    "source_sha256":  {
+                          "src/pc_renderer.c":  "43a6d36af5ce8fe928f22e9edf16cf1dd090fdc2b63657f44d84ae06a32e2f1e",
+                          "src/pc_renderer_pitch.inc":  "456bdc5625ca776682c7d36a23a9c178ad5bbad2386d8fef0679a4b0e7240f5a",
+                          "src/water.c":  "d9132bf6e285eacc3923b347a3d42c35f848143147b396ddb0e3ff0e68179e73",
+                          "include/ssa/pc_renderer.h":  "68557c9cd58d21dec2948b0871cca8d2c211e97863bfae5408e13f722065adb2",
+                          "tests/bench_renderer.c":  "fc5403fb6f4879a60701470adb14c65615732bf4c99ae43fce89b55a8c317bfc",
+                          "tests/test_pc_renderer.py":  "2ccff97cd2229a4a9bfcd1097706b3aaeeafdcd04c05157439e7f9afe708e87a"
+                      },
+    "baseline_executable_sha256":  "5a3ea974a9455cac702f18864bb0a03ec2846550b1a43b6137403f75099f5abc",
+    "optimized_executable_sha256":  "dd0e69d060d6a4a34f13d7d93af3ea4d457b6a4ed395ad847aa87c47f0537d98",
+    "validation":  {
+                       "surface_checks":  52135255,
+                       "surface_msvc_gcc_agree":  true,
+                       "renderer_sanitizer_checks":  11169540,
+                       "asan_ubsan_leaks":  true,
+                       "windows_build_libraries":  126,
+                       "software_smoke_frames":  30,
+                       "gba_smoke_frames":  30,
+                       "rom_sha1":  "4ff48d8c18b70a5184758f1917343ae85a70858e"
+                   }
+}

@@ -1,0 +1,223 @@
+{
+  "result": "pass",
+  "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
+  "health_digit_original_cases": 66,
+  "fixed_digit_original_cases": 96,
+  "weapon_ammo_icon_original_cases": 40,
+  "retail_weapon_images": [
+    285,
+    286,
+    280,
+    281,
+    282,
+    283,
+    292,
+    291,
+    290,
+    284
+  ],
+  "retail_ammo_images": [
+    243,
+    273,
+    277,
+    274,
+    275,
+    278,
+    294,
+    271,
+    276,
+    272
+  ],
+  "ammo_limits": [
+    999,
+    999,
+    100,
+    300,
+    300,
+    25,
+    10,
+    3,
+    10,
+    10
+  ],
+  "original_constructor_cases": 160,
+  "constructor_types": [
+    4,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "constructor_counts_by_players": {
+    "1": {
+      "4": 3,
+      "6": 3,
+      "7": 1,
+      "8": 1,
+      "9": 8,
+      "12": 5,
+      "13": 42,
+      "14": 2,
+      "15": 7,
+      "16": 1,
+      "18": 1
+    },
+    "2": {
+      "4": 4,
+      "6": 3,
+      "7": 1,
+      "8": 1,
+      "13": 42,
+      "14": 2,
+      "15": 7,
+      "17": 2,
+      "18": 1
+    },
+    "3": {
+      "4": 5,
+      "6": 3,
+      "7": 1,
+      "8": 1,
+      "13": 42,
+      "14": 2,
+      "15": 7,
+      "17": 3,
+      "18": 1
+    },
+    "4": {
+      "4": 6,
+      "6": 3,
+      "7": 1,
+      "8": 1,
+      "13": 42,
+      "14": 2,
+      "15": 7,
+      "17": 4,
+      "18": 1
+    }
+  },
+  "controller_direct_callers": {
+    "0x0800E700": [
+      "0x0800F916"
+    ],
+    "0x0800EFB4": [
+      "0x0800F93A"
+    ]
+  },
+  "legacy_animation_mapping": [
+    {
+      "animation": "0x17",
+      "words": [
+        63,
+        65535
+      ]
+    },
+    {
+      "animation": "0x18",
+      "words": [
+        64,
+        65535
+      ]
+    },
+    {
+      "animation": "0x19",
+      "words": [
+        65,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1A",
+      "words": [
+        65,
+        66,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1B",
+      "words": [
+        80,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1C",
+      "words": [
+        81,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1D",
+      "words": [
+        82,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1E",
+      "words": [
+        83,
+        65535
+      ]
+    },
+    {
+      "animation": "0x1F",
+      "words": [
+        84,
+        65535
+      ]
+    },
+    {
+      "animation": "0x20",
+      "words": [
+        85,
+        65535
+      ]
+    },
+    {
+      "animation": "0x21",
+      "words": [
+        86,
+        65535
+      ]
+    },
+    {
+      "animation": "0x22",
+      "words": [
+        87,
+        65535
+      ]
+    },
+    {
+      "animation": "0x23",
+      "words": [
+        88,
+        65535
+      ]
+    }
+  ],
+  "green_weapon_icons_without_animation_frames": [
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75
+  ],
+  "scope": "Complete original E700/EFB4 and F1C0/F27C handlers, including original FC04/arithmetic and retail weapon/ammo animation images/capacities; original101F4 constructor with only F9B4 allocation controlled.16maps,1..4players,all motion indices. Static Thumb direct-call scan through080C6000; indirect/computed reachability is not proved. GAME+34C meaning is unresolved. Old full layout/gauges are not recovered. No game runtime or ROM modifications.",
+  "source_sha256": {
+    "scripts/audit_legacy_hud.py": "0bd80c348c2bcc03b9533a58cf0d32f0340a52fec83b85f8cde80e1eeda60614"
+  }
+}

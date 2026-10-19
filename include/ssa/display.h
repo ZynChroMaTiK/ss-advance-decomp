@@ -22,8 +22,8 @@ int ssa_display_registers_default(SsaDisplayRegisters *);
  * Returns1 success,-1 invalid,-2 explicitly unsupported. No output writes on
  * failure. Supports BG affine sampling,8bpp1D OBJ normal/affine/double/flip,
  * wrapped positions and tile fetches. Unsupported: other display modes/layers,
- * windows, blending, nontrivial mosaic,4bpp OBJ, decreasing OAM BG-priority
- * order (hardware priority anomaly), or conservative scanline-budget excess.
+ * windows, blending, nontrivial mosaic,4bpp OBJ or conservative scanline-budget
+ * excess. Mixed OBJ priorities include transparent-sample priority promotion.
  * This is a native compositor, not CPU execution or full hardware emulation. */
 int ssa_display_compose(const SsaDisplayRegisters *,const uint8_t *world,size_t world_size,
     const uint16_t background_palette[256],const uint16_t object_palette[256],

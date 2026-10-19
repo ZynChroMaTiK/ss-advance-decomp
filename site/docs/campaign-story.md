@@ -24,8 +24,8 @@ and callback reentry. Presentation callbacks observe committed prefix effects;
 failures preserve those effects and release the update guard. This controller
 does not own artwork, text formatting, audio playback or the outer dispatcher.
 The new `campaign_screen.c` supplies that presentation composition and now runs
-in the Windows frontend. Score/name entry and the original completion tally UI
-remain separate unfinished work.
+in the Windows frontend. The original completion tally UI and subsequent
+score/name entry now connect through [completion.md](completion.md) and [scores.md](scores.md).
 
 ## Native screen and Windows integration
 

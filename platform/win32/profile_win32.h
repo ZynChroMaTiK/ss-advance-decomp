@@ -2,6 +2,7 @@
 #define SSA_PROFILE_WIN32_H
 #include "ssa/profile.h"
 #include "ssa/settings.h"
+#include "ssa/scores.h"
 #include <wchar.h>
 enum { SSA_SAVE_LANGUAGE,SSA_SAVE_COMPLETE,SSA_SAVE_CLEAR };
 typedef struct SsaWin32Profile {
@@ -17,4 +18,14 @@ int ssa_win32_profile_open(SsaWin32Profile *,const wchar_t *,unsigned enabled);
 int ssa_win32_profile_store(SsaWin32Profile *,unsigned action,unsigned value);
 int ssa_win32_settings_read(SsaSettings *,const wchar_t *);
 int ssa_win32_settings_write(const SsaSettings *,const wchar_t *);
+typedef struct SsaWin32Scores {
+ SsaScores data,defaults;
+ wchar_t path[32768];
+ unsigned enabled,last_error,last_rank;
+} SsaWin32Scores;
+int ssa_win32_scores_open(SsaWin32Scores *,const uint8_t *,size_t,const wchar_t *,unsigned enabled);
+/* Re-read under an exclusive lock, merge ONE submitted record, flush and
+ * replace atomically. clear resets to ROM defaults. Failed writes retain the
+ * result in memory. Existing progress/settings files are not changed. */
+int ssa_win32_scores_store(SsaWin32Scores *,unsigned clear,uint32_t,const char name[12]);
 #endif

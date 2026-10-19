@@ -10,6 +10,8 @@ typedef struct SsaNetricsaData {
     SsaStatisticsTotals totals;
     unsigned level,lives,show_all;
     uint32_t random;
+    unsigned weapon_entries,enemy_entries; /* Persistent campaign discoveries. */
+    unsigned opening_entry; /*0 briefing,1..10 weapon,11..22 enemy; must be available. */
 } SsaNetricsaData;
 enum { SSA_NET_CLOSE=0x10000,SSA_NET_FOCUS=0x20000,
        SSA_NET_NEXT=0x100000,SSA_NET_PREVIOUS=0x200000,
@@ -56,4 +58,6 @@ const char *ssa_netricsa_text(const SsaNetricsa *,unsigned id);
  * Feed SSA_NET_CLOSE to the next screen step for the normal fade/audio. */
 int ssa_netricsa_pointer(SsaNetricsa *,int x,int y,unsigned click);
 int ssa_netricsa_wheel(SsaNetricsa *,int steps);
+/* Fully visible selected dossier only; closing/fading/other pages return zero masks. */
+int ssa_netricsa_viewed(const SsaNetricsa *,unsigned *weapons,unsigned *enemies);
 #endif

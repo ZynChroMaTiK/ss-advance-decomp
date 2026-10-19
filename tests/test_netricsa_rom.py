@@ -14,7 +14,7 @@ class Enemy(C.Structure):_fields_=[('spawned',C.c_uint32),('hits',C.c_uint32),('
 class Rows(C.Structure):_fields_=[('weapons',Weapon*10),('enemies',Enemy*12)]
 class Totals(C.Structure):_fields_=[('score',C.c_uint32),('health',C.c_int32),('armor6',C.c_int32),('armor4',C.c_int32),
  *[(n,C.c_uint32) for n in ('level','elapsed','spawned','kills','hits','weapon_hits','pickups')]]
-class Data(C.Structure):_fields_=[('rows',Rows),('totals',Totals),*[(n,C.c_uint) for n in ('level','lives','show_all','random')]]
+class Data(C.Structure):_fields_=[('rows',Rows),('totals',Totals),*[(n,C.c_uint) for n in ('level','lives','show_all','random','weapon_entries','enemy_entries','opening_entry')]]
 class Net(C.Structure):_fields_=[('rom',C.c_void_p),('rom_size',C.c_size_t),('data',Data),
  ('tiles',C.c_uint8*32768),('frame_tiles',C.c_uint8*3456),('images',(C.c_uint8*4096)*23),('fonts',C.c_uint8*4032),
  ('frame_map',C.c_uint16*600),('palette',C.c_uint16*256),('formatted',(C.c_char*512)*2),('text',C.c_void_p*2),

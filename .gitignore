@@ -18,6 +18,9 @@ build/
 /save.dat
 /settings.dat
 /settings.dat.tmp-*
+/scores.dat
+/scores.dat.lock
+/scores.dat.tmp-*
 /soundfonts/*.sf2
 /save.dat.lock
 /save.dat.tmp-*

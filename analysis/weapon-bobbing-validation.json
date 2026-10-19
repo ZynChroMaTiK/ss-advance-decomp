@@ -1,0 +1,75 @@
+{
+    "result":  "pass",
+    "feature":  "Native-viewport weapon bob overflow with parallel dual Colts",
+    "default":  "off",
+    "settings_version":  11,
+    "settings_bytes":  16,
+    "motion":  "Both Colts and their flashes share identical X/Y bob offsets. Original artwork is mirrored for the left hand, then both hands move in parallel. Footstep phase counter*1872, X 0..6px and Y 0..2px; jump dip up to 4px. Idle positions and sprite scales remain original.",
+    "amplitude":  "Weapon/flash amplitude reaches full strength at straight speed8; recovered camera and footsteps unchanged.",
+    "edge_filling":  false,
+    "sprite_scaling":  "original, unchanged",
+    "idle":  "original positions and pixels",
+    "walking_input_cases":  [
+                                "W",
+                                "W+D"
+                            ],
+    "native":  {
+                   "result":  "pass",
+                   "checks":  2326859,
+                   "frames":  7890,
+                   "sanitizers":  "ASan/UBSan/leaks=1"
+               },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  2326859,
+                    "input":  {
+                                  "result":  "pass",
+                                  "checks":  315,
+                                  "physical_input":  false,
+                                  "real_window_messages":  true
+                              },
+                    "original_switch":  {
+                                            "result":  "pass",
+                                            "checks":  3295,
+                                            "switch_cases":  20,
+                                            "waiting_frames":  506,
+                                            "weapons":  10,
+                                            "views":  2
+                                        }
+                },
+    "physical_input_tested":  false,
+    "executable_sha256":  "ee4ae26af51a3d5303e00a7495d78882f6d74a113acc3f877b5d91a3762a9d0f",
+    "source_sha256":  {
+                          "include/ssa/native_game.h":  "c3302158143ac71c9b8526ff1137952ec2874f5f949410bc991978e4d5d2d2df",
+                          "src/native_alternates.inc":  "65c1e01cc8da1e2446cc3c4f31599763407bdf3869851bbc94660d3512c480f0",
+                          "src/native_game.c":  "22dd7f267fdf74621e35e6984e02a029407f5598004618ede7f9d8276b228981",
+                          "include/ssa/actor_projection.h":  "3b357c4ecd8a01fe3aa10458e45c43fe116e04fb4a59f46f3381633dc656cfc7",
+                          "include/ssa/actor_scene.h":  "7a1650246f372bcb4a62115fb9de77046e956ae51671c7fcbc465bbafd13c738",
+                          "src/actor_scene.c":  "e9a6945236bc85923b36b0de75a2583bd729fc36cd76d9f2b3ed4e6ad4c5f030",
+                          "src/actor_projection.c":  "d729cb8a4cb794b378ee2429379014687db0d9a5ed2afb046ce7a986bc4e0014",
+                          "src/pc_renderer.c":  "0a219d124ef39413a7bab14152ee972f765086bdc5f2bcb9114aa40135dde331",
+                          "src/display.c":  "1ed9568cb33dd908e2f2d5394582f50d86821b65fa5f6f168f9a26b1ceeac0d5",
+                          "include/ssa/display.h":  "b3ea75ce0ee1ed4785b0d4c6449020bd389d208139d8f8f60f99d1c9de8096e9",
+                          "tests/test_alternate_weapons.c":  "93f74475d70c1b431104b6efb61c0f0a7adea8802f08ca86d80aaeb638138ac8",
+                          "tests/test_pc_renderer.c":  "14c27b177d3190a41b16f2c443acceac8bb7248ddf8e427f54c2824bd0e93515"
+                      },
+    "viewport":  "At native aspect, original weapon pixels translate past the centered3:2 canvas and clip at actual viewport bounds. Original scale/crop, fixed HUD anchors, no edge filling. Reference and exactly3:2 composition unchanged.",
+    "viewport_checks":  "Exact escaped pixel colors: all10 weapons across960x540 widescreen and480x640 tall output, both HUD modes, plus dual Colts.",
+    "display":  {
+                    "display":  {
+                                    "assertions":  418538,
+                                    "guards":  39,
+                                    "native_frames":  1438,
+                                    "real_images":  311
+                                },
+                    "pc_renderer":  {
+                                        "result":  "pass",
+                                        "checks":  11169528,
+                                        "sizes":  7,
+                                        "different_from_upscale":  257587,
+                                        "chase_jump_frames":  24,
+                                        "third_person_frames":  24,
+                                        "collision_fallback_frames":  0
+                                    }
+                }
+}

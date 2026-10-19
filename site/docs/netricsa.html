@@ -1,16 +1,35 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native NETRICSA — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="netricsa.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-netricsa">Native NETRICSA</h1>
-<p>NETRICSA now appears before the map on every level start, advance and restart.
+<p>NETRICSA appears before the map on ordinary level starts, advances and manual
+restarts. Automatic death retries skip straight to the level reveal.
 Chapter introductions lead to NETRICSA, then the map; the ending still returns
 to Main. Pre-level NETRICSA keeps the original animated background and music.
-Closing it proceeds to the map, with gameplay still at frame0.</p>
+Closing it proceeds to the map, with gameplay still at frame0.
+Classic HUD announces genuinely new unread weapon/enemy types with retained
+analyzing sprite79 (2s, upper center, HUD-green on/off blink, no backing), then a green/white inbox
+notification that snaps inward after analysis, holds2s, then snaps back. Its idle position is215,2; the attention
+position is108,28, in place of the analysis text (108,40 with a boss bar).
+Both inbox blink phases use green sprite65, with its green shading ramp
+palette-swapped to neutral shades for white. The white sprite66 is not used;
+frame geometry, black outlines and transparency stay identical between phases.
+The blink spans the5s sequence. This uses simulation time and pauses with gameplay. Reading
+all outstanding entries clears the notification; duplicates and retained
+campaign/retry journal entries do not restart it. See <a href="classic-hud.html">classic-hud.md</a>
+for artwork, reference positioning and focused validation.</p>
 <p>Opening N/Tab during play instead overlays NETRICSA on a frozen copy of the
 current game image. Its frame, artwork and text blend over that image, with
 transparent space showing the game. The animated background is omitted. The
 RGB888 compositor preserves the current PC renderer resolution, including
 letterbox areas, and also supports the240x160 reference renderer. Pointer mapping
 accounts for both the game viewport and the NETRICSA canvas. Closing returns to
-gameplay, restores capture/music, and frees the captured buffers.
-Options &gt; Extra &gt; In-game NETRICSA can disable this gameplay shortcut. It
+gameplay, restores capture, and frees the captured buffers. The current level
+music continues uninterrupted through overlay opening, navigation and closing;
+its track, note state and playback position are not reset or faded.</p>
+<p>Manual opening now selects the newest unread weapon/enemy dossier directly.
+Reopening after a fully presented entry selects the next unread dossier in
+reverse discovery order. A quick close during the fade leaves it unread. With
+no unread entries, and for automatic pre-level briefings, the original opening
+page is retained.
+Options &gt; Extras &gt; In-game NETRICSA can disable this gameplay shortcut. It
 defaults to On and persists; pre-level briefings remain enabled either way.</p>
 <p>In-game presentation fades take15 ticks/250ms at60Hz through ssa_netricsa_pc_step.
 The original controller entry point retains its recovered timing for oracle
@@ -45,7 +64,7 @@ terminal gameplay states. Tab toggles it off during play; Esc/N also returns to
 the same world. Enter/Space cycles
 category/upper/lower focus. Tab also closes pre-level NETRICSA and proceeds to
 map view, retaining its original fade speed. Arrows or WASD navigate; Left/Right cycles acquired
-weapons or encountered enemies. Mouse hover selects categories; clicking focuses
+weapons or defeated enemies. Mouse hover selects categories; clicking focuses
 a panel. Wheel scrolls that panel. Clicking either half of an illustration, or
 wheeling over it, cycles records. Hover sounds play when selection changes.
 Clicking the localized &quot;Press A to skip&quot; prompt also closes NETRICSA, both
@@ -57,13 +76,46 @@ close sound, music transition and destination.</p>
 the original small font: weapons1..10, enemies1..12. Click an available number
 to open its record and reset both panels' scroll/held-scroll state. The current
 record is highlighted; hover highlights another available number. Unavailable
-records are dimmed and ignore clicks, preserving acquired/encountered filtering.
+records are hidden and ignore clicks, preserving acquired/defeated filtering.
 Keyboard and illustration/wheel cycling remain available. Selectors share the
 same fading/compositor and letterbox pointer transform in both screen modes.</p>
 <p>The screen uses the original23 illustrations at0844CF48, NETRICSA tiles/map
 080AAF38/080B4C20, scrolling menu background080A8368, small font080B7A60 and
 original metrics/charmap. It renders native240x160 RGB555 pixels, scaled by the
 existing letterbox/presentation service. No ROM instructions execute at runtime.</p>
+<h2 id="discovery-and-unread-dossiers">Discovery and unread dossiers</h2>
+<p>The latest user correction makes the Classic top-right panel an unread-message
+counter for weapon/enemy dossiers, not lives. SsaNetricsaJournal keeps separate
+discovered/read masks for10 weapons and12 enemy types. Weapon ownership creates
+an entry, including starting loadouts; enemy spawns/hits do not. Native kill
+counters create enemy entries; dead actor bodies also cover drain/hazard deaths
+that bypass ordinary damage statistics. Repeated kills/acquisitions never
+duplicate an existing dossier. UI availability uses kills or the journal's
+known masks across keyboard, illustration/wheel and numbered selectors.</p>
+<p>On every level, starting equipment is already familiar: its dossiers remain
+browsable, but create neither an unread count nor an analyzing/inbox alert.
+This includes standalone password/level-selection loadouts at all difficulties
+and alternate-mode starting weapons. Pre-level snapshots acknowledge only
+owned starting weapons not already known in the carried journal. The first
+simulation tick commits that baseline before movement or pickups, so subsequent
+discoveries still alert. Existing unread entries carried from earlier play
+remain unread; entering another level does not acknowledge them. Read status
+still survives advancement/retry. The earlier first-level Schofield exception
+also remains, including its pickups there. Unowned weapons are not unlocked,
+and save/settings/score formats are unchanged.</p>
+<p>After a successful Windows frame presentation, ssa_netricsa_viewed acknowledges
+only the fully visible selected weapon/enemy record. Fade-in, fade-out, briefing
+and statistics pages acknowledge nothing. Merely opening NETRICSA does not clear
+the counter. The native read service intersects acknowledgements with known
+entries, so unavailable dossiers cannot be marked read in advance.</p>
+<p>Journal masks are carried in the in-memory campaign snapshot. Retry reloads
+keep the current journal while restoring entry equipment/score, so new knowledge
+and read status survive a death. Advancing carries the same journal. Fresh
+New Game/password/selected-level starts create a new run journal. Existing save,
+settings and score-file formats remain unchanged. Statistical rows remain actual
+counts; old journal entries never invent kills/ownership in a new map's stats.
+The hidden show_all diagnostic still exposes all enemy dossiers for original
+controller/text oracle comparisons; ordinary gameplay does not enable it.</p>
 <h2 id="recovered-behavior">Recovered behavior</h2>
 <p>Original19C00 builds the records and submits labels;1A2C4 handles category,
 focus, scrolling, close and refresh. The outer1A780 screen initializes category4
@@ -98,9 +150,9 @@ authoritative. Lives uses the native lifecycle's continue count. Session totals
 are not a new save format, score table, completion tally or continue workflow.</p>
 <p>The game does not tick while NETRICSA owns presentation. Relative movement and
 held buttons are cleared on entry; focus loss clears NETRICSA held scroll.
-Closing restores the previous capture preference and current game music mode.
-The existing audio reset service flushes effect loops on entry/exit; live door
-and enemy loops resynchronize on subsequent world updates. Both renderers use
+Closing restores the previous capture preference. Only pre-level NETRICSA
+requests music7 and its closing music fade. The in-game overlay issues UI
+sound cues without resetting the mixer or replacing the current music. Both renderers use
 the same NETRICSA canvas. The borrowed ROM and screen address must stay stable;
 embedded formatted-text pointers are repaired after initialization's copy.</p>
 <p>The tip seed currently comes from a native frame-based LCG projection. The
@@ -110,7 +162,7 @@ not a claim that the complete game port has original feature parity.</p>
 <h2 id="verification">Verification</h2>
 <p>Run .\decomp.ps1 test-netricsa and
 scripts/test-netricsa.ps1 -SkipBuild after the Windows build.</p>
-<p>The portable suite passes19,336 ASan/UBSan/leak assertions over36 map/language
+<p>The portable suite passes19,561 ASan/UBSan/leak assertions over36 map/language
 starts and5,292 presentation ticks. It visits all weapon/enemy records, tests
 independent panel focus/scroll, illustration clicks/wheel, unavailable records,
 bounded text, fades and blank output. A generated bitmap was visually inspected.
@@ -154,4 +206,155 @@ All119 portable/Windows libraries and the Windows frontend build successfully.</
 but fails linking its uncatalogued19C00 callee. It is not exact; the claim was
 released with notes. No catalogue split, ROM mutation or new matching claim was
 made for this screen.</p>
+<p>Newest unread entry selection (2026-10-19): SsaNetricsaJournal retains a bounded
+22-ID discovery history, oldest first (weapons1..10, enemies11..22), across
+campaign carry/retry. Known/read masks remain authoritative. Read-only snapshots
+append newly observed types to a copy; ordinary tick/read commits retain order.
+Simultaneous discoveries use a stable weapon-then-enemy ID tie order. Repeated
+types do not move forward. History validation rejects invalid IDs, duplicates,
+unknown IDs and counts&gt;22; an omitted/incomplete history is filled deterministically.
+This is campaign-session state, not a new on-disk save format.</p>
+<p>ssa_native_game_netricsa_latest returns the newest unread ID without mutation,
+zero when none. Manual begin_netricsa supplies it through snapshot.opening_entry;
+ssa_netricsa_init resolves the category/record, original artwork and texts before
+the first fade frame, with focus on the upper description and reset scrolling.
+All22 available IDs work in all three languages. Automatic pre-level NETRICSA
+continues to start on the briefing page. The existing fully-visible successful
+presentation acknowledgment is retained: early-close/fading records remain
+unread; presenting an entry advances the next opening; no automatic page changes
+occur while reading. No-unread manual opening uses the original default page.</p>
+<p>Validation: native NETRICSA ASan/UBSan/leaks=1 and MSVC20,950checks,36 screen
+runs/5,292frames, plus2,684 ROM row comparisons,174 record calls and405 controller
+calls. The differential ctypes snapshot was updated for opening_entry.
+Native journal/HUD sanitizer and MSVC170,303checks/403draws pass. Actual weapon
+acquisition and enemy combat kills verify non-ID chronology, snapshot purity,
+carry retention, newest/next/none, and malformed histories. Windows560 checks
+exercise mixed weapon/enemy reopen order, early close without acknowledgment,
+actual present/read, next entry, drained inbox/default opening and retry in both
+renderers; the same suite retains768 supplied Time Strike PNG checks.
+Full test-netricsa Windows routes pass: original127-tick pre-level briefing,
+110 gameplay-overlay ticks, mouse controls, frozen/resumed simulation,70 music
+checks and0 audio errors each in software854x480 and reference240x160.
+Reports: netricsa-validation.json, windows-netricsa-validation.json,
+classic-hud-validation.json and windows-classic-hud-validation.json.
+Static frontend/125libraries rebuilt; SHA256:
+fbd14808aeb4492e03ebc71b6a34d5f41b127803986e4a1fc481817cbc1e488d.
+No full campaign replay, ROM changes or new matching claims.</p>
+<p>New-entry sound cue (2026-10-19): netricsa_store now starts retained NETRICSA UI
+sound0x0B in the same branch that sets hud_netricsa_ticks=300. One centered,
+non-looping effect per new notification batch, for either a weapon or enemy.
+Use the ordinary local sound service/source1 (legacy play fallback), never the
+music-command path. It follows sound volume and the existing protected local
+SFX priority, and works with music disabled. No new media is embedded.
+Redraws, pulse/blink phases, pause, reading, repeat discoveries and familiar
+starter/carried entries do not replay it. Sound is not emitted from getters or
+draw functions. Existing per-type unread and reverse discovery order are unchanged.</p>
+<p>Focused native ASan/UBSan/leaks=1 and MSVC171,315 checks/403 draws pass. The
+notification fixture binds both legacy/source-aware audio sinks and verifies
+one cue at the300-tick onset, no repeated cue on redraw/continued analysis/read,
+no mutation/reset of the active music player, a centered source1, and an enemy
+kill's new-entry cue. It renders48,000 actual ROM-cue frames: nonzero signal,
+zero decoder errors, self-completion, plus silence with sound volume0 and music
+disabled. Windows560 menu/overlay/reopening checks and768 supplied-PNG pixel
+comparisons pass. No physical listening or full campaign playback was performed.
+The Windows HUD checker now links ssa_audio for these actual mixer checks.
+Static125libraries and frontend rebuilt; executable SHA256:
+b521f80abf30ba3e97104cd3672da2c84b181c20580d32aae9045376e9f3ece9.
+See classic-hud-validation.json and windows-classic-hud-validation.json. ROM
+unchanged; no new exact matching claim or full launcher rerun for this audio hook.</p>
+<p>Notification correction (2026-10-19): supersedes the earlier single-cue policy.
+Classic HUD plays retained cue0x0B at analysis onset and once more75 active
+simulation ticks later (1.25 seconds). Original HUD emits neither play.
+A focused real-mixer diagnostic found the cue completes by tick71 (1.183s)
+at24000Hz, so75 ticks separates the complete sounds without overlap.
+The small hud_netricsa_repeat latch accompanies the existing notification
+clock. Pause freezes timing. Reading all unread messages, death/completion,
+or switching to Original clears the latch; switching back cannot resurrect it.
+The ordinary protected centered source1/legacy SFX path, sound slider, music,
+notification visuals, discovery and read ordering remain unchanged.</p>
+<p>Validation: native ASan/UBSan/leaks=1 and MSVC each pass335944 checks over405
+counted draws/two renderer paths. Both legacy and source-aware sinks verify
+exactly two Classic plays, no third, no Original plays, canceled repeats on
+read/HUD change, paused countdown, centered source and unchanged music player.
+The real mixer confirms completion before the75-tick repeat, audible output
+and sound-volume0 silence. Windows frontend560 checks and768 supplied icon
+pixels also pass. Static125libraries/frontend rebuilt; executable SHA256:
+1f96bcf3c60678f312ee2b96e86e771136a1238d25b6e203331639b99ff8b2b8
+See classic-hud-validation.json and windows-classic-hud-validation.json.
+No physical listening or full campaign replay was performed; ROM unchanged.</p>
+<p>Back-to-back cue correction (2026-10-19): overrides the previous75-tick gap.
+The earlier duration measurement observed sequencer completion, not sound
+completion. The actual0x0B burst ends about0.1075s into its1.18s ROM sequence;
+most of the remaining sequence is silent. New CUE_TWICE source commands queue
+one repeat owned by the audio mixer. The second copy starts on the output
+sample immediately after the first copy's last active voice, replacing only
+its finished instance and ignoring the sequence's trailing rest. A pair has
+one centered local instance, never two overlapping copies, and cannot loop.
+Music and other effects keep ordinary playback and their independent buses.
+CANCEL_REPEAT removes only a pending copy, leaving current playback intact.
+Stop/reset/retire remove the queue. Audio pause freezes both the sound and queue.
+Windows forwards these commands under its existing audio mutex; there is no
+simulation-clock delay in its pair. Notification startup and cancellation are
+centralized in native_audio.inc. Legacy sinks without source service approximate
+the audible length at7 simulation ticks (frame precision); Windows does not use
+that compatibility fallback. Original HUD remains silent; analysis visuals and
+the unread journal remain unchanged.
+Validation: ASan/UBSan/leaks=1 and MSVC357231 checks/409 draws/two paths pass.
+At24000/48000Hz, each first burst matches ordinary playback sample for sample;
+the exact next sample matches a manually restarted cue, followed by bit-identical
+output and exactly two starts. Cancellation, stop, reset, audio pause/resume,
+legacy fallback, Original silence, music preservation and visuals pass.
+Windows560 checks plus768 supplied icon pixels pass. Full MSVC audio regression
+also passes660573 checks/131 audible songs/35640000 catalog frames/zero decoder
+errors or clipped catalog samples. Its stale Game Over fixture was corrected
+to use the final life and the recovered pre-terminal music request; no death
+behavior was changed. Static125libraries/frontend rebuilt; SHA256:
+6aa4beab75a8d8c699d2d313b9b550a309aec6245ac5ccc6d2a52bffd7dd6582
+See netricsa-cue-validation.json and current Classic HUD validation reports.
+ROM unchanged; no physical listening or full campaign replay was performed.</p>
+<p>Equal-length gap correction (2026-10-19): supersedes the back-to-back policy.
+The first burst is measured in output frames. After its voices finish, the
+mixer inserts that exact number of silent frames, then starts the second copy.
+For retained0x0B, both burst and gap are about0.108s; its1.18s sequence duration
+still does not define audible duration. CUE_TWICE remains finite (two total).
+A gap belongs to its protected local source/player, with pending instances
+reserved in player_busy. Gap frames advance on the audio clock, stop while
+paused, and honor existing repeat cancellation, stop, reset and HUD/read gates.
+Original HUD stays silent. The legacy sink rounds the two duration intervals
+to13 game ticks; Windows uses mixer measurements with sample precision.
+Validation for equal cue/gap duration: ASan/UBSan/leaks=1 and MSVC390355checks/
+409draws/two paths pass. Real24/48kHz output matches the first ordinary burst,
+then exactly that many silent samples, then a manually restarted second burst
+bit for bit. Exactly two starts, no overlap/third cue. Gap pause/resume and
+cancellation during silence are included, with earlier stop/reset/HUD/read and
+music checks retained. Windows560 checks+768 supplied icon pixels pass.
+Full MSVC audio regression660573 checks/131 audible songs/zero decoder errors
+or clipped catalog samples also passes. Static125libraries/frontend rebuilt;
+SHA256 7278284217a42b848edce0d50912f6ba3c91d0a807a695ea5d50b7e68119a315.
+Current report: netricsa-cue-validation.json. No physical listening or campaign
+replay was performed; ROM unchanged.</p>
+<p>Half-length gap correction (2026-10-19): supersedes the equal-length gap above.
+CUE_TWICE now waits half the measured first audible burst's output frames,
+rounded up to a single frame, before the second play. This is about54ms of
+silence after the roughly108ms cue. Trailing sequence rests remain excluded.
+Legacy sinks approximate sound plus gap with10 game ticks. Classic-only
+notification, Original HUD silence, pause, cancellation and two-play limit
+are unchanged. The24/48kHz fixture checks the shorter silence and compares
+both bursts with ordinary playback sample for sample.
+Validation: GCC ASan/UBSan/leaks and MSVC382477 checks/409 draws/two paths
+agree; Windows560 checks/two renderers and768 supplied icon pixels pass.
+Static125libraries/frontend rebuild passes. See netricsa-cue-validation.json
+and current Classic HUD reports. No physical listening or campaign replay.</p>
+<p>In-game music continuity (2026-10-19): the overlay now keeps the current level
+music running across opening, navigation, closing and reopening. The frontend
+does not reset the mixer, select NETRICSA music or fade audio for this overlay.
+Its visual fade is unchanged. Pre-level briefings retain music7 and the
+original transition to map music. UI sound cues remain independent.
+Validation:1666 Windows Classic frontend checks include four overlay cycles,
+comparing music player0, music state and master gain with uninterrupted
+reference playback while both mixers advance. test-netricsa.ps1 passes20950
+native checks and both live renderer routes (initial briefing, overlay and
+resume;70 level-music checks each, zero audio errors).125libraries/frontend
+rebuilt. See netricsa-music-continuity-validation.json and the current Windows
+NETRICSA report. No physical listening or broad sanitizer/campaign replay.</p>
 </main></body></html>

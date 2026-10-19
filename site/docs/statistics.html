@@ -86,9 +86,13 @@ password-setting counter reset. The new <a href="completion.html">completion ada
 preserves original capture/accumulate/checkpoint ordering, the setting policy and
 bonus-adjusted score. The frontend now commits campaign-session totals and
 checkpoint rows after the visible bonus tally, and carries the resulting score
-to the next level and its R entry snapshot. See <a href="completion.html">pause/tally integration</a>.
-Disk persistence of campaign totals, continue/death orchestration and high-score/
-name entry remain pending. All twelve campaign maps are enabled for manual validation.</p>
+to the next level and its entry snapshot. See <a href="completion.html">pause/tally integration</a>.
+High-score/name entry and scores.dat persistence now connect at Quit-run/ending;
+see <a href="scores.html">scores.md</a>. Finite-life death/retry/game-over orchestration now
+connects too; see <a href="run-exit.html">run-exit.md</a>. Campaign totals currently remain
+within the run. An original SRAM/disk format for those totals has not been
+established by this recovery, so their persistence should not be assumed from
+the older TODO alone. All twelve campaign maps are enabled for manual validation.</p>
 <h2 id="verification">Verification</h2>
 <pre><code class="language-powershell">.\decomp.ps1 test-statistics
 .\decomp.ps1 test-native-statistics

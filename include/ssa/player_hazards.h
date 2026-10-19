@@ -32,6 +32,9 @@ typedef struct SsaPlayerHazardOps {
  * The ordered special_lines list is its only promised query output. */
 int ssa_player_interaction_query(SsaMapCollision *, const SsaEntity *,
                                   uint8_t facing, const SsaMathTables *);
+/* Same0429C contact traversal for an explicit destination, including the
+ * zoom-scaled automap sight segment. Uses its own query scratch. */
+int ssa_player_interaction_query_at(SsaMapCollision *,const SsaEntity *,int32_t x,int32_t y);
 /* Original 03464: one radius sample per frame, then hazard-sector membership.
  * Returns 0/1, or -1 on invalid native inputs/geometry. */
 int ssa_player_hazard_sample(const SsaMapAssets *, const SsaEntity *,

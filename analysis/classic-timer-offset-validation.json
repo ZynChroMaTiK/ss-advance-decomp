@@ -1,0 +1,13 @@
+{
+    "result":  "pass",
+    "scope":  "Move Classic timer backing fromX105 toX104; digits and colon unchanged",
+    "core_msvc":  {
+                      "result":  "pass",
+                      "checks":  382372,
+                      "draws":  409,
+                      "paths":  2
+                  },
+    "sanitizers_rerun":  false,
+    "executable_sha256":  "e8cba5198de920799cf081590145c6ac95265c67a543605c0c314c1f8e2a6146",
+    "source_sha256":  "0704db650dd947252825b1ddc7c3f9c4992cb7d24f3c09f298c2a9bd49d37547"
+}

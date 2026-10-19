@@ -1,0 +1,19 @@
+{
+  "result": "pass",
+  "line_rom_cases": 3000,
+  "line_rom_pixels": 115200000,
+  "scene_rom_cases": 384,
+  "original_line_submissions": 166680,
+  "complete_rom_frames": 16,
+  "complete_rom_pixels": 614400,
+  "maps": 16,
+  "scope": "Original07FDC pixels and normal08420 automap geometry; ARM execution is test-only.",
+  "sanitizers": "UBSan",
+  "source_sha256": {
+    "src/automap.c": "ced5f52ff22ea7730c2209efd02fa2391069bfb2a011ced579a9a83d65313732",
+    "include/ssa/automap.h": "e9cdc2472371a641a7c15ea81b6264cafaa13bdf49431a4deedd727fb3d65b34",
+    "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
+    "src/movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
+    "tests/test_automap_rom.py": "3d9ed4ad4a457887079e8bddf0f0551759e841adba9bf7d67417a8894ada59cf"
+  }
+}

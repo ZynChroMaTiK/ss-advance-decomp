@@ -18,6 +18,7 @@
 #include "ssa/netricsa.h"
 #include "ssa/native_statistics.h"
 #include "ssa/intermission.h"
+#include "ssa/run_exit.h"
 #include "audio_win32.h"
 #include "profile_win32.h"
 
@@ -25,6 +26,8 @@ typedef struct App {
     HWND window;SsaNativeGame *game;uint8_t *rom;size_t rom_size;
     unsigned level,captured,running,smoke,failed,reload,smoke_frames;
     unsigned advance;
+    unsigned automap_keys;
+    unsigned death_active,death_fade,death_black;
     int wheel_remainder;
     SsaNativeCarry entry;
     SsaCampaignScreen *story;
@@ -56,6 +59,7 @@ typedef struct App {
     unsigned level_select_test;
     unsigned level_starter_checks;
     SsaWin32Profile profile;
+    SsaWin32Scores scores;
     SsaSettings settings;
     WINDOWPLACEMENT windowed_placement;
     LONG_PTR windowed_style;
@@ -75,7 +79,7 @@ typedef struct App {
     unsigned transition_test,transition_stage;
     SsaNativeCarry transition_expected;
     unsigned mute,no_music,audio_test,audio_test_sound;
-    unsigned audio_test_worker,audio_test_mute,audio_test_footsteps,audio_test_spatial,audio_test_music;
+    unsigned audio_test_worker,audio_test_m_key,audio_test_footsteps,audio_test_spatial,audio_test_music;
     unsigned audio_test_music_queued,audio_test_level_starts,audio_test_fade;
     SsaWin32Audio audio;
     SsaPcRenderer renderer;
@@ -123,7 +127,7 @@ done:
 }
 static void release(App *a)
 {
-    unsigned held=a->captured;a->captured=0;a->wheel_remainder=0;a->menu_held_keys=0;a->story_held=0;
+    unsigned held=a->captured;a->captured=0;a->wheel_remainder=0;a->menu_held_keys=0;a->story_held=0;a->automap_keys=0;
     a->net_held=0;
     a->screen_held=0;
     ssa_pc_input_runtime_focus(&a->game->input_runtime,0);
@@ -143,7 +147,8 @@ static int confine(App *a)
 static void capture(App *a)
 {
     if(a->captured)return;
-    if(a->map_active || a->menu_active || a->story_active || a->net_active || a->screen_active)return;
+    if(a->map_active || a->menu_active || a->story_active || a->net_active || a->screen_active || a->death_active ||
+       a->game->players[0].inventory.health<=0)return;
     if(!confine(a))return;
     a->captured=1;
     SetCursor(NULL);ssa_pc_input_runtime_focus(&a->game->input_runtime,1);
@@ -192,6 +197,19 @@ static int display_mode_apply(App *a,unsigned mode)
     }else{a->window_mode=mode;a->display_applied=1;}
     a->display_switching=0;InvalidateRect(a->window,NULL,FALSE);return ok!=0;
 }
+static void display_toggle(App *a)
+{
+    unsigned mode=a->settings.display_mode^1u;
+    if(!display_mode_apply(a,mode)){
+        fprintf(stderr,"Could not toggle display mode (Windows error %lu).\n",(unsigned long)GetLastError());
+        a->menu_notice="Display mode could not be changed.";a->menu_notice_ticks=300;return;
+    }
+    a->settings.display_mode=mode;
+    if(a->menu)a->menu->settings.display_mode=mode;
+    if(a->profile.enabled && !ssa_win32_settings_write(&a->settings,a->settings_path)){
+        a->menu_notice="Could not save Settings. Changes apply for this session.";a->menu_notice_ticks=300;
+    }
+}
 static int presentation_error(const char *stage)
 {fprintf(stderr,"Presentation failed: %s (Windows error %lu).\n",stage,(unsigned long)GetLastError());return 0;}
 static int snapshot_surface(const wchar_t *,const BITMAPINFO *,const uint32_t *);
@@ -199,7 +217,8 @@ static const uint32_t *display_pixels(const App *a)
 {
     if(a->screen_active)return a->screen_pixels;
     if(a->net_active && !a->net_prelevel)return a->net_pixels;
-    return !a->map_active && !a->menu_active && !a->story_active && !a->net_active && a->renderer.pixels && !a->original_renderer?a->renderer.pixels:a->game->rgb888;
+    return !a->map_active && !a->menu_active && !a->story_active && !a->net_active &&
+        !(a->game->players[0].motion.movement.flags&8) && a->renderer.pixels && !a->original_renderer?a->renderer.pixels:a->game->rgb888;
 }
 static int present(App *a,HDC window_dc)
 {
@@ -258,6 +277,10 @@ static int present(App *a,HDC window_dc)
     n=StretchDIBits(window_dc,0,0,w,h,0,0,w,h,a->back_pixels,&a->back_info,DIB_RGB_COLORS,SRCCOPY);
     if(n==0 || n==(int)GDI_ERROR)return presentation_error("finished frame blit");
     if(!GdiFlush())return presentation_error("display frame completion");
+    if(a->net_active){unsigned weapons,enemies;
+        if(ssa_netricsa_viewed(a->netricsa,&weapons,&enemies)!=1 ||
+           ssa_native_game_netricsa_read(a->game,weapons,enemies)!=1)return presentation_error("NETRICSA read acknowledgement");}
+    if(a->death_active && a->death_fade==0xf00)a->death_black=1;
     if(a->startup_test && a->transition_test && a->map_views==1 && a->level_revealing){
         const wchar_t *directory=_wgetenv(L"SSA_TRANSITION_CAPTURE_DIR");
         unsigned bit=a->level_fade==LEVEL_FADE_TICKS?1:a->level_fade==LEVEL_FADE_TICKS/2?2:!a->level_fade?4:0;
@@ -314,197 +337,78 @@ static int render(App *a)
         }
         a->bitmap.bmiHeader.biWidth=240;a->bitmap.bmiHeader.biHeight=-160;return 1;
     }
-    if(a->original_renderer){a->bitmap.bmiHeader.biWidth=240;a->bitmap.bmiHeader.biHeight=-160;
-        return ssa_native_game_draw(a->game)==1;}
+    if(a->original_renderer || (a->game->players[0].motion.movement.flags&8)){a->bitmap.bmiHeader.biWidth=240;a->bitmap.bmiHeader.biHeight=-160;
+        if(ssa_native_game_draw(a->game)!=1)return 0;
+    }else{
     if(ssa_native_game_prepare_view(a->game)<0)return 0;
     if(!w){if(!GetClientRect(a->window,&rect))return 0;
         if(rect.right<=0 || rect.bottom<=0)return 1;
         w=(unsigned)rect.right;h=(unsigned)rect.bottom;}
+    if(a->settings.aspect_ratio==SSA_ASPECT_GBA){int x,y,width,height;
+        if(!ssa_ui_viewport((int)w,(int)h,240,160,&x,&y,&width,&height))return 0;
+        w=(unsigned)width;h=(unsigned)height;
+    }
     if(ssa_pc_renderer_resize(&a->renderer,w,h)<0){
         fprintf(stderr,"Could not allocate render resolution %ux%u.\n",w,h);return 0;}
     if(ssa_pc_renderer_draw(&a->renderer,a->game)<0){
         fprintf(stderr,"PC renderer rejected frame %lu.\n",(unsigned long)a->game->frame_game.counter);return 0;}
-    a->bitmap.bmiHeader.biWidth=(LONG)w;a->bitmap.bmiHeader.biHeight=-(LONG)h;return 1;
-}
-static int begin_map(App *a)
-{
-    if(!a->map_view){a->map_view=calloc(1,sizeof(*a->map_view));if(!a->map_view)return 0;}
-    else memset(a->map_view,0,sizeof(*a->map_view));
-    if(ssa_map_view_init(a->map_view,a->rom,a->rom_size,a->level,a->language,a->difficulty)!=1)return 0;
-    if(a->audio.device && !ssa_win32_audio_restart(&a->audio,a->level)){
-        fprintf(stderr,"Map audio start failed (%u); continuing silently.\n",a->audio.last_error);
-        ssa_win32_audio_close(&a->audio);(void)ssa_native_game_bind_audio(a->game,NULL);
+    a->bitmap.bmiHeader.biWidth=(LONG)w;a->bitmap.bmiHeader.biHeight=-(LONG)h;
     }
-    a->map_active=1;a->map_fire=0;a->map_black_hold=MAP_BLACK_HOLD_TICKS;a->completion_recorded=a->tally_recorded=0;
-    a->black_presented_at.QuadPart=a->reveal_presented_at.QuadPart=0;
-    a->level_revealing=a->level_fade=0;++a->map_views;return render(a);
-}
-static int begin_netricsa(App *a,unsigned prelevel)
-{
-    SsaLevelStatistics current;SsaNetricsaData view={0};unsigned i;
-    if(!prelevel && !a->settings.ingame_netricsa)return 0;
-    if(a->screen_active || a->net_active || a->map_active || a->menu_active || a->story_active || a->level_revealing ||
-       ssa_native_game_statistics(&current,a->game)!=1)return 0;
-    if(!a->netricsa){a->netricsa=calloc(1,sizeof(*a->netricsa));if(!a->netricsa)return 0;}
-    else memset(a->netricsa,0,sizeof(*a->netricsa));
-    view.rows=current.rows;view.totals=a->statistics;
-    if(ssa_statistics_complete(&view.totals,&current)!=1)return 0;
-    for(i=0;i<12;++i){view.rows.enemies[i].spawned+=a->statistics_rows.enemies[i].spawned;
-        view.rows.enemies[i].hits+=a->statistics_rows.enemies[i].hits;view.rows.enemies[i].kills+=a->statistics_rows.enemies[i].kills;}
-    for(i=0;i<10;++i){view.rows.weapons[i].shots+=a->statistics_rows.weapons[i].shots;
-        view.rows.weapons[i].hits+=a->statistics_rows.weapons[i].hits;}
-    view.level=a->level;view.lives=prelevel?a->game->gameplay.life_game.continue_flag:a->game->game.life_game.continue_flag;
-    view.random=a->game->frame_game.counter*0x41c64e6du+12345u;
-    if(ssa_netricsa_init(a->netricsa,a->rom,a->rom_size,a->language,&view)!=1)return 0;
-    if(!prelevel){size_t count,j;uint32_t *backdrop,*hud_frame,*pixels;
-        SsaSpriteOam saved=a->game->oam,weapon_oam=saved;
-        SsaSpriteDispatch sprites=a->game->sprites;SsaWeaponObject objects[SSA_SPRITE_CAPACITY];int ok;
-        /* Capture the current renderer before switching presentation owners.
-         * Keep every world pixel, including the PC renderer's full resolution. */
-        if(!render(a))return 0;
-        a->net_width=(unsigned)a->bitmap.bmiHeader.biWidth;a->net_height=(unsigned)-a->bitmap.bmiHeader.biHeight;
-        if(!a->net_width || !a->net_height || (uint64_t)a->net_width*a->net_height>SIZE_MAX/sizeof(*pixels))return 0;
-        count=(size_t)a->net_width*a->net_height;
-        backdrop=malloc(count*sizeof(*backdrop));hud_frame=malloc(count*sizeof(*hud_frame));pixels=malloc(count*sizeof(*pixels));
-        if(!backdrop || !hud_frame || !pixels){free(backdrop);free(hud_frame);free(pixels);return 0;}
-        memcpy(hud_frame,display_pixels(a),count*sizeof(*hud_frame));
-        /* Rebuild weapon-only OAM from private sprite copies. Never change live
-         * sprite links, timers, cache or gameplay when capturing the clean frame. */
-        for(i=0;i<SSA_SPRITE_CAPACITY;++i){objects[i]=*sprites.objects[i];sprites.objects[i]=&objects[i];}
-        sprites.active_count=0;
-        for(i=0;i<a->game->sprites.active_count;++i){unsigned slot=a->game->sprites.active[i];
-            if(objects[slot].type==2)sprites.active[sprites.active_count++]=slot;}
-        ok=ssa_native_game_build_oam(a->game,&weapon_oam,&sprites)==1;
-        if(ok){a->game->oam=weapon_oam;ok=render(a);a->game->oam=saved;}
-        if(!ok){free(backdrop);free(hud_frame);free(pixels);return 0;}
-        memcpy(backdrop,display_pixels(a),count*sizeof(*backdrop));
-        a->net_weapon_pieces=weapon_oam.count;a->net_hud_removed=0;
-        for(j=0;j<count;++j)a->net_hud_removed+=backdrop[j]!=hud_frame[j];
-        free(a->net_backdrop);free(a->net_hud_frame);free(a->net_pixels);
-        a->net_backdrop=backdrop;a->net_hud_frame=hud_frame;a->net_pixels=pixels;
+    if(a->death_active){size_t i,count=(size_t)a->bitmap.bmiHeader.biWidth*(unsigned)-a->bitmap.bmiHeader.biHeight;
+        uint32_t *pixels=a->original_renderer || (a->game->players[0].motion.movement.flags&8)?a->game->rgb888:a->renderer.pixels;
+        unsigned darken=a->death_fade/256;
+        for(i=0;i<count;++i){unsigned c=pixels[i],r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+            pixels[i]=a->death_fade==0xf00?0:((r-r*darken/16)<<16)|((g-g*darken/16)<<8)|(b-b*darken/16);}
     }
-    a->net_prelevel=prelevel;if(prelevel)++a->net_briefings;
-    release(a);a->net_active=1;a->net_held=a->net_pressed=0;
-    a->net_counter=a->game->frame_game.counter;a->net_ticks=0;
-    if(a->audio.device && !ssa_win32_audio_screen(&a->audio,a->level,7))return 0;
-    ++a->transition_frame;return render(a);
+    return 1;
 }
-static int finish_netricsa(App *a)
-{
-    a->net_active=a->net_pressed=a->net_held=0;
-    if(a->net_prelevel){a->net_prelevel=0;return begin_map(a);}
-    if(a->audio.device && !ssa_win32_audio_screen(&a->audio,a->level,a->game->music_mode))return 0;
-    capture(a);
-    ++a->transition_frame;
-    free(a->net_backdrop);free(a->net_hud_frame);free(a->net_pixels);a->net_backdrop=a->net_hud_frame=a->net_pixels=NULL;
-    return render(a);
-}
-static int netricsa_client_pointer(const App *a,int x,int y,int *out_x,int *out_y)
-{
-    RECT bounds;int ix=x,iy=y;
-    if(!GetClientRect(a->window,&bounds))return 0;
-    if(a->net_prelevel)return ssa_ui_pointer(bounds.right,bounds.bottom,240,160,x,y,out_x,out_y);
-    if(!ssa_ui_pointer(bounds.right,bounds.bottom,(int)a->net_width,(int)a->net_height,x,y,&ix,&iy))return 0;
-    return ssa_ui_pointer((int)a->net_width,(int)a->net_height,240,160,ix,iy,out_x,out_y);
-}
-static void netricsa_pointer(App *a,int x,int y,unsigned click)
-{
-    int result=ssa_netricsa_pointer(a->netricsa,x,y,click);
-    if(result==SSA_NET_POINTER_CLOSE){a->net_pressed|=SSA_NET_CLOSE;return;}
-    if(result<0)a->failed=1;
-    if(result>0)ssa_win32_audio_menu_command(&a->audio,12,a->level,!a->no_music);
-    if(click && result>=0 && a->netricsa->hover &&
-       !(a->netricsa->hover==2 && !a->netricsa->has_enemies))ssa_win32_audio_menu_command(&a->audio,13,a->level,!a->no_music);
-}
-static void netricsa_wheel(App *a,int steps)
-{
-    unsigned weapon=a->netricsa->weapon,enemy=a->netricsa->enemy;
-    if(ssa_netricsa_wheel(a->netricsa,steps)<0){a->failed=1;return;}
-    if(a->netricsa->weapon!=weapon || a->netricsa->enemy!=enemy)
-        ssa_win32_audio_menu_command(&a->audio,12,a->level,!a->no_music);
-}
-static int netricsa_pointer_check(App *a,int x,int y,int wheel)
-{
-    RECT bounds;int left,top,width,height,px,py;LPARAM point;
-    int rw=a->net_prelevel?240:(int)a->net_width,rh=a->net_prelevel?160:(int)a->net_height;
-    if(!GetClientRect(a->window,&bounds) || !ssa_ui_viewport(rw,rh,240,160,&left,&top,&width,&height))return 0;
-    px=left+(x*width+width/2)/240;py=top+(y*height+height/2)/160;
-    if(!ssa_ui_viewport(bounds.right,bounds.bottom,rw,rh,&left,&top,&width,&height))return 0;
-    point=MAKELPARAM(left+(px*width+width/2)/rw,top+(py*height+height/2)/rh);
-    SendMessageW(a->window,WM_MOUSEMOVE,0,point);
-    SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,point);
-    SendMessageW(a->window,WM_LBUTTONUP,0,point);
-    if(wheel)SendMessageW(a->window,WM_MOUSEWHEEL,MAKEWPARAM(0,wheel*WHEEL_DELTA),0);
-    return !a->failed;
-}
-static int begin_menu(App *a)
-{
-    if(!a->menu){a->menu=calloc(1,sizeof(*a->menu));if(!a->menu)return 0;}
-    else memset(a->menu,0,sizeof(*a->menu));
-    if(ssa_menu_init(a->menu,a->rom,a->rom_size,!a->no_music)!=1)return 0;
-    a->menu->level_limit=SSA_NATIVE_CAMPAIGN_LEVELS;
-    a->menu->language=a->language;a->menu->completed_levels=a->profile.data.completed;
-    a->menu->settings=a->settings;a->menu->soundfont_available=ssa_win32_audio_soundfont_available(&a->audio);
-    a->menu->midi_available=a->audio.midi && !a->audio.midi->error;
-    a->menu_active=1;a->menu_last_page=65535;
-    a->menu_pressed=a->menu_held_keys=a->menu_page_ticks=0;
-    a->menu_game_counter=a->game->frame_game.counter;return render(a);
-}
-static int begin_story(App *a,unsigned next_level)
-{
-    release(a);
-    if(!a->story){a->story=calloc(1,sizeof(*a->story));if(!a->story)return 0;}
-    else memset(a->story,0,sizeof(*a->story));
-    if(ssa_campaign_screen_init(a->story,a->rom,a->rom_size,next_level,a->language,!a->no_music)!=1)return 0;
-    a->story_active=1;a->story_pressed=a->story_held=0;
-    a->story_game_counter=a->game->frame_game.counter;
-    a->map_active=a->menu_active=a->level_revealing=0;
-    if(a->audio.device && !ssa_win32_audio_begin_story(&a->audio,next_level)){
-        fprintf(stderr,"Story audio start failed (%u); continuing silently.\n",a->audio.last_error);
-        ssa_win32_audio_close(&a->audio);(void)ssa_native_game_bind_audio(a->game,NULL);
-    }
-    return render(a);
-}
-static int finish_story(App *a)
-{
-    unsigned ending=a->story->next_level==12;
-    a->story_active=a->story_pressed=a->story_held=0;
-    if(!ending)return begin_netricsa(a,1);
-    if(!begin_menu(a))return 0;
-    a->menu->page=a->menu->draw_page=SSA_MENU_MAIN;
-    a->menu_pressed=a->menu_held_keys=a->menu_page_ticks=0;
-    return render(a);
-}
-static void level_options(const App *a,SsaNativeGame *g)
+#include "game_screens.inc"
+static int level_options(const App *a,SsaNativeGame *g)
 {
     static const uint8_t continues[]={5,3,2};
     g->damage.difficulty=(uint8_t)a->difficulty;
     g->hud_notice.language=a->language;
-    g->gba_view=a->original_renderer;
-    (void)ssa_native_game_alternate_weapons(g,a->settings.alternate_weapons,0);
-    g->gameplay.life_game.continue_flag=continues[a->difficulty];
+    g->high_score=ssa_scores_valid(&a->scores.data)?a->scores.data.entries[0].score:0;
+    if(ssa_native_game_apply_settings(g,&a->settings)!=1)return 0;
+    g->gameplay.life_game.continue_flag=g->game.life_game.continue_flag=continues[a->difficulty];
+    return 1;
 }
 static void save_change(App *a,unsigned action,unsigned value)
 {
-    if(!ssa_win32_profile_store(&a->profile,action,value)){
+    int ok=ssa_win32_profile_store(&a->profile,action,value);
+    if(action==SSA_SAVE_CLEAR && ssa_scores_valid(&a->scores.data)){
+        if(!ssa_win32_scores_store(&a->scores,1,0,NULL))ok=0;
+        if(a->menu)a->menu->scores=a->scores.data;
+    }
+    if(!ok){
         fprintf(stderr,"Could not save progress/settings (Windows error %u): %ls\n",a->profile.last_error,a->profile.path);
         a->menu_notice="Could not save data. Check the save file's folder permissions.";a->menu_notice_ticks=300;
     }
+}
+static void score_change(App *a)
+{
+    if(!a->menu->score_submitted)return;
+    if(!ssa_win32_scores_store(&a->scores,0,a->menu->score_candidate,a->menu->scores.name)){
+        a->scores.data=a->menu->scores;
+        a->menu_notice="Could not save Scores. The record is kept for this session.";a->menu_notice_ticks=300;
+        fprintf(stderr,"Could not save Scores (Windows error %u): %ls\n",a->scores.last_error,a->scores.path);
+    }else{
+        a->menu->scores=a->scores.data;
+        a->menu->score_highlight=a->scores.last_rank<18?a->scores.last_rank+1:0;
+    }
+    a->menu->score_submitted=0;
 }
 static void settings_change(App *a)
 {
     SsaSettings next=a->menu->settings;
     if(a->menu_pressed || a->menu->page!=SSA_MENU_SETTINGS){
-        a->menu->soundfont_available=ssa_win32_audio_soundfont_available(&a->audio);
-        a->menu->midi_available=a->audio.midi && !a->audio.midi->error;
+        SsaWin32AudioStatus status=ssa_win32_audio_status(&a->audio);
+        a->menu->soundfont_available=status.soundfont_available;a->menu->midi_available=status.midi_available;
     }
     if((next.music_style==SSA_MUSIC_SOUNDFONT && !a->menu->soundfont_available) ||
        (next.music_style==SSA_MUSIC_MIDI && !a->menu->midi_available)){
         next.music_style=SSA_MUSIC_ORIGINAL;a->menu->settings.music_style=next.music_style;}
-    if(next.music_style==a->settings.music_style && next.music_volume==a->settings.music_volume && next.sound_volume==a->settings.sound_volume &&
-       next.renderer==a->settings.renderer && next.jump_enabled==a->settings.jump_enabled && next.ingame_netricsa==a->settings.ingame_netricsa &&
-       next.thirdperson_enabled==a->settings.thirdperson_enabled && next.display_mode==a->settings.display_mode &&
-       next.alternate_weapons==a->settings.alternate_weapons)return;
+    if(ssa_settings_equal(&next,&a->settings))return;
     if(!ssa_win32_audio_settings(&a->audio,&next)){
         a->menu->settings.music_style=a->settings.music_style;
         a->menu_notice="Music device could not be enabled.";a->menu_notice_ticks=300;return;}
@@ -512,8 +416,11 @@ static void settings_change(App *a)
         next.display_mode=a->settings.display_mode;a->menu->settings.display_mode=next.display_mode;
         a->menu_notice="Display mode could not be changed.";a->menu_notice_ticks=300;}
     a->settings=next;a->original_renderer=next.renderer==SSA_RENDER_GBA;
-    a->game->gba_view=a->original_renderer;
-    (void)ssa_native_game_alternate_weapons(a->game,next.alternate_weapons,0);
+    if(ssa_native_game_apply_settings(a->game,&next)!=1){
+        fprintf(stderr,"Could not apply runtime settings at frame%lu.\n",(unsigned long)a->game->frame_game.counter);
+        a->failed=1;
+    }
+    if(!next.automap_enabled){a->automap_keys=0;a->wheel_remainder=0;}
     if(a->profile.enabled && !ssa_win32_settings_write(&next,a->settings_path)){
         a->menu_notice="Could not save Settings. Changes apply for this session.";a->menu_notice_ticks=300;}
 }
@@ -531,7 +438,7 @@ static int begin_intermission(App *a,unsigned completion)
     if(a->screen_active || a->menu_active || a->story_active || a->map_active || a->net_active || a->level_revealing)return 0;
     if(!a->intermission){a->intermission=calloc(1,sizeof(*a->intermission));if(!a->intermission)return 0;}
     if(ssa_intermission_init(a->intermission,a->game,a->language,completion)!=1)return 0;
-    {SsaSpriteOam saved=a->game->oam,filtered=saved;SsaSpriteDispatch sprites=a->game->sprites;
+    {SsaSpriteOam saved=a->game->oam,filtered=saved,saved_layers[6];SsaSpriteDispatch sprites=a->game->sprites;
         SsaWeaponObject objects[SSA_SPRITE_CAPACITY];unsigned i;int ok;
         for(i=0;i<SSA_SPRITE_CAPACITY;++i){objects[i]=*sprites.objects[i];sprites.objects[i]=&objects[i];}
         sprites.active_count=0;
@@ -539,8 +446,13 @@ static int begin_intermission(App *a,unsigned completion)
          * Completion owns its score/digits; pause retains the gameplay HUD. */
         if(!completion)for(i=0;i<a->game->sprites.active_count;++i){unsigned slot=a->game->sprites.active[i];
             if(objects[slot].type!=13 && objects[slot].type!=14)sprites.active[sprites.active_count++]=slot;}
-        ok=ssa_native_game_build_oam(a->game,&filtered,&sprites)==1;
-        if(ok){a->game->oam=filtered;ok=render(a);a->game->oam=saved;}
+        memcpy(saved_layers,a->game->original_hud_oam,sizeof saved_layers);
+        ok=ssa_native_game_build_oam(a->game,&a->game->oam,&sprites)==1;filtered=a->game->oam;
+        if(ok){unsigned suppressed=a->game->hud_suppressed;
+            if(completion)a->game->hud_suppressed=1;
+            a->game->oam=filtered;ok=render(a);a->game->oam=saved;
+            a->game->hud_suppressed=suppressed;}
+        a->game->oam=saved;memcpy(a->game->original_hud_oam,saved_layers,sizeof saved_layers);
         if(!ok)return 0;
     }
     a->screen_width=(unsigned)a->bitmap.bmiHeader.biWidth;a->screen_height=(unsigned)-a->bitmap.bmiHeader.biHeight;
@@ -556,13 +468,10 @@ static int begin_intermission(App *a,unsigned completion)
 }
 static unsigned screen_completion_music_finished(App *a)
 {
-    unsigned done;
     if(!a->audio.device)return 1;
-    EnterCriticalSection(&a->audio.mutex);
     /* Original02932 reads03006994: player0 from the ROM player table.
      * Song7 is a short PSG cue on player1, not a spoken Sam recording. */
-    done=!a->audio.mixer.players[0].active;
-    LeaveCriticalSection(&a->audio.mutex);return done;
+    return !ssa_win32_audio_status(&a->audio).music_active;
 }
 static int finish_intermission(App *a)
 {
@@ -584,9 +493,7 @@ static int finish_intermission(App *a)
         a->reload=a->advance=1;return 1;
     }
     if(a->intermission->pause.input_state==5){
-        if(!begin_menu(a))return 0;
-        a->menu->page=a->menu->draw_page=SSA_MENU_MAIN;
-        ssa_win32_audio_menu_command(&a->audio,8,a->level,!a->no_music);return render(a);
+        return begin_score_menu(a,a->game->score);
     }
     capture(a);
     return render(a);
@@ -598,9 +505,53 @@ static int intermission_tick(App *a)
     screen_commands(a);++a->transition_frame;
     return active || finish_intermission(a);
 }
+static int begin_death_exit(App *a)
+{
+    if(a->game->game.life_game.input_state!=4 || a->death_active)return 0;
+    release(a);a->death_active=1;a->death_fade=a->death_black=0;
+    a->level_revealing=a->level_fade=0;
+    /* Original08E74(7) fades music/effects; it is not sound7. */
+    if(!a->no_music)ssa_win32_audio_fade(&a->audio,7);
+    ++a->transition_frame;return 1;
+}
+static int death_tick(App *a)
+{
+    int destination;
+    if(!a->death_active)return 0;
+    if(a->reload)return 1;
+    ++a->transition_frame;
+    /* Original15698 clamps only after crossing0xF00. Present full black
+     * before retiring the frozen level, even when catching up a slow frame. */
+    if(a->death_fade<0xf00){a->death_fade+=0x40;return 1;}
+    if(!a->death_black)return 1;
+    destination=ssa_run_exit(&a->game->game.life_game,&a->game->frame_game.flags);
+    if(destination<0)return 0;
+    a->game->gameplay.life_game=a->game->game.life_game;
+    /* The original terminal handoff consumes a life. Rebuild the level from
+     * its entry snapshot while lives remain, without a restart prompt. */
+    a->advance=0;
+    if(destination==SSA_RUN_RETRY){a->reload=1;return 1;}
+    a->death_active=0;
+    a->reload=0;
+    if(!begin_menu(a))return 0;
+    a->menu->page=a->menu->draw_page=SSA_MENU_MAIN;
+    if(ssa_menu_step(a->menu,0)!=1)return 0;
+    ssa_win32_audio_menu_command(&a->audio,8,a->level,!a->no_music);
+    return render(a);
+}
 static int game_tick(App *a)
 {
     int result;
+    if(a->death_active)return 1;
+    /* Pause belongs to the frontend screens. A dead player still needs entity
+     * updates to finish06154 and request its terminal fade; retaining bit1
+     * here would freeze that scene indefinitely. Mode4 freezes it deliberately. */
+    if(a->game->players[0].inventory.health<=0 && a->game->game.life_game.input_state!=4)
+        a->game->frame_game.flags&=~1u;
+    if(a->game->players[0].motion.movement.flags&8){
+        if((a->automap_keys&1) && ssa_native_game_automap_zoom(a->game,1)<0)return -1;
+        if((a->automap_keys&2) && ssa_native_game_automap_zoom(a->game,-1)<0)return -1;
+    }
     if(!a->settings.thirdperson_enabled){
         a->game->input.view_toggle=0;a->game->player.view.third_person=0;
     }
@@ -609,6 +560,8 @@ static int game_tick(App *a)
         a->game->input.jump_pressed=0;
     }
     result=ssa_native_game_tick(a->game);
+    if(result==1 && a->window && a->game->game.life_game.input_state==4 && !a->death_active &&
+       !a->smoke && !begin_death_exit(a))return -1;
     if(result==1 && a->game->finished && a->game->level_runtime.script.exit_toggle==1 &&
        a->game->players[0].inventory.health>0 && !a->completion_recorded){
         save_change(a,SSA_SAVE_COMPLETE,a->level);a->completion_recorded=1;
@@ -620,6 +573,7 @@ static int game_tick(App *a)
 static int finish_menu(App *a)
 {
     memset(&a->statistics,0,sizeof(a->statistics));memset(&a->statistics_rows,0,sizeof(a->statistics_rows));
+    a->tally_recorded=a->completion_recorded=a->advance=a->reload=a->death_active=a->death_fade=a->death_black=0;
     a->language=a->menu->language;a->difficulty=a->menu->difficulty;a->no_music=!a->menu->music_enabled;
     {SsaNativeGame *next=calloc(1,sizeof(*next));
         if(!next)return 0;
@@ -639,7 +593,8 @@ static int finish_menu(App *a)
         if(ssa_native_game_carry_capture(&a->entry,a->game)!=1)return 0;
     }
     a->completion_setting=a->menu->loadout;
-    level_options(a,a->game);a->menu_active=0;a->menu_pressed=0;++a->menu_starts;
+    if(!level_options(a,a->game))return 0;
+    a->menu_active=0;a->menu_pressed=0;++a->menu_starts;
     return !a->menu->loadout && a->level==0?begin_story(a,0):begin_netricsa(a,1);
 }
 static int menu_frozen(const App *a)
@@ -649,20 +604,17 @@ static int menu_action(App *a)
     if(a->menu->quit_requested){release(a);a->running=0;return 1;}
     return !a->menu->done || finish_menu(a);
 }
-static int finish_map(App *a)
+static int begin_level_reveal(App *a)
 {
-    uint64_t duration=elapsed_us(a->black_presented_at);
-    if(a->startup_test && a->map_black_presents!=a->map_views){
-        fprintf(stderr,"Map handoff skipped the final black presentation.\n");return 0;}
-    if(a->startup_test && duration<250000){fprintf(stderr,"Black hold was too short.\n");return 0;}
-    if(duration && (!a->black_hold_min_us || duration<a->black_hold_min_us))a->black_hold_min_us=duration;
-    /* Flush queued map audio before the first gameplay tick. Both music and
+    /* Flush old screen/death audio before the first gameplay tick. Music and
      * non-music starts reset the sound fade and transient confirm effect. */
     if(a->audio.device && !ssa_win32_audio_begin_level(&a->audio,a->level)){
         fprintf(stderr,"Level audio start failed (%u); continuing silently.\n",a->audio.last_error);
         ssa_win32_audio_close(&a->audio);(void)ssa_native_game_bind_audio(a->game,NULL);
     }
-    a->map_active=0;a->map_fire=0;++a->map_starts;
+    a->map_active=0;a->map_fire=0;
+    a->completion_recorded=a->tally_recorded=0;
+    a->reveal_presented_at.QuadPart=0;
     if(a->startup_test && a->audio.device){unsigned song;int valid;
         EnterCriticalSection(&a->audio.mutex);
         valid=ssa_audio_music_select(a->rom,a->rom_size,2,a->level,1,&song)==1 &&
@@ -726,9 +678,21 @@ static int finish_map(App *a)
     if(!render(a))return 0;
     return 1;
 }
+static int finish_map(App *a)
+{
+    uint64_t duration=elapsed_us(a->black_presented_at);
+    if(a->startup_test && a->map_black_presents!=a->map_views){
+        fprintf(stderr,"Map handoff skipped the final black presentation.\n");return 0;}
+    if(a->startup_test && duration<250000){fprintf(stderr,"Black hold was too short.\n");return 0;}
+    if(duration && (!a->black_hold_min_us || duration<a->black_hold_min_us))a->black_hold_min_us=duration;
+    ++a->map_starts;return begin_level_reveal(a);
+}
 static int reload(App *a)
 {
     SsaNativeCarry carry=a->entry;SsaNativeGame *next;unsigned level=a->level,chapter=a->advance && a->level==5;
+    unsigned retry=a->death_active && !a->advance;
+    unsigned lives=a->game->frame_game.counter?a->game->game.life_game.continue_flag:a->game->gameplay.life_game.continue_flag;
+    if(!a->advance && ssa_native_game_netricsa_entries(&carry.journal,a->game)!=1)return 0;
     if(a->advance){
         if(!a->game->finished || a->level+1>=SSA_NATIVE_CAMPAIGN_LEVELS || ssa_native_game_carry_next(&carry,a->game)!=1)return 0;
         if(a->tally_recorded)carry=a->completed_carry;
@@ -747,16 +711,25 @@ static int reload(App *a)
         for(i=0;i<10;++i){a->statistics_rows.weapons[i].shots+=completed.rows.weapons[i].shots;
             a->statistics_rows.weapons[i].hits+=completed.rows.weapons[i].hits;}
     }
-    level_options(a,next);
+    if(!level_options(a,next)){ssa_native_game_free(next);free(next);return 0;}
+    next->gameplay.life_game.continue_flag=next->game.life_game.continue_flag=(uint8_t)lives;
     if(a->advance)a->completion_setting=0;
     release(a);ssa_native_game_free(a->game);free(a->game);a->game=next;a->level=level;a->entry=carry;
+    a->death_active=a->death_fade=a->death_black=0;
     ssa_pc_renderer_free(&a->renderer);
     if(a->audio.device){SsaNativeAudioOps ops={ssa_win32_audio_play,ssa_win32_audio_stop,&a->audio,
         ssa_win32_audio_play_at,ssa_win32_audio_listen,ssa_win32_audio_move,ssa_win32_audio_music,ssa_win32_audio_source};
         if(ssa_native_game_bind_audio(a->game,&ops)<0)return 0;
     }
     ssa_pc_input_runtime_focus(&a->game->input_runtime,0);ssa_pc_input_runtime_enable(&a->game->input_runtime,0);
-    a->reload=a->advance=0;return chapter?begin_story(a,6):begin_netricsa(a,1);
+    a->reload=a->advance=0;
+    if(retry){
+        /* Death already presented black. Retry at the usual level reveal,
+         * retaining the reduced lives and restored entry snapshot. */
+        a->net_active=a->net_prelevel=a->map_active=a->story_active=0;
+        return begin_level_reveal(a);
+    }
+    return chapter?begin_story(a,6):begin_netricsa(a,1);
 }
 /* Test-only shell transitions. Actual exits/combat are verified separately by
  * the normal-input campaign checker, without these inventory/death fixtures. */
@@ -851,7 +824,7 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
                 (void)menu_pointer_input(a,x,y,0);
         }return 0;
     case WM_CHAR:
-        if(a->menu_active && a->menu->page==SSA_MENU_PASSWORD){
+        if(a->menu_active && (a->menu->page==SSA_MENU_PASSWORD || a->menu->page==SSA_MENU_SCORE_NAME)){
             (void)ssa_menu_text(a->menu,(unsigned)wp);return 0;
         }break;
     case WM_LBUTTONDOWN:
@@ -881,11 +854,13 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
            a->game->input.focused && a->game->input.enabled){
             int delta=a->wheel_remainder+(short)HIWORD(wp),steps=delta/WHEEL_DELTA;
             a->wheel_remainder=delta%WHEEL_DELTA;
-            if(steps)ssa_native_game_cycle_weapon(a->game,-steps);
+            if(steps){if(a->game->players[0].motion.movement.flags&8)ssa_native_game_automap_zoom(a->game,steps);
+                else ssa_native_game_cycle_weapon(a->game,-steps);}
         }else a->wheel_remainder=0;
         return 0;
     case WM_KEYDOWN:case WM_KEYUP:{
         int down=msg==WM_KEYDOWN,repeat=down && (lp&((LPARAM)1<<30))!=0;
+        if(wp==VK_F11){if(down && !repeat && !a->display_switching)display_toggle(a);return 0;}
         if(a->screen_active){
             unsigned bit=wp==VK_RETURN?2u:wp==VK_SPACE?4u:0;
             if(down)a->screen_held|=bit;else a->screen_held&=~bit;
@@ -898,7 +873,6 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
                     a->intermission->pause.selection=a->intermission->pause.selection>=2?3:0;
                     a->screen_pressed|=0x10000;
                 }
-                if(wp=='M')ssa_win32_audio_toggle_mute(&a->audio);
             }return 0;
         }
         if(a->net_active){unsigned held=wp==VK_UP || wp=='W'?SSA_NET_SCROLL_UP:wp==VK_DOWN || wp=='S'?SSA_NET_SCROLL_DOWN:0;
@@ -910,7 +884,6 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
                 else if(wp==VK_DOWN || wp=='S')a->net_pressed|=SSA_NET_DOWN;
                 else if(wp==VK_LEFT || wp=='A')a->net_pressed|=SSA_NET_PREVIOUS;
                 else if(wp==VK_RIGHT || wp=='D')a->net_pressed|=SSA_NET_NEXT;
-                else if(wp=='M')ssa_win32_audio_toggle_mute(&a->audio);
             }return 0;
         }
         if(a->story_active){
@@ -918,17 +891,20 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
             if(down)a->story_held|=bit;else a->story_held&=~bit;
             if(down && !repeat){
                 if(wp==VK_RETURN || wp==VK_SPACE || wp==VK_ESCAPE)a->story_pressed|=0x10000;
-                else if(wp=='M')ssa_win32_audio_toggle_mute(&a->audio);
             }
             return 0;
         }
         if(a->menu_active){
-            int editing=a->menu && a->menu->page==SSA_MENU_PASSWORD;
+            int editing=a->menu && (a->menu->page==SSA_MENU_PASSWORD || a->menu->page==SSA_MENU_SCORE_NAME);
             unsigned key=wp==VK_UP?1u:!editing && wp=='W'?2u:wp==VK_DOWN?4u:!editing && wp=='S'?8u:0;
             if(down)a->menu_held_keys|=key;else a->menu_held_keys&=~key;
             if(editing && down && wp==VK_DELETE){(void)ssa_menu_text(a->menu,127);return 0;}
-            if(editing && down && (wp==VK_HOME || wp==VK_END) && a->menu->password_typed){
-                a->menu->password_cursor=wp==VK_HOME?0:(uint8_t)strlen(a->menu->password);return 0;}
+            if(editing && down && (wp==VK_HOME || wp==VK_END)){
+                if(a->menu->page==SSA_MENU_SCORE_NAME && a->menu->score_typed)
+                    a->menu->score_cursor=wp==VK_HOME?0:(uint8_t)a->menu->score_length;
+                else if(a->menu->page==SSA_MENU_PASSWORD && a->menu->password_typed)
+                    a->menu->password_cursor=wp==VK_HOME?0:(uint8_t)strlen(a->menu->password);
+                return 0;}
             if(down && !repeat){
                 if(wp==VK_UP || (!editing && wp=='W'))a->menu_pressed|=SSA_MENU_UP;
                 else if(wp==VK_DOWN || (!editing && wp=='S'))a->menu_pressed|=SSA_MENU_DOWN;
@@ -936,7 +912,6 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
                 else if(wp==VK_RIGHT || (!editing && wp=='D'))a->menu_pressed|=SSA_MENU_RIGHT;
                 else if(wp==VK_RETURN || (!editing && wp==VK_SPACE))a->menu_pressed|=SSA_MENU_CONFIRM|SSA_MENU_START;
                 else if(wp==VK_ESCAPE)a->menu_pressed|=SSA_MENU_BACK;
-                else if(wp=='M' && !editing)ssa_win32_audio_toggle_mute(&a->audio);
             }return 0;
         }
         if(down && !repeat && (wp=='N' || wp==VK_TAB) && !a->map_active && !a->level_revealing){
@@ -947,9 +922,24 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
             }
             return 0;
         }
-        if(down && !repeat && wp=='M'){ssa_win32_audio_toggle_mute(&a->audio);return 0;}
+        if(wp=='M'){
+            if(down && !repeat && a->settings.automap_enabled && a->captured && !a->map_active && !a->level_revealing &&
+               !a->game->finished && a->game->players[0].inventory.health>0 && !(a->game->frame_game.flags&1)){
+                if(ssa_native_game_automap(a->game,!(a->game->players[0].motion.movement.flags&8))<0)a->failed=1;
+                a->automap_keys=0;a->wheel_remainder=0;++a->transition_frame;
+                /* Keep pixel ownership and bitmap dimensions synchronized
+                 * before a queued WM_PAINT can present this mode. */
+                if(!a->failed && !render(a))a->failed=1;
+            }return 0;
+        }
+        if(wp==VK_ADD || wp==VK_OEM_PLUS || wp==VK_SUBTRACT || wp==VK_OEM_MINUS){
+            unsigned bit=(wp==VK_ADD || wp==VK_OEM_PLUS)?1u:2u;
+            if(!down)a->automap_keys&=~bit;
+            else if(a->captured && (a->game->players[0].motion.movement.flags&8) && !repeat)a->automap_keys|=bit;
+            return 0;
+        }
         if(a->map_active && down && !repeat && (wp==VK_RETURN || wp==VK_SPACE)){a->map_fire=1;return 0;}
-        if(down && !repeat && wp==VK_RETURN){
+        if(down && !repeat && wp==VK_RETURN && a->startup_test){
             if(wp==VK_RETURN && a->game->finished && a->level+1==SSA_NATIVE_CAMPAIGN_LEVELS){
                 if(!begin_story(a,12))a->failed=1;return 0;
             }
@@ -957,9 +947,9 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
             a->reload=1;return 0;
         }
         if((a->captured || (a->startup_test && a->transition_test && a->level_revealing)) && wp<128){
-            if(down && !repeat && wp>='0' && wp<='9')
+            if(down && !repeat && wp>='0' && wp<='9' && !(a->game->players[0].motion.movement.flags&8))
                 ssa_native_game_select_weapon(a->game,wp=='0'?10:(unsigned)(wp-'0'));
-            else if(down && !repeat && wp=='Q' && !a->map_active && !(a->game->frame_game.flags&1) &&
+            else if(down && !repeat && wp=='Q' && !a->map_active && !(a->game->players[0].motion.movement.flags&8) && !(a->game->frame_game.flags&1) &&
                     a->game->input.focused && a->game->input.enabled && a->game->players[0].inventory.health>0)
                 ssa_native_game_previous_weapon(a->game);
             else ssa_pc_input_runtime_key(&a->game->input_runtime,(int)wp,down,repeat);
@@ -995,6 +985,7 @@ static int snapshot(App *a,const wchar_t *path)
     const uint32_t *pixels=display_pixels(a);
     return snapshot_surface(path,&a->bitmap,pixels);
 }
+#include "game_diagnostics.inc"
 static int run(App *a)
 {
     LARGE_INTEGER frequency,previous,now;double acc=0;MSG m;unsigned frames=0;
@@ -1017,82 +1008,7 @@ static int run(App *a)
             fprintf(stderr,"Audio output failed (%u); continuing silently.\n",a->audio.last_error);ssa_win32_audio_close(&a->audio);
             (void)ssa_native_game_bind_audio(a->game,NULL);
         }
-        if(a->audio_test && frames>=20 && !a->audio_test_sound){
-            if(a->game->audio_ops.play)a->game->audio_ops.play(a->game->audio_ops.context,0x14);
-            if(a->audio.device){uint64_t before;unsigned muted;SsaAudioPlayer music;
-                EnterCriticalSection(&a->audio.mutex);muted=a->audio.mixer.muted;music=a->audio.mixer.players[0];
-                a->audio_test_level_starts=a->no_music?!music.active:music.active && music.song==0x73 && a->audio.mixer.music_command==2;
-                a->game->audio_ops.play(a->game->audio_ops.context,13);
-                a->audio_test_footsteps=!memcmp(&music,&a->audio.mixer.players[0],sizeof(music)) &&
-                    audio_test_latest(&a->audio.mixer,13)->active &&
-                    audio_test_latest(&a->audio.mixer,13)->song==13;
-                SendMessageW(a->window,WM_KEYDOWN,'M',0);
-                a->audio_test_mute=a->audio.mixer.muted!=muted;
-                SendMessageW(a->window,WM_KEYDOWN,'M',0);
-                a->audio_test_mute&=a->audio.mixer.muted==muted;
-                before=a->audio.recycled;LeaveCriticalSection(&a->audio.mutex);
-                /* Deliberately stall rendering beyond the50ms audio queue.
-                 * The audio worker must continue delivering device buffers. */
-                Sleep(160);
-                EnterCriticalSection(&a->audio.mutex);a->audio_test_worker=a->audio.recycled>before;
-                LeaveCriticalSection(&a->audio.mutex);
-            }
-            a->audio_test_sound=1;
-        }
-        if(a->audio_test && a->audio.device && frames>=30 && !a->audio_test_fade){
-            EnterCriticalSection(&a->audio.mutex);
-            if(ssa_audio_fade(&a->audio.mixer,0)==1)a->audio_test_fade=1;
-            LeaveCriticalSection(&a->audio.mutex);
-        }
-        if(a->audio_test && a->audio.device && frames>=40 && a->audio_test_fade==1){
-            EnterCriticalSection(&a->audio.mutex);
-            if(a->audio.mixer.master_gain<1 && a->audio.mixer.music.flags&4)a->audio_test_fade=2;
-            LeaveCriticalSection(&a->audio.mutex);
-        }
-        if(a->audio_test && frames>=40 && a->audio_test_footsteps==1 && a->audio.device){SsaAudioPlayer music;
-            EnterCriticalSection(&a->audio.mutex);music=a->audio.mixer.players[0];
-            a->game->audio_ops.play(a->game->audio_ops.context,14);
-            if(!memcmp(&music,&a->audio.mixer.players[0],sizeof(music)) &&
-               audio_test_latest(&a->audio.mixer,14)->active &&
-               audio_test_latest(&a->audio.mixer,14)->song==14)a->audio_test_footsteps=2;
-            LeaveCriticalSection(&a->audio.mutex);
-        }
-        if(a->audio_test && frames>=80 && !a->audio_test_spatial && a->audio.device){SsaAudioPlayer music;SsaAudioPoint point;
-            EnterCriticalSection(&a->audio.mutex);music=a->audio.mixer.players[0];point=a->audio.mixer.listener.position;
-            /* The level-clear cue ran before restart. A sticky failure here
-             * must not be hidden by the later explicit level-music callback. */
-            if(a->audio_test_music!=1 || (a->no_music?music.active:!music.active || music.song!=0x73 || a->audio.mixer.music_command!=2))a->audio_test_music=4;
-            else if(a->audio_test_level_starts==1 && a->audio.mixer.master_gain==1 && !(a->audio.mixer.music.flags&12))a->audio_test_level_starts=2;
-            point.x+=a->audio.mixer.listener.right_x*256;point.y+=a->audio.mixer.listener.right_y*256;
-            a->game->audio_ops.play_at(a->game->audio_ops.context,0x14,&point);
-            if(a->audio.mixer.listener_ready && audio_test_latest(&a->audio.mixer,0x14)->positioned &&
-               audio_test_latest(&a->audio.mixer,0x14)->target_right>audio_test_latest(&a->audio.mixer,0x14)->target_left*3 &&
-               !memcmp(&music,&a->audio.mixer.players[0],sizeof(music)))a->audio_test_spatial=1;
-            LeaveCriticalSection(&a->audio.mutex);
-        }
-        if(a->audio_test && frames>=90 && a->audio_test_spatial==1 && a->audio.device){SsaAudioPoint point;uint64_t notes;
-            EnterCriticalSection(&a->audio.mutex);notes=a->audio.mixer.notes;point=a->audio.mixer.listener.position;
-            point.x-=a->audio.mixer.listener.right_x*256;point.y-=a->audio.mixer.listener.right_y*256;
-            a->game->audio_ops.move(a->game->audio_ops.context,0x14,&point);
-            if(a->audio.mixer.notes==notes && audio_test_latest(&a->audio.mixer,0x14)->target_left>audio_test_latest(&a->audio.mixer,0x14)->target_right*3)
-                a->audio_test_spatial=2;
-            LeaveCriticalSection(&a->audio.mutex);
-        }
-        if(a->audio_test && a->audio.device && a->audio_test_music<3){
-            static const unsigned at[]={45,100,110},command[]={9,10,2},song[]={0x78,0x81,0x73};
-            unsigned step=a->audio_test_music;
-            if(frames>=at[step]){SsaAudioPlayer *player;
-                EnterCriticalSection(&a->audio.mutex);
-                if(!a->audio_test_music_queued){
-                    a->game->audio_ops.music(a->game->audio_ops.context,command[step],a->level);a->audio_test_music_queued=1;
-                }
-                player=&a->audio.mixer.players[0];
-                if((a->no_music?!player->active:player->active && player->song==song[step]) && !(a->audio.mixer.music.flags&8)){
-                    ++a->audio_test_music;a->audio_test_music_queued=0;
-                }
-                LeaveCriticalSection(&a->audio.mutex);
-            }
-        }
+        diagnostics_audio(a,frames);
         if(a->smoke_resize && frames==2 && !SetWindowPos(a->window,NULL,0,0,1024,768,
             SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOZORDER))return 0;
         if(a->smoke){
@@ -1110,11 +1026,13 @@ static int run(App *a)
             if(acc>8.0/60.0)acc=8.0/60.0;
         }
         while(acc>=1.0/60.0){
-            if(a->screen_active){
+            if(a->death_active){
+                if(!death_tick(a))return 0;
+            }else if(a->screen_active){
                 /* Screen clock is60Hz even when the scene/render rate differs. */
                 if(a->transition_test && a->intermission->completion){a->screen_held=1;a->screen_pressed=1;}
                 if(!intermission_tick(a))return 0;
-            }else if(a->net_active){unsigned i;uint32_t input;
+            }else if(a->net_active){uint32_t input;
                 if(a->game->frame_game.counter!=a->net_counter)return 0;
                 if(a->net_prelevel){
                     ++a->net_prelevel_ticks;
@@ -1142,43 +1060,20 @@ static int run(App *a)
                            a->netricsa->data.rows.weapons[j].ammo!=snapshot.rows.weapons[j].ammo)return 0;
                         ++a->net_data_checks;
                     }
-                    if(t>=25 && t<95 && a->audio.device){int valid;
+                    if(t>=25 && t<95 && a->audio.device){int valid;unsigned song;
                         EnterCriticalSection(&a->audio.mutex);
                         valid=a->no_music?!a->audio.mixer.players[0].active:
-                            a->audio.mixer.music_command==7 && a->audio.mixer.players[0].song==0x70;
+                            ssa_audio_music_select(a->rom,a->rom_size,a->game->music_mode,a->level,1,&song)==1 &&
+                            a->audio.mixer.music_command==a->game->music_mode && a->audio.mixer.players[0].song==song;
                         LeaveCriticalSection(&a->audio.mutex);if(!valid)return 0;++a->net_music_checks;
                     }
                     if(t==95){if(!netricsa_pointer_check(a,136,12,0) || !(a->net_pressed&SSA_NET_CLOSE))return 0;++a->net_checks;}
                 }
                 input=a->net_pressed|a->net_held;
-                if(!a->netricsa->closing && (input&SSA_NET_CLOSE) && !a->no_music)ssa_win32_audio_fade(&a->audio,5);
-                if((a->net_prelevel?ssa_netricsa_step(a->netricsa,input):ssa_netricsa_pc_step(a->netricsa,input))<0)return 0;
-                a->net_pressed=0;++a->net_ticks;++a->transition_frame;
-                for(i=0;i<a->netricsa->command_count;++i){unsigned c=a->netricsa->commands[i];
-                    if(c>=0x100)ssa_win32_audio_play(&a->audio,c-0x100);
-                    else ssa_win32_audio_menu_command(&a->audio,c,a->level,!a->no_music);}
-                if(a->netricsa->done && !finish_netricsa(a))return 0;
+                if(!netricsa_tick(a,input))return 0;
             }else if(a->story_active){unsigned i;uint32_t input;
                 if(a->game->frame_game.counter!=a->story_game_counter)return 0;
-                if(a->startup_test){
-                    unsigned t=a->story->frame;
-                    if(t==80)SendMessageW(a->window,WM_KEYDOWN,VK_UP,0);
-                    if(t==100)SendMessageW(a->window,WM_KEYUP,VK_UP,0);
-                    if(t==110)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                    if(t==130)SendMessageW(a->window,WM_KEYUP,VK_DOWN,0);
-                    if(t==145)SendMessageW(a->window,WM_KEYDOWN,VK_RIGHT,0);
-                    if(t==150)SendMessageW(a->window,WM_KEYUP,VK_RIGHT,0);
-                    if(t==160)SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,0);
-                    if(a->audio.device && !a->story->story.mode){
-                        unsigned song=0;int valid;
-                        EnterCriticalSection(&a->audio.mutex);
-                        valid=a->no_music?!a->audio.mixer.players[0].active:
-                            ssa_audio_music_select(a->rom,a->rom_size,11,a->story->next_level,1,&song)==1 &&
-                            a->audio.mixer.music_command==11 && a->audio.mixer.players[0].song==song;
-                        LeaveCriticalSection(&a->audio.mutex);
-                        if(!valid)return 0;++a->story_music_checks;
-                    }
-                }
+                if(!diagnostics_story_input(a))return 0;
                 input=a->story_pressed|(a->story_held&1?0x40u:0u)|(a->story_held&2?0x80u:0u)|(a->story_held&4?0x800000u:0u);
                 if(ssa_campaign_screen_step(a->story,input)<0)return 0;
                 a->story_pressed=0;++a->story_ticks;++a->transition_frame;
@@ -1203,112 +1098,12 @@ static int run(App *a)
                 if(a->menu_notice_ticks)--a->menu_notice_ticks;
                 if(a->menu_last_page!=a->menu->page){a->menu_last_page=a->menu->page;a->menu_page_ticks=0;
                     if(a->menu->page==SSA_MENU_PASSWORD)a->menu_held_keys=0;}
-                if(a->startup_test){unsigned p=a->menu->page,t=a->menu_page_ticks;
-                    unsigned wanted_language=a->menu_test?(a->menu_test-1)/3:a->password_test?(a->password_test-1)%3:0;
-                    unsigned wanted_difficulty=a->menu_test?(a->menu_test-1)%3:1;
-                    if(p==SSA_MENU_MAIN && (a->menu_test || (a->password_test && wanted_language)) &&
-                            !a->menu_options_test && (t==2 || t==4))
-                        SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                    else if(p==SSA_MENU_OPTIONS && (a->menu_test || a->password_test)){
-                        if(a->menu_credits_test==2){
-                            if(t==2){SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);a->menu_options_test=1;}
-                        }else if(t==6 || t==8)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                        else if((t==10 && wanted_language>=1) || (t==12 && wanted_language==2))
-                            SendMessageW(a->window,WM_KEYDOWN,VK_RIGHT,0);
-                        else if(t==14){
-                            if(a->password_test){SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);a->menu_options_test=1;}
-                            else SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                        }else if(a->menu_test && t==16)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                        else if(a->menu_test && t==20)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
-                    }
-                    else if(p==SSA_MENU_CREDITS && a->menu_test){
-                        a->menu_credits_test=1;
-                        if(t==0){SendMessageW(a->window,WM_KEYUP,VK_DOWN,0);SendMessageW(a->window,WM_KEYUP,VK_UP,0);}
-                        else if(t==2)SendMessageW(a->window,WM_KEYDOWN,VK_UP,0);
-                        else if(t==4)SendMessageW(a->window,WM_KEYDOWN,'W',0);
-                        else if(t==5)SendMessageW(a->window,WM_KEYUP,VK_UP,0);
-                        else if(t==6){SendMessageW(a->window,WM_KEYUP,'W',0);SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);}
-                        else if(t==8)SendMessageW(a->window,WM_KEYDOWN,'S',0);
-                        else if(t==9)SendMessageW(a->window,WM_KEYUP,VK_DOWN,0);
-                        else if(t==10)SendMessageW(a->window,WM_KILLFOCUS,0,0);
-                        else if(t==70)SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);
-                    }
-                    else if(p==SSA_MENU_SINGLE && a->password_test && (t==2 || t==4))
-                        SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                    else if(p==SSA_MENU_SINGLE && a->level_select_test && t==2)
-                        SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                    else if(p==SSA_MENU_LEVEL_SELECT && a->level_select_test && t>=2)
-                        SendMessageW(a->window,WM_KEYDOWN,a->menu->selection==a->level_select_test-1?VK_RETURN:VK_DOWN,0);
-                    else if(p==SSA_MENU_MAIN && a->menu_test && t==8){
-                        RECT bounds;int ox,oy,ow,oh;unsigned selection=a->menu_options_test?0:2;
-                        unsigned before,valid;uint64_t starts;SsaAudioPlayer music;
-                        int x=120+(int)a->menu->offset,y=82+(int)selection*16;
-                        if(!a->audio.synchronized || !GetClientRect(a->window,&bounds) ||
-                           !ssa_ui_viewport(bounds.right,bounds.bottom,240,160,&ox,&oy,&ow,&oh))return 0;
-                        /* Keep the mixer stable while checking real pointer
-                         * messages. Critical sections permit the cue callback
-                         * to enter recursively on this same thread. */
-                        EnterCriticalSection(&a->audio.mutex);starts=a->audio.mixer.starts;music=a->audio.mixer.players[0];
-                        /* Blank canvas clicks must not submit or make sound. */
-                        SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(ox+ow/240,oy+oh/160));
-                        valid=!a->menu_pressed && a->audio.mixer.starts==starts;
-                        /* Hover another visible label, then the intended row. */
-                        before=a->menu->selection;
-                        SendMessageW(a->window,WM_MOUSEMOVE,0,MAKELPARAM(ox+x*ow/240,oy+90*oh/160));
-                        starts+=before!=0;valid&=!a->menu->selection && a->audio.mixer.starts==starts;
-                        before=a->menu->selection;
-                        SendMessageW(a->window,WM_MOUSEMOVE,0,MAKELPARAM(ox+x*ow/240,oy+y*oh/160));
-                        starts+=before!=selection;valid&=a->menu->selection==selection && a->audio.mixer.starts==starts;
-                        /* Moving within the same label, leaving into blank
-                         * space and returning, and clicking it stay quiet. */
-                        SendMessageW(a->window,WM_MOUSEMOVE,0,MAKELPARAM(ox+(x+1)*ow/240,oy+y*oh/160));
-                        SendMessageW(a->window,WM_MOUSEMOVE,0,MAKELPARAM(ox+ow/240,oy+oh/160));
-                        SendMessageW(a->window,WM_MOUSEMOVE,0,MAKELPARAM(ox+x*ow/240,oy+y*oh/160));
-                        SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(ox+x*ow/240,oy+y*oh/160));
-                        valid&=a->menu_pressed==SSA_MENU_CONFIRM && a->menu->selection==selection &&
-                            a->audio.mixer.starts==starts && !memcmp(&music,&a->audio.mixer.players[0],sizeof music);
-                        LeaveCriticalSection(&a->audio.mutex);
-                        if(!valid)return 0;
-                        ++a->menu_mouse_checks;
-                    }
-                    else if(p==SSA_MENU_PASSWORD && a->password_test && !a->menu->leaving && a->menu->draw_page==SSA_MENU_PASSWORD){
-                        unsigned index=((a->password_test-1)/PASSWORD_TEST_LEVELS)*12+(a->password_test-1)%PASSWORD_TEST_LEVELS+1;
-                        const char *target=ssa_menu_password(a->menu,index);
-                        size_t length;
-                        if(!target)return 0;
-                        /* Release menu navigation before original editor hold-repeat. */
-                        SendMessageW(a->window,WM_KEYUP,VK_DOWN,0);SendMessageW(a->window,WM_KEYUP,VK_UP,0);
-                        {unsigned j;
-                            length=strlen(target);while(length && target[length-1]=='_')--length;
-                            SendMessageW(a->window,WM_CHAR,'x',0);SendMessageW(a->window,WM_CHAR,8,0);
-                            a->password_test_edges+=2;
-                            for(j=0;j<length;++j){unsigned c=(unsigned char)target[j];
-                                SendMessageW(a->window,WM_KEYDOWN,c,0);
-                                if(a->menu_pressed)return 0;
-                                SendMessageW(a->window,WM_CHAR,c>='A' && c<='Z'?c+32:c,0);
-                                SendMessageW(a->window,WM_KEYUP,c,0);++a->password_test_edges;
-                            }
-                            if(strlen(a->menu->password)!=length || strncmp(a->menu->password,target,length))return 0;
-                        }
-                        if(a->original_renderer){SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);SendMessageW(a->window,WM_KEYUP,VK_RETURN,0);}
-                        else{RECT bounds;int ox,oy,ow,oh;
-                            if(!GetClientRect(a->window,&bounds) || !ssa_ui_viewport(bounds.right,bounds.bottom,240,160,&ox,&oy,&ow,&oh))return 0;
-                            SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(ox+120*ow/240,oy+120*oh/160));
-                            SendMessageW(a->window,WM_LBUTTONUP,0,MAKELPARAM(ox+120*ow/240,oy+120*oh/160));
-                        }
-                        ++a->password_test_edges;
-                    }
-                    else if((p==SSA_MENU_MAIN || p==SSA_MENU_SINGLE) && t==8)
-                        SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
-                    else if(p==SSA_MENU_TITLE && a->menu->counter==96)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
-                    else if(p==SSA_MENU_DIFFICULTY && ((wanted_difficulty>=1 && t==4) || (wanted_difficulty==2 && t==6)))
-                        SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-                    else if(p==SSA_MENU_DIFFICULTY && t==10)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
-                }
+                if(!diagnostics_menu_input(a))return 0;
                 {unsigned previous_music=a->menu->music_enabled,previous_language=a->menu->language,p=a->menu->page,t=a->menu_page_ticks;
                     unsigned held=(a->menu_held_keys&3?SSA_MENU_UP:0u)|(a->menu_held_keys&12?SSA_MENU_DOWN:0u);
                     int32_t old_y=a->menu->credits_y;
                     if(ssa_menu_step_input(a->menu,a->menu_pressed,held)!=1)return 0;
+                    score_change(a);
                     settings_change(a);
                     if(a->menu->clear_requested)save_change(a,SSA_SAVE_CLEAR,0);
                     else if(previous_language!=a->menu->language)save_change(a,SSA_SAVE_LANGUAGE,a->menu->language);
@@ -1380,7 +1175,7 @@ static int run(App *a)
                 ++a->reveal_game_ticks;
                 /* The simulation clock can include time spent preparing the
                  * first frame. Fade timing starts after black was displayed. */
-                if(a->reveal_presented_at.QuadPart && elapsed_us(a->reveal_presented_at)>=
+                if(!a->death_active && a->reveal_presented_at.QuadPart && elapsed_us(a->reveal_presented_at)>=
                    (uint64_t)(LEVEL_FADE_TICKS-a->level_fade+1)*1000000/LEVEL_FADE_TICKS){
                     --a->level_fade;++a->level_fade_ticks;
                     if(a->startup_test && a->transition_test && a->level_fade==LEVEL_FADE_TICKS-6){
@@ -1489,17 +1284,17 @@ static int run(App *a)
                a->audio.mixer.master_gain!=1 || (a->no_music?a->audio.mixer.players[0].active:
                !a->audio.mixer.players[0].active || a->audio.mixer.music_command!=2)))return 0;
             if(a->audio_test && (!a->audio.device || !a->audio.recycled || !ssa_win32_audio_position(&a->audio) ||
-                a->audio.mixer.errors || !a->audio_test_worker || !a->audio_test_mute ||
+                a->audio.mixer.errors || !a->audio_test_worker || !a->audio_test_m_key ||
                 a->audio_test_footsteps!=2 || a->audio_test_spatial!=2 || a->audio_test_music!=3 || a->audio_test_level_starts!=2 || a->audio_test_fade!=2))return 0;
             printf("{\"result\":\"pass\",\"startup_path\":\"normal\",\"frames\":%u,\"raw_input_registered\":true,"
                 "\"buffered_presents\":%llu,\"restarts\":%u,\"level\":%u,\"transition_steps\":%u,\"audio_device\":%u,\"audio_buffers\":%llu,\"audio_recycled\":%llu,"
-                "\"audio_position\":%u,\"audio_notes\":%llu,\"audio_errors\":%u,\"audio_worker_progress\":%u,\"audio_mute_toggle\":%u,\"audio_footsteps\":%u,\"audio_spatial\":%u,\"audio_music\":%u,\"audio_level_starts\":%u,\"audio_fade\":%u,"
+                "\"audio_position\":%u,\"audio_notes\":%llu,\"audio_errors\":%u,\"audio_worker_progress\":%u,\"audio_m_key_preserves_mute\":%u,\"audio_footsteps\":%u,\"audio_spatial\":%u,\"audio_music\":%u,\"audio_level_starts\":%u,\"audio_fade\":%u,"
                 "\"map_views\":%u,\"map_starts\":%u,\"map_frozen_ticks\":%u,\"map_music_checks\":%u,\"level_music_checks\":%u,\"map_black_presents\":%u,\"map_fade_presents\":%u,"
                 "\"map_black_hold_ticks\":%u,\"level_fade_ticks\":%u,\"level_fade_starts\":%u,\"level_fade_presents\":%u,\"black_hold_min_us\":%llu,\"level_fade_min_us\":%llu,"
                 "\"menu_starts\":%u,\"menu_frozen_ticks\":%u,\"difficulty\":%u,\"language\":%u,\"menu_music_toggles\":%u,\"menu_credits_checks\":%u,\"password_edges\":%u,\"password_loadout\":%u,\"reveal_weapon_checks\":%u,"
                 "\"reveal_game_ticks\":%u,\"reveal_move_checks\":%u,\"reveal_hud_checks\":%u,\"reveal_entry_checks\":%u,\"menu_mouse_checks\":%u,\"menu_music_continuity\":%u,\"level_starter_checks\":%u}\n",frames,(unsigned long long)a->presents,a->startup_restarts,
                 a->level,a->transition_stage,a->audio.device?1u:0u,(unsigned long long)a->audio.submitted,(unsigned long long)a->audio.recycled,
-                ssa_win32_audio_position(&a->audio),(unsigned long long)a->audio.mixer.notes,a->audio.mixer.errors,a->audio_test_worker,a->audio_test_mute,a->audio_test_footsteps,a->audio_test_spatial,a->audio_test_music,a->audio_test_level_starts,a->audio_test_fade,
+                ssa_win32_audio_position(&a->audio),(unsigned long long)a->audio.mixer.notes,a->audio.mixer.errors,a->audio_test_worker,a->audio_test_m_key,a->audio_test_footsteps,a->audio_test_spatial,a->audio_test_music,a->audio_test_level_starts,a->audio_test_fade,
                 a->map_views,a->map_starts,a->map_wait_ticks,a->map_music_checks,a->level_music_checks,a->map_black_presents,a->map_fade_presents,
                 a->map_hold_ticks,a->level_fade_ticks,a->level_fade_starts,a->level_fade_presents,
                 (unsigned long long)a->black_hold_min_us,(unsigned long long)a->level_fade_min_us,
@@ -1584,13 +1379,21 @@ int wmain(int argc,wchar_t **argv)
     if(a.profile.enabled && !ssa_win32_settings_read(&a.settings,a.settings_path)){
         fprintf(stderr,"Could not load Settings; using defaults.\n");
         a.menu_notice="Settings could not be loaded. Using defaults.";a.menu_notice_ticks=300;}
+    {wchar_t scores_path[32768];
+        if(save_path){if(swprintf(scores_path,32768,L"%ls.scores",save_path)<0)goto done;}
+        else wcscpy_s(scores_path,32768,L"scores.dat");
+        if(!ssa_win32_scores_open(&a.scores,a.rom,a.rom_size,scores_path,a.profile.enabled)){
+            fprintf(stderr,"Could not load Scores (Windows error %u); using defaults.\n",a.scores.last_error);
+            a.menu_notice="Scores could not be loaded. Using defaults.";a.menu_notice_ticks=300;
+        }
+    }
     if(a.original_renderer)a.settings.renderer=SSA_RENDER_GBA; /* Explicit CLI override. */
     a.original_renderer=a.settings.renderer==SSA_RENDER_GBA;
     if(a.direct_level?
        ssa_native_game_init_loadout(a.game,a.rom,a.rom_size,a.level,a.difficulty*12+a.level+1)!=1:
        ssa_native_game_init_campaign(a.game,a.rom,a.rom_size,a.level,a.difficulty,NULL)!=1){
         fprintf(stderr,"Native init failed line%u\n",a.game->error_line);goto done;}
-    level_options(&a,a.game);
+    if(!level_options(&a,a.game))goto done;
     if(ssa_native_game_alternate_weapons(a.game,a.settings.alternate_weapons,
         a.direct_level?SSA_ALTERNATE_LOADOUT:SSA_ALTERNATE_NEW_GAME)!=1)goto done;
     a.completion_setting=a.direct_level?a.difficulty*12+a.level+1:0;
@@ -1634,5 +1437,5 @@ done:
     free(a.intermission);free(a.screen_backdrop);free(a.screen_pixels);
     if(a.game){ssa_native_game_free(a.game);free(a.game);}free(a.map_view);free(a.menu);free(a.story);free(a.netricsa);free(a.net_backdrop);free(a.net_hud_frame);free(a.net_pixels);free(a.rom);return result;
 usage:
-    fwprintf(stderr,L"Usage: ssa_native_game.exe ROM.gba [--resolution auto|WIDTHxHEIGHT] [--original-renderer] [--mute] [--no-music] [--level 0..%u] [--smoke] [--snapshot output.bmp]\nNative campaign prototype (%u levels); M toggles audio. Original screen/ending parity remains unfinished.\n",SSA_NATIVE_CAMPAIGN_LEVELS-1,SSA_NATIVE_CAMPAIGN_LEVELS);return 2;
+    fwprintf(stderr,L"Usage: ssa_native_game.exe ROM.gba [--resolution auto|WIDTHxHEIGHT] [--original-renderer] [--mute] [--no-music] [--level 0..%u] [--smoke] [--snapshot output.bmp]\nNative campaign (%u levels); M toggles automap (enable in Extras).\n",SSA_NATIVE_CAMPAIGN_LEVELS-1,SSA_NATIVE_CAMPAIGN_LEVELS);return 2;
 }

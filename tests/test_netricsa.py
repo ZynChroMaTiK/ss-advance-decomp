@@ -7,7 +7,7 @@ subprocess.run(['gcc','-std=c11','-O2','-g','-Wall','-Wextra','-Werror','-pedant
 env=os.environ.copy();env['ASAN_OPTIONS']='detect_leaks=1'
 p=subprocess.run([str(b/'test_netricsa'),str(r/'orig/SSA.gba'),str(b/'netricsa.bmp')],env=env,capture_output=True,text=True)
 print(p.stderr,end='');p.check_returncode();report=json.loads(p.stdout)
-report['sanitizers']='ASan/UBSan/leaks=1';names+=['include/ssa/netricsa.h','tests/test_netricsa.py']
+report['sanitizers']='ASan/UBSan/leaks=1';names+=['include/ssa/netricsa.h','tests/test_netricsa.py','tests/test_netricsa_rom.py']
 oracle=subprocess.run([sys.executable,str(r/'tests/test_netricsa_rom.py')],capture_output=True,text=True,check=True)
 report['original_rom']=json.loads(oracle.stdout)
 report['source_sha256']={n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in names}

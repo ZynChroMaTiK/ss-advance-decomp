@@ -7,6 +7,7 @@
  * owns projection/ordering/clipping scratch. Keep addresses stable; zero-init. */
 typedef struct SsaActorScene {
     unsigned screen_mirrors; /* PC alternate-hand muzzle presentation;default0. */
+    int screen_x,screen_y; /* PC fixed-screen offset in120x120 world-canvas pixels. */
     SsaActorQueue queue;
     SsaActorProjector projector;
     SsaWorldScene *geometry;

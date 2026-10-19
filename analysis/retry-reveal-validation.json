@@ -1,0 +1,65 @@
+{
+    "result":  "pass",
+    "scope":  "Death retries bypass NETRICSA/map and reuse normal level fade-in; entry inventory and reduced lives retained",
+    "native_core_msvc":  {
+                             "result":  "pass",
+                             "checks":  26453,
+                             "native_frames":  9879,
+                             "deaths":  30,
+                             "retries":  21,
+                             "gameovers":  9,
+                             "death_voices":  21,
+                             "gameover_music_changes":  9,
+                             "languages":  3,
+                             "difficulties":  3
+                         },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  4697889,
+                    "native_frames":  8316,
+                    "deaths":  24,
+                    "retries":  12,
+                    "main_returns":  12,
+                    "black_presentations":  24,
+                    "clock_paths":  4,
+                    "renderers":  2,
+                    "hud_styles":  2,
+                    "languages":  3,
+                    "output_muted":  true
+                },
+    "classic_regression":  {
+                               "result":  "pass",
+                               "checks":  560,
+                               "paths":  2,
+                               "hidden_window":  true
+                           },
+    "intermission_regression":  {
+                                    "result":  "pass",
+                                    "checks":  6205,
+                                    "completion_routes":  6,
+                                    "pause_paths":  12,
+                                    "main_menu_quits":  6,
+                                    "renderers":  2,
+                                    "languages":  3,
+                                    "hidden_window":  true
+                                },
+    "retry_checks":  [
+                         "No extra briefing/map starts",
+                         "Fresh reveal clock and presented black frame",
+                         "Ready weapon and movement during fade",
+                         "Restored entry inventory/score and reduced lives",
+                         "Last-life Game Over returns to Main"
+                     ],
+    "sanitizers_rerun":  false,
+    "physical_input_tested":  false,
+    "physical_listening_tested":  false,
+    "executable_sha256":  "38856b618afec4bb2d37e64a6758b695f513b3b9ea3918491416fb6a4660c567",
+    "source_sha256":  {
+                          "platform/win32/game.c":  "218720de72f08407159142b0845395f5fdba09a342883e58bb448d3f177c5bc5",
+                          "platform/win32/audio_win32.c":  "d7fc14300786afdfcb60b19c4c3bde2d14f472624303466c86c3a06519a2ec26",
+                          "tests/test_run_exit_win32.c":  "75d9b6af965375357e7f5e94de36a3b31616a884306ab8f3d7ea57015a91ac50",
+                          "tests/test_run_exit.c":  "797d003bc3daed8ed2e3fe4a86987a5ea5b581afada71b45b96641fb9303ecd9",
+                          "tests/test_classic_hud_win32.c":  "268d25eef53f3f5ec225cbf83a5d66aa8d2c0aa73615ced332a1be564c98ccb6",
+                          "tests/test_intermission_win32.c":  "70f27187f04e4a045a26cd2a90a90bf4e8f4a48c6038883400767a58cda96262"
+                      }
+}

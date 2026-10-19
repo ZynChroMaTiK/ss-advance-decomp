@@ -5,10 +5,10 @@
   "scope": "Original0750C setup tail + actual0787C VCOUNT interrupts vs native pixels.",
   "rom_sha1": "4ff48d8c18b70a5184758f1917343ae85a70858e",
   "source_sha256": {
-    "src/display.c": "25362cd8c23983aa5e672283919ae16a34faf15d713776da5f9a150105336302",
-    "include/ssa/display.h": "22dad1d6e7d0846eeb530fc6460db508d5fd28922d28725dd1929129b354e6ab",
-    "src/native_game.c": "cfdc0b66365eb0d60c611a2d786fc75191b24af7563a1665e6b9f85a9c543893",
-    "src/pc_renderer.c": "fb0ed016de2e8721e4b5671cfb523c54b786da7f27ab486ac5baa03f5528c956",
+    "src/display.c": "1ed9568cb33dd908e2f2d5394582f50d86821b65fa5f6f168f9a26b1ceeac0d5",
+    "include/ssa/display.h": "b3ea75ce0ee1ed4785b0d4c6449020bd389d208139d8f8f60f99d1c9de8096e9",
+    "src/native_game.c": "baa09f78a68ad7e539219b4d16415013a5af808553b866b57fc9360c4d29515d",
+    "src/pc_renderer.c": "3632477d6f5d0c469ae0a945eeeb1e6b68f8f14726faf464e718b7d1bd66635f",
     "tests/test_hud_colors.py": "97d9d0c587e4774c9c46767e46025787f6b1aa4865240f18a01a7bb7179b63ab"
   }
 }

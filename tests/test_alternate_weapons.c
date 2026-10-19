@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-static unsigned checks,frames,pickups,shots,transitions,loadout_cases,reloads,reload_sounds,reequips,paired_clicks,shotgun_cases,pellets_checked,shotgun_timing_cases;
+static unsigned checks,frames,pickups,shots,transitions,loadout_cases,reloads,reload_sounds,reequips,paired_clicks,shotgun_cases,pellets_checked,shotgun_timing_cases,shotgun_reload_sounds;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"alternate line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
 static void audio_play(void *context,unsigned song){(void)context;(void)song;}
 static void audio_stop(void *context,unsigned song){(void)context;(void)song;}
@@ -12,6 +12,14 @@ static void audio_source(void *context,SsaAudioSourceCommand command,unsigned so
     SsaNativeGame *g=context;
     if(song!=0x28)return;
     CHECK(command==SSA_AUDIO_SOURCE_PLAY && source==1 && !point);
+    if(g->gameplay.weapon.current==3){
+        if(g->alternates.shotgun_inserting){
+            CHECK(g->alternates.enabled && g->weapon.shotgun_animating &&
+                g->weapon.object.animation==12 && (g->weapon.object.frame&0x3fff)==23);
+            ++shotgun_reload_sounds;
+        }
+        return;
+    }
     CHECK(g->alternates.reload_phase==2 || g->alternates.reload_phase==3);++reload_sounds;
 }
 static void tick(SsaNativeGame *g){CHECK(ssa_native_game_tick(g)==1);++frames;}
@@ -25,20 +33,57 @@ static SsaNativeGame *start(const uint8_t *rom,unsigned enabled){
     return g;
 }
 static void dispose(SsaNativeGame *g){ssa_native_game_free(g);free(g);}
-static unsigned add_colt(SsaNativeGame *g){
+static unsigned add_pickup(SsaNativeGame *g,unsigned item){
     unsigned slot;SsaScriptActor *a;
     CHECK(ssa_entity_pool_allocate(&g->spawn.pool,&slot)==1);a=&g->spawn.actors[slot];CHECK(!a->owned);
-    memset(a,0,sizeof(*a));a->owned=1;a->activation.entity=&a->entity;a->entity.type=0xe1;a->animation=0x20;
+    memset(a,0,sizeof(*a));a->owned=1;a->activation.entity=&a->entity;a->entity.type=0xe1;a->animation=(uint16_t)item;
     a->entity.body.x=g->players[0].entity.body.x;a->entity.body.y=g->players[0].entity.body.y;a->entity.body.z=g->players[0].entity.body.z;
     CHECK(ssa_world_insert(&g->world,&a->entity)==1);return slot;
 }
-static void pickup(SsaNativeGame *g,unsigned accepted){
-    unsigned slot=add_colt(g),before=g->pickup.game.collected;SsaEntity *p=&g->players[0].entity;
+static void pickup_item(SsaNativeGame *g,unsigned item,unsigned accepted){
+    unsigned slot=add_pickup(g,item),before=g->pickup.game.collected;SsaEntity *p=&g->players[0].entity;
     CHECK(ssa_world_query(&g->world,p,p->body.x,p->body.y)>=0);
     CHECK(g->pickup.game.collected==before+accepted);
     CHECK(g->spawn.actors[slot].owned==!accepted);
     if(!accepted)CHECK(ssa_script_spawn_release(&g->spawn,slot)==0);
     ++pickups;
+}
+static void pickup(SsaNativeGame *g,unsigned accepted){pickup_item(g,0x20,accepted);}
+static void pc_pickups(const uint8_t *rom){
+    static const unsigned ammo_items[8]={0x35,0x3a,0x3b,0x38,0x3d,0x36,0x3c,0x39};
+    static const unsigned weapon_items[8]={0x21,0x22,0x25,0x23,0x29,0x27,0x28,0x26};
+    static const unsigned amounts[8]={10,50,50,5,5,1,5,5};
+    unsigned mode,i;
+    for(mode=0;mode<2;++mode){SsaNativeGame *g=start(rom,mode);SsaInventory *inv=&g->players[0].inventory;
+        CHECK(g->pickup.pc_pickups);
+        for(i=0;i<8;++i){unsigned weapon=i+3,bit=1u<<(weapon-1),limit=g->inventory_rules.ammo_capacity[weapon-1];
+            unsigned expected,current,requested,wait;
+            CHECK(!(inv->weapons&bit));inv->ammo[weapon-1]=0;
+            pickup_item(g,ammo_items[i],1);
+            CHECK((unsigned)inv->ammo[weapon-1]==amounts[i] && !(inv->weapons&bit) && !inv->pending_count);
+            if(!i){SsaNativeCarry carry;SsaNativeGame *next=calloc(1,sizeof(*next));
+                CHECK(next && ssa_native_game_carry_capture(&carry,g)==1);
+                CHECK(ssa_native_game_init_campaign(next,rom,0x800000,0,1,&carry)==1);
+                CHECK(next->pickup.pc_pickups && (unsigned)next->players[0].inventory.ammo[2]==amounts[0] &&
+                    !(next->players[0].inventory.weapons&4));dispose(next);}
+            inv->ammo[weapon-1]=(int16_t)(limit-1);pickup_item(g,ammo_items[i],1);
+            CHECK((unsigned)inv->ammo[weapon-1]==limit);pickup_item(g,ammo_items[i],0);
+            inv->ammo[weapon-1]=(int16_t)amounts[i];pickup_item(g,weapon_items[i],1);
+            for(wait=0;wait<100 && inv->pending_count;++wait)tick(g);
+            expected=amounts[i]+limit/2;if(expected>limit)expected=limit;
+            CHECK(wait<100 && (inv->weapons&bit) && (unsigned)inv->ammo[weapon-1]==expected && !inv->pending_count);
+            current=g->gameplay.weapon.current;requested=g->gameplay.weapon.requested;
+            inv->ammo[weapon-1]=0;pickup_item(g,weapon_items[i],1);
+            CHECK((unsigned)inv->ammo[weapon-1]==limit/2 && !inv->pending_count &&
+                g->gameplay.weapon.current==current && g->gameplay.weapon.requested==requested);
+            inv->ammo[weapon-1]=(int16_t)(limit-1);pickup_item(g,weapon_items[i],1);
+            CHECK((unsigned)inv->ammo[weapon-1]==limit && !inv->pending_count);pickup_item(g,weapon_items[i],0);
+        }
+        dispose(g);g=start(rom,mode);inv=&g->players[0].inventory;
+        memset(inv->ammo,0,sizeof inv->ammo);pickup_item(g,0x33,1);
+        for(i=2;i<10;++i)CHECK(!(inv->weapons&(1u<<i)) && inv->ammo[i]==g->inventory_rules.ammo_capacity[i]);
+        dispose(g);
+    }
 }
 static void weapon_pixels(SsaNativeGame *g,uint16_t *pixels){
     SsaSpriteDispatch d=g->sprites;SsaSpriteOam o=g->oam;uint8_t zero[14400]={0};uint16_t black[256]={0};
@@ -321,6 +366,231 @@ static void tap(SsaNativeGame *g){
     CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,1)==1);
     CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,0)==1);
 }
+static void reload_key(SsaNativeGame *g){
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',1,0)==1);
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',0,0)==1);
+}
+static void manual_reload(const uint8_t *rom){
+    unsigned dual;
+    for(dual=0;dual<2;++dual){
+        SsaNativeGame *g=start(rom,1);unsigned i,ammo,before,sounds;uint64_t began;
+        SsaNativeAudioOps audio={0};audio.context=g;audio.play=audio_play;audio.stop=audio_stop;audio.source=audio_source;
+        CHECK(ssa_native_game_bind_audio(g,&audio)==1);
+        if(dual)pickup(g,1);
+        settle(g,dual);sounds=reload_sounds;
+        reload_key(g);tick(g);CHECK(!g->alternates.reload_phase && reload_sounds==sounds);
+        tap(g);settle(g,dual);
+        CHECK(g->alternates.rounds[0]==1 && g->alternates.rounds[1]==dual);
+        ammo=(unsigned)g->players[0].inventory.ammo[1];before=g->weapon_game.shots[1];
+        /* Disabled/focus-lost actions are consumed, never replayed on resume. */
+        g->frame_game.flags|=1;reload_key(g);tick(g);
+        g->frame_game.flags&=UINT16_C(0xfffe);tick(g);CHECK(!g->alternates.reload_phase);
+        reload_key(g);ssa_pc_input_runtime_focus(&g->input_runtime,0);
+        ssa_pc_input_runtime_focus(&g->input_runtime,1);tick(g);CHECK(!g->alternates.reload_phase);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',1,0)==1);tick(g);
+        CHECK(g->alternates.reload_phase==2 && reload_sounds==sounds+1);
+        began=g->alternates.clock;
+        for(i=0;i<100 && g->alternates.reload_phase;++i){
+            CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',1,1)==1);tick(g);
+        }
+        CHECK(i<100 && g->alternates.clock-began==(dual?1680u:1300u));
+        CHECK(!g->alternates.rounds[0] && !g->alternates.rounds[1]);
+        CHECK(reload_sounds==sounds+1+dual && g->weapon_game.shots[1]==before &&
+            (unsigned)g->players[0].inventory.ammo[1]==ammo);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',0,0)==1);
+        tap(g);settle(g,dual);CHECK(g->weapon_game.shots[1]==before+1+dual);
+        /* Reload waits for recoil, and another R cannot restart its deadline. */
+        tap(g);tick(g);reload_key(g);tick(g);
+        CHECK(g->alternates.reload_phase==1 || g->alternates.reload_phase==2);
+        settle(g,dual);CHECK(!g->alternates.reload_phase);
+        dispose(g);
+    }
+}
+static unsigned bobbing_viewport(SsaNativeGame *g,const uint16_t *source,unsigned style){
+    static const unsigned sizes[2][2]={{960,540},{480,640}};
+    SsaPcRenderer pc={0};uint32_t *background=malloc(960*540*sizeof(*background));
+    uint32_t flags=g->weapon.object.flags;unsigned old_style=g->hud_style,old_suppressed=g->hud_suppressed,k,wide=0;
+    CHECK(background);g->hud_suppressed=1;g->hud_style=style;
+    for(k=0;k<2;++k){unsigned i,samples=0,changed=0,dx,dy;double scale,left,top;
+        CHECK(ssa_pc_renderer_resize(&pc,sizes[k][0],sizes[k][1])==1);
+        g->weapon_bobbing=0;g->weapon.object.flags=flags&~UINT32_C(1);
+        CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1 && ssa_pc_renderer_draw(&pc,g)==1);
+        memcpy(background,pc.pixels,(size_t)pc.width*pc.height*sizeof(*background));
+        g->weapon.object.flags=flags;g->weapon_bobbing=1;
+        CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1 && g->pc_weapon_separate && ssa_pc_renderer_draw(&pc,g)==1);
+        scale=pc.width/240.0<pc.height/160.0?pc.width/240.0:pc.height/160.0;
+        left=(pc.width-240*scale)/2;top=(pc.height-160*scale)/2;
+        dx=(unsigned)g->weapon_bob_x/256;dy=(unsigned)g->weapon_bob_y/256;
+        /* Exact original pixels that move outside the3:2 canvas must still
+         * appear in the native viewport, without edge filling or scaling. */
+        for(i=0;i<38400;++i)if(source[i] && (i%240+dx>=240 || i/240+dy>=160)){
+            unsigned x=(unsigned)(left+(i%240+dx+0.5)*scale),y=(unsigned)(top+(i/240+dy+0.5)*scale),c=source[i];
+            unsigned rr=c&31,gg=(c>>5)&31,bb=(c>>10)&31;
+            uint32_t color=(((rr<<3)|(rr>>2))<<16)|(((gg<<3)|(gg>>2))<<8)|((bb<<3)|(bb>>2));
+            if(x>=pc.width || y>=pc.height)continue;
+            CHECK(pc.pixels[(size_t)y*pc.width+x]==color);++samples;
+            changed+=pc.pixels[(size_t)y*pc.width+x]!=background[(size_t)y*pc.width+x];
+        }
+        if(k)CHECK(samples && changed);else{wide+=samples;if(samples)CHECK(changed);}
+    }
+    g->hud_style=old_style;g->hud_suppressed=old_suppressed;
+    CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1);
+    ssa_pc_renderer_free(&pc);free(background);return wide;
+}
+static void bobbing(const uint8_t *rom,const char *directory){
+    SsaNativeGame *g=start(rom,0);uint16_t still[38400],moving[38400],repeat[38400];
+    unsigned weapon,i,changed,overflow=0;int32_t x,y;SsaInventory inventory;uint16_t sx,sy;
+    CHECK(!g->weapon_bobbing);
+    g->players[0].inventory.weapons=0x3ff;
+    for(i=0;i<10;++i)g->players[0].inventory.ammo[i]=999;
+    for(weapon=1;weapon<=10;++weapon){
+        CHECK(ssa_native_game_select_weapon(g,weapon)==1);
+        for(i=0;i<180 && (g->gameplay.weapon.current!=weapon || g->weapon.object.y!=0x5000);++i)tick(g);
+        CHECK(i<180);tick(g);
+        g->player.camera.bob_amplitude=0x100000;g->player.camera_frame.counter=16;
+        g->players[0].entity.body.velocity_x=16*65536;
+        g->players[0].entity.body.z=(int32_t)g->players[0].entity.body.floor*65536;
+        x=g->weapon.object.x;y=g->weapon.object.y;inventory=g->players[0].inventory;
+        sx=g->weapon.object.scale_x;sy=g->weapon.object.scale_y;
+        g->weapon_bobbing=0;weapon_pixels(g,still);CHECK(!g->weapon_bob_x && !g->weapon_bob_y);
+        g->weapon_bobbing=1;weapon_pixels(g,moving);CHECK(g->weapon_bob_x>0 && g->weapon_bob_y>0);
+        CHECK(g->weapon.object.screen_x==(x+g->weapon_bob_x)/256 && g->weapon.object.screen_y==(y+g->weapon_bob_y)/256);
+        weapon_pixels(g,repeat);CHECK(!memcmp(moving,repeat,sizeof moving));
+        /* Pure integer translation: original pixels, without filling/scaling. */
+        {unsigned dx=(unsigned)g->weapon_bob_x/256,dy=(unsigned)g->weapon_bob_y/256;
+            for(i=8;i<160;++i)CHECK(!memcmp(moving+i*240+8,still+(i-dy)*240+8-dx,224*sizeof(uint16_t)));}
+        CHECK(g->weapon.object.scale_x==sx && g->weapon.object.scale_y==sy);
+        /* Every hand/model still has opaque pixels reaching the bottom.
+         * The arch must never pull its cropped edge upward. */
+        {unsigned bottom=0,right=0,old_right=0;
+            for(i=0;i<240;++i)bottom+=moving[159*240+i]!=0;
+            for(i=0;i<160;++i){right+=moving[i*240+239]!=0;old_right+=still[i*240+239]!=0;}
+            CHECK(bottom>0 && (!old_right || right>0));}
+        CHECK(g->weapon.object.x==x && g->weapon.object.y==y && !memcmp(&inventory,&g->players[0].inventory,sizeof inventory));
+        for(changed=i=0;i<38400;++i)changed+=still[i]!=moving[i];
+        CHECK(changed>20);
+        overflow+=bobbing_viewport(g,still,weapon&1?SSA_HUD_ORIGINAL:SSA_HUD_CLASSIC);
+        g->player.pose.third_person=1;weapon_pixels(g,repeat);
+        CHECK(!g->weapon_bob_x && !g->weapon_bob_y && !memcmp(still,repeat,sizeof still));
+        g->player.pose.third_person=0;g->players[0].entity.body.velocity_x=0;
+        g->players[0].entity.body.velocity_y=0;weapon_pixels(g,repeat);
+        CHECK(!g->weapon_bob_x && !g->weapon_bob_y &&
+            !memcmp(still,repeat,sizeof still));g->weapon_bobbing=0;
+    }
+    CHECK(overflow>10);
+    /* Compare the visible arch endpoints against the recovered camera's real
+     * left/right step events. The center rises; each step reaches the other side. */
+    {SsaBody body=g->players[0].entity.body;SsaPlayerVertical vertical=g->players[0].vertical;
+        SsaCamera camera={0};SsaCameraFrame frame={0};unsigned steps=0,last=0;int32_t previous_x=0,highest=512;
+        body.velocity_x=8*65536;body.velocity_y=0;vertical.flags=4;frame.is_local=1;
+        g->weapon_bobbing=1;g->player.camera.bob_amplitude=0x100000;
+        g->players[0].entity.body.velocity_x=16*65536;
+        for(i=1;i<=140;++i){int event;frame.counter=(uint16_t)i;
+            event=ssa_camera_step(&body,&vertical,&camera,&frame,&g->math);
+            g->player.camera=camera;
+            g->player.camera_frame.counter=(uint16_t)i;
+            CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1);
+            CHECK(g->weapon_bob_y>=0 && g->weapon_bob_y<=512);
+            CHECK(g->weapon_bob_x>=0 && g->weapon_bob_x<=1536);
+            if(g->weapon_bob_y<highest)highest=g->weapon_bob_y;
+            if(event){
+                CHECK(g->weapon_bob_y>=416 && (event==13?g->weapon_bob_x<=24:g->weapon_bob_x>=1512));
+                if(steps)CHECK((i-last==17 || i-last==18) && (int64_t)(previous_x-768)*(g->weapon_bob_x-768)<0);
+                last=i;previous_x=g->weapon_bob_x;++steps;
+            }
+        }
+        CHECK(steps==7 && highest<=2);
+    }
+    dispose(g);
+    /* Actual PC walking input: single-axis W must visibly cross native pixel
+     * rows, just as W+D does. Neither may move above/left of original art. */
+    for(weapon=0;weapon<2;++weapon){unsigned low=512,high=0,visible=0;
+        g=start(rom,0);g->weapon_bobbing=1;
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'W',1,0)==1);
+        if(weapon)CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'D',1,0)==1);
+        for(i=0;i<70;++i){tick(g);weapon_pixels(g,moving);
+            CHECK(g->weapon_bob_x>=0 && g->weapon_bob_y>=0);
+            if((unsigned)g->weapon_bob_y<low)low=(unsigned)g->weapon_bob_y;
+            if((unsigned)g->weapon_bob_y>high)high=(unsigned)g->weapon_bob_y;
+            visible+=g->weapon.object.screen_y>g->weapon.object.y/256;
+        }
+        CHECK(visible && high-low>=256);
+        CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'W',0,0)==1);
+        if(weapon)CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'D',0,0)==1);
+        for(i=0;i<30;++i)tick(g);
+        weapon_pixels(g,repeat);CHECK(!g->weapon_bob_x && !g->weapon_bob_y);
+        dispose(g);
+    }
+    for(weapon=0;weapon<2;++weapon){
+        SsaActorProjection projections[32];SsaPcRenderer pc={0};unsigned slot,count,flash=0;uint32_t before=0,after=0;
+        g=start(rom,1);if(weapon)pickup(g,1);settle(g,weapon);
+        if(weapon)CHECK(ssa_native_game_hud_style(g,SSA_HUD_CLASSIC)==1);
+        tap(g);for(i=0;i<30;++i){tick(g);
+            for(slot=0;slot<100;++slot)if(g->spawn.actors[slot].owned && g->spawn.actors[slot].entity.type==0x96 &&
+                (g->spawn.actors[slot].entity.body.flags&0x2000) && (!weapon || g->alternates.flash_left[slot]))break;
+            if(slot<100)break;
+        }
+        CHECK(i<30 && slot<100);
+        g->player.camera.bob_amplitude=0x100000;g->player.camera_frame.counter=16;
+        g->players[0].entity.body.velocity_x=16*65536;
+        g->players[0].entity.body.z=(int32_t)g->players[0].entity.body.floor*65536;
+        inventory=g->players[0].inventory;x=g->weapon.object.x;y=g->weapon.object.y;
+        CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1 && ssa_native_game_draw(g)==1);
+        weapon_pixels(g,still);
+        count=g->actor_scene.queue.projection_count;memcpy(projections,g->actor_scene.queue.projections,sizeof projections);
+        CHECK(ssa_pc_renderer_resize(&pc,480,320)==1 && ssa_pc_renderer_draw(&pc,g)==1);
+        for(i=0;i<480*320;++i)before=before*33+pc.pixels[i];
+        g->weapon_bobbing=1;
+        CHECK(ssa_native_game_build_oam(g,&g->oam,&g->sprites)==1 && ssa_native_game_draw(g)==1);
+        CHECK(g->actor_scene.queue.projection_count==count);
+        for(i=0;i<count;++i){const SsaActorProjection *v=&g->actor_scene.queue.projections[i];
+            if(v->animation==g->spawn.actors[slot].animation){
+                CHECK(v->x==projections[i].x+g->actor_scene.screen_x &&
+                    v->y==projections[i].y+g->actor_scene.screen_y);++flash;
+                CHECK(v->width==projections[i].width && v->height==projections[i].height);
+            }else CHECK(v->x==projections[i].x && v->y==projections[i].y);
+        }
+        CHECK(flash && g->weapon.object.x==x && g->weapon.object.y==y && !memcmp(&inventory,&g->players[0].inventory,sizeof inventory));
+        CHECK(ssa_pc_renderer_draw(&pc,g)==1);
+        for(i=0;i<480*320;++i)after=after*33+pc.pixels[i];
+        CHECK(before!=after);
+        if(weapon){unsigned left=0,right=0;weapon_pixels(g,moving);
+            for(i=0;i<38400;++i)if(moving[i]){if(i%240<120)++left;else ++right;}
+            CHECK(left>30 && right>30);
+            {unsigned dx=(unsigned)g->weapon_bob_x/256,dy=(unsigned)g->weapon_bob_y/256;
+                for(i=8;i<160;++i){
+                    CHECK(!memcmp(moving+i*240+8,still+(i-dy)*240+8-dx,104*sizeof(uint16_t)));
+                    CHECK(!memcmp(moving+i*240+128,still+(i-dy)*240+128-dx,104*sizeof(uint16_t)));}}}
+        if(weapon)(void)bobbing_viewport(g,still,SSA_HUD_CLASSIC);
+        preview(directory,weapon?"dual-bobbing":"single-bobbing",g);
+        /* Pause and extra render preparations cannot advance the motion. */
+        g->frame_game.flags|=1;tick(g);x=g->weapon_bob_x;y=g->weapon_bob_y;
+        CHECK(ssa_native_game_prepare_view(g)==1 && g->weapon_bob_x==x && g->weapon_bob_y==y);
+        g->frame_game.flags&=UINT16_C(0xfffe);
+        g->player.camera.bob_amplitude=0;
+        g->players[0].entity.body.velocity_x=g->players[0].entity.body.velocity_y=0;
+        g->players[0].entity.body.z=(int32_t)g->players[0].entity.body.floor*65536+32*65536;
+        weapon_pixels(g,repeat);CHECK(!g->weapon_bob_x && g->weapon_bob_y==512);
+        {unsigned bottom=0;for(i=0;i<240;++i)bottom+=repeat[159*240+i]!=0;CHECK(bottom>0);}
+        ssa_pc_renderer_free(&pc);dispose(g);
+    }
+    /* A real stationary jump must bob without horizontal movement, then
+     * return to the idle baseline after landing without advancing on draws. */
+    g=start(rom,1);settle(g,0);g->weapon_bobbing=1;
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',1,0)==1);
+    CHECK(ssa_pc_input_runtime_key(&g->input_runtime,' ',0,0)==1);
+    {unsigned airborne=0,peak=0;
+        for(i=0;i<100;++i){tick(g);
+            if(g->players[0].entity.body.z>(int32_t)g->players[0].entity.body.floor*65536){
+                ++airborne;CHECK(g->weapon_bob_y>=0);if((unsigned)g->weapon_bob_y>peak)peak=(unsigned)g->weapon_bob_y;
+                x=g->weapon_bob_x;y=g->weapon_bob_y;weapon_pixels(g,repeat);
+                CHECK(g->weapon_bob_x==x && g->weapon_bob_y==y);
+            }else if(airborne)break;
+        }
+        CHECK(i<100 && airborne>10 && peak>=256 && !g->weapon_bob_x && !g->weapon_bob_y);
+    }
+    dispose(g);
+}
 static void paired_input(const uint8_t *rom){
     SsaNativeGame *g=start(rom,1);unsigned click,i,before,old,starts,hand[2]={0};uint64_t times[2]={0};
     pickup(g,1);settle(g,1);
@@ -426,33 +696,45 @@ static void shotgun_pattern(const uint8_t *rom){
 static void shotgun_timing(const uint8_t *rom){
     unsigned mode;
     for(mode=0;mode<3;++mode){
-        SsaNativeGame *g=start(rom,1);unsigned i,starts=0,dwell[17]={0},count;
+        SsaNativeGame *g=start(rom,1);unsigned i,starts=0,dwell[18]={0},count,drawable,idle_ticks=0;
+        unsigned reload_before=shotgun_reload_sounds;
+        uint16_t idle_frame=g->weapon_animations.words[g->weapon_animations.offsets[2]]&0x3fff;
         g->players[0].inventory.weapons|=4;g->players[0].inventory.ammo[2]=(int16_t)(mode==2?1:200);
         CHECK(ssa_native_game_select_weapon(g,3)==1);
         for(i=0;i<100 && (g->gameplay.weapon.current!=3 || g->weapon.object.y!=0x5000);++i)tick(g);
         CHECK(i<100);g->gba_view=mode==1;
+        {SsaNativeAudioOps audio={0};audio.play=audio_play;audio.stop=audio_stop;audio.source=audio_source;audio.context=g;
+            CHECK(ssa_native_game_bind_audio(g,&audio)==1);}
         if(mode==1){ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0);ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0);tick(g);}
-        count=g->weapon_animations.lengths[mode==2?22:12]-1u;
+        drawable=g->weapon_animations.lengths[mode==2?22:12]-1u;
+        count=mode==2?6:18;
+        CHECK(drawable==(mode==2?6u:17u));
         ssa_pc_input_runtime_button(&g->input_runtime,1,1);
         for(i=0;i<(mode==2?150u:316u);++i){
             tick(g);
             if(g->weapon.shotgun_animating){
-                unsigned elapsed=g->weapon.shotgun_elapsed,position=elapsed==105?count-1:elapsed*count/105;
-                CHECK(elapsed>=1 && elapsed<=105 && g->weapon.object.frame_index==position);
+                unsigned elapsed=g->weapon.shotgun_elapsed,position=0;
+                uint16_t expected;
+                while(elapsed>((position+1)*105+count-1)/count)++position;
+                CHECK(elapsed>=1 && elapsed<=105 && g->weapon.object.frame_index==(position<drawable?position:drawable-1));
+                expected=position==count-1?idle_frame:g->weapon_animations.words[g->weapon_animations.offsets[mode==2?22:12]+position]&0x3fff;
+                CHECK((g->weapon.object.frame&0x3fff)==expected);
                 CHECK(g->weapon.object.done==(elapsed==105));
                 if(elapsed==1){CHECK(i==starts*105);++starts;}
-                if(i<105)++dwell[position];
+                if(i<105){++dwell[position];if(position==count-1){++idle_ticks;CHECK(g->gameplay.weapon.flags&0x400);}}
             }
             if(i<105)CHECK(g->gameplay.weapon.current==3 && g->weapon.object.y==0x5000);
-            if(i==50){unsigned elapsed=g->weapon.shotgun_elapsed,position=g->weapon.object.frame_index;
+            if(i==53){unsigned elapsed=g->weapon.shotgun_elapsed,position=g->weapon.object.frame_index,sounds=shotgun_reload_sounds;
                 g->frame_game.flags|=1;tick(g);tick(g);
-                CHECK(g->weapon.shotgun_elapsed==elapsed && g->weapon.object.frame_index==position);
+                CHECK(g->weapon.shotgun_elapsed==elapsed && g->weapon.object.frame_index==position && shotgun_reload_sounds==sounds);
                 g->frame_game.flags&=UINT16_C(0xfffe);
                 ssa_pc_input_runtime_button(&g->input_runtime,1,0);ssa_pc_input_runtime_button(&g->input_runtime,1,1);
             }
         }
         CHECK(starts==(mode==2?1u:4u));
+        CHECK(shotgun_reload_sounds==reload_before+(mode==2?0u:3u));
         for(i=0;i<count;++i)CHECK(dwell[i]>=105/count && dwell[i]<=(105+count-1)/count);
+        CHECK(idle_ticks==(mode==2?17u:5u));
         if(mode==2)CHECK(g->gameplay.weapon.current!=3); /* Last shell's shorter artwork still occupies the full cycle. */
         else{
             ssa_pc_input_runtime_button(&g->input_runtime,1,0);
@@ -460,6 +742,7 @@ static void shotgun_timing(const uint8_t *rom){
             for(i=0;i<104;++i){tick(g);CHECK(g->gameplay.weapon.current==3 && g->weapon.object.y==0x5000);}
             for(i=0;i<80 && g->gameplay.weapon.current!=1;++i)tick(g);
             CHECK(i<80);
+            CHECK(shotgun_reload_sounds==reload_before+4);
         }
         ++shotgun_timing_cases;dispose(g);
     }
@@ -467,6 +750,6 @@ static void shotgun_timing(const uint8_t *rom){
 int main(int argc,char **argv){
     uint8_t *rom=malloc(0x800000);FILE *f;
     CHECK(argc>=2 && rom && (f=fopen(argv[1],"rb")));CHECK(fread(rom,1,0x800000,f)==0x800000);CHECK(!fclose(f));
-    flow(rom,argc==3?argv[2]:NULL);firing(rom,argc==3?argv[2]:NULL);loadouts(rom);magazines(rom,argc==3?argv[2]:NULL);reequip(rom);paired_input(rom);shotgun_pattern(rom);shotgun_timing(rom);free(rom);
+    pc_pickups(rom);flow(rom,argc==3?argv[2]:NULL);firing(rom,argc==3?argv[2]:NULL);loadouts(rom);magazines(rom,argc==3?argv[2]:NULL);reequip(rom);manual_reload(rom);bobbing(rom,argc==3?argv[2]:NULL);paired_input(rom);shotgun_pattern(rom);shotgun_timing(rom);free(rom);
     printf("{\"result\":\"pass\",\"checks\":%u,\"frames\":%u,\"pickups\":%u,\"alternating_shots\":%u,\"left_hand_transitions\":%u,\"loadout_cases\":%u,\"reloads\":%u,\"reload_sounds\":%u,\"reequips\":%u,\"paired_clicks\":%u,\"shotgun_cases\":%u,\"pellets_checked\":%u,\"shotgun_timing_cases\":%u,\"shotgun_interval_ms\":1750,\"colt_shot_ms\":450,\"colt_reload_ms\":1070,\"dual_reload_ms\":1400}\n",checks,frames,pickups,shots,transitions,loadout_cases,reloads,reload_sounds,reequips,paired_clicks,shotgun_cases,pellets_checked,shotgun_timing_cases);return 0;
 }

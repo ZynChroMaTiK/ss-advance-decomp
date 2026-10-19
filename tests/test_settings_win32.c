@@ -16,6 +16,37 @@ static void game_h(App *a){
     SendMessageW(a->window,WM_KEYDOWN,'H',0);SendMessageW(a->window,WM_KEYUP,'H',0);
     a->captured=captured;a->menu_active=menu;CHECK(game_tick(a)==1);
 }
+static void aspect_checks(App *a){
+    static const unsigned sizes[3][2]={{854,480},{640,480},{480,640}};
+    RECT saved;unsigned i,mode,aspect,counter=a->game->frame_game.counter;
+    unsigned rw=a->render_width,rh=a->render_height;
+    CHECK(GetWindowRect(a->window,&saved));
+    a->menu_active=0;a->render_width=a->render_height=0;
+    for(i=0;i<3;++i){RECT client;
+        CHECK(SetWindowPos(a->window,NULL,80,80,(int)sizes[i][0],(int)sizes[i][1],SWP_NOZORDER|SWP_NOACTIVATE));
+        CHECK(GetClientRect(a->window,&client));
+        for(mode=0;mode<2;++mode)for(aspect=0;aspect<2;++aspect){int x,y,w,h;HDC dc;unsigned xx,yy,bad=0,lit=0;wchar_t path[128];
+            a->original_renderer=mode;a->game->gba_view=mode;a->settings.aspect_ratio=aspect;
+            CHECK(render(a));
+            CHECK(ssa_ui_viewport(client.right,client.bottom,240,160,&x,&y,&w,&h));
+            CHECK(a->bitmap.bmiHeader.biWidth==(mode?240:aspect?w:client.right));
+            CHECK(-a->bitmap.bmiHeader.biHeight==(mode?160:aspect?h:client.bottom));
+            CHECK(ssa_ui_viewport(client.right,client.bottom,a->bitmap.bmiHeader.biWidth,
+                -a->bitmap.bmiHeader.biHeight,&x,&y,&w,&h));
+            dc=GetDC(a->window);CHECK(dc && present(a,dc));ReleaseDC(a->window,dc);
+            for(yy=0;yy<(unsigned)client.bottom;++yy)for(xx=0;xx<(unsigned)client.right;++xx){
+                unsigned c=a->back_pixels[yy*(unsigned)client.right+xx]&0xffffff;
+                if(xx<(unsigned)x || xx>=(unsigned)(x+w) || yy<(unsigned)y || yy>=(unsigned)(y+h))bad+=c!=0;
+                else lit+=c!=0;}
+            CHECK(!bad && lit>100 && a->game->frame_game.counter==counter && !IsWindowVisible(a->window));
+            if(!mode){CHECK(swprintf(path,128,L"build/audio-settings/aspect-%u-%u.bmp",i,aspect)>0);
+                CHECK(snapshot_surface(path,&a->back_info,a->back_pixels));}
+        }
+    }
+    CHECK(SetWindowPos(a->window,NULL,saved.left,saved.top,saved.right-saved.left,saved.bottom-saved.top,SWP_NOZORDER|SWP_NOACTIVATE));
+    a->render_width=rw;a->render_height=rh;a->menu_active=1;a->original_renderer=0;a->game->gba_view=0;
+    a->settings.aspect_ratio=SSA_ASPECT_NATIVE;
+}
 static void scores_checks(App *a){
     SsaMenu *saved=malloc(sizeof(*saved));unsigned language,mode,page_index;
     unsigned original=a->original_renderer,counter=a->game->frame_game.counter;
@@ -56,7 +87,7 @@ static void scores_checks(App *a){
 static void midi_checks(App *a,const wchar_t *font_path){
     SsaWin32Midi *m=a->audio.midi;SsaAudio *mix=&a->audio.mixer;
     SsaAudioSynth synth=ssa_win32_midi_synth(m);SsaAudioTrack track={0};SsaAudioVoice voice={0};
-    SsaSettings settings={SSA_MUSIC_MIDI,100,100,SSA_RENDER_SOFTWARE,1,1,1,SSA_DISPLAY_FULLSCREEN,0};int16_t pcm[1600];unsigned song,block,i;uint64_t notes;
+    SsaSettings settings={SSA_MUSIC_MIDI,100,100,SSA_RENDER_SOFTWARE,1,1,1,SSA_DISPLAY_FULLSCREEN,0,1,SSA_HUD_ORIGINAL,SSA_ASPECT_NATIVE,0,0,0};int16_t pcm[1600];unsigned song,block,i;uint64_t notes;
     /* Remove only a test-created copy, proving an already loaded bank is no
      * longer selectable once its file is absent. The user's file is untouched. */
     CHECK(CopyFileW(font_path,L"build/audio-settings/availability-test.sf2",FALSE));
@@ -68,7 +99,7 @@ static void midi_checks(App *a,const wchar_t *font_path){
     settings.music_style=SSA_MUSIC_MIDI;CHECK(ssa_win32_audio_settings(&a->audio,&settings));
     a->menu->settings=settings;a->settings=settings;settings_change(a);
     CHECK(!a->menu->soundfont_available && a->menu->midi_available);
-    a->menu->page=a->menu->draw_page=SSA_MENU_SETTINGS;a->menu->selection=2;
+    a->menu->page=a->menu->draw_page=SSA_MENU_SETTINGS;a->menu->selection=3;
     key(a,VK_RIGHT);CHECK(a->settings.music_style==SSA_MUSIC_ORIGINAL);
     key(a,VK_RIGHT);CHECK(a->settings.music_style==SSA_MUSIC_MIDI);
     /* Finish real worker playback before faster-than-realtime muted device
@@ -180,6 +211,28 @@ int wmain(int argc,wchar_t **argv){
         CHECK(GetWindowRect(a->window,&restored) && EqualRect(&windowed,&restored));
         key(a,VK_LEFT);CHECK(a->settings.display_mode==SSA_DISPLAY_FULLSCREEN);
         CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.display_mode==SSA_DISPLAY_FULLSCREEN);
+        /* F11 is global, before the gameplay/menu/overlay key routers. */
+        {unsigned context,renderer,counter=a->game->frame_game.counter;
+            for(renderer=0;renderer<2;++renderer)for(context=0;context<5;++context){
+                a->original_renderer=renderer;a->menu_active=context==0;a->net_active=context==2;
+                a->screen_active=context==3;a->story_active=context==4;
+                SendMessageW(a->window,WM_KEYDOWN,VK_F11,0);
+                CHECK(a->settings.display_mode==SSA_DISPLAY_WINDOWED && a->window_mode==SSA_DISPLAY_WINDOWED);
+                CHECK(a->menu->settings.display_mode==SSA_DISPLAY_WINDOWED && !IsWindowVisible(a->window));
+                CHECK(GetWindowRect(a->window,&restored) && EqualRect(&restored,&windowed));
+                CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.display_mode==SSA_DISPLAY_WINDOWED);
+                SendMessageW(a->window,WM_KEYDOWN,VK_F11,(LPARAM)1<<30);
+                SendMessageW(a->window,WM_KEYUP,VK_F11,0);
+                CHECK(a->settings.display_mode==SSA_DISPLAY_WINDOWED); /* No auto-repeat/key-up toggle. */
+                SendMessageW(a->window,WM_KEYDOWN,VK_F11,0);SendMessageW(a->window,WM_KEYUP,VK_F11,0);
+                CHECK(a->settings.display_mode==SSA_DISPLAY_FULLSCREEN && a->window_mode==SSA_DISPLAY_FULLSCREEN);
+                CHECK(a->menu->settings.display_mode==SSA_DISPLAY_FULLSCREEN && !IsWindowVisible(a->window));
+                CHECK(GetWindowRect(a->window,&restored) && EqualRect(&restored,&full));
+                CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.display_mode==SSA_DISPLAY_FULLSCREEN);
+                CHECK(a->game->frame_game.counter==counter && !a->failed && !a->menu_pressed && !a->net_pressed && !a->screen_pressed && !a->story_pressed);
+            }
+            a->original_renderer=0;a->menu_active=1;a->net_active=a->screen_active=a->story_active=0;
+        }
     }
     key(a,VK_DOWN);CHECK(a->menu->selection==1);
     key(a,VK_RIGHT);CHECK(a->original_renderer && a->settings.renderer==SSA_RENDER_GBA);
@@ -192,6 +245,16 @@ int wmain(int argc,wchar_t **argv){
     CHECK(!a->game->gba_view);
     a->render_width=854;a->render_height=480;a->menu_active=0;
     CHECK(render(a) && a->bitmap.bmiHeader.biWidth==854 && a->bitmap.bmiHeader.biHeight==-480);a->menu_active=1;
+    key(a,VK_DOWN);CHECK(a->menu->selection==2);
+    key(a,VK_RIGHT);CHECK(a->settings.aspect_ratio==SSA_ASPECT_GBA);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.aspect_ratio==SSA_ASPECT_GBA);
+    a->menu_active=0;CHECK(render(a) && a->renderer.width==720 && a->renderer.height==480);a->menu_active=1;
+    key(a,VK_UP);key(a,VK_RIGHT);CHECK(a->original_renderer);
+    key(a,VK_DOWN);CHECK(a->menu->selection==3 && a->settings.aspect_ratio==SSA_ASPECT_GBA);
+    key(a,VK_UP);key(a,VK_LEFT);key(a,VK_DOWN);CHECK(a->menu->selection==2);
+    key(a,VK_LEFT);CHECK(a->settings.aspect_ratio==SSA_ASPECT_NATIVE);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.aspect_ratio==SSA_ASPECT_NATIVE);
+    aspect_checks(a);
     key(a,VK_ESCAPE);key(a,VK_DOWN);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_EXTRA);
     CHECK(!a->settings.jump_enabled);
     key(a,VK_RIGHT);CHECK(a->settings.jump_enabled);
@@ -236,8 +299,44 @@ int wmain(int argc,wchar_t **argv){
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.alternate_weapons);
     key(a,VK_LEFT);CHECK(!a->settings.alternate_weapons && !a->game->alternates.enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.alternate_weapons);
+    key(a,VK_DOWN);CHECK(a->menu->selection==4 && !a->settings.automap_enabled);
+    key(a,VK_RIGHT);CHECK(a->settings.automap_enabled);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.automap_enabled);
+    key(a,VK_DOWN);CHECK(a->menu->selection==5 && a->settings.hud_style==SSA_HUD_ORIGINAL);
+    key(a,VK_RIGHT);CHECK(a->settings.hud_style==SSA_HUD_CLASSIC && a->game->hud_style==SSA_HUD_CLASSIC);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.hud_style==SSA_HUD_CLASSIC);
+    key(a,VK_LEFT);CHECK(a->settings.hud_style==SSA_HUD_ORIGINAL && a->game->hud_style==SSA_HUD_ORIGINAL);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.hud_style==SSA_HUD_ORIGINAL);
+    key(a,VK_DOWN);CHECK(a->menu->selection==6 && !a->settings.weapon_bobbing && !a->game->weapon_bobbing);
+    key(a,VK_RIGHT);CHECK(a->settings.weapon_bobbing && a->game->weapon_bobbing);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.weapon_bobbing);
+    key(a,VK_LEFT);CHECK(!a->settings.weapon_bobbing && !a->game->weapon_bobbing);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.weapon_bobbing);
+    key(a,VK_DOWN);CHECK(a->menu->selection==7 && !a->settings.surface_decals && !a->game->surface_decals_enabled);
+    key(a,VK_RIGHT);CHECK(a->settings.surface_decals && a->game->surface_decals_enabled);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.surface_decals);
+    key(a,VK_LEFT);CHECK(!a->settings.surface_decals && !a->game->surface_decals_enabled);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.surface_decals);
+    key(a,VK_DOWN);CHECK(a->menu->selection==8 && !a->settings.water_reflections && !a->game->water_reflections);
+    key(a,VK_RIGHT);CHECK(a->settings.water_reflections && a->game->water_reflections);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.water_reflections);
+    key(a,VK_LEFT);CHECK(!a->settings.water_reflections && !a->game->water_reflections);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.water_reflections);
+    key(a,VK_UP);CHECK(a->menu->selection==7);
+    key(a,VK_UP);CHECK(a->menu->selection==6);
+    key(a,VK_UP);CHECK(a->menu->selection==5);
+    key(a,VK_UP);CHECK(a->menu->selection==4);
+    CHECK(ssa_native_game_automap(a->game,1)==1);a->automap_keys=1;a->wheel_remainder=30;
+    key(a,VK_RIGHT);CHECK(!a->settings.automap_enabled && !(a->game->players[0].motion.movement.flags&8));
+    CHECK(!a->automap_keys && !a->wheel_remainder);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.automap_enabled);
+    a->menu_active=0;
+    SendMessageW(a->window,WM_KEYDOWN,'M',0);SendMessageW(a->window,WM_KEYUP,'M',0);
+    CHECK(!(a->game->players[0].motion.movement.flags&8) && !a->failed);
+    a->menu_active=1;key(a,VK_LEFT);CHECK(a->settings.automap_enabled);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.automap_enabled);
     key(a,VK_ESCAPE);key(a,VK_UP);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
-    key(a,VK_DOWN);key(a,VK_DOWN);CHECK(a->menu->selection==2);
+    key(a,VK_DOWN);key(a,VK_DOWN);key(a,VK_DOWN);CHECK(a->menu->selection==3);
     EnterCriticalSection(&a->audio.mutex);before=a->audio.mixer.players[0];starts=(unsigned)a->audio.mixer.starts;
     key(a,VK_RIGHT);CHECK(a->settings.music_style==1 && a->audio.mixer.synth.context);
     CHECK(a->audio.mixer.starts==starts && !memcmp(&before,&a->audio.mixer.players[0],sizeof before));
@@ -282,6 +381,8 @@ int wmain(int argc,wchar_t **argv){
 midi_validation:
     midi_checks(a,argv[2]);
     ssa_win32_audio_close(&a->audio);DestroyWindow(a->window);UnregisterClassW(wc.lpszClassName,wc.hInstance);
+    if(a->back_dc){if(a->back_original)SelectObject(a->back_dc,a->back_original);
+        if(a->back_bitmap)DeleteObject(a->back_bitmap);DeleteDC(a->back_dc);}
     ssa_pc_renderer_free(&a->renderer);ssa_native_game_free(a->game);free(a->game);free(a->menu);free(a->rom);free(a);
     printf("{\"result\":\"pass\",\"checks\":%u,\"score_paths\":%u,\"midi_only\":%s,\"hidden_window\":true,\"output_muted\":true,\"midi_device\":\"Microsoft GS Wavetable Synth\",\"midi_sequences\":26}\n",checks,midi_only?0:6,midi_only?"true":"false");return 0;
 }

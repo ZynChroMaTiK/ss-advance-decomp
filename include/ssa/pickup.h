@@ -48,4 +48,9 @@ int ssa_pickup_touch(SsaPickupGame *, const SsaPickupPlayer *, SsaPickup *,
  * repeat_weapon=0 retains original acceptance. Other pickup behavior is shared. */
 int ssa_pickup_touch_alternate(SsaPickupGame *,const SsaPickupPlayer *,SsaPickup *,
                              uint32_t override_item,unsigned repeat_weapon);
+/* PC pickup rules: store ammo without ownership and take owned weapons for
+ * their normal half-capacity ammo grant. Full ammo still refuses the pickup.
+ * repeat_weapon retains variant acquisition priority (the second Colt). */
+int ssa_pickup_touch_pc(SsaPickupGame *,const SsaPickupPlayer *,SsaPickup *,
+                      uint32_t override_item,unsigned repeat_weapon);
 #endif

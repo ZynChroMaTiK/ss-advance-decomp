@@ -563,17 +563,20 @@ static void music_transitions(SsaAudio *a,const uint8_t *rom){
     SsaNativeAudioOps ops={scene_play,scene_stop,&scene,scene_world,scene_listen,scene_move,scene_music,NULL};
     CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);scene.mixer=a;ssa_audio_reset(a);
     CHECK(ssa_audio_level_music(a,0)==1 && ssa_native_game_bind_audio(g,&ops)==1 && !scene.music_events);
+    /* Game Over music belongs to the final life; ordinary deaths now retry. */
+    g->game.life_game.continue_flag=g->gameplay.life_game.continue_flag=1;
     CHECK(ssa_combat_runtime_damage(&g->combat,&g->players[0].entity,&g->players[0].entity,&g->players[0].entity,1000,&g->combat_ops)==0);
     CHECK(!g->players[0].inventory.health && ssa_native_game_tick(g)==1);
-    /* Death first runs the recovered notice/fall phase. The terminal music
-     * starts when its original lifecycle enters input state4, not on damage. */
-    for(i=0;i<320 && g->game.life_game.input_state!=4;++i){
-        CHECK(!scene.music_events && g->music_mode==2);
+    /* The final-life lifecycle requests Game Over during the fall/message
+     * phase, before the eventual terminal handoff. Damage itself is silent. */
+    CHECK(!scene.music_events && g->music_mode==2);
+    for(i=0;i<640 && g->game.life_game.input_state!=4;++i){
+        CHECK(scene.music_events<=1 && g->music_mode==(scene.music_events?10u:2u));
         CHECK(ssa_native_game_tick(g)==1);mix_frames(a,400);
     }
-    CHECK(i>0 && i<320 && g->game.life_game.input_state==4);
+    CHECK(i>0 && i<640 && g->game.life_game.input_state==4);
     CHECK(ssa_native_game_tick(g)==1);
-    CHECK(scene.music_events==1 && scene.last_music==10 && g->music_mode==10 && a->music.pending_song==0x81);
+    CHECK(scene.music_events==1 && scene.last_music==10 && g->music_mode==10 && a->players[0].song==0x81);
     mix_frames(a,400);CHECK(a->players[0].song==0x81);
     for(i=0;i<320;++i){CHECK(ssa_native_game_tick(g)==1);mix_frames(a,400);}
     CHECK(g->game.life_game.input_state==4 && scene.music_events==1 && g->music_serial==1);

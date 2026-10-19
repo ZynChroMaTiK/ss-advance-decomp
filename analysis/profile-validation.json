@@ -1,22 +1,23 @@
 {
   "result": "pass",
-  "checks": 590187,
-  "frames": 1257,
-  "level_starts": 99,
+  "checks": 590241,
+  "frames": 1275,
+  "level_starts": 108,
   "campaign_names": 12,
   "languages": 3,
   "sanitizers": "ASan/UBSan/leaks=1",
   "scope": "Profile codec, immediate-predecessor unlocks, original localized campaign names, keyboard/mouse level selection and Clear Data confirmation; disk persistence is checked separately on Windows.",
   "source_sha256": {
     "src/profile.c": "038c6222ac55dff9ac8d6dcb4a01abfbfcf9d819d8da3dc8a146df8c183005b4",
-    "src/menu.c": "78f5e7fa2e8297b01e1ead9b06713a5691474f1ff58467fbd080c4aae71957a8",
+    "src/menu.c": "d710597c42ad61ed64fedf1675e66555e704e98e5c8d7308d3927a7fce4677f8",
+    "src/scores.c": "b5bb5db65255c8ea8d8096c50155b38e8bcd3084e5a3f360a2505ec8fbda9b9f",
     "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
     "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
-    "tests/test_profile.c": "ac8a817af826cfeadac7934c6626ac343f5d2600e5be9a0f06cc0b2e9f3e47bf",
+    "tests/test_profile.c": "cd08fce4fbb19e704b40b20f384e110153b9ff03cde2e1807955f4df81d2e759",
     "include/ssa/profile.h": "63989b06752471d795e375aa2364038aeb035c85d3ccdaa7cf01a5b7bf0b664d",
-    "include/ssa/menu.h": "f59a6c3fa42f354e8ac391ef67e3ed9e9441178086a9df9ab9f528815618c9fd",
+    "include/ssa/menu.h": "9d0cfab776022163d65452f9de6ac0556f8733b45e3ea5c91f215f86c4bafc8c",
     "include/ssa/map_view.h": "7ccfad549fc714c92ffd6a6c0ec1b2c81c98f6c36b98749541dd9928ac610da7",
-    "include/ssa/native_game.h": "1bbb464753edba7c56d8551f519912cbce477aff33eea94e7c545ad027a42610",
-    "tests/test_profile.py": "d59ae1e81905208b307ab037b56e4356acf78bf314186190491275bdc665cbd0"
+    "include/ssa/native_game.h": "3e3e33d1c298cbb535e09b8171e664728f9f6136914fa6fe677c7d454366863f",
+    "tests/test_profile.py": "4bbbfa2a1fd434befafea1a8a2285a68385a00cbe26bd60bc23c9d99fe14dff1"
   }
 }

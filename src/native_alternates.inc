@@ -1,6 +1,32 @@
 /* PC alternate-weapon policy. The original Colt controller remains the only
  * source of ammunition use, damage and statistics. Dual firing runs two clock
  * phases while each hand's presentation retains the original animation rate. */
+static void weapon_bob_update(SsaNativeGame *g)
+{
+    const SsaBody *body=&g->players[0].entity.body;int32_t sine,cosine,amplitude=g->player.camera.bob_amplitude;
+    int64_t altitude=(int64_t)body->z-(int32_t)body->floor*65536;
+    g->weapon_bob_x=g->weapon_bob_y=0;
+    if(!g->weapon_bobbing || g->player.pose.third_person || g->players[0].inventory.health<=0 ||
+       (g->players[0].motion.movement.flags&(8|SSA_PLAYER_CONTROL_LOCK)))return;
+    if(amplitude<0)amplitude=0;
+    /* The original squared-speed amplitude reaches only half strength at
+     * straight walking speed8. Normalize there, so vertical motion survives
+     * native pixel quantization without requiring faster diagonal movement. */
+    if(amplitude>0x80000)amplitude=0x100000;
+    else amplitude*=2;
+    if(!body->velocity_x && !body->velocity_y)amplitude=0;
+    /* Original art is the upper-left bound: only move right/down. Both
+     * Colts and their flashes use the same offset, moving in parallel.
+     * Sound13 is the left endpoint,14 the right, with the arch rising between. */
+    ssa_sincos(&g->math,(uint16_t)(g->player.camera_frame.counter*1872u),&sine,&cosine);
+    g->weapon_bob_x=(int32_t)((int64_t)(65536-cosine)*amplitude*3/(65536LL*4096));
+    if(sine<0)sine=-sine;
+    g->weapon_bob_y=(int32_t)((int64_t)(65536-sine)*amplitude*2/(65536LL*4096));
+    /* Height-based jump dip also works from rest, eases around the apex and
+     * returns continuously on landing. No extra animation/render clock. */
+    if(altitude>0){if(altitude>64*65536)altitude=64*65536;
+        g->weapon_bob_y+=(int32_t)(altitude/(16*256));}
+}
 static int alternate_hands_busy(const SsaNativeGame *g)
 {
     return (g->alternates.hands[0].animation==11 && !g->alternates.hands[0].done) ||
@@ -16,6 +42,7 @@ int ssa_native_game_alternate_weapons(SsaNativeGame *g,unsigned enabled,unsigned
         memset(g->alternates.hands,0,sizeof g->alternates.hands);
         g->alternates.rounds[0]=g->alternates.rounds[1]=0;
         g->alternates.reload_phase=0;g->alternates.next_shot=g->alternates.clock;
+        g->alternates.shotgun_inserting=0;
         g->weapon.object.previous_frame=0xffff;
     }
     g->alternates.enabled=enabled;
@@ -68,11 +95,14 @@ static void alternate_before(SsaNativeGame *g)
      * the runtime must suppress fresh shots even if selection updates there. */
     g->weapon.double_colt=w->current==2 && g->alternates.variant && g->weapon.object.y==0x5000 && !(w->flags&0x2100);
     if(w->current==2){
+        unsigned manual=g->input_runtime.sample.enabled && g->input_runtime.sample.reload_pressed &&
+            !(g->players[0].motion.movement.flags&8) && g->weapon.object.y==0x5000 && !(w->flags&0x2100) &&
+            (g->alternates.rounds[0] || (g->alternates.variant && g->alternates.rounds[1]));
         /* Test the gun whose turn comes next, never the gun that just fired.
          * Also handle a partial magazine retained through a variant change. */
         if(!g->alternates.reload_phase && w->requested==2 &&
            g->alternates.variant==g->alternates.requested_variant &&
-           g->alternates.rounds[g->alternates.variant?g->alternates.next_left:0]>=6){
+           (manual || g->alternates.rounds[g->alternates.variant?g->alternates.next_left:0]>=6)){
             g->alternates.reload_phase=1;g->alternates.reload_dual=g->alternates.variant;
         }
         if(g->alternates.reload_phase){
@@ -129,6 +159,15 @@ static void alternate_before(SsaNativeGame *g)
 static void alternate_after(SsaNativeGame *g)
 {
     unsigned current=g->gameplay.weapon.current;
+    if(!(g->frame_game.flags&1)){
+        unsigned was_inserting=g->alternates.shotgun_inserting;
+        g->alternates.shotgun_inserting=g->alternates.enabled && current==3 &&
+            g->players[0].inventory.health>0 && g->weapon.shotgun_animating &&
+            g->weapon.object.animation==12 && (g->weapon.object.frame&0x3fff)==23;
+        /* Sprite23 holds across several timed slots. Cue only its first
+         * visible tick, after animation advances, as a local weapon effect. */
+        if(g->alternates.shotgun_inserting && !was_inserting)(void)sound(g,0x28);
+    }
     if(g->alternates.weapon!=current){
         g->alternates.weapon=current;
         g->alternates.variant=current==2 && g->alternates.enabled?g->alternates.requested_variant:0;
@@ -156,13 +195,23 @@ static int32_t alternate_reload_offset(const SsaNativeGame *g,unsigned hand)
     elapsed=1284-remaining;lower=elapsed<360?elapsed:remaining<360?remaining:360;
     return (int32_t)(lower*0x8c00/360);
 }
-int ssa_native_game_build_oam(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispatch *sprites)
+static int build_oam_weapons(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispatch *sprites,int32_t bob_x,int32_t bob_y)
 {
     SsaSpriteDispatch copy;SsaWeaponObject objects[84];SsaSpriteCacheEntry cache[SSA_SPRITE_IMAGE_COUNT];
     unsigned i,slot=84,free_slot=84,id,used[84]={0},left_visible;uint16_t idle_frame;int result;
     if(!g || !out || !sprites)return -1;
-    if(!g->alternates.enabled || g->gameplay.weapon.current!=2 || !g->players[0].inventory.health)
-        return ssa_sprite_oam_build(out,sprites,&g->sprite_assets,g->cache.entries,&g->math);
+    if(!g->alternates.enabled || g->gameplay.weapon.current!=2 || !g->players[0].inventory.health){
+        if(!bob_x && !bob_y)
+            return ssa_sprite_oam_build(out,sprites,&g->sprite_assets,g->cache.entries,&g->math);
+        copy=*sprites;
+        for(i=0;i<84;++i){objects[i]=*sprites->objects[i];copy.objects[i]=&objects[i];}
+        slot=g->weapon.object.slot;if(slot>=84)return -1;
+        objects[slot].x+=bob_x;objects[slot].y+=bob_y;
+        result=ssa_sprite_oam_build(out,&copy,&g->sprite_assets,g->cache.entries,&g->math);
+        if(result==1)for(i=0;i<84;++i){sprites->objects[i]->screen_x=objects[i].screen_x;
+            sprites->objects[i]->screen_y=objects[i].screen_y;}
+        return result;
+    }
     left_visible=g->alternates.left_y<0xdc00;
     if(left_visible && sprites->active_count>=84)return -1;
     for(i=0;i<sprites->active_count;++i){unsigned index=sprites->active[i];
@@ -206,11 +255,82 @@ int ssa_native_game_build_oam(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispat
     }
     if(left_visible){
         objects[free_slot].frame^=0x8000;objects[free_slot].previous_frame^=0x8000;
+        objects[free_slot].x+=bob_x;objects[free_slot].y+=bob_y;
     }
+    objects[slot].x+=bob_x;objects[slot].y+=bob_y;
     result=ssa_sprite_oam_build(out,&copy,&g->sprite_assets,cache,&g->math);
     if(result==1)for(i=0;i<sprites->active_count;++i){unsigned index=sprites->active[i];
         sprites->objects[index]->screen_x=objects[index].screen_x;
         sprites->objects[index]->screen_y=objects[index].screen_y;
     }
+    return result;
+}
+static unsigned original_hud_group(const SsaWeaponObject *o)
+{
+    if(o->type==9 || o->type==12)return 1; /* Original top-center score/clock. */
+    if(o->type==16 || o->type==17 || (o->type==4 && (o->animation==0x5b ||
+       (o->animation>=0xdb && o->animation<=0xde))))return 2; /* Top-left lives. */
+    if(o->type==4 || o->type==15 || o->type==5)return 3;
+    if(o->type==7)return 4; /* Top-right weapon icon. */
+    if(o->type==6 || o->type==8)return 5; /* Bottom-right ammo. */
+    return 0; /* Weapon models, reticle and messages. */
+}
+static int build_original_hud(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispatch *sprites)
+{
+    SsaSpriteDispatch copy=*sprites;SsaWeaponObject objects[84];SsaSpriteOam layers[6];unsigned i,group;
+    int result;
+    for(i=0;i<84;++i){if(!sprites->objects[i])return -1;
+        objects[i]=*sprites->objects[i];copy.objects[i]=&objects[i];}
+    /* Build isolated snapshots so output-space anchoring never moves a piece
+     * of a first-person weapon that happens to overlap a corner HUD panel.
+     * All source coordinates and transparent sprite padding remain original;
+     * native240x160 OAM is never normalized to a new margin or rearranged. */
+    for(group=0;group<6;++group){SsaWeaponObject filtered[84];SsaSpriteDispatch d=copy;
+        layers[group]=*out;
+        for(i=0;i<84;++i){filtered[i]=objects[i];d.objects[i]=&filtered[i];
+            if(original_hud_group(&filtered[i])!=group)filtered[i].flags&=~UINT32_C(1);}
+        if(build_oam_weapons(g,&layers[group],&d,g->weapon_bob_x,g->weapon_bob_y)!=1)return -1;
+    }
+    result=build_oam_weapons(g,out,&copy,g->weapon_bob_x,g->weapon_bob_y);
+    if(result==1 && out==&g->oam)memcpy(g->original_hud_oam,layers,sizeof layers);
+    if(result==1)for(i=0;i<84;++i){sprites->objects[i]->screen_x=objects[i].screen_x;
+        sprites->objects[i]->screen_y=objects[i].screen_y;}
+    return result;
+}
+/* Keep the original crop/scale, but move its pixels in output space. The
+ * source weapon canvas is unshifted so bobbing cannot clip at its3:2 edge. */
+static int build_pc_weapon_layers(SsaNativeGame *g)
+{
+    SsaSpriteDispatch copy=g->sprites;SsaWeaponObject objects[84];unsigned i,layer;
+    g->pc_weapon_separate=0;
+    if(!g->weapon_bob_x && !g->weapon_bob_y)return 1;
+    for(layer=0;layer<(g->hud_style==SSA_HUD_ORIGINAL?3u:2u);++layer){
+        SsaSpriteOam *o=layer==0?&g->pc_weapon_oam:layer==1?&g->pc_hud_oam:&g->pc_center_hud_oam;
+        *o=g->oam;
+        for(i=0;i<84;++i){objects[i]=*g->sprites.objects[i];copy.objects[i]=&objects[i];
+            if(layer==0?i!=g->weapon.object.slot:i==g->weapon.object.slot ||
+               (g->hud_style==SSA_HUD_CLASSIC && ssa_classic_hud_replaces(objects[i].type)) ||
+               (layer==2 && original_hud_group(&objects[i])))objects[i].flags&=~UINT32_C(1);}
+        if((layer==0?build_oam_weapons(g,o,&copy,0,0):
+            ssa_sprite_oam_build(o,&copy,&g->sprite_assets,g->cache.entries,&g->math))!=1)return -1;
+    }
+    g->pc_weapon_separate=1;return 1;
+}
+int ssa_native_game_build_oam(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispatch *sprites)
+{
+    SsaSpriteDispatch copy;SsaWeaponObject objects[84];unsigned i;int result;
+    if(!g || !sprites || sprites->active_count>84)return -1;
+    weapon_bob_update(g);
+    if(g->hud_style!=SSA_HUD_CLASSIC){result=build_original_hud(g,out,sprites);
+        if(result==1 && out==&g->oam && sprites==&g->sprites)result=build_pc_weapon_layers(g);
+        return result;}
+    copy=*sprites;
+    for(i=0;i<84;++i){if(!sprites->objects[i])return -1;
+        objects[i]=*sprites->objects[i];copy.objects[i]=&objects[i];
+        if(ssa_classic_hud_replaces(objects[i].type))objects[i].flags&=~UINT32_C(1);}
+    result=build_oam_weapons(g,out,&copy,g->weapon_bob_x,g->weapon_bob_y);
+    if(result==1)for(i=0;i<84;++i){sprites->objects[i]->screen_x=objects[i].screen_x;
+        sprites->objects[i]->screen_y=objects[i].screen_y;}
+    if(result==1 && out==&g->oam && sprites==&g->sprites)result=build_pc_weapon_layers(g);
     return result;
 }

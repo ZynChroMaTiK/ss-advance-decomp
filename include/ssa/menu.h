@@ -2,12 +2,13 @@
 #define SSA_MENU_H
 #include "ssa/map_view.h"
 #include "ssa/settings.h"
+#include "ssa/scores.h"
 enum { SSA_MENU_UP=1,SSA_MENU_DOWN=2,SSA_MENU_CONFIRM=4,SSA_MENU_BACK=8,
        SSA_MENU_START=16,SSA_MENU_LEFT=32,SSA_MENU_RIGHT=64 };
 enum { SSA_MENU_LANGUAGE=10,SSA_MENU_TITLE=11,SSA_MENU_MAIN=0,
        SSA_MENU_SINGLE=1,SSA_MENU_OPTIONS=4,SSA_MENU_PASSWORD=8,SSA_MENU_DIFFICULTY=9,SSA_MENU_CREDITS=12,
        SSA_MENU_SCORES=13,SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15,SSA_MENU_SETTINGS=16,SSA_MENU_EXTRA=17,
-       SSA_MENU_QUIT=18 };
+       SSA_MENU_QUIT=18,SSA_MENU_SCORE_NAME=19 };
 enum { SSA_MENU_UNAVAILABLE_LEVEL=100 };
 enum { SSA_MENU_LEVELS_PER_CHAPTER=6 };
 typedef struct SsaMenu {
@@ -35,13 +36,20 @@ typedef struct SsaMenu {
     unsigned quit_requested; /* PC Main-menu Quit; never a new-game result. */
     int32_t score_y,score_speed;
     unsigned score_ticks,score_leaving;
+    SsaScores scores;
+    uint32_t score_candidate;
+    unsigned score_rank,score_highlight,score_submitted;
+    uint8_t score_cursor,score_up,score_down,score_typed;
+    unsigned score_length;
 } SsaMenu;
 /* Starts at Title in English. Options cycles Language in place (Left backwards,
  * Right/Confirm forwards), using original language names and localized labels.
  * Options IDs1..5: Credits, Language, Clear Data, Settings, Extras. Music volume is
- * controlled by Settings; Extras holds jump, third-person and in-game NETRICSA toggles.
+ * controlled by Settings; Extras includes jump, third-person, in-game NETRICSA,
+ * alternate weapons, automap, HUD style, first-person weapon bobbing and surface decals.
  * No separate music toggle. Original title/main/
- * single-player/difficulty/credits pages. Other
+ * single-player/difficulty/credits/Scores/name-entry pages. The frontend owns
+ * score-file persistence. Other
  * menu destinations are explicit unsupported boundaries, not fake features. */
 int ssa_menu_init(SsaMenu *,const uint8_t *,size_t,unsigned music_enabled);
 int ssa_menu_step(SsaMenu *,unsigned pressed);
@@ -52,6 +60,10 @@ int ssa_menu_step_input(SsaMenu *,unsigned pressed,unsigned held);
  * Outside labels never confirms. Title/credits/password keep click-to-confirm. */
 unsigned ssa_menu_pointer(SsaMenu *,int x,int y,unsigned click);
 int ssa_menu_text(SsaMenu *,unsigned character);
+/* Post-game name entry. Caller copies its persisted table into scores first.
+ * Submitted record raises score_submitted for one tick; caller stores only
+ * that event, then may merge the resulting latest table back into scores. */
+int ssa_menu_score_begin(SsaMenu *,uint32_t score);
 /* Shared letterbox mapping and bounded ASCII editor for future UI screens.
  * Text accepts letters/digits/underscore/space, uppercases letters, and handles
  * Backspace(8), Delete(127). cursor may point at the trailing NUL. */

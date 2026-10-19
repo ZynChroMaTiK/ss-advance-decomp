@@ -1,0 +1,36 @@
+{
+    "result":  "pass",
+    "core":  {
+                 "result":  "pass",
+                 "checks":  10339,
+                 "typed_submissions":  54,
+                 "codec_bytes":  320,
+                 "languages":  3
+             },
+    "windows":  {
+                    "result":  "pass",
+                    "checks":  754,
+                    "name_paths":  6,
+                    "quit_run_paths":  6,
+                    "ending_paths":  6,
+                    "new_run_paths":  6,
+                    "renderers":  2,
+                    "languages":  3,
+                    "hidden_window":  true
+                },
+    "physical_input_tested":  false,
+    "source_sha256":  {
+                          "src/scores.c":  "b5bb5db65255c8ea8d8096c50155b38e8bcd3084e5a3f360a2505ec8fbda9b9f",
+                          "include/ssa/scores.h":  "72654c05ad5060e4cf5bdd573e54cef1817ff7536d67cb317f04d77c8d430e35",
+                          "src/menu.c":  "d710597c42ad61ed64fedf1675e66555e704e98e5c8d7308d3927a7fce4677f8",
+                          "include/ssa/menu.h":  "9d0cfab776022163d65452f9de6ac0556f8733b45e3ea5c91f215f86c4bafc8c",
+                          "platform/win32/game.c":  "d25accd52a476a995f8e6d0a89b2f97fbb285da1292f003e5e580187ff9e5b2d",
+                          "platform/win32/profile_win32.c":  "6104f7b7a962c711dd28f46dba27d1ae5d441264adcf2120cbb0ee4caa245f8e",
+                          "platform/win32/profile_win32.h":  "b71ea54e05b4738fa412efb0ce1edc08a4c7d96c9e820e27c0b6c9067f521317",
+                          "tests/test_scores.c":  "19154f84fa61c27cdfcd63f1d81edd30ca5b98f367b479e4592383df4813e88b",
+                          "tests/test_scores_win32.c":  "19eb1c350f0e4873b2afa38d2f9ad772c207df48f69d12d460568fce1bd66289",
+                          "scripts/test-scores.ps1":  "bdd560c554c3c7f77c9686419b83fd82393deb8b8365bd7d10fcad35b73b8610",
+                          "CMakeLists.txt":  "d3a667b027b6a82d9dc675ae115d46caf2d24e9fb8124a2f78a3414cd642ac2b"
+                      },
+    "executable_sha256":  "4657e6cbfeefd68ca742537c1b81e1d4b62f8043f2c015bb9e011e8b556717e6"
+}

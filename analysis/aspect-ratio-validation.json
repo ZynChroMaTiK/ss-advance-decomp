@@ -1,0 +1,81 @@
+{
+    "result":  "pass",
+    "scope":  "New aspect setting, compatibility, current native menus and frontend presentation",
+    "default":  "Native",
+    "gba_ratio":  "3:2",
+    "renderer_gba_disables_setting":  true,
+    "settings_file_bytes":  16,
+    "settings_version":  9,
+    "settings_core":  {
+                          "result":  "pass",
+                          "checks":  38958,
+                          "music_sequences":  26,
+                          "soundfont_seconds":  208,
+                          "peak":  32760,
+                          "hybrid_music":  true,
+                          "music_limited_frames":  237192,
+                          "cpu_seconds":  6.25
+                      },
+    "settings_windows":  {
+                             "result":  "pass",
+                             "checks":  23614,
+                             "score_paths":  6,
+                             "midi_only":  false,
+                             "hidden_window":  true,
+                             "output_muted":  true,
+                             "midi_device":  "Microsoft GS Wavetable Synth",
+                             "midi_sequences":  26
+                         },
+    "hud_core":  {
+                     "result":  "pass",
+                     "checks":  357231,
+                     "draws":  409,
+                     "paths":  2
+                 },
+    "hud_windows":  {
+                        "result":  "pass",
+                        "checks":  560,
+                        "paths":  2,
+                        "hidden_window":  true
+                    },
+    "native_menu_checks":  76171,
+    "presentation_cases":  12,
+    "presentation_sizes":  [
+                               [
+                                   854,
+                                   480
+                               ],
+                               [
+                                   640,
+                                   480
+                               ],
+                               [
+                                   480,
+                                   640
+                               ]
+                           ],
+    "captures_inspected":  [
+                               "settings-0",
+                               "settings-1",
+                               "settings-2",
+                               "settings-gba-0",
+                               "aspect-0-0",
+                               "aspect-0-1"
+                           ],
+    "additional_rom_menu_comparison":  {
+                                           "result":  "fail",
+                                           "reason":  "Existing main-menu Quit extension: native five items at y74 vs original four items at y82. Aspect/settings code is outside this failing comparison."
+                                       },
+    "physical_input_tested":  false,
+    "executable_sha256":  "ccf5b4a6179aa9ca96d4b3ca1d67918a555f358e4f206ef7d13eac9b54993906",
+    "source_sha256":  {
+                          "include/ssa/settings.h":  "7aa388875073cf597c951ac87a596d380f9128bbac1daacebc7888791b9188e9",
+                          "src/settings.c":  "d0294c0179c083e270e2dc44e5ba0353bf47b3019641e82fa0026e84ec3963a7",
+                          "src/menu.c":  "3ec7e9c1cf5a82bfca7a84d533c1e6b263936395dcb7b9285a1d9b986bf900e5",
+                          "platform/win32/game.c":  "76510ff6867449b0c84b55c9254475b99bfba981f1f6ec3a2cdb2b12947760ce",
+                          "tests/test_audio_settings.c":  "cb72b604cf03b2ed73fc217314011564e9e0ad718983a16f57d3b4ee7693ed5a",
+                          "tests/test_settings_win32.c":  "0e3387b00f8c381e5ea0056f94ab251becff06f0171de8ef200541b76ff07d69",
+                          "tests/test_classic_hud.c":  "36bb338c783f15cae29d9e57516c1f96062843873f5b78b864ed70f62da8464f",
+                          "tests/test_menu_rom.py":  "d656cd0066e1c5a7b04231893df12efcfc6127e7362ba24105209ae8411f1af1"
+                      }
+}

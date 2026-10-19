@@ -7,7 +7,7 @@ static int32_t signed_bits(uint32_t v) {return v<=INT32_MAX?(int32_t)v:-1-(int32
 static void pending_clear(SsaPcInput *p) {
     p->pressed=p->pending_yaw=0;
     p->pending_pitch=0;
-    p->fire_pressed=p->jump_pressed=p->use_pressed=p->view_toggle=0;
+    p->fire_pressed=p->jump_pressed=p->use_pressed=p->view_toggle=p->reload_pressed=0;
 }
 int ssa_pc_input_init(SsaPcInput *p,int32_t sensitivity) {
     if(!p || sensitivity<=0)return -1;
@@ -21,7 +21,7 @@ void ssa_pc_input_enable(SsaPcInput *p,int enabled) {
     if(!ready(p))return;
     p->enabled=(uint8_t)!!enabled;
     if(!enabled) {
-        p->blocked|=p->down&(SSA_PC_SPACE|SSA_PC_H|SSA_PC_E);
+        p->blocked|=p->down&(SSA_PC_SPACE|SSA_PC_H|SSA_PC_E|SSA_PC_R);
         if(p->left_down)p->left_blocked=1;
         pending_clear(p);
     }
@@ -39,6 +39,7 @@ static uint32_t key_bit(int key) {
     case 'W':return SSA_PC_W;case 'S':return SSA_PC_S;
     case 'A':return SSA_PC_A;case 'D':return SSA_PC_D;
     case ' ':return SSA_PC_SPACE;case 'H':return SSA_PC_H;case 'E':return SSA_PC_E;
+    case 'R':return SSA_PC_R;
     default:return 0;
     }
 }
@@ -50,12 +51,13 @@ int ssa_pc_input_key(SsaPcInput *p,int key,int down,int repeat) {
     was_down=!!(p->down&bit);edge=down && !was_down && !repeat;
     if(down)p->down|=bit;
     else {p->down&=~bit;p->blocked&=~bit;return 1;}
-    if((!p->enabled || (repeat && !was_down)) && (bit&(SSA_PC_SPACE|SSA_PC_H|SSA_PC_E)))p->blocked|=bit;
+    if((!p->enabled || (repeat && !was_down)) && (bit&(SSA_PC_SPACE|SSA_PC_H|SSA_PC_E|SSA_PC_R)))p->blocked|=bit;
     if(!edge || !p->enabled || (p->blocked&bit))return 1;
     p->pressed|=bit;
     if(bit==SSA_PC_SPACE)p->jump_pressed=1;
     else if(bit==SSA_PC_H)p->view_toggle^=1;
     else if(bit==SSA_PC_E)p->use_pressed=1;
+    else if(bit==SSA_PC_R)p->reload_pressed=1;
     return 1;
 }
 int ssa_pc_input_button(SsaPcInput *p,unsigned button,int down) {
@@ -94,6 +96,7 @@ int ssa_pc_input_sample(SsaPcInput *p,SsaPcInputSample *out) {
         n.pressed=p->fire_pressed;
         n.jump_down=(uint8_t)(((down&SSA_PC_SPACE) && !(p->blocked&SSA_PC_SPACE)) || p->jump_pressed);
         n.view_toggle=p->view_toggle;
+        n.reload_pressed=p->reload_pressed;
         n.packed=n.keys|n.held|((uint32_t)n.pressed<<16);
     }
     pending_clear(p);*out=n;return 1;

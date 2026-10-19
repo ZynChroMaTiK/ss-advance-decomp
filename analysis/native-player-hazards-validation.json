@@ -7,6 +7,7 @@
   "native_guards": 96,
   "maps": 16,
   "scope": "whole 05680 including 055BC,05548,03464,real BSP/trigonometry/non-stopping 0429C wall sweep; only line activation1C0D4/switch1C518 effects controlled; full player/body bytes and ordered callback inputs; not full scripts/gameplay",
-  "rom_comparisons": 24576,
-  "source_sha256": "b7184a94249272776a7b065f1410d74845b24711c376d17ed87375e026e6ad13"
+  "automap_query_cases": 4096,
+  "rom_comparisons": 28672,
+  "source_sha256": "2a83b5599585721b46d4bcd9e50305180ecb94d528809cdea3f826da367b7f0c"
 }

@@ -2625,7 +2625,7 @@
       "sections": [
         {
           "title": "How they work",
-          "text": "Look for bullets, shells, rockets, cannonballs and coloured energy cells. You need the matching weapon and room for more ammo to pick them up."
+          "text": "Look for bullets, shells, rockets, cannonballs and coloured energy cells. You can collect ammo before finding its weapon, as long as you have room for more."
         },
         {
           "title": "Names on the map",
@@ -2917,11 +2917,11 @@
       "sections": [
         {
           "title": "Moving around",
-          "text": "WASD moves, the mouse looks, Space jumps, and H switches between first- and third-person views. Jump and the third-person toggle are PC additions. The camera moves closer when walls get in the way."
+          "text": "WASD moves and the mouse looks. Enable Jump in Extras to use Space; H switches between first- and third-person views when enabled. Jump and the third-person toggle are PC additions. The camera moves closer when walls get in the way."
         },
         {
           "title": "Fighting and using things",
-          "text": "Left-click fires. E uses doors and switches. Number keys 1–0 and the mouse wheel select weapons; Q goes back to the last weapon. R restarts the current level. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
+          "text": "Left-click fires. E uses doors and switches. Number keys 1–0 and the mouse wheel select weapons; Q goes back to the last weapon. R reloads Colts with Alternate weapons enabled. Enable Automap in Extras to use M, and zoom with +/minus or the mouse wheel. F11 toggles fullscreen/windowed mode. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
         }
       ],
       "related": [
@@ -2947,7 +2947,7 @@
         },
         {
           "title": "Picking things up",
-          "text": "Walk over pickups to collect them. Ammo needs a matching weapon and space to carry more. Health, armor and shields have their own limits."
+          "text": "Walk over pickups to collect them. Ammo only needs space to carry more; a matching weapon is not required. Already-owned weapons can supply ammo. Health, armor and shields have their own limits."
         }
       ],
       "related": [

@@ -1,0 +1,20 @@
+{
+    "result":  "pass",
+    "scope":  "Tommygun Classic HUD vertical cartridge variant of Minigun badge",
+    "core":  {
+                 "result":  "pass",
+                 "checks":  357231,
+                 "draws":  409,
+                 "paths":  2
+             },
+    "renderer_paths":  2,
+    "captures_inspected":  [
+                               "build/classic-tommy-bullets-preview.png",
+                               "build/classic-tommy-bullets-tests/classic-ammo-panel-0.bmp"
+                           ],
+    "executable_sha256":  "63b406c7bec3424271e6086b61987b55da767632d9ab386d305cff8b2b7f4c49",
+    "source_sha256":  {
+                          "src/classic_hud.c":  "ad6ed4207f3990cf7d1cb62c27d619a0fa9c67b22637d522cb277240f4bab645",
+                          "tests/test_classic_hud.c":  "36bb338c783f15cae29d9e57516c1f96062843873f5b78b864ed70f62da8464f"
+                      }
+}
