@@ -89,9 +89,9 @@ def actor_content(resource, frame):
 def screen_content(index):
     """Fallbacks for artwork outside the named weapon/HUD sequences."""
     if index == 25: return 'weapon-3', 'Coach Gun', 'Coach Gun · weapon frame'
-    if 63 <= index <= 88: return 'netricsa-ui', 'NETRICSA interface', 'NETRICSA interface piece'
-    if 89 <= index <= 109: return 'hud-meter-pieces', 'Meter pieces', 'Meter piece'
-    if 110 <= index <= 139: return 'hud-digits', 'Health numbers', 'Number'
+    if 63 <= index <= 88: return 'old-hud-panels', 'Old HUD panels', 'Old HUD panel'
+    if 89 <= index <= 109: return 'old-hud-meters', 'Old HUD meters', 'Old HUD meter'
+    if 110 <= index <= 139: return 'old-hud-digits', 'Old HUD numbers', 'Old HUD digit'
     if 140 <= index <= 264: return 'hud-letters', 'HUD letters and numbers', 'Letter or symbol'
     if 265 <= index <= 270: return 'hud-status', 'Health and armour icons', 'Status icon'
     if 271 <= index <= 279 or index in (288,294): return 'hud-ammo', 'Ammo icons', 'Ammo icon'

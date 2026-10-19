@@ -8,7 +8,7 @@ from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
 from graphics_content import actor_content, screen_content, pixel_digest, is_sheet
-from graphics_usage import SECTIONS, actor_uses, screen_uses, other_uses, texture_uses, merge_uses, finalize_uses
+from graphics_usage import SECTIONS, actor_uses, screen_uses, other_uses, texture_uses, referenced_textures, merge_uses, finalize_uses
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = {
@@ -36,6 +36,7 @@ def main():
         animations = json.loads(archive.read('animations/sprites.json'))
         actor_usage = actor_uses(manifest,json.loads(archive.read('animations/actors.json')))
         screen_usage = screen_uses(animations,wiki)
+        used_textures = referenced_textures(archive,manifest)
         sprite_names = {}
         def name_sequence(sequence, title, collection, collection_title, aliases='', override=False):
             for word in animations[sequence]['words']:
@@ -54,8 +55,6 @@ def main():
                 name_sequence(sequence, title+' · weapon frame', key, title, aliases)
             name_sequence(0x41+n, title+' · HUD icon', 'hud-weapons', 'Weapon icons', aliases)
             name_sequence(0xde+n, title+' · ammo icon', 'hud-ammo', 'Ammo icons', aliases)
-        for digit in range(10):
-            name_sequence(0x24+digit, f'Health digit {digit}', 'hud-digits', 'Health numbers')
         # Sequences 217 onward hold crosshairs/ammo, despite fitting the text
         # renderer's byte range. Do not mislabel those pictures as characters.
         for char in range(33, 158):
@@ -112,6 +111,8 @@ def main():
                 'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
                 'collectionTitle': f'{texture["name"]} · {family}',
                 'uses': texture_uses(texture['family']),
+                'unused': (texture['family'],texture['mip'],texture['index']) not in used_textures,
+                'unusedReason': 'Not referenced by any of the 16 original maps, including multiplayer maps and both switch states.',
                 'images': [dict(image(texture['png']), label=f'{family} · resolution {texture["mip"] + 1} of 3')]})
         for sprite in manifest['sprites']:
             label = sprite_names.get(sprite['id'])
@@ -161,6 +162,9 @@ def main():
                 url_aliases[entry['id']] = first['id']
                 first['tags'] = ' '.join(dict.fromkeys((first['tags']+' '+entry['tags']+' '+entry['collectionTitle']).split()))
                 first['uses'] = merge_uses(first['uses'],entry['uses'])
+                # A duplicate of an active texture is still used artwork.
+                if 'unused' in first or 'unused' in entry:
+                    first['unused'] = first.get('unused',False) and entry.get('unused',False)
             else:
                 unique[key] = entry
         entries = list(unique.values())

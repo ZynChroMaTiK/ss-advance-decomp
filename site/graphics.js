@@ -2,7 +2,7 @@ export const PAGE_SIZE = 60;
 export function filterGraphics(entries, query = '', category = 'all') {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return entries.filter(e => e.uses.some(u => category === 'all' || u.section === category)
-    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
+    && words.every(word => `${e.title} ${e.collectionTitle || ''} ${e.id} ${e.tags || ''} ${e.unused ? 'unused' : ''} ${e.uses.map(u => u.title).join(' ')} ${e.images.map(i => i.source).join(' ')}`.toLocaleLowerCase().includes(word)));
 }
 export function imageFor(entry, palette = 0) { return entry.images[palette] || entry.images[0]; }
 export function uniqueGraphics(entries, palette = 0, preferred = null) {
@@ -62,6 +62,9 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       img.src = original.path; img.alt = ''; img.width = original.width; img.height = original.height;
       img.loading = 'lazy'; img.decoding = 'async'; frame.append(img);
       button.append(frame, make('strong', entry.title), make('small', `${original.width} × ${original.height}`));
+      if (entry.unused) {
+        const chip = make('span', 'Unused', 'graphics-unused'); chip.title = entry.unusedReason; button.append(chip);
+      }
       button.onclick = () => {
         returnSpot = {id:entry.id, y:globalThis.window?.scrollY}; route(entry.id);
       };
@@ -85,7 +88,10 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-previous-image').disabled = $('graphics-next-image').disabled = true;
     if (!selected) { doc.title = 'Graphics — Serious Sam Advance'; return; }
     $('graphics-title').textContent = selected.title;
-    $('graphics-usage').textContent = 'Used for: '+selected.uses.map(u => u.title).join('; ')+'.';
+    $('graphics-unused').hidden = !selected.unused;
+    $('graphics-unused-note').hidden = !selected.unused;
+    $('graphics-unused-note').textContent = selected.unusedReason || '';
+    $('graphics-usage').textContent = (selected.unused ? 'Artwork: ' : 'Used for: ')+selected.uses.map(u => u.title).join('; ')+'.';
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
       ? 'An original sprite frame. Use Sprite colours to see its Egypt and Rome versions.'
       : selected.category === 'sprites' ? 'Original weapon or on-screen artwork. Some images are pieces the game draws together.'

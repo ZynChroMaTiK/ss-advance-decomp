@@ -3,19 +3,21 @@
 Content names live in graphics_content.py. Uses are deliberately separate:
 one picture can serve multiple animations. Only frames actually selected by
 the sequence (expanded over directions and distance sizes) receive that use.
-Unknown uses remain explicit; being stored in a table does not prove gameplay.
+Unused artwork stays with its subject; being stored in a table does not prove gameplay.
 """
 from collections import defaultdict
 from pathlib import Path
 import re
+import json
+import struct
 
 SECTIONS = {
     'enemies':'Enemies', 'player':'Sam and player colours', 'weapons':'Weapons in hand',
     'pickups':'Pickups and level exits', 'projectiles':'Projectiles and weapon effects',
-    'effects':'Hits, explosions and spawning', 'hud':'HUD and on-screen messages',
+    'effects':'Hits, explosions and spawning', 'hud':'HUD and on-screen messages', 'old-hud':'Old HUD',
     'netricsa':'NETRICSA', 'menus':'Menus and startup', 'story':'Chapter screens and ending',
     'textures-egypt':'Textures · Egypt', 'textures-rome':'Textures · Rome',
-    'world':'Skies', 'text':'Text and colour tables', 'unconfirmed':'Other stored graphics',
+    'world':'Skies', 'text':'Text and colour tables',
 }
 
 
@@ -106,8 +108,9 @@ def screen_uses(sequences, wiki):
         if n != 1: add(0xde+n,title+' · Ammo icon','hud','src/hud_sprites.c')
     for sequence,title in [(20,'Chainsaw · Sustained cutting'),(22,'Coach Gun · One shell')]:
         add(sequence,title,'weapons','src/weapon_controller.c')
-    for sequence in range(0x24,0x2e):
-        add(sequence,'HUD · Large numbers','hud','src/hud_sprites.c','hud-numbers')
+    # Sequences 0x24..0x41 belong to the old numeric HUD. The type-5
+    # controller remains, but the original HUD constructor creates no type 5.
+    add(0x4c,'HUD · Selection rectangle','hud','src/hud_sprites.c')
     for sequence in range(92,217):
         add(sequence,'HUD · Messages and counters','hud','src/hud_sprites.c','hud-text')
     for sequence,title in {84:'HUD · Health and armour bars',85:'HUD · Health and armour bars',86:'HUD · Health icon',
@@ -126,7 +129,7 @@ def other_uses(entry):
         chapter=0 if index < 3 else index-2
         return [use('story-'+str(chapter),['Egypt chapter','Rome chapter','Ending'][chapter],'story','src/campaign_story.c; src/campaign_screen.c')]
     if category == 'splashes':
-        if 'hidden-photo' in path: return [use('hidden-photos','Hidden pictures','unconfirmed','scripts/export_presentation_assets.py')]
+        if 'hidden-photo' in path: return []
         return [use('startup','Startup logos','menus','src/menu.c')]
     if category == 'menus':
         if 'netricsa' in path: return [use('netricsa-interface','NETRICSA · Panels and frame','netricsa','src/netricsa.c')]
@@ -150,8 +153,73 @@ def merge_uses(first, second):
     return list(by_id.values())
 
 
+def referenced_textures(archive, manifest):
+    """All 16 maps, every side layer, both switch states, and named mip images.
+
+    Read original map records rather than just currently visible wall geometry.
+    This includes multiplayer maps and textures behind closed doors. Floors and
+    ceilings use colours/skies, not the wall texture banks (map_texture_bindings.c).
+    """
+    banks = {(family,mip):{} for family in range(2) for mip in range(3)}
+    for texture in manifest['textures']:
+        banks[texture['family'],texture['mip']].setdefault(texture['name'].split('\0')[0][:8].lower(), texture['index'])
+    used = set()
+    pairs = {'sw1_off ':'sw1_on  ','sw1_on  ':'sw1_off ', 'sw2_off ':'sw2_on  ','sw2_on  ':'sw2_off '}
+    for level in range(16):
+        meta = json.loads(archive.read(f'maps/map-{level:02}.json'))
+        raw = archive.read(f'maps/map-{level:02}.wod0')
+        family = 0 if level < 6 or level in (12,13) else 1
+        sections = meta['sections']; sides = sections['sides']; lines = sections['lines']
+        names = [name.split('\0')[0][:8].lower() for name in meta['texture_names']]
+        referenced = set()
+        for side in range(sides['count']):
+            for index in struct.unpack_from('<3h',raw,sides['offset']+side*12+4):
+                if index >= 0: referenced.add(names[index])
+        for line in range(lines['count']):
+            offset = lines['offset']+line*40
+            if struct.unpack_from('<H',raw,offset+36)[0] != 2: continue
+            side = struct.unpack_from('<h',raw,offset+8)[0]
+            if side < 0: continue
+            index = struct.unpack_from('<h',raw,sides['offset']+side*12+6)[0]
+            if index >= 0 and names[index] in pairs:
+                partner = pairs[names[index]]
+                if partner in names: referenced.add(partner)
+        for name in referenced:
+            # These are the same first-name matches used by the native loader.
+            assert name in banks[family,0], (level,name)
+            for mip in range(3):
+                if name in banks[family,mip]: used.add((family,mip,banks[family,mip][name]))
+    return used
+
+
+def unused_category(entry):
+    category = entry['category']
+    if category == 'story': return 'story'
+    if category == 'splashes': return 'menus'
+    if category == 'actors':
+        resource = int(entry['id'].split('-')[1])
+        if resource in (21,23): return 'enemies'
+        if resource in (13,15,68): return 'projectiles'
+        if resource in (16,29): return 'effects'
+        if 32 <= resource <= 63: return 'pickups'
+    if category == 'sprites':
+        index = int(entry['id'].split('-')[1])
+        if index == 25: return 'weapons'
+        if 63 <= index <= 139 or index == 269: return 'old-hud'
+        if index in (287,288,293,295,296,297): return 'hud'
+        if 304 <= index <= 310: return 'effects'
+    raise ValueError(f'Unclassified unused graphic: {entry["id"]}')
+
+
 def finalize_uses(entries):
     for entry in entries:
         if not entry['uses']:
-            entry['uses']=[use('unconfirmed-'+entry['category'],'Unconfirmed use · '+entry['category'],
-                'unconfirmed','Original export; no confirmed caller mapped')]
+            section = unused_category(entry)
+            entry['uses']=[use('stored-'+entry['collection'],entry['collectionTitle'],section,'scripts/graphics_usage.py')]
+            entry['unused'] = True
+            entry['unusedReason'] = (
+                'Left over from the old HUD. The game uses a different HUD.' if section == 'old-hud' else
+                'Stored in the game, but not selected by the mapped animation sequences and game screens.')
+        else:
+            entry.setdefault('unused',False)
+        if not entry['unused']: entry.pop('unusedReason',None)

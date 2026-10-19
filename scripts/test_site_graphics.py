@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import Counter
 import hashlib, json, re, struct, zipfile
 from graphics_content import pixel_digest, is_sheet
-from graphics_usage import selected_actor_frames, SECTIONS
+from graphics_usage import selected_actor_frames, referenced_textures, SECTIONS
 from export_graphics_archive import png
 
 # Same visible picture, different unused/transparent palette colours.
@@ -13,6 +13,26 @@ assert a != b and pixel_digest(a) == pixel_digest(b)
 assert pixel_digest(a) != pixel_digest(png(2,1,b'\0\1',[0,32,123],True))
 assert pixel_digest(a) != pixel_digest(png(2,1,b'\0\1',[0,31,123],False))
 assert pixel_digest(a) != pixel_digest(png(1,2,b'\0\1',[0,31,123],True))
+
+# Texture reachability must include the unused-looking switch-on image and
+# multiplayer maps, but exclude spare descriptors and later duplicate names.
+class MapFixture:
+    def read(self,path):
+        level=int(re.search(r'map-(\d+)',path)[1])
+        names=['used','sw1_off ','sw1_on  ','spare','multi']
+        if path.endswith('.json'):
+            return json.dumps({'texture_names':names,'sections':{
+                'sides':{'offset':0,'count':1},'lines':{'offset':12,'count':1}}}).encode()
+        raw=bytearray(52)
+        struct.pack_into('<3h',raw,4,4 if level==12 else 0,1,-1)
+        struct.pack_into('<h',raw,20,0)
+        struct.pack_into('<H',raw,48,2)
+        return raw
+fixture_textures=[{'family':f,'mip':m,'index':i,'name':name}
+    for f in range(2) for m in range(3)
+    for i,name in enumerate(['USED','sw1_off ','sw1_on  ','spare','multi','used'])]
+fixture_used=referenced_textures(MapFixture(),{'textures':fixture_textures})
+assert fixture_used == {(f,m,i) for f in range(2) for m in range(3) for i in (0,1,2)} | {(0,m,4) for m in range(3)}
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / 'site'
@@ -86,6 +106,17 @@ assert by_id['sprite-235']['collection'] == 'character-shapes'
 assert by_id['sprite-304']['collection'] == 'screen-effects'
 assert all(not e['collectionTitle'].startswith(('Resource ','Shared item')) for e in entries)
 assert {s['id'] for s in catalog['usageSections']} == set(SECTIONS)
+assert 'unconfirmed' not in SECTIONS and SECTIONS['old-hud']=='Old HUD'
+for entry in entries:
+    assert isinstance(entry['unused'],bool)
+    assert bool(entry.get('unusedReason')) == entry['unused']
+for id,section in [('sprite-063','old-hud'),('sprite-089','old-hud'),('sprite-110','old-hud'),
+        ('sprite-269','old-hud'),('sprite-025','weapons'),('actor-021-009','enemies'),
+        ('actor-013-001','projectiles'),('actor-032-004','pickups'),('story-story-05','story'),
+        ('splashes-04-hidden-photo-1','menus')]:
+    assert by_id[id]['unused'] and {u['section'] for u in by_id[id]['uses']} == {section},id
+for id in ['sprite-293','actor-015-001','actor-032-001','story-story-00']:
+    assert not by_id[id]['unused'],id
 # Every original texture, including duplicate aliases and unused records,
 # belongs to its bank's setting. Wall/door roles and individual maps are not
 # separate gallery categories. Shared images retain both settings if needed.
@@ -128,6 +159,11 @@ if archive_path.exists():
         assert set(sources)|set(manifest['excluded']) == {p for p in archive.namelist() if p.endswith('.png')}
         assert hashlib.sha256(archive.read('manifest.json')).hexdigest() == manifest['source_manifest_sha256']
         original=json.loads(archive.read('manifest.json'))
+        used_textures=referenced_textures(archive,original)
+        used_paths={sources[t['png']] for t in original['textures'] if (t['family'],t['mip'],t['index']) in used_textures}
+        for entry in entries:
+            if entry['category']=='textures':
+                assert entry['unused'] == (Path(entry['images'][0]['path']).name not in used_paths),entry['id']
         sequences=json.loads(archive.read('animations/actors.json'))
         assert selected_actor_frames(original['actor_resources'][32],sequences[32]['words']) == {1,29}
         assert selected_actor_frames(original['actor_resources'][33],sequences[33]['words']) == {2,30}

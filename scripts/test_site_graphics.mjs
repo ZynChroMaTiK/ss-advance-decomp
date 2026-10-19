@@ -43,6 +43,9 @@ for(const category of data.usageSections){
  const pictures=uniqueGraphics(filterGraphics(data.entries,'',category.id));
  assert.equal($('graphics-grid').children.length,Math.min(PAGE_SIZE,pictures.length));
  for(const card of $('graphics-grid').children)assert.match(card.children[2].textContent,/^\d+ × \d+$/,'cards show dimensions without group labels');
+ for(const [index,card] of $('graphics-grid').children.entries()){
+  assert.equal(card.children.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
+ }
 }
 const actor=data.entries.find(e=>e.category==='actors'&&e.images[0].path!==e.images[1].path);
 gallery.open(actor.id,{focus:true});
@@ -119,6 +122,16 @@ for(const setting of ['Egypt','Rome']){
  assert(!/ · (Walls|Doors)/.test($('graphics-usage').textContent));
 }
 assert.equal(filterGraphics(data.entries,'<script>not markup</script>').length,0);
+assert(!data.usageSections.some(s=>s.id==='unconfirmed'));
+const oldHud=filterGraphics(data.entries,'','old-hud');
+assert(oldHud.length>0 && oldHud.every(e=>e.unused));
+assert.deepEqual(filterGraphics(data.entries,'unused'),data.entries.filter(e=>e.unused));
+gallery.open(oldHud[0].id);
+assert.equal($('graphics-unused').hidden,false);
+assert.equal($('graphics-unused-note').textContent,oldHud[0].unusedReason);
+assert.match($('graphics-usage').textContent,/^Artwork:/);
+gallery.open('sprite-293');
+assert($('graphics-unused').hidden && $('graphics-unused-note').hidden,'active artwork clears the unused explanation');
 assert(html.indexOf('<aside class="graphics-inspector"')<html.indexOf('<div class="graphics-browse"'),'mobile visual order matches reading order');
 assert(!html.includes('data-route="wiki"'),'NETRICSA navigation stays removed');
 assert(html.includes('European')&&html.includes('enable in Options → Extras'));
