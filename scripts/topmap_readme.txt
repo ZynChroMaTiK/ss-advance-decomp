@@ -31,5 +31,5 @@ Project website: https://zynchromatik.github.io/ss-advance-decomp/
 
 EDITING THE MAP GUIDE
 The map sources are scripts/export_topmaps.py and scripts/topmap_viewer.*.
-Use scripts/refresh_atlas_ui.py to update the viewer from existing exports.
+Run scripts/export_topmaps.py to rebuild the local viewer and maps.
 See site/README.md in the repository for website editing instructions.

@@ -6,7 +6,7 @@ extras. You can play all twelve campaign levels.
 
 **[Download v0.8.0 Alpha 1](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.1)**
 · [Website](https://zynchromatik.github.io/ss-advance-decomp/)
-· [Explore the maps](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/2d)
+· [Explore the maps](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
 
 It’s still an alpha, so you’ll find bugs and unfinished bits. The game runs
 directly on Windows—there’s no emulator to set up.

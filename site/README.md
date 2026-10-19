@@ -12,7 +12,7 @@ From the repository root, run:
 python -m http.server 8080
 ```
 
-Open <http://localhost:8080/site/>. Use this local server rather than opening `index.html` directly. The 3D viewer needs WebGL2; the 2D maps also work without it.
+Open <http://localhost:8080/site/>. Use this local server rather than opening `index.html` directly. The 3D viewer needs WebGL2.
 
 ## Where to edit
 
@@ -24,7 +24,6 @@ Open <http://localhost:8080/site/>. Use this local server rather than opening `i
 - `../scripts/build_site_sources.py`: turns the secret-source records into a readable page.
 - `../scripts/wiki_entities.json`: weapon and enemy descriptions.
 - `../scripts/build_wiki.py`: level, item and gameplay descriptions.
-- `../scripts/topmap_viewer.html` and `topmap_viewer.js`: 2D map text and controls.
 - `../README.md` and `../analysis/`: the source for the published help and developer notes.
 
 Change these source files, then run the refresh commands below. Editing a generated page directly means your changes will be lost the next time it’s rebuilt.
@@ -36,7 +35,6 @@ From the repository root:
 ```sh
 pip install -r scripts/site-document-requirements.txt
 python scripts/refresh-site-docs.py
-python scripts/refresh_atlas_ui.py
 node scripts/test_site.mjs
 node scripts/test_site_routes.mjs
 node scripts/test_site_wiki.mjs

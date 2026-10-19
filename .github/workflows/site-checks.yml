@@ -13,14 +13,10 @@ jobs:
       - uses: actions/checkout@v6
       - name: Verify level geometry and backface culling
         run: node scripts/test_site.mjs
-      - name: Verify unified routing and iframe bridge
+      - name: Verify 3D routing and legacy links
         run: node scripts/test_site_routes.mjs
       - name: Verify explorer loading and recovery
         run: node scripts/test_site_viewer_loading.mjs
-      - name: Verify atlas keyboard controls and lookup
-        run: node scripts/test_site_atlas.mjs
-      - name: Verify per-level atlas delivery and loading races
-        run: node scripts/test_site_atlas_loading.mjs
       - name: Verify object lookup, touch input and reference deep links
         run: node scripts/test_site_explorer_controls.mjs
       - name: Verify NETRICSA entries, search, links and artwork
@@ -31,7 +27,7 @@ jobs:
         run: python3 scripts/test_site_graphics.py
       - name: Verify resources below the Pages project prefix
         run: python3 scripts/test_site_http.py
-      - name: Verify reference links, content and offline maps
+      - name: Verify reference links, content and removed 2D assets
         run: python3 scripts/test_site_audit.py
       - name: Install reference renderer
         run: python3 -m pip install -r scripts/site-document-requirements.txt

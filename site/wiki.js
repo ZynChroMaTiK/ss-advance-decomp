@@ -46,7 +46,7 @@ export function createWikiView(entries, doc = document) {
     article.append(heading);
     if (entry.facts?.length) { const facts = node('dl', '', 'wiki-facts'); for (const [label, value] of entry.facts) { const item = node('div'); item.append(node('dt', label), node('dd', String(value))); facts.append(item); } article.append(facts); }
     for (const section of entry.sections) { const block = node('section'); block.append(node('h3', section.title), node('p', section.text)); article.append(block); }
-    if (entry.level !== undefined) { const actions = node('div', '', 'actions'); actions.append(link('Open 2D map ↗', `#levels/${entry.level + 1}/2d`, 'button primary'), link('Explore in 3D ↗', `#levels/${entry.level + 1}/3d`, 'button')); article.append(actions); }
+    if (entry.level !== undefined) { const actions = node('div', '', 'actions'); actions.append(link('Explore in 3D ↗', `#levels/${entry.level + 1}/3d`, 'button primary')); article.append(actions); }
     if (entry.appearances?.length) {
       const block = node('section'); block.append(node('h3', 'Where to find it'), node('p', 'Here’s where it appears. Some enemies and items arrive later, so they won’t all be there at once.', 'fine'));
       const links = node('div', '', 'wiki-related'); for (const item of entry.appearances) links.append(link(`${String(item.level + 1).padStart(2, '0')} / ${item.title} · ${item.count}`, `#wiki/level-${item.level + 1}`)); block.append(links); article.append(block);

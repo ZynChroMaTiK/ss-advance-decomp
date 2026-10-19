@@ -10,7 +10,7 @@
       "sections": [
         {
           "title": "Finding something",
-          "text": "Search for a name or choose a category. Each level links to its 2D map and 3D view. Weapon and enemy pages also show where you can find them."
+          "text": "Search for a name or choose a category. Each level links to its 3D view. Weapon and enemy pages also show where you can find them."
         },
         {
           "title": "About this guide",
@@ -2602,7 +2602,7 @@
       "title": "Ammunition",
       "category": "items",
       "summary": "Keep your weapons supplied.",
-      "image": "atlas/icons/p0-r053.png",
+      "image": "assets/map-icons/p0-r053.png",
       "aliases": [
         "Cannon balls",
         "Minigun ammo",
@@ -2642,7 +2642,7 @@
           "href": "docs/pickups.html"
         },
         {
-          "title": "Atlas data",
+          "title": "Map data",
           "href": "data/catalog.json"
         }
       ]
@@ -2652,7 +2652,7 @@
       "title": "Ankhs and special pickups",
       "category": "items",
       "summary": "Some pickups also make something happen in the level.",
-      "image": "atlas/icons/p0-r063.png",
+      "image": "assets/map-icons/p0-r063.png",
       "aliases": [
         "Level exit / ankh trigger"
       ],
@@ -2686,7 +2686,7 @@
           "href": "docs/level-script.html"
         },
         {
-          "title": "Atlas data",
+          "title": "Map data",
           "href": "data/catalog.json"
         }
       ]
@@ -2696,7 +2696,7 @@
       "title": "Armor and shields",
       "category": "items",
       "summary": "Help Sam take more hits.",
-      "image": "atlas/icons/p0-r045.png",
+      "image": "assets/map-icons/p0-r045.png",
       "aliases": [
         "100 armor",
         "25 armor",
@@ -2732,7 +2732,7 @@
           "href": "docs/combat-damage.html"
         },
         {
-          "title": "Atlas data",
+          "title": "Map data",
           "href": "data/catalog.json"
         }
       ]
@@ -2742,7 +2742,7 @@
       "title": "Backpacks and power-ups",
       "category": "items",
       "summary": "Extra supplies and temporary help.",
-      "image": "atlas/icons/p0-r051.png",
+      "image": "assets/map-icons/p0-r051.png",
       "aliases": [
         "Backpack",
         "Serious power"
@@ -2777,7 +2777,7 @@
           "href": "docs/pickups.html"
         },
         {
-          "title": "Atlas data",
+          "title": "Map data",
           "href": "data/catalog.json"
         }
       ]
@@ -2787,7 +2787,7 @@
       "title": "Health pickups",
       "category": "items",
       "summary": "Restore Sam’s health.",
-      "image": "atlas/icons/p0-r049.png",
+      "image": "assets/map-icons/p0-r049.png",
       "aliases": [
         "100 health (collect below 200)",
         "25 health",
@@ -2823,7 +2823,7 @@
           "href": "docs/inventory.html"
         },
         {
-          "title": "Atlas data",
+          "title": "Map data",
           "href": "data/catalog.json"
         }
       ]
@@ -2839,7 +2839,7 @@
           "text": "Using a switch or entering an area can open a door, move a lift or bring in more enemies. Sometimes you need to defeat a group before you can move on."
         },
         {
-          "title": "Reading the atlas",
+          "title": "Reading the map",
           "text": "Select a door, switch or green event area to see what happens there. In 3D, Show doors open lets you look through doorways. The viewer does not run the level’s events."
         }
       ],
@@ -2866,7 +2866,7 @@
         },
         {
           "title": "Using the maps",
-          "text": "Use the 2D map to find labelled items and enemies. Switch to 3D to look around rooms and see their heights. Hide ceilings for a clearer view from above."
+          "text": "Use the 3D map to find items and enemies, look around rooms and see their heights. Hide ceilings for a clearer view from above."
         }
       ],
       "related": [
@@ -3000,7 +3000,7 @@
         },
         {
           "title": "Secret notes and sources",
-          "href": "atlas/sources-and-secret-coverage.json"
+          "href": "data/sources-and-secret-coverage.json"
         }
       ],
       "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
@@ -3042,7 +3042,7 @@
         },
         {
           "title": "Secret notes and sources",
-          "href": "atlas/sources-and-secret-coverage.json"
+          "href": "data/sources-and-secret-coverage.json"
         }
       ],
       "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
@@ -3084,7 +3084,7 @@
         },
         {
           "title": "Secret notes and sources",
-          "href": "atlas/sources-and-secret-coverage.json"
+          "href": "data/sources-and-secret-coverage.json"
         }
       ],
       "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
@@ -3126,7 +3126,7 @@
         },
         {
           "title": "Secret notes and sources",
-          "href": "atlas/sources-and-secret-coverage.json"
+          "href": "data/sources-and-secret-coverage.json"
         }
       ],
       "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."
@@ -3168,7 +3168,7 @@
         },
         {
           "title": "Secret notes and sources",
-          "href": "atlas/sources-and-secret-coverage.json"
+          "href": "data/sources-and-secret-coverage.json"
         }
       ],
       "coverage": "A known secret marked using a walkthrough and the original map. We are still looking for others."

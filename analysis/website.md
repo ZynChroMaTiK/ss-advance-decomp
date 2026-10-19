@@ -1,5 +1,12 @@
 # Project website and level explorer
 
+Current website (19 October 2026): the Levels section uses only the 3D viewer.
+The 2D viewer, iframe bridge and offline map download have been removed from
+the published site. Old 2D bookmarks open the same level in 3D. Shared map icons
+now live in `site/assets/map-icons/`, and secret-source records in `site/data/`.
+Local overhead-map export tools remain available for development. The notes
+below describe earlier website versions.
+
 Published 2026-10-17: https://zynchromatik.github.io/ss-advance-decomp/
 
 The static frontend is in `site/`, with Project, Atlas, 3D Explorer and Development

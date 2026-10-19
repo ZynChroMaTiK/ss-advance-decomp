@@ -4,9 +4,10 @@ These are detailed notes for contributors. Start with [the website README](READM
 
 
 A buildless, static frontend with PC Port, About the game, Levels, Graphics,
-and Download & Help sections. Levels combines the 2D atlas and 3D world viewer with
-one selection and shareable `#levels/1/2d` or `#levels/1/3d` URLs. Legacy
-`#atlas/1` and `#explorer/1` URLs redirect to the corresponding view.
+and Download & Help sections. Levels opens the 3D world viewer with a level
+selector and shareable `#levels/1/3d` URLs. Old `#atlas/1` and `#levels/1/2d`
+bookmarks open the same level in 3D. The 2D viewer and offline map download
+are no longer part of the website.
 
 The Graphics gallery groups related frames, with an Every frame view for the
 complete export. Weapon and HUD labels follow the original animation tables.
@@ -42,8 +43,7 @@ index.html as a file. Example from the repository root:
 
 Open http://localhost:8080/site/. All URLs are relative, including the locally
 vendored Three.js 0.180.0 runtime. No CDN, backend, account or original ROM is
-required to view the exported website. WebGL2 is needed for the 3D Explorer;
-the atlas remains available without it.
+required to view the exported website. WebGL2 is needed for the 3D Explorer.
 
 ## GitHub Pages
 
@@ -60,8 +60,7 @@ Using the project's Python environment, from the workspace root:
     python scripts/validate_project_site.py
 
 The exporter reads the user's original ROM, validated topmap export, and graphics
-archive. The build script splits the online atlas, copies the archive and generates
-readable reference pages. scripts/fetch_site_vendor.py refreshes the pinned
+archive. The build script copies shared map icons and generates readable reference pages. scripts/fetch_site_vendor.py refreshes the pinned
 official Three.js modules; no dependency download is required for ordinary builds.
 Regeneration runs from the full native project workspace with its recovered data
 and validation inputs. The repository now includes the native source, tests,
@@ -76,16 +75,10 @@ the HTTP validation result. It packages `build/exports/ssa-project-site.zip`.
 
 Reference HTML uses `scripts/site_documents.py`; install
 `scripts/site-document-requirements.txt` before rebuilding reference pages.
-`python scripts/refresh_atlas_ui.py` updates online/offline atlas UI from the
-committed exports without a ROM. Pages deployment waits for the website checks.
-
-The online atlas fetches JSON and SVG only for the selected level, shares sprite
-artwork, and caches at most three loaded levels. Failed requests can be retried;
-late responses cannot replace a newer selection. Its navigation rail appears in
-the standalone viewer and is hidden inside the website's shared level selector.
-The downloadable ZIP retains every map and embedded artwork for offline use.
-`test_site_atlas_loading.mjs` covers loading and `test_site_audit.py` verifies
-that online SVGs reproduce the complete offline maps with identical artwork.
+Pages deployment waits for the website checks. Shared map icons live in
+`assets/map-icons/`; secret-source records live in `data/`. The 3D viewer and
+field guide use these assets directly. Local overhead-map export tools remain
+available for development, but their viewer and ZIP are not published.
 
 Long README and porting references group past milestones into expandable sections.
 Links to headings inside these sections open them automatically. NETRICSA evidence

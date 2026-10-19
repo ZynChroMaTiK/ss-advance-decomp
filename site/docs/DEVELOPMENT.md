@@ -12,7 +12,7 @@ needed. ROMs and SoundFont banks are not included. See the
 [release notes](releases/v0.8.0-alpha.1.md) for features and known limitations.
 
 [Project website, features and roadmap](https://zynchromatik.github.io/ss-advance-decomp/)
-· [Combined 2D atlas / 3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/2d)
+· [3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
 
 ## Build from a fresh checkout
 

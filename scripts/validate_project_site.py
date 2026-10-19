@@ -31,13 +31,13 @@ def main():
             checks+=1
         for script in p.scripts:context.eval('new Function('+json.dumps(script)+')');checks+=1
     page=Page();page.feed((SITE/'index.html').read_text())
-    for filename in ['app.js','viewer3d.js','geometry.js','wiki.js','viewer_objects.js','flight_controls.js','reference.js','atlas/loader.js','atlas/viewer.js']:
+    for filename in ['app.js','viewer3d.js','geometry.js','wiki.js','viewer_objects.js','flight_controls.js','reference.js']:
         source=(SITE/filename).read_text();plain=re.sub(r'^import .*?;\s*','',source,flags=re.M);plain=plain.replace('export function ','function ')
         context.eval('new Function('+json.dumps('return (async()=>{'+plain+'})')+')')
-        bindings=Page();bindings.feed((SITE/('atlas/index.html' if filename.startswith('atlas/') else 'index.html')).read_text())
+        bindings=Page();bindings.feed((SITE/'index.html').read_text())
         for dom_id in re.findall(r"\$\('([^']+)'\)",source):assert dom_id in bindings.ids,dom_id
         for ref in re.findall(r"from '([^']+)'",source):assert (SITE/filename).parent.joinpath(ref).is_file(),ref
-    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css',SITE/'accessibility.css',SITE/'reference.css',SITE/'atlas/viewer.css']:
+    for css in [SITE/'styles.css',SITE/'wiki.css',SITE/'gba-font.css',SITE/'accessibility.css',SITE/'reference.css']:
         rules=tinycss2.parse_stylesheet(css.read_text(),skip_comments=True,skip_whitespace=True)
         assert not [r for r in rules if r.type=='error']
     context.eval((SITE/'geometry.js').read_text().replace('export function ','function '))
@@ -47,11 +47,10 @@ def main():
         context.set('model',json.dumps(d));result=json.loads(context.eval('''JSON.stringify((()=>{const d=JSON.parse(model);let floor=0,walls=0;function check(p,idx){if(!p.every(Number.isFinite))throw Error('Nonfinite mesh');for(let j=0;j<idx.length;j+=3){const a=idx[j]*3,b=idx[j+1]*3,c=idx[j+2]*3,u=[0,1,2].map(k=>p[b+k]-p[a+k]),v=[0,1,2].map(k=>p[c+k]-p[a+k]);const cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(Math.hypot(...cross)<1e-9)throw Error('Degenerate triangle')}}for(const s of d.sectors){const p=floorPositions(s.mesh_loops,s.initial_floor);check(p,Array.from({length:p.length/3},(_,i)=>i));floor+=p.length/9}for(const state of ['initial','open']){const b=wallBuffers(d.walls[state]);check(b.positions,b.indices);if(b.uvs.length!==b.positions.length/3*2)throw Error('UV mismatch');walls+=b.indices.length/3}return {floor,walls}})())'''))
         totals['floor_triangles']+=result['floor'];totals['wall_triangles']+=result['walls']
         for m in d['markers']:
-            if m.get('sprite'):assert (SITE/'atlas'/m['sprite']).is_file()
+            if m.get('sprite'):assert (SITE/'assets/map-icons'/m['sprite'].removeprefix('icons/')).is_file()
         for f in d['walls']['initial']+d['walls']['open']:
             if f['texture']:assert (SITE/f['texture']).is_file()
     assert totals['levels']==16 and totals['markers']==1541 and totals['secrets']==5
-    for name,digest in json.loads((SITE/'atlas/manifest-sha256.json').read_text()).items():assert hashlib.sha256((SITE/'atlas'/name).read_bytes()).hexdigest()==digest,name
     for name,info in json.loads((SITE/'vendor/manifest.json').read_text())['files'].items():assert hashlib.sha256((SITE/'vendor'/name).read_bytes()).hexdigest()==info['sha256']
     assert "from './three.module.js'" in (SITE/'vendor/OrbitControls.js').read_text()
     for p in SITE.rglob('*'):
@@ -59,7 +58,7 @@ def main():
         if p.is_file():assert p.stat().st_size<100*1024*1024,p
     assert hashlib.sha1((ROOT/'orig/SSA.gba').read_bytes()).hexdigest()=='4ff48d8c18b70a5184758f1917343ae85a70858e'
     http=json.loads((ROOT/'build/exports/ssa-site-http-validation.json').read_text())
-    result={'status':'PASS','checks':{'html_links_and_inline_scripts':checks,'viewer_javascript':'syntax and DOM bindings','geometry_helpers':'executed against all exported levels','css':'parsed','vendor':'pinned SHA256 verified','embedded_atlas_hashes':'PASS','rom':'unchanged'},**totals,'http':http,'browser_webgl_visual_qa':'unavailable: no browser connected'}
+    result={'status':'PASS','checks':{'html_links_and_inline_scripts':checks,'viewer_javascript':'syntax and DOM bindings','geometry_helpers':'executed against all exported levels','css':'parsed','vendor':'pinned SHA256 verified','rom':'unchanged'},**totals,'http':http,'browser_webgl_visual_qa':'unavailable: no browser connected'}
     (SITE/'data/site-validation.json').write_text(json.dumps(result,indent=2)+'\n')
     archive=ROOT/'build/exports/ssa-project-site.zip'
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:

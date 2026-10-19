@@ -19,7 +19,7 @@ assert(searchEntries(entries,'  ROCKET   launcher ','weapons').some(e=>e.title==
 assert.equal(searchEntries(entries,'does-not-exist').length,0);
 for(const [type,name] of [[209,'Cyclops'],[213,'Hermit Crabuloid'],[214,'Gunrilla']]){
  const entry=entries.find(e=>e.entity_type===type);assert.equal(entry.title,name);
- for(const level of entries.filter(e=>e.category==='levels'))for(const folder of ['data','atlas/data']){
+ for(const level of entries.filter(e=>e.category==='levels'))for(const folder of ['data']){
   const d=JSON.parse(readFileSync(new URL(`${folder}/level-${String(level.level+1).padStart(2,'0')}.json`,site)));
   for(const marker of d.markers.filter(m=>m.entity_type===type))assert.equal(marker.name,name);
  }
@@ -41,4 +41,4 @@ wiki.open('level-16');assert(allNodes(elements.get('wiki-article')).some(n=>n.hr
 wiki.open('invalid-record');assert(allNodes(elements.get('wiki-article')).some(n=>n.href==='#wiki/field-guide'));
 wiki.open('weapon-pistol',{focus:true});assert(elements.get('wiki-article').focused);assert(elements.get('wiki-article').scrolled);
 wiki.open('invalid-record',{focus:true});assert.equal(doc.title,'Entry not found — NETRICSA — Serious Sam Advance');
-console.log(JSON.stringify({status:'PASS',entries:entries.length,categories:counts,checks:'all entries rendered, links, portraits, search, aliases, filters, reset, unknown entry, atlas enemy labels'}));
+console.log(JSON.stringify({status:'PASS',entries:entries.length,categories:counts,checks:'all entries rendered, links, portraits, search, aliases, filters, reset, unknown entry, map enemy labels'}));

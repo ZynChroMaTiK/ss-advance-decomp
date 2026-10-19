@@ -1,6 +1,6 @@
 export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js').then(m => m.createViewer()), loadWiki = () => import('./wiki.js').then(m => m.createWiki()), loadGraphics = () => import('./graphics.js').then(m => m.createGraphics())) {
   const $ = id => document.getElementById(id);
-  let level = 0, route = 'project', mode = '2d', viewer, viewerPromise, atlasReady = false, revision = 0;
+  let level = 0, route = 'project', viewer, viewerPromise, revision = 0;
   let wikiPromise, catalogError = '', renderedRoute, renderedWikiId;
   let graphicsPromise, renderedGraphicId;
   const supportedLevels = Number($('project').dataset.nativeCampaignLevels);
@@ -10,7 +10,7 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     element.scrollIntoView({block:'start'});
   }
   $('skip-content').onclick = event => { event.preventDefault(); focusContent($('main')); };
-  const levelUrl = () => `#levels/${level + 1}/${mode}`;
+  const levelUrl = () => `#levels/${level + 1}/3d`;
   function fillCatalog() {
     for (const select of document.querySelectorAll('.level-select')) {
       select.replaceChildren(); select.disabled = !catalog.length;
@@ -24,9 +24,6 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     }
   }
   fillCatalog();
-  for (const button of document.querySelectorAll('[data-mode]')) {
-    button.onclick = () => { mode = button.dataset.mode; location.hash = levelUrl(); };
-  }
   async function render() {
     const ticket = ++revision;
     const parts = location.hash.slice(1).split('/');
@@ -34,8 +31,6 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
     route = legacy ? 'levels' : ['project', 'features', 'levels', 'wiki', 'graphics', 'development'].includes(parts[0]) ? parts[0] : 'project';
     const n = Number(parts[1]);
     if (route === 'levels' && Number.isInteger(n) && n >= 1 && n <= (catalog.length || 16)) level = n - 1;
-    if (legacy) mode = parts[0] === 'atlas' ? '2d' : '3d';
-    else if (['2d', '3d'].includes(parts[2])) mode = parts[2];
     if (route === 'levels') history.replaceState(null, '', levelUrl());
     document.querySelectorAll('.page').forEach(p => p.hidden = p.id !== route);
     if (renderedRoute !== undefined && renderedRoute !== route) focusContent($(route).querySelector('h1'));
@@ -46,18 +41,11 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
       if (a.dataset.route === 'levels') a.href = levelUrl();
     });
     document.querySelectorAll('.level-select').forEach(s => s.value = level);
-    document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
-    $('atlas-panel').hidden = mode !== '2d';
-    $('explorer-panel').hidden = mode !== '3d';
     $('level-status').textContent = catalogError || (!catalog.length ? 'Loading the level list…' : level < supportedLevels ? 'Campaign level · available in the PC game' : level < 12 ? 'Campaign level · not yet playable' : 'Multiplayer map · explore here; multiplayer is not playable yet');
     document.title = `${{project:'PC port', features:'About the game', levels:'Level Browser', wiki:'NETRICSA Field Guide', graphics:'Graphics', development:'Download & Help'}[route]} — Serious Sam Advance`;
-    if (route === 'levels' && mode === '2d') {
-      if (!atlasReady) { $('atlas-frame').src = `atlas/index.html#level-${level + 1}`; atlasReady = true; }
-      else $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin);
-    }
-    const active3d = route === 'levels' && mode === '3d' && catalog.length > 0;
+    const active3d = route === 'levels' && catalog.length > 0;
     viewer?.setActive(active3d);
-    if (route === 'levels' && mode === '3d' && !catalog.length) {
+    if (route === 'levels' && !catalog.length) {
       $('view-message').hidden = false;
       $('view-message').textContent = catalogError || 'Loading the level list…';
     }
@@ -108,24 +96,18 @@ export function createApp(catalog = [], loadViewer = () => import('./viewer3d.js
         viewerPromise = null;
         if (ticket !== revision) return;
         $('view-message').hidden = false;
-        $('view-message').textContent = `3D could not start: ${error.message}. Switch to the 2D map to explore this level.`;
+        $('view-message').textContent = `The 3D view could not start: ${error.message}. Try reloading the page or using a browser with WebGL2 enabled.`;
       }
     }
   }
-  $('atlas-frame').addEventListener('load', () => $('atlas-frame').contentWindow.postMessage({type:'ssa:set-level', level}, location.origin));
   $('graphics-retry').onclick = () => render();
   window.addEventListener('hashchange', render);
-  window.addEventListener('message', e => {
-    if (e.origin === location.origin && e.source === $('atlas-frame').contentWindow && e.data?.type === 'ssa:level' && Number.isInteger(e.data.level) && e.data.level >= 0 && e.data.level < catalog.length && route === 'levels' && mode === '2d' && e.data.level !== level) {
-      level = e.data.level; history.replaceState(null, '', levelUrl()); render();
-    }
-  });
   render();
   return {render, setCatalog(entries) {
     if (!Array.isArray(entries) || entries.length !== 16 || entries.some((entry, i) => entry.level !== i || !entry.path || !entry.bounds)) throw Error('Invalid level catalog');
     catalog = entries; catalogError = ''; fillCatalog(); return render();
   }, catalogFailed() {
-    catalogError = 'The level list could not load. Try reloading the page, or choose a level inside the 2D map.';
+    catalogError = 'The level list could not load. Check your connection and reload the page.';
     return render();
   }};
 }
