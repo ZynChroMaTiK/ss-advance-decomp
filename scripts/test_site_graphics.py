@@ -86,6 +86,19 @@ assert by_id['sprite-235']['collection'] == 'character-shapes'
 assert by_id['sprite-304']['collection'] == 'screen-effects'
 assert all(not e['collectionTitle'].startswith(('Resource ','Shared item')) for e in entries)
 assert {s['id'] for s in catalog['usageSections']} == set(SECTIONS)
+# Every original texture, including duplicate aliases and unused records,
+# belongs to its bank's setting. Wall/door roles and individual maps are not
+# separate gallery categories. Shared images retain both settings if needed.
+textures_by_path = {i['path']:e for e in entries if e['category']=='textures' for i in e['images']}
+for source, name in sources.items():
+    match = re.match(r'textures/family-([01])/', source)
+    if not match: continue
+    entry = textures_by_path['assets/graphics/'+name]
+    section = 'textures-'+('egypt','rome')[int(match[1])]
+    assert section in {u['section'] for u in entry['uses']}, source
+for entry in textures_by_path.values():
+    assert {u['section'] for u in entry['uses']} <= {'textures-egypt','textures-rome'}
+    assert all(u['title'] in ('Egypt textures','Rome textures') for u in entry['uses'])
 usage_sources=set()
 for entry in entries:
     assert entry['uses'] and len({u['id'] for u in entry['uses']}) == len(entry['uses'])

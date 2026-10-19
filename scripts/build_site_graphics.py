@@ -15,7 +15,7 @@ CATEGORIES = {
     'menus': 'Menus and backgrounds', 'netricsa': 'NETRICSA pictures',
     'story': 'Story pictures', 'splashes': 'Logos and hidden pictures',
     'sprites': 'Weapons and HUD', 'actors': 'Enemies, items and effects',
-    'textures': 'Wall textures', 'sky': 'Skies', 'fonts': 'Fonts',
+    'textures': 'Textures', 'sky': 'Skies', 'fonts': 'Fonts',
     'palettes': 'Colour palettes',
 }
 
@@ -36,7 +36,6 @@ def main():
         animations = json.loads(archive.read('animations/sprites.json'))
         actor_usage = actor_uses(manifest,json.loads(archive.read('animations/actors.json')))
         screen_usage = screen_uses(animations,wiki)
-        texture_usage = texture_uses(ROOT)
         sprite_names = {}
         def name_sequence(sequence, title, collection, collection_title, aliases='', override=False):
             for word in animations[sequence]['words']:
@@ -112,7 +111,7 @@ def main():
                 'resolution': texture['mip'], 'tags': f'{family} resolution {texture["mip"]}',
                 'collection': f'texture-{texture["family"]}-{texture["index"]:03}',
                 'collectionTitle': f'{texture["name"]} · {family}',
-                'uses': texture_usage.get((texture['family'],texture['index']),[]),
+                'uses': texture_uses(texture['family']),
                 'images': [dict(image(texture['png']), label=f'{family} · resolution {texture["mip"] + 1} of 3')]})
         for sprite in manifest['sprites']:
             label = sprite_names.get(sprite['id'])

@@ -107,6 +107,17 @@ assert.equal($('graphics-grid').children.filter(b=>b.children[0].children[0].src
 for(const action of ['attacking','taking damage'])assert(filterGraphics(data.entries,`Methug soldier ${action}`,'enemies').includes(soldier),'usage remains searchable');
 const texture=data.entries.find(e=>e.category==='textures');
 assert(filterGraphics(data.entries,texture.title.toUpperCase(),texture.uses[0].section).some(e=>e.id===texture.id));
+for(const setting of ['Egypt','Rome']){
+ const section='textures-'+setting.toLowerCase();
+ assert.equal($('graphics-category').children.find(o=>o.value===section).textContent,`Textures · ${setting}`);
+ const textures=filterGraphics(data.entries,'',section);
+ assert(textures.length>0 && textures.every(e=>e.category==='textures'));
+ $('graphics-category').value=section;$('graphics-category').onchange();
+ $('graphics-grid').children[0].onclick();follow(links.at(-1));
+ assert.match($('graphics-usage').textContent,new RegExp(`${setting} textures`));
+ assert.equal($('graphics-detail-category').textContent,'Textures');
+ assert(!/ · (Walls|Doors)/.test($('graphics-usage').textContent));
+}
 assert.equal(filterGraphics(data.entries,'<script>not markup</script>').length,0);
 assert(html.indexOf('<aside class="graphics-inspector"')<html.indexOf('<div class="graphics-browse"'),'mobile visual order matches reading order');
 assert(!html.includes('data-route="wiki"'),'NETRICSA navigation stays removed');

@@ -83,7 +83,7 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
     $('graphics-note').textContent = selected.note || (selected.category === 'actors'
       ? 'An original sprite frame. Use Sprite colours to see its Egypt and Rome versions.'
       : selected.category === 'sprites' ? 'Original weapon or on-screen artwork. Some images are pieces the game draws together.'
-      : selected.category === 'textures' ? 'An original texture. Uses are matched to the walls and doors in the exported levels.'
+      : selected.category === 'textures' ? 'An original texture from the Egypt or Rome set. Each set includes both walls and doors.'
       : 'Original artwork. Zoom in to see the pixels.');
     $('graphics-origin').textContent = selected.origin ? `Drawing offset: ${selected.origin.join(', ')} pixels` : '';
     const sequence = frames(), index = sequence.indexOf(selected);

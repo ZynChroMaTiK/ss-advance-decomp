@@ -7,7 +7,6 @@ Unknown uses remain explicit; being stored in a table does not prove gameplay.
 """
 from collections import defaultdict
 from pathlib import Path
-import json
 import re
 
 SECTIONS = {
@@ -15,7 +14,8 @@ SECTIONS = {
     'pickups':'Pickups and level exits', 'projectiles':'Projectiles and weapon effects',
     'effects':'Hits, explosions and spawning', 'hud':'HUD and on-screen messages',
     'netricsa':'NETRICSA', 'menus':'Menus and startup', 'story':'Chapter screens and ending',
-    'world':'Level scenery', 'text':'Text and colour tables', 'unconfirmed':'Other stored graphics',
+    'textures-egypt':'Textures · Egypt', 'textures-rome':'Textures · Rome',
+    'world':'Skies', 'text':'Text and colour tables', 'unconfirmed':'Other stored graphics',
 }
 
 
@@ -137,19 +137,12 @@ def other_uses(entry):
     return []
 
 
-def texture_uses(root):
-    result=defaultdict(dict)
-    for path in sorted((root/'site/data').glob('level-*.json')):
-        level=json.loads(path.read_text(encoding='utf8'))
-        for state in level['walls'].values():
-            if not isinstance(state,list): continue
-            for wall in state:
-                texture=wall.get('texture') or ''; match=re.search(r'family-(\d)/(\d+)-',texture)
-                if not match: continue
-                family,index=map(int,match.groups());role='Doors' if wall.get('door') else 'Walls'
-                record=use(f'level-{level["level"]}-{role.lower()}',f'{level["title"]} · {role}','world',f'site/data/{path.name}')
-                result[family,index][record['id']]=record
-    return {key:list(value.values()) for key,value in result.items()}
+def texture_uses(family):
+    # The original texture banks define the setting, including stored textures
+    # not referenced by an exported level. Doors and walls share those banks.
+    setting = ('Egypt', 'Rome')[family]
+    key = 'textures-'+setting.lower()
+    return [use(key, setting+' textures', key, 'src/texture_assets.c')]
 
 
 def merge_uses(first, second):
