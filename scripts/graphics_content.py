@@ -58,7 +58,7 @@ ACTOR_GROUPS = [
     ('Sam', list(range(101,106))), ('Sam’s blue shirt', list(range(106,111))),
     ('Sam’s green shirt', list(range(111,116))), ('Sam’s orange shirt', list(range(116,121))),
     ('Sam’s white shirt', list(range(121,126))),
-    ('Blood and hit effects', [12,100]), ('Purple energy effects', [13,15]),
+    ('Blood and hit effects', [12,100]), ('Rocket', [13,15]),
     ('Smoke and debris', [14,99]), ('Explosions', [16,28,31,68]),
     ('Green splatter', [29]), ('Blue energy effects', [89,92,93,94,131,132]),
     ('Cannonball', [90]), ('Red spark', [95]), ('Fireballs and flames', list(range(126,131))),
