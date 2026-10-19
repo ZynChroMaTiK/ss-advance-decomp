@@ -14,7 +14,8 @@
 .graphics-thumb img{object-fit:contain;max-width:100%;max-height:100%;width:auto;height:auto;image-rendering:pixelated}
 .graphics-card strong,.graphics-card small{display:block;padding:10px 12px 0;overflow-wrap:anywhere}
 .graphics-card strong{font-size:15px;line-height:1.4}.graphics-card small{font-size:14px;color:var(--muted);padding-bottom:12px;line-height:1.5}
-.graphics-unused,.graphics-palette-variant,.graphics-resolution,.graphics-brightness{display:inline-block;padding:3px 8px;border:1px solid #9b8657;border-radius:20px;background:#302a1d;color:#f2dca8;font:12px/1.4 Segoe UI,sans-serif}.graphics-card :is(.graphics-unused,.graphics-palette-variant,.graphics-resolution,.graphics-brightness){margin:0 12px 12px}#graphics-unused,#graphics-palette-variant,#graphics-resolution,#graphics-brightness{margin-bottom:12px}
+.graphics-chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px}.graphics-card .graphics-chips{margin:0 12px 10px}.graphics-chips:not(:has(> :not([hidden]))){display:none}
+.graphics-unused,.graphics-palette-variant,.graphics-resolution,.graphics-brightness{display:inline-block;padding:1px 6px;border:1px solid #9b8657;border-radius:10px;background:#302a1d;color:#f2dca8;font:11px/1.25 Segoe UI,sans-serif}
 .graphics-palette-variant{border-color:#638c99;background:#1b3038;color:#c0e4ed}
 .graphics-resolution{border-color:#6e8062;background:#253020;color:#d1e4c2}.graphics-brightness{border-color:#8d7b9e;background:#302739;color:#e4d1f4}
 .graphics-inspector{position:sticky;top:calc(var(--graphics-filter-height,110px) + 24px);max-height:calc(100dvh - var(--graphics-filter-height,110px) - 40px);overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:18px;min-width:0}

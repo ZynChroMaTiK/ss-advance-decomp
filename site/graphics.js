@@ -68,15 +68,17 @@ export function createGraphicsView(data, doc = document, navigate = (hash, {repl
       img.src = original.path; img.alt = ''; img.width = original.width; img.height = original.height;
       img.loading = 'lazy'; img.decoding = 'async'; frame.append(img);
       button.append(frame, make('strong', entry.title), make('small', `${original.width} × ${original.height}`));
+      const chips = make('span', '', 'graphics-chips');
       if (entry.unused) {
-        const chip = make('span', 'Unused', 'graphics-unused'); chip.title = entry.unusedReason; button.append(chip);
+        const chip = make('span', 'Unused', 'graphics-unused'); chip.title = entry.unusedReason; chips.append(chip);
       }
       if (hasPaletteVariants(entry)) {
         const chip = make('span', 'Palette variants', 'graphics-palette-variant');
-        chip.title = 'Different Egypt and Rome colours. Use Sprite colours to switch.'; button.append(chip);
+        chip.title = 'Different Egypt and Rome colours. Use Sprite colours to switch.'; chips.append(chip);
       }
-      if (entry.resolutionLabel) button.append(make('span', entry.resolutionLabel, 'graphics-resolution'));
-      if (entry.brightnessLabel) button.append(make('span', entry.brightnessLabel, 'graphics-brightness'));
+      if (entry.resolutionLabel) chips.append(make('span', entry.resolutionLabel, 'graphics-resolution'));
+      if (entry.brightnessLabel) chips.append(make('span', entry.brightnessLabel, 'graphics-brightness'));
+      if (chips.children.length) button.append(chips);
       button.onclick = () => route(entry.id);
       cards.set(entry.id, button); $('graphics-grid').append(button);
     }

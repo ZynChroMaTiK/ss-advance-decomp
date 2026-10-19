@@ -40,11 +40,12 @@ for(const category of data.usageSections){
  assert.equal($('graphics-grid').children.length,pictures.length);
  for(const card of $('graphics-grid').children)assert.match(card.children[2].textContent,/^\d+ × \d+$/,'cards show dimensions without group labels');
  for(const [index,card] of $('graphics-grid').children.entries()){
-  assert.equal(card.children.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
+  const chips=card.children.find(child=>child.className==='graphics-chips')?.children || [];
+  assert.equal(chips.some(child=>child.className==='graphics-unused'),pictures[index].unused,'only unused artwork receives a chip');
   const images=pictures[index].images;
-  assert.equal(card.children.some(child=>child.className==='graphics-palette-variant'),images.length>1&&images[0].path!==images[1].path,'only visibly different palettes receive a chip');
+  assert.equal(chips.some(child=>child.className==='graphics-palette-variant'),images.length>1&&images[0].path!==images[1].path,'only visibly different palettes receive a chip');
   for(const [field,css] of [['resolutionLabel','graphics-resolution'],['brightnessLabel','graphics-brightness']]){
-   assert.equal(card.children.find(child=>child.className===css)?.textContent,pictures[index][field]);
+   assert.equal(chips.find(child=>child.className===css)?.textContent,pictures[index][field]);
   }
  }
 }
