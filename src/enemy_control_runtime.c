@@ -1,6 +1,7 @@
 #include "ssa/enemy_control_runtime.h"
 #include "ssa/enemy_ranged.h"
 #include "projectile_runtime_internal.h"
+#include "enemy_contact_internal.h"
 #include <string.h>
 
 static int ready(const SsaEnemyControlRuntime *r) {
@@ -44,7 +45,8 @@ typedef struct Call {
     SsaCombatScope *scope;
     unsigned slot;
     SsaPlayerHazardGame hazards;
-    unsigned contact_blocked;
+    SsaEntity *contact;
+    unsigned hold_range;
 } Call;
 static int visibility(void *ctx,int player,int enemy,int *blocked) {
     Call *c=ctx;SsaEnemyNavigationOps *o=&c->r->queries->ops;
@@ -71,24 +73,25 @@ static int turn(void *ctx,SsaEnemyNavigation *n,int32_t rate,int32_t *delta) {
 }
 static int move(void *ctx,SsaEnemyNavigation *n,int32_t *result) {
     Call *c=ctx;SsaEnemyMotion m=motion(c);int moved;(void)n;
+    if(c->hold_range)m.speed=0; /* Still run vertical physics and contact queries. */
     moved=c->r->crowd_slide?
         ssa_enemy_walk_world_sliding(&m,c->r->math,c->frame->ticks,c->r->walk_count,
             c->r->combat->spawn->world,&c->r->crowd[c->slot]):
         ssa_enemy_walk_world(&m,c->r->math,c->frame->ticks,c->r->walk_count,c->r->combat->spawn->world);
     c->r->game.blocking_entity=c->r->combat->spawn->world->blocking_entity;
     if(moved<0)return -1;
-    c->contact_blocked=moved==0;
+    c->contact=c->r->crowd_slide?c->r->crowd[c->slot].contact:NULL;
+    if(!c->contact && !moved)c->contact=c->r->game.blocking_entity;
     *result=moved;return 0;
 }
 static int finish(void *ctx,SsaEnemyNavigation *n) {
     Call *c=ctx;SsaEnemyActivation *a=c->r->controllers[c->slot].activation;
-    SsaEntity *hit=c->r->combat->spawn->world->blocking_entity;
+    SsaEntity *hit=c->contact;
     int result=ssa_enemy_hazards(n->entity,&a->health,c->r->combat->spawn->level->map,&c->hazards);
     if(result<0)return result;
-    if(c->r->converted_combat && a->health>0 && (n->entity->body.flags&0x400) &&
-       c->contact_blocked && hit && hit==n->target && !(hit->body.flags&0x10) &&
-       !(hit->body.flags&0x20))
-        return ssa_combat_scope_damage(c->scope,hit,n->entity,NULL,
+    if(c->r->converted_combat && a->health>0 &&
+       ssa_enemy_converted_contact(c->r->combat->spawn,n->entity,hit))
+        return ssa_combat_scope_melee(c->scope,hit,n->entity,
             n->entity->type==0xd0 || n->entity->type==0xd6?40u:20u);
     return 0;
 }
@@ -104,7 +107,7 @@ static int event(void *ctx,const SsaEnemyControl *v,const SsaEnemyControlEvent *
     a->parameter34=v->drain_period;a->parameter36=v->drain_countdown;
     switch(ev->kind) {
     case SSA_ENEMY_CONTROL_DAMAGE:
-        return ssa_combat_scope_damage(c->scope,ev->other,source,NULL,(uint32_t)args[0]);
+        return ssa_combat_scope_melee(c->scope,ev->other,source,(uint32_t)args[0]);
     case SSA_ENEMY_CONTROL_EXPLOSION:
         return ssa_combat_scope_explode(c->scope,source,source,NULL,(uint32_t)args[0],(uint32_t)args[1],args[2]);
     case SSA_ENEMY_CONTROL_PROJECTILE: {
@@ -149,21 +152,46 @@ static int boss_commit(void *ctx,const SsaEnemyBoss *b,SsaProjectile *p) {
     Call *c=ctx;(void)b;
     return ssa_projectile_runtime_enemy_commit_scoped(c->r->projectiles,c->scope,p);
 }
+/* Prefer a clear ranged shot within 768 units. Only converted actors fighting
+ * enemies use this policy; player pursuit and recovered controllers stay intact.
+ * Melee-only actors still approach, at half their current chase speed. */
+static int prion_tactics(Call *c,int32_t *speed) {
+    SsaEnemyControlRuntime *r=c->r;SsaEnemyNavigation *n=&r->navigation[c->slot];
+    SsaEntity *e=n->entity,*target=n->target;int32_t distance,slope;
+    unsigned type=e->type;uint16_t heading;
+    if(!r->combat->prion_balance || !(e->body.flags&0x400) || !target ||
+       target->type<0xcd || target->type>0xd8 || (target->body.flags&(0x10|0x20)))return 0;
+    *speed/=2;
+    if(type!=0xcf && type!=0xd1 && type!=0xd2 && type!=0xd3 && type!=0xd4 && type!=0xd6)return 0;
+    if(ssa_enemy_distance(target,e,r->math,&distance)<0)return -1;
+    if(distance<0 || distance>768)return 0;
+    heading=ssa_direction(r->math,
+        (int16_t)(((uint32_t)target->body.x-(uint32_t)e->body.x)>>16),
+        (int16_t)(((uint32_t)target->body.y-(uint32_t)e->body.y)>>16));
+    if(ssa_weapon_aim_query(&r->aim,e,0,0,e->body.height-e->body.height/4,
+        heading,0xc000000,&slope)<0)return -1;
+    if(r->aim.target!=target)return 0; /* Chase around occluders instead of camping. */
+    c->hold_range=1;n->phase=2;
+    n->waypoint_x=(uint16_t)((uint32_t)target->body.x>>16);
+    n->waypoint_y=(uint16_t)((uint32_t)target->body.y>>16);
+    return 0;
+}
 static int run(void *ctx,SsaCombatScope *scope) {
     Call *c=ctx;SsaEnemyControlRuntime *r=c->r;SsaScriptSpawn *s=r->combat->spawn;
     SsaScriptActor *a=&s->actors[c->slot];SsaEnemyControl *v=&r->controllers[c->slot];
     SsaEnemyNavigationOps nav={visibility,nearest,path,turn,move,finish,c};
-    SsaEnemyControlOps ops={&nav,aim,event,c};int result;
+    SsaEnemyControlOps ops={&nav,aim,event,c};int result;int32_t speed=c->frame->speed_factor;
     c->scope=scope;r->game.blocking_entity=s->world->blocking_entity;
     v->animation_done=a->animation_flags;v->drain_period=a->parameter34;v->drain_countdown=a->parameter36;
+    if(a->activation.state==1 && a->activation.health>0 && prion_tactics(c,&speed)<0)return -1;
     if(a->entity.type>=0xd7){
         SsaEnemyBossOps boss_ops={&ops,boss_create,boss_commit,c};
         r->bosses[c->slot].animation_index=a->animation_frame;
         result=ssa_enemy_boss_step(&r->bosses[c->slot],&r->game,&r->boss_rules,
             s->level->script.alive,sizeof(s->level->script.alive),r->math,c->frame->ticks,&boss_ops);
     }else if(a->entity.type>=0xcf && a->entity.type<=0xd2)
-        result=ssa_enemy_basic_step(v,&r->game,r->math,c->frame->ticks,c->frame->speed_factor,&ops);
-    else result=ssa_enemy_ranged_step(v,&r->game,r->math,c->frame->ticks,c->frame->speed_factor,&ops);
+        result=ssa_enemy_basic_step(v,&r->game,r->math,c->frame->ticks,speed,&ops);
+    else result=ssa_enemy_ranged_step(v,&r->game,r->math,c->frame->ticks,speed,&ops);
     a->script.flags=a->entity.body.flags;a->script.timer=a->activation.timer;
     a->script.variant=a->activation.state;a->script.facing=a->activation.facing;
     a->animation_flags=v->animation_done;a->parameter34=v->drain_period;a->parameter36=v->drain_countdown;
@@ -171,7 +199,7 @@ static int run(void *ctx,SsaCombatScope *scope) {
 }
 int ssa_enemy_control_runtime_step(SsaEnemyControlRuntime *r,unsigned slot,
     const SsaEnemyCdFrame *frame,const SsaEnemyControlRuntimeOps *ops) {
-    Call c={r,frame,ops,NULL,slot,{0},0};SsaScriptSpawn *s;SsaScriptActor *a;
+    Call c={r,frame,ops,NULL,slot,{0},0,0};SsaScriptSpawn *s;SsaScriptActor *a;
     SsaEnemyControl *v;unsigned i;int result;
     if(!ready(r) || r->crowd_slide>1 || r->converted_combat>1 || slot>=100 || !frame || frame->ticks>255 || !ops || !ops->combat ||
        !ops->combat->event || !ops->presentation || !r->queries->ops.visibility ||

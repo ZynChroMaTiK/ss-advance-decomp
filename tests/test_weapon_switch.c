@@ -14,7 +14,7 @@ static void switch_case(const uint8_t *rom,unsigned weapon,unsigned view){
     unsigned target=weapon==2?3:2,continuous=g->weapon_rules.continuous[weapon-1]!=0;
     CHECK(g->weapon.finish_fire_before_switch==1 && !g->previous_weapon);
     for(i=0;i<10;++i)g->players[0].inventory.ammo[i]=300;
-    g->damage.god_mode=1;g->player.free_aim=1;g->player.view.third_person=(uint8_t)view;
+    g->vertical_aim=1;g->damage.god_mode=1;g->player.free_aim=1;g->player.view.third_person=(uint8_t)view;
     if(weapon==9)g->player.pitch=14564; /* Empty Time Strike gesture must also finish before switching. */
     if(continuous){
         CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,1)==1);

@@ -103,15 +103,28 @@ and vertical offsets. HUD, first-person weapon/flash sprites and recursive
 reflections are excluded. This renders an independent scene from the mirrored
 eye; it does not flip or reuse the primary framebuffer. One scene pass runs per
 distinct visible water height, with no pass when no water is visible.
-The reflection multiplies the original water
-RGB555 color; GBA output selects the nearest opaque original-palette color.
-Glints and ripple decals bypass multiplication and retain their palette colors. Reflections
+The reflection uses50% alpha blending with the original water RGB555 color:
+each channel is `(base*(510-fade)+reflected*fade)/510`, rounded to the nearest
+integer. At full strength this is an equal mix of the water and reflected
+scene; the distance fade reduces reflection opacity toward zero. Both dark
+and bright scenery contribute, replacing the previous screen/additive blend.
+GBA output selects the
+nearest opaque original-palette colors. GBA reflections use a stable4x4
+two-color dither when a subtle highlight falls between palette entries; exact
+palette colors remain unchanged. Candidate pairs and weights are cached per
+RGB555 result for the frame, alongside the ordinary nearest-color cache.
+Glints and ripple decals bypass blending and retain their palette colors. Reflections
 fade after768 units and disappear at1536. Static stain artwork retains its
 existing two-color limit; the separate water shading layer does not alter it.
-The software pass uses the output resolution. GBA output reuses this native
-polygon renderer at240x160 projection, sampling into the original120x120 visible
+The native renderer uses full viewport resolution for reflections, retaining
+the viewport aspect ratio and live FOV without downsampling. GBA reflections
+remain240x160. GBA output reuses this native
+polygon renderer with its original3:2 projection, sampling into the original120x120 visible
 plane spans with nearest original-palette colors. Its ordinary original world
-and actor passes remain unchanged. The reflection backend is shared through the
+and actor passes remain unchanged. Both paths use center-aligned bilinear
+reconstruction; the visible-row optimization includes the extra sample row and
+clamps at all image edges. FOV, pitch, height clipping and full-resolution water
+stencils remain intact. The reflection backend is shared through the
 native-core/PC-renderer static-library component rather than duplicating geometry
 rendering. Each owner frees its water stencil and private reflection renderer
 before map teardown. Buffers and geometry caches persist between frames, and
@@ -145,13 +158,20 @@ Reference visibility, output guards, stable repeated draws and unchanged depth/g
 are checked in both renderers and three pitch views on Egypt/Rome fixtures.
 Water checks use render-only blue floor fixtures, verify actual second scene
 passes with no reflection rays, multiple water heights, visible reflected actor
-pixels and removing actors from render snapshots, multiply attenuation, bright glints unaffected by
+pixels and removing actors from render snapshots, half-alpha color mixing, bright glints unaffected by
 reflection, animation and distance limits, stable repeated draws and unchanged
 depth/inventory. Non-glint checks cover independent animation, darker retained
 palette colors, the shared toggle, reflection exclusion and distance rejection;
 render captures verify stable paused frames and animation advancing with the
 game clock. The suite now makes57 primary draws. Settings checks cover the new
 Extras row, live application, persistence and legacy save migration.
+The2026-10-20 reflection update passes54,072,272 checks with identical MSVC and
+GCC ASan/UBSan/leak-check results. Added cases cover native full-viewport
+allocation, GBA240x160 allocation, resize growth/shrinkage and wider viewports,
+tiny and odd-sized output stencils, edge sampling, sparse-palette highlights,
+unchanged exact palette colors, and exact50/50 mixing across every RGB555 channel value.
+All eight focused Windows checks pass; sample native/GBA reflection images were
+inspected. No campaign playthrough was run.
 A synthetic visibility fixture is placed beside actual stains; a starting view
 may legitimately be clear. These are render fixtures, not campaign playthrough
 validation. See surface-decals-validation.json and

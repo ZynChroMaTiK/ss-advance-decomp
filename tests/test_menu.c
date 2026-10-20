@@ -53,8 +53,10 @@ int main(int argc,char **argv)
         step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_OPTIONS);
         CHECK(m->selection==4 && m->music_enabled==music);
         step(m,SSA_MENU_UP,pixels);CHECK(m->selection==4 && m->commands[0]==17);
+        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==6);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_GRAPHICS);
+        step(m,SSA_MENU_BACK,pixels);CHECK(m->page==SSA_MENU_OPTIONS && m->selection==6);
         step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==5);
-        step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==2);
         step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==3);
         step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==1);
         step(m,SSA_MENU_DOWN,pixels);CHECK(m->selection==1 && m->commands[0]==17);
@@ -62,17 +64,17 @@ int main(int argc,char **argv)
         step(m,SSA_MENU_UP,pixels);
         step(m,SSA_MENU_UP,pixels);
         step(m,SSA_MENU_UP,pixels);
-        step(m,SSA_MENU_DOWN,pixels);
-        step(m,SSA_MENU_DOWN,pixels);
-        step(m,SSA_MENU_LEFT,pixels);CHECK(m->language==2 && m->page==SSA_MENU_OPTIONS);
-        step(m,SSA_MENU_RIGHT,pixels);CHECK(!m->language && m->selection==2 && m->music_enabled==music);
-        for(i=0;i<3;++i){unsigned click=ssa_menu_pointer(m,120,114,1);
+        step(m,SSA_MENU_CONFIRM,pixels);CHECK(m->page==SSA_MENU_SETTINGS);
+        step(m,SSA_MENU_LEFT,pixels);CHECK(m->language==2 && m->page==SSA_MENU_SETTINGS);
+        step(m,SSA_MENU_RIGHT,pixels);CHECK(!m->language && !m->selection && m->music_enabled==music);
+        for(i=0;i<3;++i){unsigned click=ssa_menu_pointer(m,120,28,1);
             CHECK(click==SSA_MENU_CONFIRM);step(m,click,pixels);
-            CHECK(m->language==(i+1)%3 && m->page==SSA_MENU_OPTIONS && m->selection==2 && m->music_enabled==music);
+            CHECK(m->language==(i+1)%3 && m->page==SSA_MENU_SETTINGS && !m->selection && m->music_enabled==music);
         }
         for(i=0;i<language;++i)step(m,SSA_MENU_RIGHT,pixels);
         CHECK(m->language==language && m->canvas.language==language);
-        step(m,SSA_MENU_DOWN,pixels);step(m,SSA_MENU_DOWN,pixels);
+        step(m,SSA_MENU_BACK,pixels);CHECK(m->page==SSA_MENU_OPTIONS && m->selection==4);
+        for(i=0;i<4;++i)step(m,SSA_MENU_DOWN,pixels);
         CHECK(m->selection==1 && m->music_enabled==music);
         step(m,SSA_MENU_CONFIRM,pixels);
         CHECK(m->page==SSA_MENU_CREDITS && !m->unsupported);

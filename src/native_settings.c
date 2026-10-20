@@ -4,6 +4,11 @@ int ssa_native_game_apply_settings(SsaNativeGame *g,const SsaSettings *s)
 {
     if(!g || !g->loaded || g->game.updating || g->error_line || !ssa_settings_valid(s))return -1;
     g->gba_view=s->renderer==SSA_RENDER_GBA;
+    g->vertical_aim=s->vertical_aim;
+    g->fov_offset=s->fov_offset;
+    if(g->gba_view || !g->vertical_aim){
+        g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;
+    }
     g->weapon_bobbing=s->weapon_bobbing;
     g->surface_decals_enabled=s->surface_decals;
     g->water_reflections=s->water_reflections;

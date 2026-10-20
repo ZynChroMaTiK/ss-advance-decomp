@@ -1,5 +1,35 @@
 # Native projectile runtime
 
+## Boss self-projectile correction (2026-10-21)
+
+The PC game enables `combat.boss_projectile_immunity` for both D7/D8 bosses.
+Their own projectiles exclude the firing body from movement contacts for the
+entire flight, including return paths. The combat runtime rejects damage to
+that same owner from its projectile, covering direct hits and radial blasts
+without marking the boss globally invulnerable. Player attacks, other enemies'
+shots, damage to other bosses, and player self-splash remain unchanged.
+
+Boss splitting volleys originally gave children a pointer to the parent shot.
+The native adapter preserves the original boss in each child's source after
+construction, leaving spawn coordinates, inherited velocity, animation, timing
+and damage unchanged. This identity survives further splits and parent-slot
+release/reuse. No walk through an expired parent pointer is required. As with
+the existing runtime, entity storage uses stable pool addresses; there is no
+new generation-based entity handle system.
+
+The option stays off in zero-initialized recovery runtimes. Original combat,
+projectile motion, constructor and controller routines remain unchanged.
+`tests/test_boss_projectiles.py` checks both actual boss initializers, native
+projectile construction/movement, direct-hit refusal, splitting/slot reuse,
+real expiry blasts near players and another boss, and player weapon damage on
+isolated map geometry. Gunrilla's existing return-impact regression runs with
+the boss policy enabled to check that D6 keeps its existing behavior.
+The focused boss test passes415 checks under MSVC and GCC ASan/UBSan/leak
+detection. Gunrilla passes446 checks including all8 return impacts; all8
+focused CTests pass. The rebuilt Windows executable passes a hidden, muted
+60-frame launch check. Reports: `boss-projectile-validation.json` and
+`windows-boss-projectile-validation.json`. No campaign playthrough was run.
+
 Type67 cannonballs use their original no-gravity flight again, at the user's
 request. The temporary floor-rolling override has been removed; launch detachment
 and Gunrilla's self-collision fix remain. The PC adapter still enables

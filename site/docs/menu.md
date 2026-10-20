@@ -41,7 +41,20 @@ Single Player now inserts Select Level between New Game and Password. It uses
 the original localized campaign names, saved previous-level completion unlocks,
 and no multiplayer maps. Options → Clear Data confirms Yes/No before resetting
 progress and language. Full behavior/storage/tests are in [profile.md](profile.md).
-Options has five rows: Settings, Extras, localized Language, Clear Data, and Credits.
+Options has five rows: Settings, Graphics, Extras, Clear Data, and Credits.
+Language cycles at the top of Settings. Graphics contains Display mode, Renderer
+and Aspect ratio. FOV and audio remain in Settings. Both pages return to their
+own Options row and preserve mouse/keyboard operation and saved choices.
+The split adds page20 (Graphics) without changing settings/save formats.
+The2026-10-21 layout moves Settings/Graphics items down one8-pixel tile,
+with Music style a second tile lower. Titles remain at Y0 and Back at Y144.
+Settings labels are at Y24/48/80/96/120, and its FOV/music/sounds bars at
+Y56/104/128. Graphics rows are at Y24/40/56. Mouse regions share these positions.
+The updated menu suite passes76,459 checks on MSVC and GCC ASan/UBSan/leak
+checking; the Settings suites pass39,878 portable checks and23,778 Windows
+input/persistence checks. All eight focused CTests pass. Generated English and
+German Settings/Graphics previews were visually inspected. No campaign replay
+was required for this menu-only change.
 Keyboard and mouse follow that visible order; Credits is last. Internal IDs
 remain stable for existing Settings/Clear Data return paths. The row removal
 and reordering are requested PC UI changes; historical original Options-callback

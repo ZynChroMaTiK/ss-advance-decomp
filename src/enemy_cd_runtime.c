@@ -1,4 +1,5 @@
 #include "ssa/enemy_cd_runtime.h"
+#include "enemy_contact_internal.h"
 #include <string.h>
 
 static int ready(const SsaScriptSpawn *s)
@@ -34,7 +35,7 @@ typedef struct RuntimeCall {
     const SsaEnemyCdFrame *frame;
     const SsaEnemyCdRuntimeOps *ops;
     SsaPlayerHazardGame hazards;
-    unsigned contact_blocked;
+    SsaEntity *contact;
 } RuntimeCall;
 static int visibility(void *context, int player, int enemy, int *blocked)
 {
@@ -81,19 +82,19 @@ static int move(void *context, SsaEnemyNavigation *n, int32_t *result)
         ssa_enemy_walk_world(&m,c->r->math,c->frame->ticks,c->r->walk_count,c->r->spawn->world);
     c->r->game->blocking_entity = c->r->spawn->world->blocking_entity;
     if (moved < 0) return -1;
-    c->contact_blocked=moved==0;
+    c->contact=c->r->crowd_slide?c->r->crowd.contact:NULL;
+    if(!c->contact && !moved)c->contact=c->r->game->blocking_entity;
     *result = moved;
     return 0;
 }
 static int finish(void *context, SsaEnemyNavigation *n)
 {
-    RuntimeCall *c = context;SsaEntity *hit=c->r->spawn->world->blocking_entity;
+    RuntimeCall *c = context;SsaEntity *hit=c->contact;
     int result=ssa_enemy_hazards(n->entity, &c->r->controller.activation->health,
         c->r->spawn->level->map, &c->hazards);
     if(result<0)return result;
     if(c->r->converted_combat && c->r->controller.activation->health>0 &&
-       (n->entity->body.flags&0x400) && c->contact_blocked &&
-       hit && hit==n->target && !(hit->body.flags&0x10) && !(hit->body.flags&0x20))
+       ssa_enemy_converted_contact(c->r->spawn,n->entity,hit))
         return c->ops->event(c->ops->context,&c->r->controller,SSA_ENEMY_CD_CONTACT_DAMAGE,hit,20,0,0);
     return 0;
 }

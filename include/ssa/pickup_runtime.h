@@ -18,6 +18,7 @@ struct SsaPickupRuntime {
     unsigned slot,player,loaded,updating,failed;
     unsigned repeat_weapon; /* PC variant pickup policy;0 keeps original behavior. */
     unsigned pc_pickups; /* Store unowned ammo and use duplicate weapons for ammo. */
+    unsigned collect_owned_weapons; /* Consume duplicate guns even at full ammo. */
 };
 /* Borrow stable combat/spawn/player/rules storage. Binds an unused world
  * execute_special callback; refuses to replace an existing one. Initialize

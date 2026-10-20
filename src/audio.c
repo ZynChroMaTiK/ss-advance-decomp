@@ -68,7 +68,7 @@ static uint64_t root(uint64_t value){uint64_t result=0,bit=UINT64_C(1)<<62;
     return result;
 }
 static void spatialize(SsaAudio *a,SsaAudioPlayer *p){
-    int64_t dx,dy,dz;uint64_t horizontal,distance;double pan=0,gain;
+    int64_t dx,dy,dz;uint64_t horizontal,distance;double pan=0,gain,falloff;
     p->target_left=p->target_right=1;
     if(!p->positioned || !a->listener_ready)return;
     /*24.8 deltas keep the three squared full-int32 coordinate differences
@@ -82,10 +82,11 @@ static void spatialize(SsaAudio *a,SsaAudioPlayer *p){
     if(horizontal)pan=((double)dx*a->listener.right_x+(double)dy*a->listener.right_y)/(65536.0*horizontal);
     if(pan>1)pan=1;
     if(pan< -1)pan=-1;
-    /* Smooth inverse-distance falloff for every world emitter: no large
-     * full-volume zone around doors/pickups. Unity at the source, half at
-     *256 world units. Local/UI/music playback remains unpositioned. */
-    gain=65536.0/(65536.0+distance);
+    /* Unity at the source, half at256 world units for ordinary emitters
+     * and1024 for enemies. Keep directional pan independent of falloff.
+     * Local/UI/music playback remains unpositioned. */
+    falloff=p->enemy_range?262144.0:65536.0;
+    gain=falloff/(falloff+distance);
     p->target_left=gain*(pan>0?1-0.75*pan:1);
     p->target_right=gain*(pan<0?1+0.75*pan:1);
 }
@@ -440,20 +441,26 @@ int ssa_audio_stop(SsaAudio *a,unsigned song){unsigned player;
     return 1;
 }
 int ssa_audio_source(SsaAudio *a,SsaAudioSourceCommand command,unsigned song,
-    uint64_t source,const SsaAudioPoint *position){unsigned i,count=0;int result;
-    if(!a || !a->loaded || !source || (unsigned)command>SSA_AUDIO_SOURCE_CANCEL_REPEAT)return -1;
+    uint64_t source,const SsaAudioPoint *position){unsigned i,count=0,enemy=0;int result;
+    if(!a || !a->loaded || !source || (unsigned)command>SSA_AUDIO_SOURCE_ENEMY_LOOP)return -1;
+    if(command==SSA_AUDIO_SOURCE_ENEMY_PLAY || command==SSA_AUDIO_SOURCE_ENEMY_LOOP){
+        if(!position)return -1;
+        enemy=1;command=command==SSA_AUDIO_SOURCE_ENEMY_LOOP?SSA_AUDIO_SOURCE_LOOP:SSA_AUDIO_SOURCE_PLAY;
+    }
     if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_LOOP || command==SSA_AUDIO_SOURCE_CUE_TWICE){
         if(song>=0x6e)return -1;
         if(command==SSA_AUDIO_SOURCE_LOOP)for(i=1;i<SSA_AUDIO_PLAYERS;++i){SsaAudioPlayer *p=&a->players[i];
             if(p->source==source && p->song==song && p->source_loop && player_busy(a,i)){
                 if(position){p->position=*position;p->positioned=1;}else p->positioned=0;
-                spatialize(a,p);return 1;
+                p->enemy_range=enemy;spatialize(a,p);return 1;
             }
         }
         result=play_instance(a,song,position,0);if(result!=1)return result;
         for(i=1;i<SSA_AUDIO_PLAYERS;++i)if(a->players[i].serial==a->starts){
-            a->players[i].source=source;a->players[i].source_loop=command==SSA_AUDIO_SOURCE_LOOP;
-            a->players[i].cue_repeats=command==SSA_AUDIO_SOURCE_CUE_TWICE;return 1;}
+            SsaAudioPlayer *p=&a->players[i];
+            p->source=source;p->source_loop=command==SSA_AUDIO_SOURCE_LOOP;
+            p->enemy_range=enemy;spatialize(a,p);p->left=p->target_left;p->right=p->target_right;
+            p->cue_repeats=command==SSA_AUDIO_SOURCE_CUE_TWICE;return 1;}
         return -1;
     }
     if(command==SSA_AUDIO_SOURCE_MOVE && !position)return -1;

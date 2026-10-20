@@ -6,7 +6,7 @@ $checker=Join-Path $projectRoot 'build/native-windows/Release/ssa_native_prion_t
 $native=& $checker (Join-Path $projectRoot 'orig/SSA.gba') | ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or $native.result -ne 'pass'){throw 'Windows Prion targeting validation failed.'}
 $reference=Get-Content -LiteralPath (Join-Path $projectRoot 'analysis/prion-targeting-validation.json') -Raw | ConvertFrom-Json
-foreach($field in @('result','checks','converted_types','frames','target_selections','melee_hits','ranged_shots','unconverted_cases','no_target_cases','boss_targets')){
+foreach($field in @('result','checks','converted_types','frames','target_selections','melee_hits','ranged_shots','unconverted_cases','no_target_cases','boss_targets','damage_cases','range_holds','chase_cases','health_cases')){
     if($native.$field -ne $reference.$field){throw "MSVC/GCC Prion targeting differs: $field"}
 }
 $report=[ordered]@{result='pass';native=$native;scope=$reference.scope

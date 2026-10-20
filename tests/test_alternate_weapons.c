@@ -1,5 +1,6 @@
 #include "ssa/native_game.h"
 #include "ssa/pc_renderer.h"
+#include "ssa/settings.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +27,7 @@ static void tick(SsaNativeGame *g){CHECK(ssa_native_game_tick(g)==1);++frames;}
 static SsaNativeGame *start(const uint8_t *rom,unsigned enabled){
     SsaNativeGame *g=calloc(1,sizeof(*g));unsigned i;
     CHECK(g && ssa_native_game_init_campaign(g,rom,0x800000,0,1,NULL)==1);
-    CHECK(ssa_native_game_alternate_weapons(g,enabled,1)==1);
+    if(enabled<2)CHECK(ssa_native_game_alternate_weapons(g,enabled,1)==1);
     g->players[0].inventory.health=32767;
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     for(i=0;i<30;++i)tick(g);
@@ -49,13 +50,20 @@ static void pickup_item(SsaNativeGame *g,unsigned item,unsigned accepted){
     ++pickups;
 }
 static void pickup(SsaNativeGame *g,unsigned accepted){pickup_item(g,0x20,accepted);}
+static SsaNativeGame *pickup_start(const uint8_t *rom,unsigned mode){
+    /* Cover untouched default startup, enabled alternates, and disabling the
+     * option through the same settings application used by the frontend. */
+    SsaNativeGame *g=start(rom,mode?1:2);SsaSettings settings=SSA_SETTINGS_DEFAULT;
+    if(mode==2)CHECK(ssa_native_game_apply_settings(g,&settings)==1);
+    CHECK(g->alternates.enabled==(mode==1));return g;
+}
 static void pc_pickups(const uint8_t *rom){
     static const unsigned ammo_items[8]={0x35,0x3a,0x3b,0x38,0x3d,0x36,0x3c,0x39};
     static const unsigned weapon_items[8]={0x21,0x22,0x25,0x23,0x29,0x27,0x28,0x26};
     static const unsigned amounts[8]={10,50,50,5,5,1,5,5};
     unsigned mode,i;
-    for(mode=0;mode<2;++mode){SsaNativeGame *g=start(rom,mode);SsaInventory *inv=&g->players[0].inventory;
-        CHECK(g->pickup.pc_pickups);
+    for(mode=0;mode<3;++mode){SsaNativeGame *g=pickup_start(rom,mode);SsaInventory *inv=&g->players[0].inventory;
+        CHECK(g->pickup.pc_pickups && g->pickup.collect_owned_weapons);
         for(i=0;i<8;++i){unsigned weapon=i+3,bit=1u<<(weapon-1),limit=g->inventory_rules.ammo_capacity[weapon-1];
             unsigned expected,current,requested,wait;
             CHECK(!(inv->weapons&bit));inv->ammo[weapon-1]=0;
@@ -64,7 +72,7 @@ static void pc_pickups(const uint8_t *rom){
             if(!i){SsaNativeCarry carry;SsaNativeGame *next=calloc(1,sizeof(*next));
                 CHECK(next && ssa_native_game_carry_capture(&carry,g)==1);
                 CHECK(ssa_native_game_init_campaign(next,rom,0x800000,0,1,&carry)==1);
-                CHECK(next->pickup.pc_pickups && (unsigned)next->players[0].inventory.ammo[2]==amounts[0] &&
+                CHECK(next->pickup.pc_pickups && next->pickup.collect_owned_weapons && (unsigned)next->players[0].inventory.ammo[2]==amounts[0] &&
                     !(next->players[0].inventory.weapons&4));dispose(next);}
             inv->ammo[weapon-1]=(int16_t)(limit-1);pickup_item(g,ammo_items[i],1);
             CHECK((unsigned)inv->ammo[weapon-1]==limit);pickup_item(g,ammo_items[i],0);
@@ -72,14 +80,23 @@ static void pc_pickups(const uint8_t *rom){
             for(wait=0;wait<100 && inv->pending_count;++wait)tick(g);
             expected=amounts[i]+limit/2;if(expected>limit)expected=limit;
             CHECK(wait<100 && (inv->weapons&bit) && (unsigned)inv->ammo[weapon-1]==expected && !inv->pending_count);
+            /* Test duplicates while this very weapon is actually equipped. */
+            CHECK(ssa_native_game_select_weapon(g,weapon)==1);
+            for(wait=0;wait<200 && (g->gameplay.weapon.current!=weapon || g->weapon.object.y!=0x5000);++wait)tick(g);
+            CHECK(wait<200 && g->gameplay.weapon.current==weapon);
             current=g->gameplay.weapon.current;requested=g->gameplay.weapon.requested;
             inv->ammo[weapon-1]=0;pickup_item(g,weapon_items[i],1);
             CHECK((unsigned)inv->ammo[weapon-1]==limit/2 && !inv->pending_count &&
                 g->gameplay.weapon.current==current && g->gameplay.weapon.requested==requested);
             inv->ammo[weapon-1]=(int16_t)(limit-1);pickup_item(g,weapon_items[i],1);
-            CHECK((unsigned)inv->ammo[weapon-1]==limit && !inv->pending_count);pickup_item(g,weapon_items[i],0);
+            CHECK((unsigned)inv->ammo[weapon-1]==limit && !inv->pending_count);
+            {SsaWeaponObject before=g->weapon.object;
+                pickup_item(g,weapon_items[i],1);
+                CHECK((unsigned)inv->ammo[weapon-1]==limit && !inv->pending_count &&
+                    g->gameplay.weapon.current==current && g->gameplay.weapon.requested==requested &&
+                    !memcmp(&before,&g->weapon.object,sizeof before));}
         }
-        dispose(g);g=start(rom,mode);inv=&g->players[0].inventory;
+        dispose(g);g=pickup_start(rom,mode);inv=&g->players[0].inventory;
         memset(inv->ammo,0,sizeof inv->ammo);pickup_item(g,0x33,1);
         for(i=2;i<10;++i)CHECK(!(inv->weapons&(1u<<i)) && inv->ammo[i]==g->inventory_rules.ammo_capacity[i]);
         dispose(g);
@@ -122,12 +139,15 @@ static void flow(const uint8_t *rom,const char *directory){
     SsaNativeGame *g=start(rom,0),*copy=calloc(1,sizeof(*copy));SsaNativeCarry carry;SsaPcRenderer renderer={0};
     uint16_t pixels[38400];unsigned i,count=0;
     CHECK(g->players[0].inventory.weapons==1 && !g->alternates.dual_colts);
-    pickup(g,1);settle(g,0);CHECK(g->players[0].inventory.weapons&2);pickup(g,0);CHECK(!g->alternates.dual_colts);
+    pickup(g,1);settle(g,0);CHECK(g->players[0].inventory.weapons&2);pickup(g,1);CHECK(!g->alternates.dual_colts && !g->players[0].inventory.pending_count);
     dispose(g);g=start(rom,1);
     CHECK(g->players[0].inventory.weapons==3 && g->gameplay.weapon.current==2 && !g->alternates.dual_colts);
     CHECK(ssa_native_game_select_weapon(g,2)==1 && !g->alternates.requested_variant);tick(g);
     pickup(g,1);CHECK(g->alternates.dual_colts && g->alternates.equip_dual);settle(g,1);
-    pickup(g,0);weapon_pixels(g,pixels);
+    {SsaWeaponObject before=g->weapon.object;int16_t ammo=g->players[0].inventory.ammo[1];
+        pickup(g,1);CHECK(g->alternates.dual_colts && !g->players[0].inventory.pending_count &&
+            g->players[0].inventory.ammo[1]==ammo && !memcmp(&before,&g->weapon.object,sizeof before));}
+    weapon_pixels(g,pixels);
     for(i=0;i<38400;++i){CHECK(pixels[i]==pixels[i/240*240+239-i%240]);count+=pixels[i]!=0;}
     CHECK(count>100);preview(directory,"dual-idle",g);
     CHECK(ssa_native_game_draw(g)==1);
@@ -658,7 +678,7 @@ static void shotgun_pattern(const uint8_t *rom){
         CHECK(i<100 && g->weapon.alternate_shotgun==enabled);
         yaw=(uint16_t)(g->players[0].motion.movement.heading+mode*8192);
         g->players[0].motion.movement.heading=yaw;g->players[0].motion.facing=(uint8_t)(yaw>>8);
-        g->gba_view=mode>=4;g->player.free_aim=mode<4;g->player.pitch=mode<6?pitches[mode]:0;
+        g->vertical_aim=1;g->gba_view=mode>=4;g->player.free_aim=mode<4;g->player.pitch=mode<6?pitches[mode]:0;
         g->damage.difficulty=1;
         CHECK(ssa_entity_pool_allocate(&g->spawn.pool,&slot)==1);target=&g->spawn.actors[slot];
         CHECK(!target->owned);memset(target,0,sizeof(*target));target->owned=1;

@@ -709,7 +709,7 @@ int main(int argc,char **argv)
     CHECK(ssa_classic_hud_blend555(0x7fff,0,0)==0 && ssa_classic_hud_blend555(0x7fff,0,255)==0x7fff);
     CHECK(ssa_classic_hud_blend888(0xffffff,0,128)==0x808080);
     for(i=0;i<2;++i)for(k=0;k<=100;++k){settings.hud_style=i;settings.sound_volume=k;
-        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[8]==12);
+        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[8]==15);
         CHECK(ssa_settings_decode(&loaded,encoded,16)==1 && !memcmp(&settings,&loaded,sizeof settings));}
     settings.hud_style=2;CHECK(ssa_settings_encode(&settings,encoded,16)==-1);
     CHECK(ssa_pc_renderer_resize(&pc,480,320)==1);

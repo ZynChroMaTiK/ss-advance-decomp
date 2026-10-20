@@ -1,6 +1,7 @@
 #include "ssa/native_game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 static unsigned checks,views,bob_views;static double maximum_error;
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"GBA aim line%d: %s\n",__LINE__,#x);abort();}++checks;}while(0)
@@ -28,6 +29,8 @@ static void verify(SsaNativeGame *g,SsaWeaponAim *query)
     /* Independent pinhole projection in the reference display's160 rows.
      * Original distance-table/pixel quantization may differ by a pixel. */
     expected=80-(hit.z-((double)g->player.pose.z+player->body.z+g->players[0].vertical.eye_offset-g->player.camera.eye_z))*2*(0x55b05a/65536.0)/depth;
+    if(!g->gba_view && g->fov_offset!=10)
+        expected=80+(expected-80)*tan(70*3.14159265358979323846/360)/tan((60+g->fov_offset)*3.14159265358979323846/360);
     if(expected<2)expected=2;
     if(expected>157)expected=157;
     error=c->y/256.0-expected;if(error<0)error=-error;
@@ -46,7 +49,11 @@ static void verify(SsaNativeGame *g,SsaWeaponAim *query)
                 (g->oam.entries[i].attribute1&511)==((unsigned)(c->screen_x+x)&511)){
                 CHECK((g->oam.entries[i].attribute0&255)==((unsigned)(c->screen_y+y)&255));++found;
             }
-            CHECK(found==1);++parts;
+            /* Narrow FOV can clamp the cursor to an edge; fully offscreen
+             * pieces are intentionally culled by the original OAM builder. */
+            if(c->screen_y+y>=160 || c->screen_y+y+(int)piece->height<=0)CHECK(!found);
+            else CHECK(found==1);
+            ++parts;
         }
     }
     CHECK(parts>0);++views;
@@ -91,9 +98,11 @@ int main(int argc,char **argv)
     SsaNativeGame *g=calloc(1,sizeof(*g));SsaWeaponAim query={0};SsaScriptActor *fixture=NULL,saved;SsaEntity *target;
     uint8_t *rom=malloc(0x800000);FILE *f;unsigned i,mode;int32_t sine,cosine;
     int32_t first_y=0;static const int elevations[]={-20,0,20};
-    CHECK(argc==2 && g && rom);f=fopen(argv[1],"rb");CHECK(f);
+    CHECK((argc>=2 && argc<=4) && g && rom);f=fopen(argv[1],"rb");CHECK(f);
     CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);
     CHECK(ssa_native_game_init(g,rom,0x800000,0)==1);
+    if(argc==4){g->fov_offset=(unsigned)strtoul(argv[3],NULL,10);CHECK(g->fov_offset<=60);}
+    g->vertical_aim=1; /* GBA mode must override the enabled native extra. */
     CHECK(ssa_weapon_aim_init(&query,&g->world,&g->math)==1);
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     ssa_pc_input_runtime_key(&g->input_runtime,'W',1,0);
@@ -105,7 +114,7 @@ int main(int argc,char **argv)
         CHECK(ssa_native_game_tick(g)==1);
     CHECK(g->gameplay.weapon.current==2 && g->weapon.object.y==0x5000);
     /* Simulate a renderer change after software mouse look was in use. */
-    g->player.pitch=5440;g->player.free_aim=1;g->gba_view=1;
+    g->player.pitch=5440;g->player.free_aim=1;g->gba_view=argc==2;g->vertical_aim=argc==2;
     CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,0,-85)==1);
     CHECK(ssa_native_game_tick(g)==1 && !g->input.pending_pitch && !g->player.free_aim && !g->player.pitch);
     /* Reposition a registered pickup as a test target, retaining the real
@@ -146,7 +155,7 @@ int main(int argc,char **argv)
     CHECK(g->player.pose.third_person);verify(g,&query);
     steady_cursor(g);
     /* Software mode retains its centered original crosshair and vertical look. */
-    g->gba_view=0;CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,0,-85)==1);
+    g->gba_view=0;g->vertical_aim=1;CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,0,-85)==1);
     CHECK(ssa_native_game_tick(g)==1 && g->player.free_aim && g->player.pitch==5440);
     CHECK(cursor(g)->y==80*256);
     CHECK(ssa_native_game_select_weapon(g,1)==1);

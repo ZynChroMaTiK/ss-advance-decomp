@@ -25,6 +25,12 @@ independently: a previously clear pair cannot gain overlap under this exception.
 The exception does not apply to players. Player blockages retain the original
 blocked result for contact attacks; failed side probes restore the original
 enemy blocker instead of leaving a later probe's wall/player result behind.
+For Prion melee, crowd movement additionally records the first real enemy
+contact before trying sidesteps. This transient contact resets on every move;
+it is distinct from the persistent side-preference blocker. Combat consumes it
+within the same controller call, allowing melee when either body is converted
+even if the attacker subsequently slides successfully. It is never reused as
+a target on a later frame or dereferenced after actor retirement.
 
 The PC query extends entity-cell searches by128 units to cover all original
 enemy radii, including Gunrilla's90 units across cell boundaries. Original

@@ -94,16 +94,38 @@ uint16_t ssa_water_rgb(SsaWaterRender *r,uint8_t color,double x,double y,double 
     r->mask[pixel]=(uint16_t)(int)h|((uint32_t)color<<16)|((uint32_t)(fade*255+0.5)<<24);
     return (uint16_t)a;
 }
-uint16_t ssa_water_multiply(const SsaWaterRender *r,uint32_t mask,uint16_t reflected){
+uint16_t ssa_water_blend(const SsaWaterRender *r,uint32_t mask,uint16_t reflected){
     unsigned a=r->palette[(mask>>16)&255],fade=mask>>24,c,out=0;
     for(c=0;c<3;++c){unsigned base=(a>>(c*5))&31,env=(reflected>>(c*5))&31;
-        env=31-((31-env)*fade+127)/255;out|=((base*env+15)/31)<<(c*5);}
+        /* Half-alpha reflection, reduced by the existing distance fade.
+         * Both dark and bright scenery mix with the original water color. */
+        out|=((base*(510-fade)+env*fade+255)/510)<<(c*5);}
     return (uint16_t)out;
 }
 uint8_t ssa_water_palette_index(SsaWaterRender *r,uint16_t rgb){
     unsigned key=rgb&0x7fff,mask=1u<<(key&7);
     if(!(r->valid[key>>3]&mask)){r->blended[key]=(uint8_t)nearest(r->palette,key&31,(key>>5)&31,(key>>10)&31);r->valid[key>>3]|=(uint8_t)mask;}
     return r->blended[key];
+}
+uint8_t ssa_water_reflection_index(SsaWaterRender *r,uint16_t rgb,unsigned x,unsigned y){
+    static const uint8_t threshold[16]={0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
+    unsigned key=rgb&0x7fff,mask=1u<<(key&7),primary=ssa_water_palette_index(r,rgb);
+    if(!(r->valid[4096+(key>>3)]&mask)){
+        unsigned i,best=primary,best_dot=0,best_norm=1,base=r->palette[primary];
+        int dr=(int)(key&31)-(int)(base&31),dg=(int)((key>>5)&31)-(int)((base>>5)&31),db=(int)(key>>10)-(int)((base>>10)&31);
+        /* Find the second palette color whose mixture with the nearest color
+         * best approximates the requested light. Exact colors never dither. */
+        if(dr || dg || db)for(i=1;i<256;++i){unsigned c=r->palette[i],norm;int dot;
+            int xr=(int)(c&31)-(int)(base&31),xg=(int)((c>>5)&31)-(int)((base>>5)&31),xb=(int)((c>>10)&31)-(int)((base>>10)&31);
+            norm=(unsigned)(xr*xr+xg*xg+xb*xb);dot=dr*xr+dg*xg+db*xb;
+            if(dot>0 && (unsigned)dot<norm && (uint64_t)dot*dot*best_norm>(uint64_t)best_dot*best_dot*norm){
+                best=i;best_dot=(unsigned)dot;best_norm=norm;}
+        }
+        r->blended[32768+key]=(uint8_t)best;
+        r->reflection_weight[key]=(uint8_t)((best_dot*256+best_norm/2)/best_norm);
+        r->valid[4096+(key>>3)]|=(uint8_t)mask;
+    }
+    return r->reflection_weight[key]>threshold[(y&3)*4+(x&3)]*16+8?r->blended[32768+key]:(uint8_t)primary;
 }
 uint8_t ssa_water_index(SsaWaterRender *r,uint8_t color,double x,double y,double h,double distance,size_t pixel){
     uint16_t rgb=ssa_water_rgb(r,color,x,y,h,distance,pixel);

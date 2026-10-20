@@ -1,4 +1,5 @@
 from site_documents import render_document
+assert 'id="make-it-yours"' in render_document('# Guide\n\n## Options\n','README.md',{'README.md'})
 sample='''# Reference `guide`
 
 | Routine | State |

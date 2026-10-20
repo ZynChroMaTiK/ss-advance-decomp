@@ -1,5 +1,46 @@
 # Weapon 7 conversion and periodic drain
 
+## PC Prion balance (2026-10-21)
+
+The playable adapter enables `combat.prion_balance`. A successful first Prion
+conversion doubles the victim's **current remaining health**, once, before E2
+allocation. Positive health saturates at32767; dead actors are not revived, and
+another hit on an already converted actor does not boost it again. The original
+conversion flag, drain period/countdown and effect-allocation failure semantics
+remain intact. The recovered default-off runtime preserves ROM behavior.
+
+When both attacker and victim are enemies and either has flag400, contact melee
+deals half damage (10 normally,20 for D0/D6), and other damage deals twice its
+previous amount. Projectile ownership and direct enemy-source explosions both
+use this rule, after splash attenuation and before original difficulty scaling.
+Melee is explicitly classified in the combat adapter, so kamikaze explosions
+are not mistaken for contact. Player attacks, attacks against the player,
+ordinary unconverted enemy pairs, and existing boss self-projectile immunity
+retain their prior behavior.
+
+Converted enemies chasing other enemies use half their previous movement
+coefficient. The six ranged types CF/D1/D2/D3/D4/D6 stop advancing when within
+768 units and a native aim trace reaches their selected enemy. They keep facing
+and firing; occluded/out-of-range targets still cause pursuit. Gravity and
+contact queries continue while holding position, so nearby melee remains
+possible. Melee-only types keep approaching at the reduced speed. The existing
+two behavior/animation updates per tick, firing cooldowns and drain clock are
+unchanged. Pursuit of the player is unchanged.
+
+`test-prion-targeting` adds real repeated Prion impacts, low-health doubling,
+saturation, dead-target and default-off checks for all ten types; an enemy/player
+damage matrix for contact, projectiles and explosions; and actual ranged holds
+and pursuit. The older special-weapon behavior-clock fixture disables this new
+policy to continue isolating its one-versus-two-update assertions.
+No campaign playthrough is required or claimed.
+
+Validation:6887 checks,540 controller frames,270 damage cases,50 additional
+conversion-health cases,6 ranged holds and10 pursuit cases pass with identical
+MSVC and GCC ASan/UBSan/leak-check results. The existing60 enemy melee contacts
+and80 target selections also pass. All8 focused CTests,32316 special-weapon
+checks,415 boss-projectile checks and446 Gunrilla assertions pass. All128 Windows
+native libraries/frontend rebuild, and a hidden60-frame1920x1080 launch succeeds.
+
 The earlier description of type `69` as freezing an enemy was incorrect.
 The recovered instructions implement enemy retargeting and periodic health
 drain. There is no demonstrated freeze/thaw transition, and no missing flag-400
@@ -109,10 +150,17 @@ retaining the original 600-tick target preference.
 The controller temporarily sees the chosen actor as its target for facing,
 visibility, distance checks, reactions and attacks. The real player fields are
 restored after the call, including errors. Converted ranged attacks launch
-toward the selected actor. Converted melee contact can damage that enemy through
-the existing combat path, using 20 damage, or 40 for D0/D6. It requires an actual
-blocked walk during this update and contact with the selected target; stale
-blocking pointers cannot cause a hit. Native floor hazards run first. With no
+toward the selected actor. Enemy melee contact is hostile whenever either body
+has conversion flag400, so converted enemies can both deal and receive melee
+damage, including contact with an enemy other than their selected target.
+The existing combat path applies20 damage, or40 from D0/D6. Each walking update
+captures its actual enemy collision before a crowd sidestep can replace it;
+successful sliding therefore no longer suppresses melee. Contact is reset for
+each move and runtime call, so stale blocking pointers cannot cause a hit.
+Self, player bodies, corpses, released slots and nonpositive canonical target
+health are rejected by this additional enemy-only path. Ordinary enemy pairs
+remain nonhostile, and the original player-contact path is unchanged.
+Native floor hazards run first. With no
 living candidates, the target clears and the actor does not attack.
 
 This is a requested PC policy. The recovered navigation, contact and controller
@@ -121,12 +169,16 @@ Unconverted enemies still target the player normally. The existing behavior-cloc
 fixture explicitly disables nearest selection to isolate its timing assertions.
 
 `test-prion-targeting` performs actual Prion impacts on all ten eligible enemy
-types and passes 1,602 ASan/UBSan checks: 80 target selections, prompt retargeting,
-nearest-player selection, dead/corpse rejection, vertical distance, enemy melee,
-six ranged attack types, a boss target and no-target cases. Windows agrees on
-every counter. The special-weapon suite still passes 32,318 checks, and the
-default entity-runtime integration passes 85,982. All 112 Windows libraries and
-the playable frontend rebuild; launcher/startup/restart checks pass. Reports:
+types. The expanded melee fixture covers both directions and two converted
+enemies with crowd sliding on/off, ordinary nonhostile pairs, dead targets,
+disabled policy, and stale contact after both skipped movement and free walking.
+It also covers 80 target selections, prompt retargeting, nearest-player selection,
+dead/corpse rejection, vertical distance, six ranged attack types, a boss target
+and no-target cases. Reports:
 `prion-targeting-validation.json` and `windows-prion-targeting-validation.json`.
-Full campaign replays were not repeated for this targeting change; earlier route
-reports describe their recorded build.
+The 2026-10-20 run passes 3,512 checks over514 controller frames, including60
+verified melee hits, with identical GCC ASan/UBSan/leak and MSVC counters.
+The Windows crowd suite passes20,456 checks, and all eight focused CTests pass.
+All127 native Windows libraries and the playable frontend rebuild successfully.
+Full campaign replays were not repeated; earlier route reports describe their
+recorded build.

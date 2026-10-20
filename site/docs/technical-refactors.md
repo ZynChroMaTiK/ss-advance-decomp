@@ -1,5 +1,46 @@
 # Technical audit follow-up, 2026-10-20
 
+## Render-loop optimization, 2026-10-21
+
+The hardware scene finish now gathers depth, actor/wall statistics, decals and
+water in one parallel row pass instead of a serial full-frame pass followed by
+a second effects pass. Each job owns its rows and per-row counters; counters
+are reduced after synchronous completion. Scratch counters grow with the target
+height, persist across draws and are released with the renderer's geometry
+cache. No gameplay or audio state enters worker jobs.
+
+Hardware frames skip CPU depth clears that GPU readback completely overwrites,
+including the consumed reflection rows. Software still initializes depth.
+The hardware path also skips the redundant zero-pitch color clear: its sky
+pass fills every consumed row before upload. Sky rendering resolves each
+distinct texture row once and copies adjacent identical rows. This reuse is
+only within a draw, preserving live palette fades, yaw and pitch changes.
+
+Three paired 60-frame runs at1920x1080 on the RTX4060 Laptop GPU measured these
+median isolated render times (simulation, audio and presentation excluded):
+
+| Scene | Before | After | Reduction |
+| --- | ---: | ---: | ---: |
+| Level1 start, decals off | 11.139ms | 8.011ms | 28.08% |
+| Level1 start, decals on | 11.976ms | 8.344ms | 30.33% |
+| Slave Compound pool, decals | 16.144ms | 12.731ms | 21.14% |
+| Pool, decals and reflections | 33.581ms | 24.744ms | 26.32% |
+
+All measured final-frame pixel/depth/water hashes and actor/wall counters match
+the baseline exactly across the Vulkan runs; four separate854x480 Software
+cases also match. `tests/bench_vulkan.c` reports these hashes outside its timing
+interval. Timing variation remains, and these are not end-to-end gameplay FPS.
+The backend's `effects_ms` now includes depth/statistics processing too, so
+compare total render times rather than that component across implementations.
+Raw paired samples and source hashes: [render-optimization-validation.json](render-optimization-validation.json).
+
+Validation: rebuilt Windows frontend and128 libraries; eight focused CTests;
+5,846,303 Vulkan checks,18 sprite-order cases and22 paired GPU/software draws
+with no validation errors; exact serial/parallel pixels, depth, water masks and
+counters with and without effects; muted180-frame default-Vulkan launch/resize;
+11,598,404 portable renderer assertions under GCC ASan/UBSan with leak checking.
+No campaign playthrough was run.
+
 The audit fixes are implemented without intentional changes to gameplay,
 rendered artwork, audio balance, or save formats. The remaining large frontend
 state-machine redesign is deliberately staged; the original transition order

@@ -15,6 +15,33 @@ static void snapshot(const char *dir,const char *name,unsigned level,const uint3
     for(i=0;i<4;++i)word(f,0,4);
     CHECK(fwrite(pixels,4,(size_t)w*h,f)==(size_t)w*h && !fclose(f));
 }
+static void water_blend_checks(void){
+    SsaWaterRender *r=calloc(1,sizeof(*r));uint16_t palette[256]={0};unsigned base,env;
+    CHECK(r);r->palette=palette;
+    for(base=0;base<32;++base){palette[1]=(uint16_t)(base|(base<<5)|(base<<10));
+        {unsigned half=(base+1)/2;
+            CHECK(ssa_water_blend(r,UINT32_C(0xff010000),0)==(half|(half<<5)|(half<<10)));}
+        CHECK(ssa_water_blend(r,UINT32_C(0x00010000),0x7fff)==palette[1]);
+        for(env=0;env<32;++env){unsigned channel;uint16_t result=ssa_water_blend(r,UINT32_C(0xff010000),(uint16_t)(env|(env<<5)|(env<<10)));
+            for(channel=0;channel<15;channel+=5){unsigned value=(result>>channel)&31;
+                CHECK(value==(base+env+1)/2);}
+            CHECK(!(result&0x8000));
+        }
+    }
+    /* Sparse GBA palettes retain weak highlights through stable two-color
+     * dithering, while exact palette colors remain completely unchanged. */
+    memset(palette,0,sizeof palette);palette[2]=0x7fff;
+    memset(r->valid,0,sizeof r->valid);
+    {unsigned x,y,sum=0;
+        for(y=0;y<4;++y)for(x=0;x<4;++x){unsigned index=ssa_water_reflection_index(r,8|(8<<5)|(8<<10),x,y);
+            CHECK(index && index<256);sum+=palette[index]&31;
+            CHECK(ssa_water_reflection_index(r,0,x,y)==1);
+            CHECK(ssa_water_reflection_index(r,0x7fff,x,y)==2);
+        }
+        CHECK(abs((int)sum-8*16)<=16);
+    }
+    free(r);
+}
 /* Asset coverage only: inspect campaign materials without running levels. */
 static void materials(const uint8_t *rom){
     SsaSurfaceDecals *d=calloc(1,sizeof(*d));SsaPaletteEffect palette={0};SsaMapAssets map={0};
@@ -71,7 +98,7 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
     CHECK(floor_colors && base && depth && !g->water_reflections);
     while(water<256 && !g->surface_decals.water_floor[water])++water;
     CHECK(water<256);
-    /* Find an actual animated sprite pixel and prove it bypasses multiply. */
+    /* Find an actual animated sprite pixel and prove it bypasses blending. */
     for(f=0;f<128 && !found;f+=3)for(y=0;y<128 && !found;++y)for(x=0;x<128;++x)
         if(ssa_water_glint(&g->surface_decals,x*2.0,y*2.0,100,f)){gx=x*2.0;gy=y*2.0;stamp=f;found=1;break;}
     CHECK(found && !ssa_water_glint(&g->surface_decals,gx,gy,1536,stamp));
@@ -83,7 +110,7 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
     for(f=0;f<128;++f)changes+=!ssa_water_glint(&g->surface_decals,gx,gy,100,f);
     CHECK(changes>50);
     /* Non-glint decals keep water-colored shading, animate independently and
-     * bypass the reflection multiply just like the separate bright glints. */
+     * bypass reflection blending just like the separate bright glints. */
     {unsigned got=0,off=0;double rx=0,ry=0;uint32_t tick=0;uint16_t shade;
         for(f=0;f<256 && !got;f+=12)for(y=0;y<128 && !got;++y)for(x=0;x<128;++x)
             if(ssa_water_ripple(&g->surface_decals,x*2.0,y*2.0,100,f) &&
@@ -111,8 +138,35 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
         CHECK(ssa_water_rgb(w,(uint8_t)water,0,0,-16,100,0)==(g->palette_effect.colors[water]&0x7fff));
         CHECK(ssa_water_rgb(w,(uint8_t)water,0,0,16,100,1)==(g->palette_effect.colors[water]&0x7fff));
         CHECK(ssa_pc_renderer_reflect(&mirror,g,&g->pc_camera,0,w,out,NULL)==1 && mirror && w->passes==2 && !mirror->rays);
+        CHECK(mirror->width==2 && mirror->height==2);
         CHECK(out[2]==0xabcdef && out[3]==0xfedcba);
+        {uint32_t odd[15];unsigned p;
+            for(p=0;p<15;++p)odd[p]=0x123456;
+            CHECK(ssa_water_begin(w,&g->water_scene,&g->surface_decals,g->palette_effect.colors,
+                0,0,32767,0,0,1,3,5)==1);
+            (void)ssa_water_rgb(w,(uint8_t)water,0,0,16,100,0);
+            (void)ssa_water_rgb(w,(uint8_t)water,0,0,16,100,14);
+            CHECK(ssa_pc_renderer_reflect(&mirror,g,&g->pc_camera,0,w,odd,NULL)==1 && w->passes==1);
+            CHECK(mirror->width==3 && mirror->height==5);
+            for(p=1;p<14;++p)CHECK(odd[p]==0x123456);
+        }
         ssa_pc_renderer_free(mirror);free(mirror);ssa_water_free(w);free(w);}
+    /* Reflection allocation follows native viewport growth and shrinkage.
+     * Returning to the original size must reproduce the same scene. */
+    {SsaWaterRender *w=calloc(1,sizeof(*w));SsaPcRenderer *mirror=NULL;
+        uint32_t *out=malloc(640*320*4),*reference=malloc(240*160*4);unsigned view,p;
+        static const unsigned sizes[4][2]={{240,160},{480,320},{640,320},{240,160}};
+        CHECK(w && out && reference);
+        for(view=0;view<4;++view){
+            CHECK(ssa_water_begin(w,&g->water_scene,&g->surface_decals,g->palette_effect.colors,
+                0,0,32767,0,0,1,sizes[view][0],sizes[view][1])==1);
+            for(p=0;p<sizes[view][0]*sizes[view][1];++p)w->mask[p]=UINT32_C(0xff000000)|(water<<16);
+            CHECK(ssa_pc_renderer_reflect(&mirror,g,&g->pc_camera,0,w,out,NULL)==1);
+            CHECK(mirror->width==sizes[view][0] && mirror->height==sizes[view][1] && w->passes==1);
+            if(!view)memcpy(reference,mirror->pixels,240*160*4);
+            else if(view==3)CHECK(!memcmp(reference,mirror->pixels,240*160*4));
+        }
+        ssa_pc_renderer_free(mirror);free(mirror);ssa_water_free(w);free(w);free(out);free(reference);}
     /* Render-only water material fixture. Geometry, actors and game state stay
      * unchanged; replacing floor colors makes both Egypt/Rome views inspectable. */
     for(x=0;x<g->map.sector_count;++x){uint8_t *s=g->map.data+g->map.sectors+x*20;
@@ -122,9 +176,11 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
         CHECK(ssa_native_game_prepare_view(g)==1 && ssa_pc_renderer_resize(r,480,320)==1 && ssa_pc_renderer_draw(r,g)==1);
         memcpy(base,r->pixels,480*320*4);memcpy(depth,r->depth,480*320*sizeof(float));
         g->water_reflections=1;CHECK(ssa_pc_renderer_draw(r,g)==1 && !memcmp(depth,r->depth,480*320*sizeof(float)));
-        for(x=0;x<480*320;++x){uint32_t a=base[x],b=r->pixels[x];changed+=a!=b;
-            CHECK((b&255)<=(a&255) && ((b>>8)&255)<=((a>>8)&255) && ((b>>16)&255)<=((a>>16)&255));}
+        for(x=0;x<480*320;++x){uint32_t a=base[x],b=r->pixels[x];unsigned shift;changed+=a!=b;
+            for(shift=0;shift<24;shift+=8){unsigned before=(a>>shift)&255,after=(b>>shift)&255;
+                CHECK(abs((int)after-(int)before)<=132);}}
         if(pitch!=1)CHECK(changed>100 && r->water.passes>0 && r->reflection && !r->reflection->rays);
+        if(r->water.passes)CHECK(r->reflection->width==480 && r->reflection->height==320);
         if(g->level==6 && !pitch)CHECK(r->water.actor_pixels>0);
         memcpy(base,r->pixels,480*320*4);CHECK(ssa_pc_renderer_draw(r,g)==1 && !memcmp(base,r->pixels,480*320*4));
         if(!pitch)snapshot(dir,"water-reflections",g->level,r->pixels,480,320);
@@ -145,6 +201,7 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
     g->water_reflections=1;CHECK(ssa_native_game_draw(g)==1);changes=0;
     for(x=0;x<38400;++x)changes+=base[x]!=g->rgb888[x];
     CHECK(changes>10 && g->water_render.passes>0 && g->water_renderer && !g->water_renderer->rays);
+    CHECK(g->water_renderer->width==240 && g->water_renderer->height==160);
     snapshot(dir,"water-gba",g->level,g->rgb888,240,160);draws+=2;
     if(g->level==6){SsaActorSource sources[100];unsigned changed=0;
         /* Removing render snapshots, without touching world entities, must
@@ -157,6 +214,23 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
         CHECK(ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,&r->water,base,NULL)==1);
         for(x=0;x<480*320;++x)changed+=base[x]!=r->pixels[x];
         CHECK(changed>10);memcpy(g->sources,sources,sizeof sources);++draws;
+        /* The mirrored camera must use the same live FOV as the main scene. */
+        memset(base,0,480*320*4);
+        CHECK(ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,&r->water,base,NULL)==1);
+        memcpy(r->pixels,base,480*320*4);
+        for(unsigned offset=0;offset<=60;offset+=60){g->fov_offset=offset;changed=0;
+            memset(base,0,480*320*4);
+            CHECK(ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,&r->water,base,NULL)==1);
+            for(x=0;x<480*320;++x)changed+=base[x]!=r->pixels[x];
+            CHECK(changed>10);}
+        g->fov_offset=10;
+        memset(base,0,480*320*4);
+        CHECK(ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,&r->water,base,NULL)==1);
+        CHECK(!memcmp(r->pixels,base,480*320*4));
+        /* Original/GBA projection and its reflection ignore the saved FOV. */
+        g->gba_view=1;CHECK(ssa_native_game_draw(g)==1);memcpy(base,g->rgb888,38400*4);
+        g->fov_offset=60;CHECK(ssa_native_game_draw(g)==1 && !memcmp(base,g->rgb888,38400*4));
+        g->fov_offset=10;g->gba_view=0;
     }
     for(x=0;x<g->map.sector_count;++x)g->map.data[g->map.sectors+x*20+10]=floor_colors[x];
     g->water_reflections=g->surface_decals_enabled=0;
@@ -426,7 +500,7 @@ int main(int argc,char **argv){
     uint8_t *rom=malloc(0x800000);SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer r={0};FILE *f;
     uint32_t *old=malloc(480*320*4);float *depth=malloc(480*320*sizeof(float));unsigned level,pitch,i,total,reference_changed=0;
     CHECK(argc>=2 && rom && g && old && depth);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
-    materials(rom);
+    water_blend_checks();materials(rom);
     for(level=0;level<=6;level+=6){
         CHECK(ssa_native_game_init(g,rom,0x800000,level)==1 && !g->surface_decals_enabled);
         CHECK(ssa_native_game_tick(g)==1);masks(g,argc>2?argv[2]:NULL);

@@ -1,8 +1,21 @@
 # Native port findings
 
+Vulkan is now an optional Windows hardware scene backend, selectable in Graphics
+when available. Walls, floor/ceiling polygons, actors and mirrored scenes use GPU
+rasterization; HUD, decals/water composition and presentation retain their CPU
+paths. Software/GBA remain available and settings versions1..14 remain readable.
+See [vulkan-renderer.md](vulkan-renderer.md) for architecture and focused evidence.
+The initial severe Vulkan stall is corrected: dedicated cached readback, bounded
+parallel effects, amortized buffer growth and visible-row reflection transfers.
+`scripts/bench-vulkan.ps1` measures isolated render time; reflections remain the
+heaviest case. Resolution, artwork, simulation and audio timing are unchanged.
+
 Technical audit follow-up: save-read failure handling, locked audio status, a
 shared decal atlas, separate scene/HUD link targets, centralized runtime settings,
-and focused incremental tests are implemented. See [technical-refactors.md](technical-refactors.md)
+and focused incremental tests are implemented. The latest render-loop pass
+combines GPU sample processing, skips overwritten clears and reuses identical
+sky rows, with exact before/after outputs and measured lower render times.
+See [technical-refactors.md](technical-refactors.md)
 for scope, measurements, and validation; frontend separation remains incremental.
 
 Current milestone: all twelve campaign levels are enabled through `play-native.cmd`.

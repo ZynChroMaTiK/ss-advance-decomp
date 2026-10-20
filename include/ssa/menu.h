@@ -8,7 +8,7 @@ enum { SSA_MENU_UP=1,SSA_MENU_DOWN=2,SSA_MENU_CONFIRM=4,SSA_MENU_BACK=8,
 enum { SSA_MENU_LANGUAGE=10,SSA_MENU_TITLE=11,SSA_MENU_MAIN=0,
        SSA_MENU_SINGLE=1,SSA_MENU_OPTIONS=4,SSA_MENU_PASSWORD=8,SSA_MENU_DIFFICULTY=9,SSA_MENU_CREDITS=12,
        SSA_MENU_SCORES=13,SSA_MENU_LEVEL_SELECT=14,SSA_MENU_CLEAR_DATA=15,SSA_MENU_SETTINGS=16,SSA_MENU_EXTRA=17,
-       SSA_MENU_QUIT=18,SSA_MENU_SCORE_NAME=19 };
+       SSA_MENU_QUIT=18,SSA_MENU_SCORE_NAME=19,SSA_MENU_GRAPHICS=20 };
 enum { SSA_MENU_UNAVAILABLE_LEVEL=100 };
 enum { SSA_MENU_LEVELS_PER_CHAPTER=6 };
 typedef struct SsaMenu {
@@ -32,7 +32,7 @@ typedef struct SsaMenu {
     uint16_t completed_levels;
     unsigned level_scroll,selecting_level,clear_requested; /* level_scroll: chapter start0/6. */
     SsaSettings settings;
-    unsigned soundfont_available,midi_available,settings_unavailable;
+    unsigned soundfont_available,midi_available,settings_unavailable,vulkan_available;
     unsigned quit_requested; /* PC Main-menu Quit; never a new-game result. */
     int32_t score_y,score_speed;
     unsigned score_ticks,score_leaving;
@@ -42,10 +42,11 @@ typedef struct SsaMenu {
     uint8_t score_cursor,score_up,score_down,score_typed;
     unsigned score_length;
 } SsaMenu;
-/* Starts at Title in English. Options cycles Language in place (Left backwards,
+/* Starts at Title in English. Settings cycles Language in place (Left backwards,
  * Right/Confirm forwards), using original language names and localized labels.
- * Options IDs1..5: Credits, Language, Clear Data, Settings, Extras. Music volume is
- * controlled by Settings; Extras includes jump, third-person, in-game NETRICSA,
+ * Options IDs1/3/4/5/6: Credits, Clear Data, Settings, Extras, Graphics.
+ * Settings owns Language, FOV and audio; Graphics owns Display mode, Renderer
+ * and Aspect ratio. Extras includes jump, third-person, in-game NETRICSA,
  * alternate weapons, automap, HUD style, first-person weapon bobbing and surface decals.
  * No separate music toggle. Original title/main/
  * single-player/difficulty/credits/Scores/name-entry pages. The frontend owns

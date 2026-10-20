@@ -311,6 +311,8 @@ static int move(void *context,SsaProjectile *p,int32_t x,int32_t y) {
      * Let its cannonball leave the shooter, without hiding any other contact
      * or extending immunity after their current bounds have separated. */
     const SsaEntity *source=p->source;
+    if(source && source->owner==w && ssa_combat_boss_projectile(c->r->combat,p->entity,source))
+        return ssa_world_try_move_ignoring(w,p->entity,x,y,source);
     if(!p->owner && p->entity->type==0x67 && source && source->owner==w && source->type==0xd6 &&
        ssa_entity_contact(p->entity,source,p->entity->body.x,p->entity->body.y)==0)
         return ssa_world_try_move_ignoring(w,p->entity,x,y,source);
@@ -364,6 +366,10 @@ static int freeze(void *context,SsaProjectile *p,SsaEntity *target) {
     for(i=0;i<100;++i) if(target==&s->actors[i].entity && s->actors[i].owned) break;
     if(i==100 || !registered(r,target)) return -1;
     s->actors[i].parameter34=30;s->actors[i].script.flags=target->body.flags;
+    if(r->combat->prion_balance && s->actors[i].activation.health>0) {
+        int health=s->actors[i].activation.health;
+        s->actors[i].activation.health=(int16_t)(health>INT16_MAX/2?INT16_MAX:health*2);
+    }
     result=allocate(r,&f);if(result<0 || !f) return result;
     f->source=target;f->entity->type=0xe2;f->entity->body.x=target->body.x;
     f->entity->body.y=target->body.y;
@@ -420,9 +426,19 @@ static int controller_event(void *context,const SsaProjectileController *control
 }
 static int create_child(void *context,const SsaProjectileCreateRequest *request,SsaProjectile **out) {
     StepCall *c=context;SsaProjectileCreateOps ops={allocate,insert_create,c->r};
+    SsaEntity *boss=NULL;
+    /* Original children point at their parent projectile, which can disappear
+     * or have its pool slot reused. Preserve the firing boss independently of
+     * that parent, including further generations of a splitting volley. */
+    for(unsigned i=0;i<100;++i)if(live(c->r,i) && c->r->projectiles[i].entity==request->source){
+        const SsaProjectile *parent=&c->r->projectiles[i];
+        if(ssa_combat_boss_projectile(c->r->combat,parent->entity,parent->source))boss=parent->source;
+        break;
+    }
     int result=ssa_projectile_create(&c->r->creator,request,c->r->math,&ops,out),slot;
     if(*out) {
         slot=slot_of(c->r,*out);if(slot<0)return -1;
+        if(boss)(*out)->source=boss;
         sync_out(c->r,(unsigned)slot);
     }
     return result;

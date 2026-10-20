@@ -1,0 +1,80 @@
+{
+    "version":  "0.8.0-alpha.3",
+    "date":  "2026-10-21",
+    "result":  "pass",
+    "archive":  {
+                    "name":  "ss-advance-v0.8.0-alpha.3-windows-x64.zip",
+                    "sha256":  "d9a2a6707efe44d50271fbcbebbb800a6b6d0904bf069cf0925a3f31f679d267",
+                    "entries":  [
+                                    "play-native.cmd",
+                                    "README.md",
+                                    "VERSION",
+                                    "build/native-windows/Release/ssa_native_game.exe",
+                                    "orig/README.md",
+                                    "scripts/install-soundfont.ps1",
+                                    "soundfonts/README.md",
+                                    "third_party/TinySoundFont/LICENSE",
+                                    "third_party/TinySoundFont/README.md",
+                                    "third_party/TinySoundFont/REVISION"
+                                ],
+                    "rom_included":  false,
+                    "soundfont_included":  false
+                },
+    "missing_rom_rejected":  true,
+    "packaged_launch":  {
+                            "vulkan":  {
+                                           "result":  "pass",
+                                           "frames":  30,
+                                           "health":  100,
+                                           "entities":  15,
+                                           "score":  0,
+                                           "hidden_window":  true,
+                                           "render_width":  640,
+                                           "render_height":  480,
+                                           "world_rays":  0,
+                                           "initial_width":  640,
+                                           "initial_height":  480,
+                                           "pitch":  0,
+                                           "buffered_presents":  1,
+                                           "presentation_samples":  0
+                                       },
+                            "software-fallback":  {
+                                                      "result":  "pass",
+                                                      "frames":  30,
+                                                      "health":  100,
+                                                      "entities":  15,
+                                                      "score":  0,
+                                                      "hidden_window":  true,
+                                                      "render_width":  640,
+                                                      "render_height":  480,
+                                                      "world_rays":  640,
+                                                      "initial_width":  640,
+                                                      "initial_height":  480,
+                                                      "pitch":  0,
+                                                      "buffered_presents":  1,
+                                                      "presentation_samples":  0
+                                                  },
+                            "gba":  {
+                                        "result":  "pass",
+                                        "frames":  30,
+                                        "health":  100,
+                                        "entities":  15,
+                                        "score":  0,
+                                        "hidden_window":  true,
+                                        "render_width":  240,
+                                        "render_height":  160,
+                                        "world_rays":  0,
+                                        "initial_width":  240,
+                                        "initial_height":  160,
+                                        "pitch":  0,
+                                        "buffered_presents":  1,
+                                        "presentation_samples":  0
+                                    }
+                        },
+    "focused_ctest":  {
+                          "passed":  8,
+                          "failed":  0
+                      },
+    "website_checks":  "Six Node suites and four Python suites",
+    "campaign_playthrough":  "Not rerun; manual campaign validation remains with the user."
+}

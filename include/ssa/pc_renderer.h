@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "ssa/water.h"
+#include "ssa/pc_hardware.h"
 struct SsaNativeGame;
 struct SsaPcRayHit;
 struct SsaPcRayLine;
@@ -24,6 +25,8 @@ typedef struct SsaPcRenderer {
     uint64_t geometry_builds,sky_builds;
     SsaWaterRender water;
     struct SsaPcRenderer *reflection;
+    const SsaPcHardware *hardware; /* Borrowed, survives until free/detach. */
+    int hardware_error;
 } SsaPcRenderer;
 /* Zero-init. Atomic resize: previous buffers remain valid on failure. */
 int ssa_pc_renderer_resize(SsaPcRenderer *,unsigned width,unsigned height);

@@ -131,6 +131,7 @@ int main(int argc,char **argv)
     static const uint16_t headings[]={0,12345,32768,54321};
     CHECK(argc==2 && g && saved && rom);f=fopen(argv[1],"rb");CHECK(f);
     CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);CHECK(ssa_native_game_init(g,rom,0x800000,0)==1);
+    g->vertical_aim=1;
     CHECK(ssa_weapon_aim_init(&query,&g->world,&g->math)==1);CHECK(ssa_pc_renderer_resize(&renderer,640,480)==1);
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     CHECK(ssa_pc_input_sensitivity(&g->input,1)==1);

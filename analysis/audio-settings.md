@@ -1,11 +1,17 @@
 # PC Settings and alternate music
 
-Options contains Settings, Extras, Language, Clear Data and Credits, in that order. The redundant
+Options contains Settings, Graphics, Extras, Clear Data and Credits, in that order. The redundant
 Music On/Off row is removed; use Music volume0% to silence music. Existing
-option IDs1..4 are retained internally; Extras is ID5, with keyboard navigation stopping at
-the first/last visible rows and mouse rows packed together. Settings opens a separate extensible page
-with Display mode (Fullscreen / Windowed), Renderer (Software / GBA), Music style (Original / SoundFont
-/ MIDI), Music volume and Sounds volume, followed by Back.
+option IDs for Credits, Clear Data, Settings and Extras remain stable; Graphics is ID6.
+Keyboard navigation stops at the first/last visible row. Settings contains Language,
+Field of view, Music style (Original / SoundFont / MIDI), Music volume and Sounds
+volume, followed by Back. Graphics contains Display mode (Fullscreen / Windowed),
+Renderer (Software / GBA / available Vulkan) and Aspect ratio, followed by Back.
+Language retains original names and savefile persistence. FOV stays in Settings
+and is disabled in GBA mode; Aspect ratio is disabled in Graphics in GBA mode.
+Current grid rows: Settings Language24, FOV48/bar56, Music style80, Music volume96/bar104,
+Sounds volume120/bar128; Graphics rows24/40/56. Both Back rows remain144.
+Earlier layout notes below are historical.
 Both volumes show a bar and percentage, bounded0..100. Up/Down selects a row;
 Left/Right changes volume by5 points or toggles a choice. Enter toggles a choice or
 raises a volume. Click a bar to set its value. Back/Esc returns to Options.
@@ -39,7 +45,8 @@ override it. Banks are loaded at launch; restart after adding a missing file.
 Saved unavailable styles fall back to Original without changing volume values.
 
 Defaults are borderless Fullscreen, Software, Jump Off, Third-person On, In-game NETRICSA On,
-Original,100%,100%. Renderer selects the actual
+Original,80% music,100% sounds. Existing saved volumes are retained; fresh
+settings and Clear Data use these defaults. Renderer selects the actual
 full-resolution PC renderer or native240x160 GBA reference renderer. Settings
 apply immediately; --original-renderer overrides a saved choice at launch.
 Jump Off suppresses new Space jumps at the frontend input boundary, without
@@ -297,3 +304,17 @@ row, at Y16..80. All nine choices are visible together; the old scrolling
 state and arrows are removed. Pointer hit regions follow the same8-pixel rows.
 The title remains at Y0 and Back at Y144. Existing keyboard order, values,
 localized labels and settings serialization are unchanged.
+
+Vertical aim (2026-10-20) adds a tenth Extras choice; Back stays at Y144.
+It defaults On, including when loading v1..12 preferences. Existing v13 choices
+are retained. Settings v13 keeps
+the16-byte record and existing field encodings; byte7 (the old signature's NUL)
+is now flags, with bit0 for vertical aim and all other bits rejected. CRC still
+covers bytes0..11. Older files must retain zero in byte7. Native settings
+application clears pitch, free-aim state and queued vertical motion when this
+option is Off or the renderer is GBA. See `vertical-aim.md`.
+
+Extras order (2026-10-20): HUD, Vertical aim, Third-person, Jump, Automap,
+In-game NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water
+reflections. Rows remain Y16..88 in8-pixel increments. Display order maps to
+stable settings/translation IDs; the saved format and defaults do not change.

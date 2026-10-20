@@ -8,7 +8,7 @@ typedef struct CampaignAudio {SsaAudio *mixer;unsigned errors,boss_music,post_bo
 static void campaign_audio_play(void *p,unsigned id){CampaignAudio *a=p;if(id==0x60 || id==0x65)++a->boss_launches;if(ssa_audio_play(a->mixer,id)<0)++a->errors;}
 static void campaign_audio_stop(void *p,unsigned id){CampaignAudio *a=p;if(ssa_audio_stop(a->mixer,id)<0)++a->errors;}
 static void campaign_audio_source(void *p,SsaAudioSourceCommand command,unsigned id,uint64_t source,const SsaAudioPoint *point){
- CampaignAudio *a=p;if(command==SSA_AUDIO_SOURCE_PLAY && (id==0x60 || id==0x65))++a->boss_launches;
+ CampaignAudio *a=p;if((command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_ENEMY_PLAY) && (id==0x60 || id==0x65))++a->boss_launches;
  if(ssa_audio_source(a->mixer,command,id,source,point)<0)++a->errors;
 }
 static void campaign_audio_music(void *p,unsigned command,unsigned level){CampaignAudio *a=p;

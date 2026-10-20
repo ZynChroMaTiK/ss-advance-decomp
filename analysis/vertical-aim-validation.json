@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-20",
+  "result": "pass",
+  "default": "on",
+  "settings_version": 13,
+  "settings_bytes": 16,
+  "legacy_versions": "1..12, vertical aim defaults on; v13 preserves saved choices",
+  "windows_static_release_build": "pass",
+  "focused_ctest": {"passed": 8, "failed": 0},
+  "native_settings_checks": 1236,
+  "settings_field_checks": 140,
+  "gba_aim": {"checks": 1289, "projected_views": 9, "bob_views": 192, "maximum_error_pixels": 1.309705},
+  "native_autoaim": {"checks": 1289, "projected_views": 9, "bob_views": 192, "maximum_error_pixels": 0.002849},
+  "enabled_chase_aim": {"checks": 9944, "aligned_views": 232, "maximum_4k_error_pixels": 0.212615},
+  "portable_menu_audio_checks": 39065,
+  "windows_settings_checks": 23670,
+  "campaign_playthrough_run": false
+}

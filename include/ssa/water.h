@@ -20,7 +20,9 @@ typedef struct SsaWaterRender {
     uint32_t *mask;
     size_t capacity;
     unsigned width,height,passes;
-    uint8_t blended[65536],valid[8192];
+    /* RGB555 cache: nearest in the first half, reflection dither alternate
+     * in the second. Validity halves follow the same layout. */
+    uint8_t blended[65536],valid[8192],reflection_weight[32768];
     uint64_t actor_pixels;
 } SsaWaterRender;
 int ssa_water_scene_init(SsaWaterScene *,const SsaMapTextureBindings *,const SsaMathTables *,const SsaSkyAssets *,const uint16_t palette[256]);
@@ -31,8 +33,9 @@ void ssa_water_free(SsaWaterRender *);
  * No reflection rays or gameplay queries/RNG. */
 uint16_t ssa_water_rgb(SsaWaterRender *,uint8_t color,double x,double y,double height,double distance,size_t pixel);
 uint8_t ssa_water_index(SsaWaterRender *,uint8_t color,double x,double y,double height,double distance,size_t pixel);
-uint16_t ssa_water_multiply(const SsaWaterRender *,uint32_t mask,uint16_t reflected);
+uint16_t ssa_water_blend(const SsaWaterRender *,uint32_t mask,uint16_t reflected);
 uint8_t ssa_water_palette_index(SsaWaterRender *,uint16_t rgb);
+uint8_t ssa_water_reflection_index(SsaWaterRender *,uint16_t rgb,unsigned x,unsigned y);
 int ssa_water_glint(const SsaSurfaceDecals *,double x,double y,double distance,uint32_t frame);
 int ssa_water_ripple(const SsaSurfaceDecals *,double x,double y,double distance,uint32_t frame);
 int ssa_water_reference(SsaWaterRender *,const SsaPlanePool *,const struct SsaRenderCamera *,uint8_t *,size_t);

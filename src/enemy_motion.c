@@ -79,6 +79,7 @@ static int crowd_step(SsaEnemyCrowd *c,SsaWorld *w,SsaEntity *e,int32_t dx,int32
     if(!blocker || blocker->type<0xcd || blocker->type>0xd8 || (blocker->body.flags&0x10)) {
         c->blocker=NULL;return 0;
     }
+    if(!c->contact)c->contact=w->blocking_entity;
     distance=absolute(dx)>absolute(dy)?absolute(dx):absolute(dy);
     if(!distance)return 0;
     if(c->blocker!=blocker || !c->side) {
@@ -111,7 +112,7 @@ int ssa_enemy_crowd_move(SsaEnemyCrowd *c,SsaWorld *w,SsaEntity *e,int32_t x,int
     dx=(int64_t)x-e->body.x;dy=(int64_t)y-e->body.y;
     distance=absolute(dx)>absolute(dy)?absolute(dx):absolute(dy);
     steps=(unsigned)((distance+4*65536-1)/(4*65536));if(!steps)steps=1;
-    c->updating=1;
+    c->updating=1;c->contact=NULL;
     for(i=1;i<=steps;++i){int64_t nx=dx*i/steps,ny=dy*i/steps;
         result=crowd_step(c,w,e,(int32_t)(nx-px),(int32_t)(ny-py));
         if(result!=1)break;

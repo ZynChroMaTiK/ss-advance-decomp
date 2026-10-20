@@ -1,5 +1,7 @@
 #include "ssa/pc_scene.h"
 #include "ssa/native_game.h"
+#include "ssa/settings.h"
+#include <math.h>
 #include <float.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -10,7 +12,15 @@
 
 typedef struct SsaPcRayHit {double distance,u;unsigned line;} SsaPcRayHit;
 typedef struct SsaPcRayLine {double ax,ay,vx,vy,numerator;} SsaPcRayLine;
-typedef struct Camera {double x,y,z,sine,cosine,focal,ps,pc,sky_shift,clip_z;unsigned clip,top,bottom;uint32_t palette[256];const SsaSurfaceDecals *decals;SsaWaterRender *water;} Camera;
+typedef struct Camera {double x,y,z,sine,cosine,focal,zoom,ps,pc,sky_shift,clip_z;unsigned clip,top,bottom;uint32_t palette[256];const SsaSurfaceDecals *decals;SsaWaterRender *water;} Camera;
+double ssa_pc_scene_fov_scale(unsigned offset)
+{
+    /*70 is the rounded original horizontal angle at3:2. Keep its exact
+     * projection; other choices are calibrated relative to that same view. */
+    const double radians=3.14159265358979323846/360.0;
+    if(offset==SSA_FOV_DEFAULT_OFFSET || offset>SSA_FOV_RANGE)return 1.0;
+    return tan(70.0*radians)/tan((SSA_FOV_MIN+offset)*radians);
+}
 static void geometry_free(SsaPcRenderer *);
 static unsigned u16(const uint8_t *p){return p[0]|(unsigned)p[1]<<8;}
 static int s16(const uint8_t *p){unsigned n=u16(p);return n<32768?(int)n:(int)n-65536;}
@@ -81,6 +91,7 @@ static size_t intersections(SsaPcRenderer *r,const SsaMapAssets *m,double dx,dou
 }
 static unsigned sky_column(const SsaNativeGame *g,const SsaPcRenderer *r,unsigned x)
 {
+    /* Backdrop artwork keeps the original70-degree framing at every world FOV. */
     double col=(double)g->pc_camera.heading*640.0/65536.0+60.0+
         ((double)x+0.5-(double)r->width/2)*80.0/r->height;
     return wrap(col,640);
@@ -223,73 +234,194 @@ static void actor(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c,const 
         }
     }
 }
+typedef struct ActorOrder {double depth;unsigned index;} ActorOrder;
+static int actor_compare(const void *left,const void *right)
+{
+    const ActorOrder *a=left,*b=right;
+    return a->depth>b->depth?-1:a->depth<b->depth?1:a->index<b->index?-1:a->index>b->index;
+}
+static void actor_order(const SsaNativeGame *g,const Camera *c,unsigned order[100],int sorted)
+{
+    ActorOrder actors[100];unsigned n=g->spawn.pool.active_count,i,first,last,j;
+    for(i=0;i<n;++i)order[i]=i;
+    if(!sorted)return;
+    for(i=0;i<n;++i){const SsaEntity *e=g->sources[i].entity;
+        actors[i]=(ActorOrder){e?(e->body.x/65536.0-c->x)*c->sine+
+            (e->body.y/65536.0-c->y)*c->cosine:-DBL_MAX,i};}
+    /* GBA paints far-to-near, with later submissions winning depth ties.
+     * Software uses the same later-wins rule within0.001 units. Billboards
+     * are parallel in world XY: sort before pitch, not by their height. */
+    qsort(actors,n,sizeof(*actors),actor_compare);
+    for(first=0;first<n;first=last){
+        for(last=first+1;last<n && actors[first].depth-actors[last].depth<=0.001;++last){}
+        for(i=first+1;i<last;++i){ActorOrder a=actors[i];j=i;
+            while(j>first && actors[j-1].index>a.index){actors[j]=actors[j-1];--j;}actors[j]=a;}
+    }
+    for(i=0;i<n;++i)order[i]=actors[i].index;
+}
 /* The Classic240x160 layer is a layout atlas. Its disjoint regions retain
  * pixel-art scaling while their anchors follow the actual viewport edges.
  * Header panels follow the top edge, and inbox movement interpolates between
  * the right-edge anchor and the same upper-center anchor as analysis. */
 #include "pc_renderer_pitch.inc"
+/* GPU rasterization returns visible plane coordinates for the existing exact
+ * palette/decal/water rules. HUD and gameplay remain outside the backend. */
+typedef struct HardwareShade {
+    SsaPcRenderer *r;const Camera *c;const SsaPcSample *samples;HardwareRowStats *stats;
+} HardwareShade;
+static void hardware_shade(void *context,unsigned first,unsigned end)
+{
+    const HardwareShade *job=context;SsaPcRenderer *r=job->r;const Camera *c=job->c;
+    const SsaPcSample *samples=job->samples;unsigned y;
+    for(y=first;y<end;++y){size_t at=(size_t)y*r->width,row_end=at+r->width;unsigned actors=0,walls=0;
+      double height_scale=(r->height/2.0-y-0.5)/c->focal*c->pc+c->ps;
+      for(;at<row_end;++at){const SsaPcSample *s=&samples[at];unsigned code=(unsigned)s->code,color=code&255,decals=(code>>8)&3;
+        r->depth[at]=s->z;
+        actors+=(code&2048)!=0;walls+=(code&6144)==4096;
+        /* ssa_water_begin already cleared the complete mask, including actors. */
+        if(decals && (c->water || c->decals)){double z=c->z+height_scale*s->z;
+            int height=(int)floor(z+0.5);
+            if(decals==1 && c->water && ssa_surface_decals_water(c->water->decals,color,height))
+                r->pixels[at]=rgb(ssa_water_rgb(c->water,(uint8_t)color,s->u,s->v,height,s->z,at));
+            else if(c->decals && !(decals==1 && ssa_surface_decals_water(c->decals,color,height)))
+                r->pixels[at]=c->palette[ssa_surface_decals_sample(c->decals,decals-1,(uint8_t)color,s->u,s->v,s->z)];
+        }
+      }
+      job->stats[y]=(HardwareRowStats){actors,walls};
+    }
+}
+static int hardware_finish(SsaPcRenderer *r,const Camera *c)
+{
+    const SsaPcSample *samples;SsaPcGeometry *cache=r->geometry;unsigned y;
+    if(cache->row_capacity<r->height){HardwareRowStats *stats;
+        if(SIZE_MAX/(size_t)r->height<sizeof(*stats))return -1;
+        stats=malloc((size_t)r->height*sizeof(*stats));if(!stats)return -1;
+        free(cache->row_stats);cache->row_stats=stats;cache->row_capacity=r->height;
+    }
+    if(r->hardware_error || r->hardware->end(r->hardware->context,r,&samples)<0)return -1;
+    /* One read of each sample supplies depth, statistics and effects. Each
+     * job owns its rows and counters; reduce only after synchronous dispatch. */
+    {HardwareShade job={r,c,samples,cache->row_stats};
+        if(r->hardware->rows)r->hardware->rows(r->hardware->context,c->top,c->bottom,hardware_shade,&job);
+        else hardware_shade(&job,c->top,c->bottom);
+    }
+    for(y=c->top;y<c->bottom;++y){r->actor_pixels+=cache->row_stats[y].actors;r->wall_pixels+=cache->row_stats[y].walls;}
+    return 1;
+}
+/* Center-aligned bilinear reconstruction of the reflection buffer.
+ * Clamp at the image edges, including a1-pixel target or odd viewport size. */
+static unsigned reflection_axis(unsigned pixel,unsigned output,unsigned size,unsigned *weight)
+{
+    int64_t at=(int64_t)(((uint64_t)pixel*2+1)*size*128/output)-128;
+    if(at<=0){*weight=0;return 0;}
+    if((uint64_t)at>=(uint64_t)(size-1)*256){*weight=0;return size-1;}
+    *weight=(unsigned)at&255;return (unsigned)(at/256);
+}
+static uint32_t reflection_sample(const SsaPcRenderer *r,unsigned x,unsigned y,unsigned fx,unsigned fy)
+{
+    unsigned x1=x+(fx!=0),y1=y+(fy!=0),channel;uint32_t out=0;
+    const uint32_t *a=r->pixels+(size_t)y*r->width,*b=r->pixels+(size_t)y1*r->width;
+    for(channel=0;channel<24;channel+=8){
+        unsigned top=((a[x]>>channel)&255)*(256-fx)+((a[x1]>>channel)&255)*fx;
+        unsigned bottom=((b[x]>>channel)&255)*(256-fx)+((b[x1]>>channel)&255)*fx;
+        out|=((top*(256-fy)+bottom*fy+32768)>>16)<<channel;
+    }
+    return out;
+}
+typedef struct ReflectionBlend {
+    const SsaPcRenderer *r;SsaWaterRender *water;unsigned key;
+    uint32_t *output;uint8_t *indexed;
+} ReflectionBlend;
+static void reflection_blend_rows(void *context,unsigned first,unsigned end)
+{
+    const ReflectionBlend *job=context;const SsaPcRenderer *r=job->r;SsaWaterRender *water=job->water;
+    unsigned y,width=r->width,height=r->height;
+    for(y=first;y<end;++y){unsigned x,fy;
+        unsigned sy=reflection_axis(water->height-1-y,water->height,height,&fy);
+        size_t p=(size_t)y*water->width;
+        for(x=0;x<water->width;++x,++p)if((water->mask[p]>>24) && (water->mask[p]&65535)==job->key){
+            uint32_t color;uint16_t reflected,blend;
+            /* Native pixels already align one-to-one; no resampling needed. */
+            if(width==water->width && height==water->height)
+                color=r->pixels[(size_t)(height-1-y)*width+x];
+            else {unsigned fx,sx=reflection_axis(x,water->width,width,&fx);
+                color=reflection_sample(r,sx,sy,fx,fy);}
+            reflected=(uint16_t)(((color>>19)&31)|(((color>>11)&31)<<5)|(((color>>3)&31)<<10));
+            blend=ssa_water_blend(water,water->mask[p],reflected);
+            if(job->output)job->output[p]=rgb(blend);
+            if(job->indexed)job->indexed[p]=ssa_water_reflection_index(water,blend,x,y);
+        }
+    }
+}
 int ssa_pc_renderer_reflect(SsaPcRenderer **owner,const SsaNativeGame *g,const SsaRenderCamera *view,
     int pitch,SsaWaterRender *water,uint32_t *output,uint8_t *indexed)
 {
     uint8_t seen[8192]={0};size_t at,count;unsigned width,height;SsaPcRenderer *r;
-    if(!owner || !g || !view || !water || (!output && !indexed))return -1;
+    if(!owner || !g || !view || !water || (!output && !indexed) || g->spawn.pool.active_count>100)return -1;
     if(!water->reflections)return 1;
     count=(size_t)water->width*water->height;
     if(!water->mask || count>water->capacity)return -1;
     for(at=0;at<count && !(water->mask[at]>>24);++at){}
     if(at==count)return 1; /* No visible reflective water: no second pass. */
+    /* Native reflections match the viewport; GBA retains its240x160 view. */
     width=indexed?240:water->width;height=indexed?160:water->height;
     if(!*owner){*owner=calloc(1,sizeof(**owner));if(!*owner)return -1;}
     r=*owner;if(r->updating || ssa_pc_renderer_resize(r,width,height)<0)return -1;
-    for(;at<count;++at){unsigned key=water->mask[at]&65535,i,y,first,last;size_t p;Camera c={0};int h;
+    for(;at<count;++at){unsigned key=water->mask[at]&65535,i,first,last;size_t p;int h;
         int32_t sine,cosine;
         if(!(water->mask[at]>>24) || (seen[key>>3]&(1u<<(key&7))))continue;
+        /* Initialize the palette/camera once per reflected height, not once
+         * for every stencil pixel visited while searching for a new height. */
+        Camera c={0};unsigned order[100],draw;
         seen[key>>3]|=(uint8_t)(1u<<(key&7));h=key<32768?(int)key:(int)key-65536;
-        /* Only reflected rows sampled by visible water can affect this frame.
-         * Keep the full projection and each scanline's interpolation unchanged. */
+        /* Include both rows needed by bilinear sampling, but skip all other
+         * rows. Projection/FOV still covers the entire mirrored view. */
         first=last=(unsigned)(at/water->width);
         for(p=at+1;p<count;++p)if((water->mask[p]>>24) && (water->mask[p]&65535)==key)
             last=(unsigned)(p/water->width);
-        c.top=(unsigned)(((uint64_t)(water->height-1-last)*2+1)*height/(2*(uint64_t)water->height));
-        c.bottom=1+(unsigned)(((uint64_t)(water->height-1-first)*2+1)*height/(2*(uint64_t)water->height));
+        {unsigned weight;
+            c.top=reflection_axis(water->height-1-last,water->height,height,&weight);
+            c.bottom=reflection_axis(water->height-1-first,water->height,height,&weight)+1;
+            if(weight)++c.bottom;
+        }
         c.x=view->x/65536.0;c.y=view->y/65536.0;c.z=2.0*h-view->z/65536.0;
         c.clip=1;c.clip_z=h;c.decals=g->surface_decals_enabled?&g->surface_decals:NULL;
         ssa_sincos(&g->math,view->heading,&sine,&cosine);c.sine=sine/65536.0;c.cosine=cosine/65536.0;
         ssa_sincos(&g->math,(uint16_t)-pitch,&sine,&cosine);c.ps=sine/65536.0;c.pc=cosine/65536.0;
+        c.zoom=g->gba_view?1.0:ssa_pc_scene_fov_scale(g->fov_offset);
         c.focal=height*(0x55b05a/65536.0)/80.0;
         c.sky_shift=c.pc>0?c.focal*c.ps/c.pc:(c.ps>=0?(double)height:-(double)height);
+        c.focal*=c.zoom;
         for(i=0;i<256;++i)c.palette[i]=rgb(g->palette_effect.colors[i]);
         r->updating=1;r->rays=r->wall_pixels=r->actor_pixels=0;
-        for(p=(size_t)c.top*width;p<(size_t)c.bottom*width;++p)r->depth[p]=FLT_MAX;
+        if(!r->hardware)for(p=(size_t)c.top*width;p<(size_t)c.bottom*width;++p)r->depth[p]=FLT_MAX;
         if(pitched_world(r,g,&c)<0){r->updating=0;return -1;}
-        for(i=0;i<g->spawn.pool.active_count;++i){SsaActorSource s=g->sources[i];SsaEntity display;
+        actor_order(g,&c,order,r->hardware!=NULL);
+        for(draw=0;draw<g->spawn.pool.active_count;++draw){SsaActorSource s;SsaEntity display;i=order[draw];s=g->sources[i];
             if(s.flags&0x2000)continue; /* HUD and fixed-screen flashes never reflect. */
             if(s.entity==&g->players[0].entity)s.flags&=UINT16_C(0xff7f);
             if(g->source_z_offsets[i] && s.entity){int64_t z=(int64_t)s.entity->body.z+g->source_z_offsets[i];
                 display=*s.entity;display.body.z=z<INT32_MIN?INT32_MIN:z>INT32_MAX?INT32_MAX:(int32_t)z;s.entity=&display;}
             pitched_actor(r,g,&c,&s);
             if(s.flags&16){s.animation=(uint16_t)(s.animation+5*(s.owner+1));pitched_actor(r,g,&c,&s);}}
+        if(r->hardware && hardware_finish(r,&c)<0){r->updating=0;return -1;}
         r->updating=0;++water->passes;water->actor_pixels+=r->actor_pixels;
-        for(y=first;y<=last;++y){unsigned x;
-            unsigned sy=(unsigned)(((uint64_t)(water->height-1-y)*2+1)*height/(2*(uint64_t)water->height));
-            const uint32_t *row=r->pixels+(size_t)sy*width;
-            for(x=0,p=(size_t)y*water->width;x<water->width;++x,++p)if((water->mask[p]>>24) && (water->mask[p]&65535)==key){
-            unsigned sx=width==water->width?x:(unsigned)(((uint64_t)x*2+1)*width/(2*(uint64_t)water->width));
-            uint32_t color=row[sx];
-            uint16_t reflected=(uint16_t)(((color>>19)&31)|(((color>>11)&31)<<5)|(((color>>3)&31)<<10));
-            uint16_t blend=ssa_water_multiply(water,water->mask[p],reflected);
-            if(output)output[p]=rgb(blend);
-            if(indexed)indexed[p]=ssa_water_palette_index(water,blend);
-        }}
+        {ReflectionBlend job={r,water,key,output,indexed};
+            /* Indexed GBA output updates a shared palette cache, so retains
+             * serial composition. RGB jobs write disjoint output rows only. */
+            if(r->hardware && r->hardware->rows && !indexed)
+                r->hardware->rows(r->hardware->context,first,last+1,reflection_blend_rows,&job);
+            else reflection_blend_rows(&job,first,last+1);
+        }
     }
     return 1;
 }
 int ssa_pc_scene_draw(SsaPcRenderer *r,const SsaNativeGame *g)
 {
-    Camera c={0};int32_t sine,cosine;unsigned x,i;size_t at,n;
+    Camera c={0};int32_t sine,cosine;unsigned x,i,draw,order[100];size_t at,n;
     if(!r || r->updating || !r->pixels || !r->depth || !g || !g->loaded || g->game.updating ||
        g->world.query_active || g->error_line || !g->map.data || g->pc_camera.sector<0 ||
-       (unsigned)g->pc_camera.sector>=g->map.sector_count)return -1;
+       (unsigned)g->pc_camera.sector>=g->map.sector_count || g->spawn.pool.active_count>100)return -1;
     if(r->hit_capacity<g->map.line_count){SsaPcRayHit *h=malloc((size_t)g->map.line_count*sizeof(*h));if(!h)return -1;
         free(r->hits);r->hits=h;r->hit_capacity=g->map.line_count;}
     r->updating=1;r->rays=r->wall_pixels=r->actor_pixels=0;
@@ -302,28 +434,47 @@ int ssa_pc_scene_draw(SsaPcRenderer *r,const SsaNativeGame *g)
             g->frame_game.counter,g->surface_decals_enabled,g->water_reflections,r->width,r->height)<0){r->updating=0;return -1;}
         c.water=&r->water;}
     ssa_sincos(&g->math,g->pc_camera.heading,&sine,&cosine);c.sine=sine/65536.0;c.cosine=cosine/65536.0;
+    c.zoom=ssa_pc_scene_fov_scale(g->fov_offset);
     c.focal=r->height*(0x55b05a/65536.0)/80.0;
     ssa_sincos(&g->math,(uint16_t)g->render_pitch,&sine,&cosine);
     c.ps=sine/65536.0;c.pc=cosine/65536.0;
-    /* Positive pitch looks up: the horizon and backdrop move down. Normal
+    /* Keep backdrop pitch movement at the original focal distance. Positive
+     * pitch looks up: the backdrop moves down. Normal
      * free look is limited to80 degrees; guard vertical/behind-camera inputs. */
     c.sky_shift=c.pc>0?c.focal*c.ps/c.pc:(c.ps>=0?(double)r->height:-(double)r->height);
+    c.focal*=c.zoom;
     for(i=0;i<256;++i)c.palette[i]=rgb(g->palette_effect.colors[i]);
     n=(size_t)r->width*r->height;
-    if(!g->render_pitch)memset(r->pixels,0,n*sizeof(*r->pixels));
-    for(at=0;at<n;++at)r->depth[at]=FLT_MAX;
-    if(g->render_pitch){
+    /* Hardware replaces every consumed depth sample; flat_sky initializes
+     * all colors before upload. Only software needs the initial depth clear. */
+    if(!r->hardware){
+        if(!g->render_pitch)memset(r->pixels,0,n*sizeof(*r->pixels));
+        for(at=0;at<n;++at)r->depth[at]=FLT_MAX;
+    }
+    if(g->render_pitch || r->hardware){
         if(pitched_world(r,g,&c)<0){r->updating=0;return -1;}
     }else {
         if(prepare_ray_lines(r,&g->map,&c)<0){r->updating=0;return -1;}
         for(x=0;x<r->width;++x)column(r,g,&c,x);
     }
-    if(c.water && ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,c.water,r->pixels,NULL)<0){r->updating=0;return -1;}
-    for(i=0;i<g->spawn.pool.active_count;++i){SsaActorSource s=g->sources[i];SsaEntity display;
+    if(r->reflection)r->reflection->hardware=r->hardware;
+    if(!r->hardware && c.water && ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,c.water,r->pixels,NULL)<0){r->updating=0;return -1;}
+    actor_order(g,&c,order,r->hardware!=NULL);
+    for(draw=0;draw<g->spawn.pool.active_count;++draw){SsaActorSource s;SsaEntity display;i=order[draw];s=g->sources[i];
         if(g->source_z_offsets[i] && s.entity){int64_t z=(int64_t)s.entity->body.z+g->source_z_offsets[i];
             display=*s.entity;display.body.z=z<INT32_MIN?INT32_MIN:z>INT32_MAX?INT32_MAX:(int32_t)z;s.entity=&display;}
-        if(g->render_pitch && !(s.flags&0x2000))pitched_actor(r,g,&c,&s);else actor(r,g,&c,&s);
+        if(r->hardware && (s.flags&0x2000))continue; /* Fixed-screen effects follow GPU readback. */
+        if((g->render_pitch || r->hardware) && !(s.flags&0x2000))pitched_actor(r,g,&c,&s);else actor(r,g,&c,&s);
         if(s.flags&16){s.animation=(uint16_t)(s.animation+5*(s.owner+1));
-            if(g->render_pitch && !(s.flags&0x2000))pitched_actor(r,g,&c,&s);else actor(r,g,&c,&s);}}
+            if((g->render_pitch || r->hardware) && !(s.flags&0x2000))pitched_actor(r,g,&c,&s);else actor(r,g,&c,&s);}}
+    if(r->hardware){
+        if(hardware_finish(r,&c)<0){r->updating=0;return -1;}
+        if(c.water){
+            if(!r->reflection){r->reflection=calloc(1,sizeof(*r->reflection));if(!r->reflection){r->updating=0;return -1;}}
+            r->reflection->hardware=r->hardware;
+            if(ssa_pc_renderer_reflect(&r->reflection,g,&g->pc_camera,g->render_pitch,c.water,r->pixels,NULL)<0){r->updating=0;return -1;}
+        }
+        for(i=0;i<g->spawn.pool.active_count;++i)if(g->sources[i].flags&0x2000)actor(r,g,&c,&g->sources[i]);
+    }
     r->updating=0;return 1;
 }

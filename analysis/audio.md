@@ -401,10 +401,12 @@ runs before the level-end sound clear, so terminal cleanup cannot hide the leak.
 The original CD/CE controllers' canonical loop owners remain untouched for
 gameplay/differential parity. With the source-capable sink, its single-owner
 presentation callbacks are superseded by per-emitter checks of the original
-phase, distance and dying-state conditions. Every qualifying CD plays0x3A and
-every qualifying CE plays0x4E, moving and stopping independently. Original
-hysteresis is preserved: CD starts at1023 and continues through1024; CE starts
-at399 and continues through400. Local weapon stop events target the player source,
+phase and dying-state conditions, with PC sound distances extended fourfold.
+Every qualifying CD plays0x3A and every qualifying CE plays0x4E, moving and
+stopping independently. One-unit hysteresis is retained at the extended range:
+CD (kamikaze) starts through4095 and continues through4096; CE starts through1599
+and continues through1600. The recovered controllers' gameplay/navigation
+distances remain unchanged. Local weapon stop events target the player source,
 so they cannot stop an enemy's copy of the same sound. Legacy sinks retain the
 old canonical CD/CE callback paths. Unbind/teardown retires owned loops. Other
 continuous enemy sequences3D/51/5F also receive loop ownership if emitted;
@@ -414,16 +416,29 @@ retirement stops them instead of preserving them as finite one-shot tails.
 original player camera, independent of chase framing and vertical aim. Stereo
 balance combines with each sequence track's own pan. At the listener's right,
 the left channel retains25% of the right channel's level; front/back/vertical
-sources remain balanced. Every positioned sound now uses gain
+sources remain balanced. Ordinary positioned sounds use gain
 `256/(256+distance)`, with three-dimensional distance and no hard cutoff. The
 old full-volume radius of256 units is removed: gain is1 at the source,1/2 at256
-units and1/5 at1024. Door movement and finish cues and enemy effects share this
-curve. Pickup cues use local playback like player sounds, with no distance gain
+units and1/5 at1024. Enemy effects instead use `1024/(1024+distance)`:
+half volume at1024 units and one fifth at4096, extending their audible reach
+without increasing point-blank volume. The source bridge explicitly marks enemy
+PLAY/LOOP commands; the mixer retains that range across MOVE and detached
+one-shot tails after RETIRE. All CD..D8 types use it, including bosses,
+activation, attacks, hurt and death. Doors and impact particles retain the
+ordinary curve. Pickup cues use local playback like player sounds, with no distance gain
 or positional pan; original sequence track pan is retained. Integer
 square roots use bounded24.8 deltas for the fullint32 coordinate range. Moving
 sources/listeners smooth channel gains with a10ms time constant, per sample,
 independent of buffer boundaries. Music and local sounds bypass this model.
 There is no HRTF, Doppler, wall occlusion or room reverberation.
+
+The2026-10-20 enemy-range change passes660,832 MSVC audio checks, including
+PCM comparisons at fourfold XYZ distances, loop stop/start boundaries,
+independent emitters, retired one-shot tails and all12 enemy-type presentation
+routes. All131 populated songs render without decoder errors or clipping.
+The Windows Release build, eight focused checks, and muted audio device
+startup/restart checks (music on/off) pass. No campaign run or physical listening
+test was performed for this change.
 
 The world-distance fixture drives the actual native mover67/68 presentation
 callbacks. Rendered peaks decrease at0/32/64/128/256/512/1024/

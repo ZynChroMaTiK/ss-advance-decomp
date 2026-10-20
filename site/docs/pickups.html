@@ -19,13 +19,30 @@ Loose ammo and ammo-filling packs can store reserves before the matching weapon
 is owned; this does not grant the weapon. Duplicate owned weapon pickups add
 the same half-capacity ammunition as acquiring that weapon normally, without
 queueing acquisition or forcing a weapon switch. Ammo caps still apply; loose
-ammo and duplicate guns remain on the ground if their pool is full. The second
+ammo remains on the ground if its pool is full. In both Alternate weapons modes,
+duplicate weapons are now collected even with full or infinite ammo, including
+the equipped Colt. This emits the usual pickup sound/message and increments
+the collected-item count without queuing acquisition or restarting the weapon
+animation. Additional Colts remain collectible after acquiring the dual pair.
+The second
 Colt retains its alternate dual-acquisition path, including when Colt ammo is
-already full. These rules apply with Alternate weapons both Off and On.
+already full. Unowned-ammo storage and duplicate ammo grants work in both modes.
 Original entry points and inventory helpers retain their ROM behavior; only
 the PC pickup call uses the ownership-independent ammo eligibility. Actual
 multiplayer request/replay gates and pickup trigger/effect/removal order stay
-unchanged. Existing carry snapshots already preserve reserves for unowned guns.
+unchanged. Existing carry snapshots already preserve reserves for unowned guns.</p>
+<p>Updated2026-10-20: the runtime enables <code>pc_pickups</code> unconditionally
+at initialization. <code>collect_owned_weapons</code> enables full-ammo duplicate collection
+in both modes; mode changes and campaign carry preserve this policy.
+Expanded integration covers untouched default startup,
+Alternate weapons On, and On-to-Off through native settings application.
+Every path covers all eight finite-ammo weapons, unowned ammo, duplicate
+grants while equipped, caps, full-pool weapon collection in both modes,
+unchanged weapon animation, loose-ammo refusal, ammo packs and carry. See the
+updated alternate-weapons regression report.
+This change passes2,327,752 checks /8,308 frames /182 pickup contacts with
+matching MSVC and GCC ASan/UBSan/leak-check results. This is an isolated
+weapon/pickup fixture, not an automated campaign playthrough.
 Focused verification: GCC ASan/UBSan/leaks and MSVC agree on2320339checks,
 6507frames and123pickup contacts in the extended alternate-weapons fixture.
 It covers all eight finite ammo/gun pairs, stored ammo surviving carry and

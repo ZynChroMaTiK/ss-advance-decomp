@@ -43,7 +43,7 @@ def render_document(text, source_path, available):
             heading_tag='h'+str(min(6,int(token.tag[1])+shift));token.tag=heading_tag
             slug=re.sub(r'[^\w\- ]','',label.lower()).replace(' ','-')
             if source_path=='README.md':
-                slug={'what-you-can-play':'current-prototype','settings-and-extras':'make-it-yours','saves-and-problems':'progress-and-troubleshooting','building-it-yourself':'build-from-a-fresh-checkout'}.get(slug,slug)
+                slug={'what-you-can-play':'current-prototype','settings-and-extras':'make-it-yours','options':'make-it-yours','saves-and-problems':'progress-and-troubleshooting','building-it-yourself':'build-from-a-fresh-checkout'}.get(slug,slug)
             duplicate=seen.get(slug,0);seen[slug]=duplicate+1
             token.attrSet('id',slug+(f'-{duplicate}' if duplicate else ''))
         elif token.type=='heading_close':token.tag=heading_tag

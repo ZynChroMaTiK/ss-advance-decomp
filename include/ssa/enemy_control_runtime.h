@@ -21,7 +21,7 @@ typedef struct SsaEnemyControlRuntime {
     uint32_t *walk_count;
     unsigned updating;
     unsigned crowd_slide; /* PC policy shared by CE..D8 walking controllers. */
-    unsigned converted_combat; /* PC: selected nonplayer contact/shot targeting. */
+    unsigned converted_combat; /* PC: symmetric converted contact and selected shot targeting. */
     SsaEnemyCrowd crowd[100];
 } SsaEnemyControlRuntime;
 typedef struct SsaEnemyControlRuntimeOps {

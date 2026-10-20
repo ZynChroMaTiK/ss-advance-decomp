@@ -34,6 +34,7 @@ int main(int argc,char **argv) {
     CHECK(ssa_inventory_rules_load(&inventory,rom,0x800000)==0);
     CHECK(ssa_weapon_rules_load(&rules,rom,0x800000)==1);CHECK(ssa_weapon_animations_load(&animations,rom,0x800000)==1);
     setup(f,rom,0x800000,0,&math,&defs,100);projectile_init(t,f,&inventory,&rules,&animations,&math);
+    t->weapon.combat.boss_projectile_immunity=1; /* Boss policy must not alter D6 return impacts. */
     t->runtime.ballistic_player_cannon=1; /* PC fix must preserve enemy cannonballs. */
     t->runtime.rolling_cannonballs=1;
     for(thing=0;thing<64;++thing)if(defs.thing[thing].type==0xd6 && !defs.thing[thing].variant)break;

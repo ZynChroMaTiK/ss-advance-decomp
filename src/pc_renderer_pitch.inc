@@ -1,19 +1,18 @@
 /* PC camera rotation. World-space polygons, near clipping and reciprocal-depth
  * interpolation: pitch is not a horizon offset or a warped old framebuffer. */
-typedef struct PitchVertex {double x,y,z,u,v;} PitchVertex;
+typedef SsaPcVertex PitchVertex;
 typedef struct PitchPoint {double x,y;} PitchPoint;
 typedef struct PitchPlane {PitchPoint p[3];unsigned sector;} PitchPlane;
+typedef struct HardwareRowStats {unsigned actors,walls;} HardwareRowStats;
 typedef struct SsaPcGeometry {
     PitchPlane *planes;size_t count,capacity;
     uint64_t signature;
     uint32_t *sky_axes;unsigned sky_width,sky_height;
+    HardwareRowStats *row_stats;unsigned row_capacity;
 } SsaPcGeometry;
 static void geometry_free(SsaPcRenderer *r)
-{if(r->geometry){free(r->geometry->planes);free(r->geometry->sky_axes);free(r->geometry);r->geometry=NULL;}}
-typedef struct PitchMaterial {
-    const uint8_t *pixels;unsigned width,height,color,transparent,actor,sky,decals;
-    double height_z;
-} PitchMaterial;
+{if(r->geometry){free(r->geometry->planes);free(r->geometry->sky_axes);free(r->geometry->row_stats);free(r->geometry);r->geometry=NULL;}}
+typedef SsaPcMaterial PitchMaterial;
 static PitchVertex pitch_vertex(const Camera *c,double x,double y,double z,double u,double v)
 {
     double dx=x-c->x,dy=y-c->y,d=dx*c->sine+dy*c->cosine,h=z-c->z;
@@ -24,6 +23,10 @@ static double orient(double ax,double ay,double bx,double by,double x,double y)
 static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchVertex b,PitchVertex d,
     const PitchMaterial *m)
 {
+    if(r->hardware){PitchVertex vertices[3]={a,b,d};
+        if(!r->hardware_error && r->hardware->triangle(r->hardware->context,vertices,m)<0)r->hardware_error=1;
+        return;
+    }
     double ax=r->width/2.0+a.x*c->focal/a.z,ay=r->height/2.0-a.y*c->focal/a.z;
     double bx=r->width/2.0+b.x*c->focal/b.z,by=r->height/2.0-b.y*c->focal/b.z;
     double dx=r->width/2.0+d.x*c->focal/d.z,dy=r->height/2.0-d.y*c->focal/d.z;
@@ -104,7 +107,8 @@ static void pitch_polygon(SsaPcRenderer *r,const Camera *c,const PitchVertex *v,
 static int flat_sky(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c)
 {
     SsaPcGeometry *cache=r->geometry;
-    unsigned x,y;const uint8_t *sky=g->sky.pixels[ssa_texture_assets_family(g->level)];
+    unsigned x,y,top=c->top,bottom=c->bottom;
+    const uint8_t *sky=g->sky.pixels[ssa_texture_assets_family(g->level)];
     if(cache->sky_width!=r->width || cache->sky_height!=r->height){
         size_t count=(size_t)r->width+r->height;uint32_t *axes;
         if(count>SIZE_MAX/sizeof(*axes))return -1;
@@ -115,9 +119,16 @@ static int flat_sky(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c)
     /* Independent axes keep texture rows/columns straight at every pitch.
      * Refresh both lookups without reallocating as yaw/pitch change. */
     for(x=0;x<r->width;++x)cache->sky_axes[x]=sky_column(g,r,x);
-    for(y=c->top;y<c->bottom;++y)cache->sky_axes[r->width+y]=sky_row(r,y,c->sky_shift)*768;
-    for(y=c->top;y<c->bottom;++y){const uint8_t *row=sky+cache->sky_axes[r->width+y];
-        for(x=0;x<r->width;++x)r->pixels[(size_t)y*r->width+x]=c->palette[row[cache->sky_axes[x]]];}
+    for(y=top;y<bottom;++y)cache->sky_axes[r->width+y]=sky_row(r,y,c->sky_shift)*768;
+    for(y=top;y<bottom;++y){const uint8_t *row=sky+cache->sky_axes[r->width+y];
+        uint32_t *out=r->pixels+(size_t)y*r->width;
+        /* Upscaled/clamped sky rows are identical within this draw. Copy
+         * their resolved colors; never retain them across palette changes. */
+        if(y>top && cache->sky_axes[r->width+y]==cache->sky_axes[r->width+y-1])
+            memcpy(out,out-r->width,(size_t)r->width*sizeof(*out));
+        else for(x=0;x<r->width;++x)out[x]=c->palette[row[cache->sky_axes[x]]];}
+    if(r->hardware){r->hardware_error=0;
+        if(r->hardware->begin(r->hardware->context,r,c->palette,c->focal,c->top,c->bottom)<0)return -1;}
     return 1;
 }
 static unsigned pitch_clip(PitchPoint *out,const PitchPoint *p,unsigned n,

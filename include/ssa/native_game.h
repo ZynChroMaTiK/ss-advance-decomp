@@ -51,6 +51,8 @@ typedef struct SsaNativeGame {
     unsigned level,loaded,error_line,finished,restart_requested;
     unsigned music_mode,music_serial;
     unsigned gba_view; /* Level camera/autoaim, with the original cursor projected onto its shot. */
+    unsigned vertical_aim; /* Opt-in mouse pitch; GBA rendering always uses original autoaim. */
+    unsigned fov_offset; /* Native horizontal FOV at3:2, in degrees above60. */
     unsigned hud_style,hud_suppressed; /* Suppressed only for clean frontend captures. */
     unsigned weapon_bobbing; /* PC first-person weapon/flash motion; default0. */
     int32_t weapon_bob_x,weapon_bob_y; /* Shared nonnegative8.8 offsets for both hands. */

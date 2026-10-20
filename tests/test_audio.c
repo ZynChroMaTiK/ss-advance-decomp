@@ -247,6 +247,26 @@ static void spatial_fixture(const uint8_t *rom){
         a.players[2].tracks[0].volume=127;CHECK(ssa_audio_render(&a,out,1)==1);
         CHECK(abs(out[0]-cases[i].left)<=2 && abs(out[1]-cases[i].right)<=2);
     }
+    /* Enemy effects at four times the distance have identical PCM/stereo to
+     * ordinary effects. Range survives movement and retirement of one-shots. */
+    for(i=0;i<sizeof(cases)/sizeof(cases[0]);++i){unsigned loop;
+        SsaAudioPoint point={cases[i].x*262144,cases[i].y*262144,cases[i].z*262144};
+        for(loop=0;loop<2;++loop){unsigned p;
+            ssa_audio_reset(&a);CHECK(ssa_audio_listen(&a,&ear)==1);
+            CHECK(ssa_audio_source(&a,loop?SSA_AUDIO_SOURCE_ENEMY_LOOP:SSA_AUDIO_SOURCE_ENEMY_PLAY,0x14,100,&point)==1);
+            p=latest(&a,0x14);a.players[p].tracks[0].volume=127;
+            CHECK(ssa_audio_render(&a,out,1)==1);
+            CHECK(abs(out[0]-cases[i].left)<=2 && abs(out[1]-cases[i].right)<=2);
+            CHECK(ssa_audio_source(&a,SSA_AUDIO_SOURCE_MOVE,0,100,&point)==1);
+            CHECK(ssa_audio_source(&a,SSA_AUDIO_SOURCE_RETIRE,0,100,NULL)==1);
+            if(loop)CHECK(!a.players[p].active);
+            else{CHECK(ssa_audio_listen(&a,&ear)==1 && a.players[p].enemy_range);
+                CHECK(ssa_audio_render(&a,out,1)==1);
+                CHECK(abs(out[0]-cases[i].left)<=2 && abs(out[1]-cases[i].right)<=2);}
+        }
+    }
+    CHECK(ssa_audio_source(&a,SSA_AUDIO_SOURCE_ENEMY_PLAY,0x14,100,NULL)==-1);
+    CHECK(ssa_audio_source(&a,SSA_AUDIO_SOURCE_ENEMY_LOOP,0x73,100,&ear.position)==-1);
     {SsaAudioPoint point={256*65536,0,0};uint64_t notes,clock;uint32_t pc;
         ssa_audio_reset(&a);CHECK(ssa_audio_listen(&a,&ear)==1 && ssa_audio_play_at(&a,0x14,&point)==1);
         a.players[2].tracks[0].volume=127;CHECK(ssa_audio_render(&a,out,1)==1 && out[1]>out[0]*3);
@@ -527,7 +547,7 @@ static void scene_music(void *p,unsigned command,unsigned level){SceneAudio *s=p
 static void game_scene(SsaAudio *a,const uint8_t *rom){
     SsaNativeGame *g=calloc(1,sizeof(*g));SceneAudio scene={0};SsaNativeAudioOps ops={scene_play,scene_stop,&scene,scene_world,scene_listen,scene_move,scene_music,NULL};
     SsaEntity *source;SsaEnemyActivation activation={0};SsaEnemyControl control={0};SsaEnemyControlEvent event={0};unsigned before,slot;
-    CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);scene.mixer=a;ssa_audio_reset(a);
+    CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);g->vertical_aim=1;scene.mixer=a;ssa_audio_reset(a);
     CHECK(ssa_native_game_bind_audio(g,&ops)==1 && scene.listeners==1);
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     CHECK(ssa_native_game_tick(g)==1);

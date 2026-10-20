@@ -49,6 +49,7 @@ int ssa_native_game_alternate_weapons(SsaNativeGame *g,unsigned enabled,unsigned
     g->weapon.alternate_shotgun=enabled;
     g->actor_scene.screen_mirrors=enabled;
     g->pickup.repeat_weapon=enabled && !g->alternates.dual_colts?2:0;
+    g->pickup.collect_owned_weapons=1;
     g->weapon.fire_inhibited=g->weapon.double_colt=g->weapon.switch_blocked=0;
     g->weapon.colt_pair=0;if(!enabled)g->weapon.colt_pair_pending=0;
     if(enabled && start_mode==SSA_ALTERNATE_NEW_GAME){

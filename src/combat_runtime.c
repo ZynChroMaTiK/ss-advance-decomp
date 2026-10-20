@@ -75,6 +75,7 @@ typedef struct DamageCall {
     SsaCombatRuntime *runtime;
     const SsaCombatRuntimeOps *ops;
     const SsaEntity *source,*owner;
+    unsigned melee;
 } DamageCall;
 static int effect(void *context,const SsaCombatDamageTarget *v,SsaCombatDamageEvent kind,
                     uint32_t a,uint32_t b) {
@@ -93,6 +94,17 @@ static int damage(void *context,SsaEntity *e,uint32_t amount) {
     uint16_t old_flags=g->local_flags;
     int result;
     if (e && project(r,e,&v)) return -1;
+    if (e==c->owner && ssa_combat_boss_projectile(r,c->source,c->owner)) return 0;
+    /* Classify contact explicitly: a kamikaze explosion also has an enemy
+     * source, while projectile damage carries its shooter in owner. */
+    if(r->prion_balance && e) {
+        const SsaEntity *attacker=c->owner?c->owner:c->source;
+        if(attacker && attacker!=e && attacker->type>=0xcd && attacker->type<=0xd8 &&
+           e->type>=0xcd && e->type<=0xd8 &&
+           !((attacker->body.flags|e->body.flags)&0x10) &&
+           ((attacker->body.flags|e->body.flags)&0x400))
+            amount=c->melee?amount/2:(amount>UINT32_MAX/2?UINT32_MAX:amount*2);
+    }
     g->source=c->source; g->source_owner=c->owner;
     g->local_flags=r->players[g->local_player]->player->motion.movement.flags;
     result=ssa_combat_damage(g,e ? &v : NULL,amount,&ops);
@@ -133,7 +145,7 @@ int ssa_combat_runtime_free(SsaCombatRuntime *r) {
 }
 int ssa_combat_runtime_damage(SsaCombatRuntime *r,SsaEntity *target,
     const SsaEntity *source,const SsaEntity *owner,uint32_t amount,const SsaCombatRuntimeOps *ops) {
-    DamageCall c={r,ops,source,owner};
+    DamageCall c={r,ops,source,owner,0};
     int result;
     if (!ready(r) || !ops || !ops->event) return -1;
     lock(r);r->spawn->updating=1;
@@ -143,7 +155,7 @@ int ssa_combat_runtime_damage(SsaCombatRuntime *r,SsaEntity *target,
 int ssa_combat_runtime_explode(SsaCombatRuntime *r,SsaEntity *origin,
     const SsaEntity *source,const SsaEntity *owner,uint32_t radius,uint32_t amount,int players,
     const SsaCombatRuntimeOps *ops) {
-    DamageCall c={r,ops,source,owner};
+    DamageCall c={r,ops,source,owner,0};
     int result;
     if (!ready(r) || !ops || !ops->event) return -1;
     lock(r);r->spawn->updating=1;
@@ -155,8 +167,8 @@ static int cd_event(void *context,const SsaEnemyCd *cd,SsaEnemyCdEvent kind,SsaE
                     int32_t a,int32_t b,int32_t d) {
     CdCall *c=context;
     SsaEntity *source=cd->activation->entity;
-    DamageCall hit={c->runtime,c->ops->combat,source,NULL};
-    if (kind==SSA_ENEMY_CD_CONTACT_DAMAGE) return damage(&hit,other,(uint32_t)a);
+    DamageCall hit={c->runtime,c->ops->combat,source,NULL,0};
+    if (kind==SSA_ENEMY_CD_CONTACT_DAMAGE) {hit.melee=1;return damage(&hit,other,(uint32_t)a);}
     if (kind==SSA_ENEMY_CD_EXPLOSION) return explode(&hit,source,(uint32_t)a,(uint32_t)b,d);
     return c->ops->presentation(c->ops->context,cd,kind,other,a,b,d);
 }
@@ -164,10 +176,16 @@ int ssa_combat_cd_step(SsaCombatRuntime *r,SsaEnemyCdRuntime *cd,const SsaEnemyC
     const SsaEnemyNavigationOps *queries,const SsaCombatCdOps *ops) {
     CdCall c={r,ops};
     SsaEnemyCdRuntimeOps bridge={queries,cd_event,&c};
+    SsaEnemyCdFrame adjusted;
     int result;
     if (!ready(r) || !cd || cd->spawn!=r->spawn || !ops || !ops->combat ||
         !ops->combat->event || !ops->presentation) return -1;
     lock(r);
+    if(r->prion_balance && frame && cd->navigation.entity && (cd->navigation.entity->body.flags&0x400) &&
+       cd->navigation.target && cd->navigation.target->type>=0xcd && cd->navigation.target->type<=0xd8 &&
+       !(cd->navigation.target->body.flags&(0x10|0x20))) {
+        adjusted=*frame;adjusted.speed_factor/=2;frame=&adjusted;
+    }
     result=ssa_enemy_cd_runtime_step(cd,frame,&bridge);
     unlock(r);return result;
 }
@@ -195,11 +213,16 @@ int ssa_combat_scope_damage(SsaCombatScope *s,SsaEntity *e,const SsaEntity *sour
     const SsaEntity *owner,uint32_t amount) {
     DamageCall c;
     if(!scope_ready(s)) return -1;
-    c=(DamageCall){s->runtime,s->ops,source,owner};return damage(&c,e,amount);
+    c=(DamageCall){s->runtime,s->ops,source,owner,0};return damage(&c,e,amount);
+}
+int ssa_combat_scope_melee(SsaCombatScope *s,SsaEntity *e,const SsaEntity *source,uint32_t amount) {
+    DamageCall c;
+    if(!scope_ready(s)) return -1;
+    c=(DamageCall){s->runtime,s->ops,source,NULL,1};return damage(&c,e,amount);
 }
 int ssa_combat_scope_explode(SsaCombatScope *s,SsaEntity *e,const SsaEntity *source,
     const SsaEntity *owner,uint32_t radius,uint32_t amount,int players) {
     DamageCall c;
     if(!scope_ready(s)) return -1;
-    c=(DamageCall){s->runtime,s->ops,source,owner};return explode(&c,e,radius,amount,players);
+    c=(DamageCall){s->runtime,s->ops,source,owner,0};return explode(&c,e,radius,amount,players);
 }

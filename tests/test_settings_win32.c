@@ -9,6 +9,11 @@ static void key(App *a,unsigned k){
     CHECK(ssa_menu_step(a->menu,a->menu_pressed)==1);a->menu_pressed=0;settings_change(a);
     CHECK(ssa_menu_step(a->menu,0)==1);
 }
+static void extra_select(App *a,unsigned row){
+    unsigned guard=0;
+    while(a->menu->selection!=row && guard++<11)key(a,a->menu->selection<row?VK_DOWN:VK_UP);
+    CHECK(a->menu->selection==row);
+}
 static void game_h(App *a){
     unsigned menu=a->menu_active,captured=a->captured;
     /* Exercise the real captured-key route without grabbing physical input. */
@@ -99,7 +104,7 @@ static void midi_checks(App *a,const wchar_t *font_path){
     settings.music_style=SSA_MUSIC_MIDI;CHECK(ssa_win32_audio_settings(&a->audio,&settings));
     a->menu->settings=settings;a->settings=settings;settings_change(a);
     CHECK(!a->menu->soundfont_available && a->menu->midi_available);
-    a->menu->page=a->menu->draw_page=SSA_MENU_SETTINGS;a->menu->selection=3;
+    a->menu->page=a->menu->draw_page=SSA_MENU_SETTINGS;a->menu->selection=4;
     key(a,VK_RIGHT);CHECK(a->settings.music_style==SSA_MUSIC_ORIGINAL);
     key(a,VK_RIGHT);CHECK(a->settings.music_style==SSA_MUSIC_MIDI);
     /* Finish real worker playback before faster-than-realtime muted device
@@ -183,9 +188,14 @@ int wmain(int argc,wchar_t **argv){
     CHECK(RegisterClassW(&wc));
     a->window=CreateWindowW(wc.lpszClassName,L"",WS_OVERLAPPEDWINDOW,80,80,720,480,NULL,NULL,wc.hInstance,a);CHECK(a->window);
     if(midi_only)goto midi_validation;
+    /* Saved/default Vulkan must fall back and disappear when no device opened. */
+    CHECK(!a->vulkan && a->settings.renderer==SSA_RENDER_VULKAN);
+    a->menu->vulkan_available=1;settings_change(a);
+    CHECK(a->settings.renderer==SSA_RENDER_SOFTWARE && a->menu->settings.renderer==SSA_RENDER_SOFTWARE && !a->menu->vulkan_available);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.renderer==SSA_RENDER_SOFTWARE);
     scores_checks(a);
     CHECK(game_tick(a)==1); /* Populate sprite cache/OAM before a world render. */
-    key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
+    key(a,VK_DOWN);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_GRAPHICS);
     {RECT windowed,full,restored,client;MONITORINFO info={0};LONG_PTR style;int left,top,width,height;LPARAM point;
         CHECK(GetWindowRect(a->window,&windowed));
         CHECK(display_mode_apply(a,SSA_DISPLAY_WINDOWED) && !IsWindowVisible(a->window));
@@ -256,6 +266,7 @@ int wmain(int argc,wchar_t **argv){
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.aspect_ratio==SSA_ASPECT_NATIVE);
     aspect_checks(a);
     key(a,VK_ESCAPE);key(a,VK_DOWN);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_EXTRA);
+    extra_select(a,3);
     CHECK(!a->settings.jump_enabled);
     key(a,VK_RIGHT);CHECK(a->settings.jump_enabled);
     key(a,VK_LEFT);CHECK(!a->settings.jump_enabled);
@@ -268,7 +279,7 @@ int wmain(int argc,wchar_t **argv){
     CHECK(ssa_pc_input_runtime_key(&a->game->input_runtime,' ',1,0)==1 && game_tick(a)==1);
     CHECK(a->game->input_runtime.sample.jump_down && a->game->player.jump.was_down && a->game->players[0].motion.velocity_z>0);
     CHECK(ssa_pc_input_runtime_key(&a->game->input_runtime,' ',0,0)==1);
-    key(a,VK_DOWN);CHECK(a->menu->selection==1);
+    extra_select(a,2);CHECK(a->menu->selection==2);
     game_h(a);CHECK(a->game->player.view.third_person);
     key(a,VK_LEFT);CHECK(!a->settings.thirdperson_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.thirdperson_enabled);
@@ -279,7 +290,7 @@ int wmain(int argc,wchar_t **argv){
     CHECK(game_tick(a)==1 && !a->game->player.view.third_person);
     game_h(a);CHECK(a->game->player.view.third_person);
     game_h(a);CHECK(!a->game->player.view.third_person);
-    key(a,VK_DOWN);key(a,VK_LEFT);CHECK(!a->settings.ingame_netricsa);
+    extra_select(a,5);key(a,VK_LEFT);CHECK(!a->settings.ingame_netricsa);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.ingame_netricsa);
     a->menu_active=0;
     SendMessageW(a->window,WM_KEYDOWN,VK_TAB,0);SendMessageW(a->window,WM_KEYUP,VK_TAB,0);
@@ -294,38 +305,44 @@ int wmain(int argc,wchar_t **argv){
     SendMessageW(a->window,WM_KEYDOWN,VK_TAB,0);SendMessageW(a->window,WM_KEYUP,VK_TAB,0);
     CHECK(a->net_active && !a->net_prelevel && !a->failed);
     CHECK(finish_netricsa(a) && !a->net_active);a->menu_active=1;
-    key(a,VK_DOWN);CHECK(a->menu->selection==3 && !a->settings.alternate_weapons);
+    extra_select(a,6);CHECK(a->menu->selection==6 && !a->settings.alternate_weapons);
     key(a,VK_RIGHT);CHECK(a->settings.alternate_weapons && a->game->alternates.enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.alternate_weapons);
     key(a,VK_LEFT);CHECK(!a->settings.alternate_weapons && !a->game->alternates.enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.alternate_weapons);
-    key(a,VK_DOWN);CHECK(a->menu->selection==4 && !a->settings.automap_enabled);
+    extra_select(a,4);CHECK(a->menu->selection==4 && !a->settings.automap_enabled);
     key(a,VK_RIGHT);CHECK(a->settings.automap_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.automap_enabled);
-    key(a,VK_DOWN);CHECK(a->menu->selection==5 && a->settings.hud_style==SSA_HUD_ORIGINAL);
+    extra_select(a,0);CHECK(a->menu->selection==0 && a->settings.hud_style==SSA_HUD_ORIGINAL);
     key(a,VK_RIGHT);CHECK(a->settings.hud_style==SSA_HUD_CLASSIC && a->game->hud_style==SSA_HUD_CLASSIC);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.hud_style==SSA_HUD_CLASSIC);
     key(a,VK_LEFT);CHECK(a->settings.hud_style==SSA_HUD_ORIGINAL && a->game->hud_style==SSA_HUD_ORIGINAL);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.hud_style==SSA_HUD_ORIGINAL);
-    key(a,VK_DOWN);CHECK(a->menu->selection==6 && !a->settings.weapon_bobbing && !a->game->weapon_bobbing);
+    extra_select(a,7);CHECK(a->menu->selection==7 && !a->settings.weapon_bobbing && !a->game->weapon_bobbing);
     key(a,VK_RIGHT);CHECK(a->settings.weapon_bobbing && a->game->weapon_bobbing);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.weapon_bobbing);
     key(a,VK_LEFT);CHECK(!a->settings.weapon_bobbing && !a->game->weapon_bobbing);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.weapon_bobbing);
-    key(a,VK_DOWN);CHECK(a->menu->selection==7 && !a->settings.surface_decals && !a->game->surface_decals_enabled);
+    extra_select(a,8);CHECK(a->menu->selection==8 && !a->settings.surface_decals && !a->game->surface_decals_enabled);
     key(a,VK_RIGHT);CHECK(a->settings.surface_decals && a->game->surface_decals_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.surface_decals);
     key(a,VK_LEFT);CHECK(!a->settings.surface_decals && !a->game->surface_decals_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.surface_decals);
-    key(a,VK_DOWN);CHECK(a->menu->selection==8 && !a->settings.water_reflections && !a->game->water_reflections);
+    extra_select(a,9);CHECK(a->menu->selection==9 && !a->settings.water_reflections && !a->game->water_reflections);
     key(a,VK_RIGHT);CHECK(a->settings.water_reflections && a->game->water_reflections);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.water_reflections);
     key(a,VK_LEFT);CHECK(!a->settings.water_reflections && !a->game->water_reflections);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.water_reflections);
-    key(a,VK_UP);CHECK(a->menu->selection==7);
-    key(a,VK_UP);CHECK(a->menu->selection==6);
-    key(a,VK_UP);CHECK(a->menu->selection==5);
-    key(a,VK_UP);CHECK(a->menu->selection==4);
+    extra_select(a,1);CHECK(a->menu->selection==1 && a->settings.vertical_aim && a->game->vertical_aim);
+    key(a,VK_RIGHT);CHECK(!a->settings.vertical_aim && !a->game->vertical_aim);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && !loaded.vertical_aim);
+    key(a,VK_LEFT);CHECK(a->settings.vertical_aim && a->game->vertical_aim);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.vertical_aim);
+    extra_select(a,9);CHECK(a->menu->selection==9);
+    extra_select(a,8);CHECK(a->menu->selection==8);
+    extra_select(a,7);CHECK(a->menu->selection==7);
+    extra_select(a,0);CHECK(a->menu->selection==0);
+    extra_select(a,4);CHECK(a->menu->selection==4);
     CHECK(ssa_native_game_automap(a->game,1)==1);a->automap_keys=1;a->wheel_remainder=30;
     key(a,VK_RIGHT);CHECK(!a->settings.automap_enabled && !(a->game->players[0].motion.movement.flags&8));
     CHECK(!a->automap_keys && !a->wheel_remainder);
@@ -335,22 +352,29 @@ int wmain(int argc,wchar_t **argv){
     CHECK(!(a->game->players[0].motion.movement.flags&8) && !a->failed);
     a->menu_active=1;key(a,VK_LEFT);CHECK(a->settings.automap_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.automap_enabled);
-    key(a,VK_ESCAPE);key(a,VK_UP);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
-    key(a,VK_DOWN);key(a,VK_DOWN);key(a,VK_DOWN);CHECK(a->menu->selection==3);
+    key(a,VK_ESCAPE);key(a,VK_UP);key(a,VK_UP);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
+    key(a,VK_RIGHT);CHECK(a->menu->language==1);
+    key(a,VK_LEFT);CHECK(a->menu->language==0);
+    key(a,VK_DOWN);CHECK(a->menu->selection==3);
+    CHECK(a->settings.fov_offset==10 && a->game->fov_offset==10);
+    key(a,VK_RIGHT);CHECK(a->settings.fov_offset==11 && a->game->fov_offset==11);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.fov_offset==11);
+    key(a,VK_LEFT);CHECK(a->settings.fov_offset==10 && a->game->fov_offset==10);
+    key(a,VK_DOWN);CHECK(a->menu->selection==4);
     EnterCriticalSection(&a->audio.mutex);before=a->audio.mixer.players[0];starts=(unsigned)a->audio.mixer.starts;
     key(a,VK_RIGHT);CHECK(a->settings.music_style==1 && a->audio.mixer.synth.context);
     CHECK(a->audio.mixer.starts==starts && !memcmp(&before,&a->audio.mixer.players[0],sizeof before));
     LeaveCriticalSection(&a->audio.mutex);
-    key(a,VK_DOWN);key(a,VK_LEFT);CHECK(a->settings.music_volume==95);
+    key(a,VK_DOWN);key(a,VK_LEFT);CHECK(a->settings.music_volume==75);
     key(a,VK_DOWN);key(a,VK_LEFT);key(a,VK_LEFT);CHECK(a->settings.sound_volume==90);
-    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_style==1 && loaded.music_volume==95 && loaded.sound_volume==90);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_style==1 && loaded.music_volume==75 && loaded.sound_volume==90);
     EnterCriticalSection(&a->audio.mutex);frames=a->audio.mixer.frames;
-    CHECK(a->audio.mixer.music_volume==95 && a->audio.mixer.sound_volume==90);LeaveCriticalSection(&a->audio.mutex);
+    CHECK(a->audio.mixer.music_volume==75 && a->audio.mixer.sound_volume==90);LeaveCriticalSection(&a->audio.mutex);
     Sleep(200);
     EnterCriticalSection(&a->audio.mutex);CHECK(a->audio.mixer.frames>frames && !a->audio.mixer.errors);LeaveCriticalSection(&a->audio.mutex);
     CHECK(ssa_win32_audio_restart(&a->audio,0));
     CHECK(ssa_win32_audio_begin_level(&a->audio,0));
-    EnterCriticalSection(&a->audio.mutex);CHECK(a->audio.mixer.synth.context && a->audio.mixer.music_volume==95 && a->audio.mixer.sound_volume==90);LeaveCriticalSection(&a->audio.mutex);
+    EnterCriticalSection(&a->audio.mutex);CHECK(a->audio.mixer.synth.context && a->audio.mixer.music_volume==75 && a->audio.mixer.sound_volume==90);LeaveCriticalSection(&a->audio.mutex);
     key(a,VK_UP);key(a,VK_UP);key(a,VK_LEFT);CHECK(!a->settings.music_style);
     /* Reverse cycling reaches MIDI. Switching must retain the sequencer and
      * settings must persist MIDI without depending on the SF2 loader. */
@@ -372,11 +396,11 @@ int wmain(int argc,wchar_t **argv){
     CHECK(SetFileAttributesW(a->settings_path,FILE_ATTRIBUTE_READONLY));
     loaded.music_volume=10;CHECK(!ssa_win32_settings_write(&loaded,a->settings_path));
     CHECK(SetFileAttributesW(a->settings_path,FILE_ATTRIBUTE_NORMAL));
-    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_volume==95);
+    CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_volume==75);
     file=CreateFileW(a->settings_path,GENERIC_WRITE,0,NULL,TRUNCATE_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);CHECK(file!=INVALID_HANDLE_VALUE);
     CHECK(WriteFile(file,bad,sizeof bad,&written,NULL));CloseHandle(file);
     loaded=(SsaSettings)SSA_SETTINGS_DEFAULT;
-    CHECK(!ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_volume==100 && !loaded.music_style);
+    CHECK(!ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_volume==80 && loaded.sound_volume==100 && !loaded.music_style);
     CHECK(ssa_win32_settings_write(&a->settings,a->settings_path));
 midi_validation:
     midi_checks(a,argv[2]);

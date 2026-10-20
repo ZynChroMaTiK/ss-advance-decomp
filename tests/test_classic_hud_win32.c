@@ -54,13 +54,13 @@ int wmain(int argc,wchar_t **argv)
         a->settings.renderer=mode?SSA_RENDER_GBA:SSA_RENDER_SOFTWARE;a->original_renderer=mode;
         level_options(a,a->game);CHECK(ssa_native_game_alternate_weapons(a->game,alternate,SSA_ALTERNATE_NEW_GAME)==1);
         CHECK(begin_menu(a) && !a->game->frame_game.counter);
-        a->menu->page=a->menu->draw_page=SSA_MENU_EXTRA;a->menu->selection=5;
+        a->menu->page=a->menu->draw_page=SSA_MENU_EXTRA;a->menu->selection=0;
         SendMessageW(a->window,WM_KEYDOWN,VK_RIGHT,0);SendMessageW(a->window,WM_KEYUP,VK_RIGHT,0);menu_step(a);
         CHECK(a->settings.hud_style==SSA_HUD_CLASSIC && a->game->hud_style==SSA_HUD_CLASSIC);
         CHECK(ssa_win32_settings_read(&saved,a->settings_path) && saved.hud_style==SSA_HUD_CLASSIC && saved.alternate_weapons==alternate);
         /* The same row must also switch safely with a real pointer click. */
         CHECK(GetClientRect(a->window,&rect) && ssa_ui_viewport(rect.right,rect.bottom,240,160,&x,&y,&w,&h));
-        {LPARAM point=MAKELPARAM(x+120*w/240,y+60*h/160);
+        {LPARAM point=MAKELPARAM(x+120*w/240,y+20*h/160);
             SendMessageW(a->window,WM_MOUSEMOVE,0,point);
             SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,point);SendMessageW(a->window,WM_LBUTTONUP,0,point);menu_step(a);}
         CHECK(a->settings.hud_style==SSA_HUD_ORIGINAL && a->game->hud_style==SSA_HUD_ORIGINAL);

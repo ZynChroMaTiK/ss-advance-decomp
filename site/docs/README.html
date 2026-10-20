@@ -2,7 +2,7 @@
 <p>This is a fan-made Windows port of the GBA game. It keeps the original levels,
 weapons, enemies and music, with keyboard and mouse controls and a few optional
 extras. You can play all twelve campaign levels.</p>
-<p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.2">Download v0.8.0 Alpha 2</a></strong>
+<p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.3">Download v0.8.0 Alpha 3</a></strong>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/">Website</a>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d">Explore the maps</a></p>
 <p>It’s still an alpha, so you’ll find bugs and unfinished bits. The game runs
@@ -103,12 +103,23 @@ playtesting, so please report anything that goes wrong.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="make-it-yours">Settings and extras</h2>
-<p>Open <strong>Options → Settings</strong> to choose fullscreen or windowed play, change the
-graphics mode, and adjust music and sound volume. Set a volume to 0% to mute it.
+<h2 id="make-it-yours">Options</h2>
+<p>Open <strong>Options → Graphics</strong> for Display Mode, Renderer and Aspect Ratio.
+<strong>Options → Settings</strong> contains Language, Field of View, Music Style, Music
+Volume and Sounds Volume. Set a volume to 0% to mute it.
+Default volumes are 80% music and 100% sounds; existing saved choices are retained.
+<strong>Renderer</strong> offers <strong>Software</strong>, <strong>GBA</strong>, and <strong>Vulkan</strong> on supported hardware.
+Vulkan draws world geometry and sprites on the GPU, with the existing HUD and
+effects composition. Vulkan is the default, with automatic Software fallback
+if unavailable; unavailable Vulkan is hidden from the choices. Existing saved
+renderer choices are preserved. You can also
+launch Vulkan with <code>play-native.cmd --vulkan</code>.
 Below Renderer, <strong>Aspect ratio</strong> offers <strong>Native</strong> (fill the window, default)
 or <strong>3:2</strong> (preserve the original GBA view with black bars). This choice applies
-to the software renderer; the GBA renderer always uses 3:2 and disables the row.</p>
+to Software and Vulkan; the GBA renderer always uses 3:2 and disables the row.
+<strong>Field of view</strong> adjusts native rendering from <strong>60° to 120°</strong>, defaulting to
+<strong>70°</strong> (the existing view). This is the horizontal angle at 3:2; wider displays
+show more to the sides. GBA rendering keeps its fixed view and disables this slider.</p>
 <p>Music choices are <strong>Original</strong>, <strong>SoundFont</strong> and <strong>MIDI</strong>. SoundFont uses an
 optional instrument file; MIDI uses the Windows GS synthesizer. You’ll only see choices
 that work on your computer. See the
@@ -119,10 +130,16 @@ and their muzzle flashes together. <strong>Jump</strong>, <strong>Alternate weap
 and <strong>Weapon bobbing</strong> are off by default.
 <strong>Surface decals</strong> adds subtle connected stain tiles on floors and ceilings,
 and sparse animated glints and ripples on water. <strong>Water reflections</strong> adds
-reflected scenery with multiply blending. Both are off by default and work in
-both renderers. All nine Extras choices fit on one page.
+scenery reflections with 50% alpha blending, at full viewport resolution in
+native mode and 240×160 in GBA mode. Both are off by default and work in
+all renderers. <strong>Vertical aim</strong> is on by default for vertical mouse aiming.
+Turn it off for original GBA auto-aim and the target-following crosshair;
+GBA rendering always retains original aiming. All ten Extras
+choices fit on one page.
+Extras are ordered: HUD, Vertical aim, Third-person, Jump, Automap, In-game
+NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water reflections.
 The <strong>HUD</strong> row switches between <strong>Original</strong> (default) and <strong>Classic</strong>, a usable
-green HUD built from the retained older artwork. Both graphics modes support it,
+green HUD built from the retained older artwork. All graphics modes support it,
 and the game saves your choice.
 Classic also shows a centered weapon selector when switching weapons. The selected
 weapon and its ammo highlight white immediately; the selector hides after three seconds or when firing.
@@ -170,7 +187,11 @@ and <strong>CMake tools</strong>. Clone this repository, open PowerShell in its 
 <pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 </code></pre>
 <p>You can build without a ROM. To play afterwards, put your own <strong>European ROM</strong> at
-<code>orig/SSA.gba</code> and run <code>play-native.cmd</code>.</p>
+<code>orig/SSA.gba</code> and run <code>play-native.cmd</code>.
+Install the <strong>Vulkan SDK</strong> before building to include the optional hardware
+renderer. The game only needs a Vulkan-capable graphics driver to run it.
+Without the SDK, the build retains Software and GBA. See the
+<a href="vulkan-renderer.html">Vulkan backend notes</a> for implementation and checks.</p>
 <p>Run focused regression checks with <code>scripts/test-focused.ps1</code> (add <code>-SkipBuild</code>
 to reuse the build). These cover settings, saves, audio status, rendering and
 frontend screens without running campaign playthroughs. See

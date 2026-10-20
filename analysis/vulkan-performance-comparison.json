@@ -1,0 +1,95 @@
+{
+    "scope":  "Same three-frame isolated render workloads at 1920x1080 before and after the Vulkan stall fix; not gameplay FPS",
+    "before":  {
+                   "device":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+                   "width":  1920,
+                   "height":  1080,
+                   "frames":  3,
+                   "cases":  [
+                                 {
+                                     "scene":  "start",
+                                     "decals":  0,
+                                     "reflections":  0,
+                                     "ms":  616.973,
+                                     "fps":  1.62
+                                 },
+                                 {
+                                     "scene":  "start",
+                                     "decals":  1,
+                                     "reflections":  0,
+                                     "ms":  711.717,
+                                     "fps":  1.41
+                                 },
+                                 {
+                                     "scene":  "pool",
+                                     "decals":  1,
+                                     "reflections":  0,
+                                     "ms":  1271.430,
+                                     "fps":  0.79
+                                 },
+                                 {
+                                     "scene":  "pool",
+                                     "decals":  1,
+                                     "reflections":  1,
+                                     "ms":  2109.613,
+                                     "fps":  0.47
+                                 }
+                             ]
+               },
+    "after":  {
+                  "device":  "NVIDIA GeForce RTX 4060 Laptop GPU",
+                  "width":  1920,
+                  "height":  1080,
+                  "frames":  3,
+                  "cases":  [
+                                {
+                                    "scene":  "start",
+                                    "decals":  0,
+                                    "reflections":  0,
+                                    "ms":  12.599,
+                                    "fps":  79.37,
+                                    "passes":  1.00,
+                                    "prepare_ms":  0.752,
+                                    "wait_ms":  5.312,
+                                    "readback_ms":  0.652,
+                                    "effects_ms":  0.000
+                                },
+                                {
+                                    "scene":  "start",
+                                    "decals":  1,
+                                    "reflections":  0,
+                                    "ms":  14.686,
+                                    "fps":  68.09,
+                                    "passes":  1.00,
+                                    "prepare_ms":  0.729,
+                                    "wait_ms":  5.685,
+                                    "readback_ms":  0.800,
+                                    "effects_ms":  1.156
+                                },
+                                {
+                                    "scene":  "pool",
+                                    "decals":  1,
+                                    "reflections":  0,
+                                    "ms":  17.790,
+                                    "fps":  56.21,
+                                    "passes":  1.00,
+                                    "prepare_ms":  0.763,
+                                    "wait_ms":  5.613,
+                                    "readback_ms":  0.693,
+                                    "effects_ms":  3.479
+                                },
+                                {
+                                    "scene":  "pool",
+                                    "decals":  1,
+                                    "reflections":  1,
+                                    "ms":  30.653,
+                                    "fps":  32.62,
+                                    "passes":  2.00,
+                                    "prepare_ms":  1.307,
+                                    "wait_ms":  8.067,
+                                    "readback_ms":  1.023,
+                                    "effects_ms":  5.828
+                                }
+                            ]
+              }
+}

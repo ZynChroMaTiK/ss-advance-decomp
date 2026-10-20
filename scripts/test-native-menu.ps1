@@ -26,7 +26,7 @@ try {
         $output | Set-Content -LiteralPath (Join-Path $testRoot ("case-$selection.json"))
         if ($launchExit -ne 0) { throw ('Menu startup failed for selection '+$selection) }
         $item=$output -join [Environment]::NewLine | ConvertFrom-Json
-        if ($item.result -ne 'pass' -or $item.menu_starts -ne 1 -or $item.menu_frozen_ticks -ne 292 -or $item.menu_credits_checks -ne 72 -or
+        if ($item.result -ne 'pass' -or $item.menu_starts -ne 1 -or $item.menu_frozen_ticks -ne (290+2*[Math]::Floor($selection/3)) -or $item.menu_credits_checks -ne 72 -or
             $item.language -ne [Math]::Floor($selection/3) -or $item.difficulty -ne $selection%3 -or
             $item.menu_music_toggles -ne 0 -or $item.menu_mouse_checks -ne 2 -or
             $item.menu_music_continuity -ne $(if($selection%3 -eq 0){0}else{2}) -or

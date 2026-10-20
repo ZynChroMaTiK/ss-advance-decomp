@@ -1,4 +1,30 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native projectile runtime — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="projectile-runtime.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-projectile-runtime">Native projectile runtime</h1>
+<h2 id="boss-self-projectile-correction-2026-10-21">Boss self-projectile correction (2026-10-21)</h2>
+<p>The PC game enables <code>combat.boss_projectile_immunity</code> for both D7/D8 bosses.
+Their own projectiles exclude the firing body from movement contacts for the
+entire flight, including return paths. The combat runtime rejects damage to
+that same owner from its projectile, covering direct hits and radial blasts
+without marking the boss globally invulnerable. Player attacks, other enemies'
+shots, damage to other bosses, and player self-splash remain unchanged.</p>
+<p>Boss splitting volleys originally gave children a pointer to the parent shot.
+The native adapter preserves the original boss in each child's source after
+construction, leaving spawn coordinates, inherited velocity, animation, timing
+and damage unchanged. This identity survives further splits and parent-slot
+release/reuse. No walk through an expired parent pointer is required. As with
+the existing runtime, entity storage uses stable pool addresses; there is no
+new generation-based entity handle system.</p>
+<p>The option stays off in zero-initialized recovery runtimes. Original combat,
+projectile motion, constructor and controller routines remain unchanged.
+<code>tests/test_boss_projectiles.py</code> checks both actual boss initializers, native
+projectile construction/movement, direct-hit refusal, splitting/slot reuse,
+real expiry blasts near players and another boss, and player weapon damage on
+isolated map geometry. Gunrilla's existing return-impact regression runs with
+the boss policy enabled to check that D6 keeps its existing behavior.
+The focused boss test passes415 checks under MSVC and GCC ASan/UBSan/leak
+detection. Gunrilla passes446 checks including all8 return impacts; all8
+focused CTests pass. The rebuilt Windows executable passes a hidden, muted
+60-frame launch check. Reports: <code>boss-projectile-validation.json</code> and
+<code>windows-boss-projectile-validation.json</code>. No campaign playthrough was run.</p>
 <p>Type67 cannonballs use their original no-gravity flight again, at the user's
 request. The temporary floor-rolling override has been removed; launch detachment
 and Gunrilla's self-collision fix remain. The PC adapter still enables

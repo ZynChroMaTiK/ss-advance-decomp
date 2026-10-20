@@ -76,6 +76,7 @@ static void projectile_case(const uint8_t *rom,int pitch,unsigned third,unsigned
     CHECK(g->projectiles.ballistic_player_prion==1);
     CHECK(g->projectiles.ballistic_player_cannon==1);
     g->input.yaw_per_count=1;
+    g->vertical_aim=1;
     CHECK(ssa_pc_input_runtime_relative(&g->input_runtime,0,-pitch)==1);
     if(third){CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',1,0)==1);CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'H',0,0)==1);}
     tap(g);await_click(g,weapon,0);

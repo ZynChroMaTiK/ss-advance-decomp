@@ -23,8 +23,8 @@ static void music_audio(void *context,unsigned command,unsigned level)
 {++music_events;if(ssa_audio_music(context,command,level)<0)++audio_failures;}
 static void source_audio(void *context,SsaAudioSourceCommand command,unsigned id,uint64_t source,const SsaAudioPoint *point)
 {
-    if(command==SSA_AUDIO_SOURCE_PLAY){if(point)++spatial_events;else if(id==13 || id==14)++footstep_events;}
-    if(command==SSA_AUDIO_SOURCE_LOOP){unsigned i,found=0;SsaAudio *a=context;
+    if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_ENEMY_PLAY){if(point)++spatial_events;else if(id==13 || id==14)++footstep_events;}
+    if(command==SSA_AUDIO_SOURCE_LOOP || command==SSA_AUDIO_SOURCE_ENEMY_LOOP){unsigned i,found=0;SsaAudio *a=context;
         for(i=1;i<SSA_AUDIO_PLAYERS;++i)if(a->players[i].source==source && a->players[i].song==id && a->players[i].active)found=1;
         if(!found)++spatial_events;}
     if(command==SSA_AUDIO_SOURCE_MOVE)++source_updates;

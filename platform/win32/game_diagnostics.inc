@@ -103,14 +103,14 @@ static int diagnostics_menu_input(App *a)
         else if(p==SSA_MENU_OPTIONS && (a->menu_test || a->password_test)){
             if(a->menu_credits_test==2){
                 if(t==2){SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);a->menu_options_test=1;}
-            }else if(t==6 || t==8)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-            else if((t==10 && wanted_language>=1) || (t==12 && wanted_language==2))
-                SendMessageW(a->window,WM_KEYDOWN,VK_RIGHT,0);
-            else if(t==14){
-                if(a->password_test){SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);a->menu_options_test=1;}
-                else SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-            }else if(a->menu_test && t==16)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
-            else if(a->menu_test && t==20)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
+            }else if(!a->menu_language_test){if(t==2)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);}
+            else if(a->password_test){if(t==2){SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);a->menu_options_test=1;}}
+            else if(t==4 || t==6 || t==8 || t==10)SendMessageW(a->window,WM_KEYDOWN,VK_DOWN,0);
+            else if(t==12)SendMessageW(a->window,WM_KEYDOWN,VK_RETURN,0);
+        }
+        else if(p==SSA_MENU_SETTINGS && (a->menu_test || a->password_test) && t>=2 && !(t&1)){
+            if(a->menu->language!=wanted_language)SendMessageW(a->window,WM_KEYDOWN,VK_RIGHT,0);
+            else{a->menu_language_test=1;SendMessageW(a->window,WM_KEYDOWN,VK_ESCAPE,0);}
         }
         else if(p==SSA_MENU_CREDITS && a->menu_test){
             a->menu_credits_test=1;

@@ -117,7 +117,7 @@ static int world_sound(SsaNativeGame *g,unsigned id,const SsaEntity *source){
     if(!source || source==&g->players[0].entity)return sound(g,id);
     audio_listener(g);identity=audio_source_for(g,source);p=audio_entity_point(source);
     if(g->audio_ops.source && identity){unsigned loop=id==0x3a || id==0x3d || id==0x4e || id==0x51 || id==0x5f;
-        g->audio_ops.source(g->audio_ops.context,loop?SSA_AUDIO_SOURCE_LOOP:SSA_AUDIO_SOURCE_PLAY,id,identity,&p);}
+        g->audio_ops.source(g->audio_ops.context,loop?SSA_AUDIO_SOURCE_ENEMY_LOOP:SSA_AUDIO_SOURCE_ENEMY_PLAY,id,identity,&p);}
     else if(g->audio_ops.play_at){
         /* Legacy sinks retain their original snapshot contract. */
         p=(SsaAudioPoint){source->body.x,source->body.y,source->body.z};
@@ -182,14 +182,15 @@ static void audio_world_sync(SsaNativeGame *g){unsigned i;
             g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_MOVE,0,source,&p);
             if(cd && cd->active && !cd->controller.destroy_requested && audio_gameplay(g)){
                 int distance=cd->navigation.distance<32768?(int)cd->navigation.distance:(int)cd->navigation.distance-65536;
-                looping=cd->navigation.phase==2 && distance && distance<=(g->audio_cd_loops[i]?1024:1023) && a->activation.state!=2;
+                /* PC audibility only: preserve the recovered AI distances. */
+                looping=cd->navigation.phase==2 && distance && distance<=(g->audio_cd_loops[i]?4096:4095) && a->activation.state!=2;
             }
             if(a->entity.type==0xce && g->enemies.active[i] && !g->enemies.controllers[i].destroy_requested && audio_gameplay(g)){
                 const SsaEnemyNavigation *n=&g->enemies.navigation[i];
                 int distance=n->distance<32768?(int)n->distance:(int)n->distance-65536;
-                looping=n->phase==2 && distance && distance<=(g->audio_cd_loops[i]?400:399) && a->activation.state!=3;
+                looping=n->phase==2 && distance && distance<=(g->audio_cd_loops[i]?1600:1599) && a->activation.state!=3;
             }
-            if(looping){g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_LOOP,song,source,&p);
+            if(looping){g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_ENEMY_LOOP,song,source,&p);
                 if(!g->audio_cd_loops[i]){g->last_sound=song;++g->sound_serial;}}
             else if(g->audio_cd_loops[i])g->audio_ops.source(g->audio_ops.context,SSA_AUDIO_SOURCE_STOP,song,source,NULL);
             g->audio_cd_loops[i]=(uint8_t)looping;

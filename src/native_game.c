@@ -1,5 +1,7 @@
 #include "ssa/native_game.h"
 #include "ssa/pc_renderer.h"
+#include "ssa/pc_scene.h"
+#include "ssa/settings.h"
 #include <stdlib.h>
 #include "ssa/weapon_progress.h"
 #include <stdio.h>
@@ -228,9 +230,12 @@ static int gba_cursor(SsaNativeGame *g,SsaWeaponObject *object)
     if(depth<=0){object->y=0x5000;return 1;}
     /* D490's distance table and vertical projection, then the reference
      * display's120-to160 scaling. Keep8.8 precision until OAM placement. */
-    if(depth/65536>65535)depth=INT64_C(65535)*65536;
-    scale=((int64_t)0x55b05a*(g->actor_assets.reciprocal[depth/65536]>>8)>>16)>>8;
-    screen=80*256-((int64_t)z-eye_z)*(scale+scale/2)/(16*65536*12);
+    if(g->gba_view){
+        if(depth/65536>65535)depth=INT64_C(65535)*65536;
+        scale=((int64_t)0x55b05a*(g->actor_assets.reciprocal[depth/65536]>>8)>>16)>>8;
+        screen=80*256-((int64_t)z-eye_z)*(scale+scale/2)/(16*65536*12);
+    }
+    else screen=80*256-(int64_t)(((double)z-eye_z)/depth*(2.0*0x55b05a/65536.0)*ssa_pc_scene_fov_scale(g->fov_offset)*256);
     object->y=(int32_t)(screen<2*256?2*256:screen>157*256?157*256:screen);
     return 1;
 }
@@ -258,7 +263,7 @@ static int sprite_handler(void *p,SsaSpriteDispatch *d,uint32_t entry,unsigned s
     result=d->objects[slot]->type==13?
         ssa_hud_notice_step(d->objects[slot],&g->hud,&g->hud_notice,&g->weapon_animations,g->frame_game.ticks):
         ssa_hud_sprite_step(d->objects[slot],&g->hud);
-    if(result==1 && g->gba_view && d->objects[slot]->type==18 && (d->objects[slot]->flags&1))
+    if(result==1 && (g->gba_view || !g->vertical_aim) && d->objects[slot]->type==18 && (d->objects[slot]->flags&1))
         result=gba_cursor(g,d->objects[slot]);
     g->frame_game.flags=g->hud.game_flags;
     g->game.life_game.message_ticks=g->gameplay.life_game.message_ticks=(uint16_t)g->hud.notice_timer;
@@ -328,7 +333,7 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
     /* Reference world pixels expand2x horizontally and4/3 vertically. */
     g->actor_scene.screen_x=g->weapon_bob_x>=0?(g->weapon_bob_x+256)/512:-(-g->weapon_bob_x+256)/512;
     g->actor_scene.screen_y=g->weapon_bob_y>=0?(g->weapon_bob_y*3+512)/1024:-(-g->weapon_bob_y*3+512)/1024;
-    if(g->player.pose.third_person){
+    if(g->player.pose.third_person && !g->gba_view && g->vertical_aim){
         /* Camera convergence uses a common unlimited sight ray. Short melee reach
          * must not tilt the chase view when switching weapons. Attack queries
          * retain their own ROM weapon ranges. */
@@ -608,7 +613,7 @@ int ssa_native_game_tick(SsaNativeGame *g)
         g->players[0].motion.movement.flags&=(uint16_t)~8u;
         g->players[0].vertical.flags=g->players[0].motion.movement.flags;g->weapon.fire_inhibited=0;
     }
-    if(g->gba_view){g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;}
+    if(g->gba_view || !g->vertical_aim){g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;}
     old_weapon=g->gameplay.weapon.current;old_variant=g->alternates.variant;old_health=g->players[0].inventory.health;
     old_request=g->gameplay.weapon.requested;old_requested_variant=g->alternates.requested_variant;
     peers[0]=&g->players[0].entity;
@@ -721,6 +726,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     SsaPlayerGameplay *gameplays[1];SsaWeaponRuntime *weapons[1];SsaWeaponObject *object;unsigned i,n;
     if(!g || g->rom || !rom || size!=0x800000 || level>15 || setting>36 || (setting && (setting-1)%12!=level))return -1;
     g->rom=rom;g->rom_size=size;g->level=level;g->music_mode=2;
+    g->fov_offset=SSA_FOV_DEFAULT_OFFSET;
 #define INIT(x) do{if(!(x)){g->error_line=__LINE__;return -1;}}while(0)
     INIT(ssa_math_tables_load(&g->math,rom,size));INIT(ssa_map_assets_load(&g->map,rom,size,level));
     INIT(ssa_level_runtime_init(&g->level_runtime,&g->map,rom,size,level)==0);
@@ -750,9 +756,14 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->damage.player_count=1;g->damage.difficulty=(uint8_t)(setting?(setting-1)/12:1);
     if(setting)g->gameplay.life_game.continue_flag=(uint8_t)(g->damage.difficulty==0?5:g->damage.difficulty==1?3:2);
     INIT(ssa_combat_runtime_init(&g->combat,&g->spawn,reserved,n+1,players,1,&g->damage,&g->score)==0);
+    g->combat.boss_projectile_immunity=1;
+    g->combat.prion_balance=1;
     g->touch_ops=(SsaPickupRuntimeOps){pickup_event,g};
     INIT(ssa_pickup_runtime_init(&g->pickup,&g->combat,&g->inventory_rules,&g->touch_ops)==0);
+    /* Always allow unowned ammo and duplicate guns for ammo, independent of
+     * alternate weapons. That option changes only the second Colt policy. */
     g->pickup.pc_pickups=1;
+    g->pickup.collect_owned_weapons=1;
     INIT(ssa_enemy_queries_init(&g->queries,&g->spawn,&g->math,reserved,n+1)==0);
     INIT(ssa_projectile_runtime_init(&g->projectiles,&g->combat,&g->math)==0);
     INIT(ssa_projectile_runtime_bind_particles(&g->projectiles,&g->particle_rules,particle_sound,g)==0);
@@ -891,6 +902,7 @@ int ssa_native_game_carry_apply(SsaNativeGame *g,const SsaNativeCarry *s)
         g->alternates.reload_phase=1;g->alternates.reload_dual=s->dual_colts;
     }
     g->pickup.repeat_weapon=s->alternate_weapons && !s->dual_colts?2:0;
+    g->pickup.collect_owned_weapons=1;
     g->gameplay.weapon.flags&=~UINT32_C(0x1400);
     return ssa_weapon_progress_restore(&g->players[0].inventory,&g->gameplay.weapon,&g->weapon.object,&saved);
 }

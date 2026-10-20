@@ -12,6 +12,7 @@
 #include <limits.h>
 #include "ssa/native_game.h"
 #include "ssa/pc_renderer.h"
+#include "vulkan_renderer.h"
 #include "ssa/map_view.h"
 #include "ssa/menu.h"
 #include "ssa/campaign_screen.h"
@@ -52,7 +53,7 @@ typedef struct App {
     SsaMenu *menu;
     unsigned menu_active,menu_pressed,menu_wait_ticks,menu_starts,menu_last_page,menu_page_ticks,menu_game_counter;
     unsigned direct_level,language,difficulty,menu_notice_ticks;
-    unsigned menu_test,menu_options_test,menu_toggle_count,menu_held_keys;
+    unsigned menu_test,menu_options_test,menu_toggle_count,menu_held_keys,menu_language_test;
     unsigned menu_credits_test,menu_credits_checks;
     unsigned menu_mouse_checks,menu_music_continuity;
     unsigned password_test,password_test_edges;
@@ -83,6 +84,8 @@ typedef struct App {
     unsigned audio_test_music_queued,audio_test_level_starts,audio_test_fade;
     SsaWin32Audio audio;
     SsaPcRenderer renderer;
+    SsaVulkanRenderer *vulkan;
+    unsigned vulkan_requested;
     HDC back_dc;HBITMAP back_bitmap;HGDIOBJ back_original;
     uint32_t *back_pixels;BITMAPINFO back_info;
     int back_width,back_height;
@@ -350,8 +353,18 @@ static int render(App *a)
     }
     if(ssa_pc_renderer_resize(&a->renderer,w,h)<0){
         fprintf(stderr,"Could not allocate render resolution %ux%u.\n",w,h);return 0;}
+    a->renderer.hardware=a->settings.renderer==SSA_RENDER_VULKAN?ssa_vulkan_backend(a->vulkan):NULL;
     if(ssa_pc_renderer_draw(&a->renderer,a->game)<0){
+        if(a->renderer.hardware){
+            fprintf(stderr,"Vulkan rendering failed; returning to software.\n");
+            a->renderer.hardware=NULL;if(a->renderer.reflection)a->renderer.reflection->hardware=NULL;
+            ssa_vulkan_close(a->vulkan);a->vulkan=NULL;a->settings.renderer=SSA_RENDER_SOFTWARE;
+            if(a->menu){a->menu->settings.renderer=SSA_RENDER_SOFTWARE;a->menu->vulkan_available=0;}
+            a->menu_notice="Vulkan unavailable; using Software.";a->menu_notice_ticks=300;
+            if(ssa_pc_renderer_draw(&a->renderer,a->game)>0)goto rendered;
+        }
         fprintf(stderr,"PC renderer rejected frame %lu.\n",(unsigned long)a->game->frame_game.counter);return 0;}
+rendered:
     a->bitmap.bmiHeader.biWidth=(LONG)w;a->bitmap.bmiHeader.biHeight=-(LONG)h;
     }
     if(a->death_active){size_t i,count=(size_t)a->bitmap.bmiHeader.biWidth*(unsigned)-a->bitmap.bmiHeader.biHeight;
@@ -401,6 +414,8 @@ static void score_change(App *a)
 static void settings_change(App *a)
 {
     SsaSettings next=a->menu->settings;
+    a->menu->vulkan_available=a->vulkan!=NULL;
+    if(next.renderer==SSA_RENDER_VULKAN && !a->vulkan){next.renderer=SSA_RENDER_SOFTWARE;a->menu->settings.renderer=next.renderer;}
     if(a->menu_pressed || a->menu->page!=SSA_MENU_SETTINGS){
         SsaWin32AudioStatus status=ssa_win32_audio_status(&a->audio);
         a->menu->soundfont_available=status.soundfont_available;a->menu->midi_available=status.midi_available;
@@ -1261,7 +1276,7 @@ static int run(App *a)
             if(a->audio_test || a->transition_test)ssa_win32_audio_quiesce(&a->audio);
             if(!a->presents || !IsWindowVisible(a->window) || a->startup_restarts!=(a->transition_test?2u*(SSA_NATIVE_CAMPAIGN_LEVELS-1):1u) || a->reload)return 0;
             if(a->menu_active || a->menu_starts!=(a->direct_level?0u:1u) ||
-               (!a->password_test && !a->level_select_test && a->menu_wait_ticks!=(a->direct_level?0u:a->menu_test?292u:187u)) ||
+               (!a->password_test && !a->level_select_test && a->menu_wait_ticks!=(a->direct_level?0u:a->menu_test?290u+2*((a->menu_test-1)/3):187u)) ||
                a->difficulty!=(a->menu_test?(a->menu_test-1)%3:a->password_test?(a->password_test-1)/PASSWORD_TEST_LEVELS:1) ||
                a->language!=(a->menu_test?(a->menu_test-1)/3:a->password_test?(a->password_test-1)%3:a->profile.data.language) ||
                (a->level_select_test && (a->level!=a->level_select_test-1 ||
@@ -1349,6 +1364,7 @@ int wmain(int argc,wchar_t **argv)
         }
         else if(!wcscmp(argv[i],L"--resolution") && i+1<argc){if(!resolution(&a,argv[++i]))goto usage;}
         else if(!wcscmp(argv[i],L"--original-renderer"))a.original_renderer=1;
+        else if(!wcscmp(argv[i],L"--vulkan"))a.vulkan_requested=1;
         else if(!wcscmp(argv[i],L"--story") && i+1<argc){wchar_t *end;unsigned long n=wcstoul(argv[++i],&end,10);
             if(a.direct_level || !argv[i][0] || *end || (n!=0 && n!=6 && n!=12))goto usage;
             a.story_requested=(unsigned)n+1;a.level=n==12?11:(unsigned)n;a.direct_level=1;}
@@ -1388,6 +1404,13 @@ int wmain(int argc,wchar_t **argv)
         }
     }
     if(a.original_renderer)a.settings.renderer=SSA_RENDER_GBA; /* Explicit CLI override. */
+    if(a.vulkan_requested)a.settings.renderer=SSA_RENDER_VULKAN;
+    a.vulkan=ssa_vulkan_open();
+    if(a.settings.renderer==SSA_RENDER_VULKAN && !a.vulkan){
+        a.settings.renderer=SSA_RENDER_SOFTWARE;
+        fprintf(stderr,"Vulkan hardware unavailable; using Software.\n");
+        a.menu_notice="Vulkan unavailable; using Software.";a.menu_notice_ticks=300;
+    }
     a.original_renderer=a.settings.renderer==SSA_RENDER_GBA;
     if(a.direct_level?
        ssa_native_game_init_loadout(a.game,a.rom,a.rom_size,a.level,a.difficulty*12+a.level+1)!=1:
@@ -1432,6 +1455,7 @@ done:
     if(a.window && IsWindow(a.window))DestroyWindow(a.window);
     if(registered)UnregisterClassW(CLASS_NAME,instance);
     ssa_pc_renderer_free(&a.renderer);
+    ssa_vulkan_close(a.vulkan);
     if(a.back_dc){if(a.back_original)SelectObject(a.back_dc,a.back_original);
         if(a.back_bitmap)DeleteObject(a.back_bitmap);DeleteDC(a.back_dc);}
     free(a.intermission);free(a.screen_backdrop);free(a.screen_pixels);

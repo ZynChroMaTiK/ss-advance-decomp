@@ -1,5 +1,35 @@
 # Project instructions
 
+Alpha3 (2026-10-21): Vulkan is the default for fresh settings and Clear Data;
+unavailable/failed Vulkan falls back to Software and is hidden in Graphics.
+Preserve saved renderer choices, including Software for legacy v1. Settings v15
+uses byte7 bit7 for the second renderer bit and retains the16-byte CRC format.
+Hardware finish combines depth/statistics/effects in disjoint synchronous row
+jobs; reduce counters after workers finish. CPU depth clears remain necessary
+for Software. Sky-row reuse is within one draw only, so palette changes stay live.
+Read analysis/vulkan-renderer.md and analysis/technical-refactors.md.
+
+FOV (2026-10-20): Settings has a60..120 degree native FOV slider, default70,
+horizontal at3:2; wider displays expand horizontally. Default projection stays
+pixel-identical. GBA disables the slider and keeps fixed projection/reflections.
+Settings v14 uses byte7 bits1..6 for degrees above60, retaining bit0 vertical
+aim and reserving bit7; v1..13 migrate to70 without changing saved preferences.
+See analysis/fov.md. Native FOV changes never scale HUD or weapon sprites.
+
+Extras order (2026-10-20): HUD, Vertical aim, Third-person, Jump, Automap,
+In-game NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water
+reflections. Both PC pickup rules are unconditional: unowned ammo is stored,
+and duplicate guns grant ammo up to capacity. Alternate weapons only adds the
+second-Colt upgrade policy. Tests cover untouched default startup and disabling
+Alternate weapons through settings, not just explicit alternate initialization.
+
+Vertical aim (2026-10-20) is an Extras toggle, On by default. Native software
+rendering uses the original level-camera autoaim and projected cursor when Off;
+GBA always uses that aiming path regardless of the preference. Keep renderer
+selection separate from aiming policy. Settings v13 retains16 bytes and reads
+v1..12 with vertical aim On; existing v13 choices are retained. Byte7 bit0 stores this flag. See
+analysis/vertical-aim.md and its validation report.
+
 Latest technical refactor (2026-10-20): read analysis/technical-refactors.md.
 Decal texels are process-owned immutable atlas data; do not free per level.
 Core links ssa_pc_scene, not ssa_pc_renderer; keep HUD composition out of scene.

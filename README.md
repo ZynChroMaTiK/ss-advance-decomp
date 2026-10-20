@@ -4,7 +4,7 @@ This is a fan-made Windows port of the GBA game. It keeps the original levels,
 weapons, enemies and music, with keyboard and mouse controls and a few optional
 extras. You can play all twelve campaign levels.
 
-**[Download v0.8.0 Alpha 2](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.2)**
+**[Download v0.8.0 Alpha 3](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.3)**
 · [Website](https://zynchromatik.github.io/ss-advance-decomp/)
 · [Explore the maps](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
 
@@ -66,13 +66,24 @@ playtesting, so please report anything that goes wrong.
 | Esc / P | Pause or resume |
 | F11 | Toggle borderless fullscreen / windowed mode |
 
-## Settings and extras
+## Options
 
-Open **Options → Settings** to choose fullscreen or windowed play, change the
-graphics mode, and adjust music and sound volume. Set a volume to 0% to mute it.
+Open **Options → Graphics** for Display Mode, Renderer and Aspect Ratio.
+**Options → Settings** contains Language, Field of View, Music Style, Music
+Volume and Sounds Volume. Set a volume to 0% to mute it.
+Default volumes are 80% music and 100% sounds; existing saved choices are retained.
+**Renderer** offers **Software**, **GBA**, and **Vulkan** on supported hardware.
+Vulkan draws world geometry and sprites on the GPU, with the existing HUD and
+effects composition. Vulkan is the default, with automatic Software fallback
+if unavailable; unavailable Vulkan is hidden from the choices. Existing saved
+renderer choices are preserved. You can also
+launch Vulkan with `play-native.cmd --vulkan`.
 Below Renderer, **Aspect ratio** offers **Native** (fill the window, default)
 or **3:2** (preserve the original GBA view with black bars). This choice applies
-to the software renderer; the GBA renderer always uses 3:2 and disables the row.
+to Software and Vulkan; the GBA renderer always uses 3:2 and disables the row.
+**Field of view** adjusts native rendering from **60° to 120°**, defaulting to
+**70°** (the existing view). This is the horizontal angle at 3:2; wider displays
+show more to the sides. GBA rendering keeps its fixed view and disables this slider.
 
 Music choices are **Original**, **SoundFont** and **MIDI**. SoundFont uses an
 optional instrument file; MIDI uses the Windows GS synthesizer. You’ll only see choices
@@ -85,10 +96,16 @@ and their muzzle flashes together. **Jump**, **Alternate weapons**, **Automap**
 and **Weapon bobbing** are off by default.
 **Surface decals** adds subtle connected stain tiles on floors and ceilings,
 and sparse animated glints and ripples on water. **Water reflections** adds
-reflected scenery with multiply blending. Both are off by default and work in
-both renderers. All nine Extras choices fit on one page.
+scenery reflections with 50% alpha blending, at full viewport resolution in
+native mode and 240×160 in GBA mode. Both are off by default and work in
+all renderers. **Vertical aim** is on by default for vertical mouse aiming.
+Turn it off for original GBA auto-aim and the target-following crosshair;
+GBA rendering always retains original aiming. All ten Extras
+choices fit on one page.
+Extras are ordered: HUD, Vertical aim, Third-person, Jump, Automap, In-game
+NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water reflections.
 The **HUD** row switches between **Original** (default) and **Classic**, a usable
-green HUD built from the retained older artwork. Both graphics modes support it,
+green HUD built from the retained older artwork. All graphics modes support it,
 and the game saves your choice.
 Classic also shows a centered weapon selector when switching weapons. The selected
 weapon and its ammo highlight white immediately; the selector hides after three seconds or when firing.
@@ -147,6 +164,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1
 
 You can build without a ROM. To play afterwards, put your own **European ROM** at
 `orig/SSA.gba` and run `play-native.cmd`.
+Install the **Vulkan SDK** before building to include the optional hardware
+renderer. The game only needs a Vulkan-capable graphics driver to run it.
+Without the SDK, the build retains Software and GBA. See the
+[Vulkan backend notes](analysis/vulkan-renderer.md) for implementation and checks.
 
 Run focused regression checks with `scripts/test-focused.ps1` (add `-SkipBuild`
 to reuse the build). These cover settings, saves, audio status, rendering and

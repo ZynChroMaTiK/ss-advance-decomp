@@ -43,7 +43,8 @@ static void source_fixture(const uint8_t *rom){
 }
 static void scene_source(void *context,SsaAudioSourceCommand command,unsigned id,uint64_t source,const SsaAudioPoint *point){
     SceneAudio *s=context;
-    if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_LOOP){s->last_song=id;
+    if(command==SSA_AUDIO_SOURCE_PLAY || command==SSA_AUDIO_SOURCE_LOOP ||
+       command==SSA_AUDIO_SOURCE_ENEMY_PLAY || command==SSA_AUDIO_SOURCE_ENEMY_LOOP){s->last_song=id;
         if(point){++s->world;s->point=*point;}else ++s->local;}
     if(command==SSA_AUDIO_SOURCE_MOVE)++s->moves;
     CHECK(ssa_audio_source(s->mixer,command,id,source,point)>=0);
@@ -113,6 +114,19 @@ static void world_distance_fixture(const uint8_t *rom){
                 CHECK(ssa_audio_render(&a,out,2048)==1 && !memcmp(out,reference,sizeof(out)));
             }
         }
+    }
+    /* Every enemy type reaches the extended-range path through the actual
+     * presentation bridge, including bosses and finite hurt/death sounds. */
+    {SsaScriptActor *actor=&g->spawn.actors[slot];unsigned type=actor->entity.type;
+        SsaEnemyControl control={0};SsaEnemyControlEvent event={0};
+        ops.source=scene_source;CHECK(ssa_native_game_bind_audio(g,&ops)==1);
+        control.activation=&actor->activation;event.kind=SSA_ENEMY_CONTROL_SOUND;event.args[0]=0x43;
+        for(i=0xcd;i<=0xd8;++i){unsigned p;
+            ssa_audio_reset(&a);actor->entity.type=(uint16_t)i;
+            CHECK(g->enemy_ops.presentation(g->enemy_ops.context,&control,&event)==0);
+            p=latest(&a,0x43);CHECK(a.players[p].positioned && a.players[p].enemy_range && a.players[p].source);
+        }
+        actor->entity.type=(uint16_t)type;
     }
     ++world_audio_cases;ssa_native_game_free(g);free(g);
 }
@@ -192,12 +206,16 @@ static void world_fixture(const uint8_t *rom){
     {SsaEnemyCdRuntime cds[2]={{0}};SsaScriptActor saved[2];uint64_t identities[2];
         for(i=0;i<2;++i){SsaScriptActor *actor=&g->spawn.actors[slots[i]];saved[i]=*actor;
             actor->entity.type=0xcd;actor->activation.state=1;actor->entity.body.height=120*65536;
-            cds[i].active=1;cds[i].navigation.phase=2;cds[i].navigation.distance=256;
+            cds[i].active=1;cds[i].navigation.phase=2;cds[i].navigation.distance=4095;
             g->entities.enemies[slots[i]]=&cds[i];}
         CHECK(ssa_native_game_tick(g)==1);
         for(i=0;i<2;++i){identities[i]=g->audio_entity_sources[slots[i]];
             CHECK(identities[i] && source_instances(&a,identities[i],0x3a)==1);}
         CHECK(identities[0]!=identities[1]);
+        cds[0].navigation.distance=4096;CHECK(ssa_native_game_tick(g)==1 && source_instances(&a,identities[0],0x3a)==1);
+        cds[0].navigation.distance=4097;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x3a));
+        cds[0].navigation.distance=4096;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x3a));
+        cds[0].navigation.distance=4095;CHECK(ssa_native_game_tick(g)==1 && source_instances(&a,identities[0],0x3a)==1);
         cds[0].navigation.phase=0;CHECK(ssa_native_game_tick(g)==1);
         CHECK(!source_instances(&a,identities[0],0x3a) && source_instances(&a,identities[1],0x3a)==1);
         /* Same-ID one-shots follow their own enemy; retirement freezes the
@@ -215,20 +233,20 @@ static void world_fixture(const uint8_t *rom){
         for(i=0;i<2;++i){g->entities.enemies[slots[i]]=NULL;g->spawn.actors[slots[i]]=saved[i];}
     }
     ++world_audio_cases;
-    /* CE has a separate original single-owner loop too. Preserve its
-     *399 start /400 stop hysteresis while allowing two independent emitters. */
+    /* CE retains independent emitters and one-unit hysteresis at the new
+     *1599 start /1600 stop distance. Death must still stop its own loop. */
     {SsaScriptActor saved[2];SsaEnemyNavigation nav[2];unsigned active[2];uint64_t identities[2];
         for(i=0;i<2;++i){SsaScriptActor *actor=&g->spawn.actors[slots[i]];saved[i]=*actor;
             actor->entity.type=0xce;actor->activation.state=1;
             nav[i]=g->enemies.navigation[slots[i]];active[i]=g->enemies.active[slots[i]];
-            g->enemies.active[slots[i]]=1;g->enemies.navigation[slots[i]].phase=2;g->enemies.navigation[slots[i]].distance=399;}
+            g->enemies.active[slots[i]]=1;g->enemies.navigation[slots[i]].phase=2;g->enemies.navigation[slots[i]].distance=1599;}
         CHECK(ssa_native_game_tick(g)==1);
         for(i=0;i<2;++i){identities[i]=g->audio_entity_sources[slots[i]];CHECK(source_instances(&a,identities[i],0x4e)==1);}
-        g->enemies.navigation[slots[0]].distance=400;g->spawn.actors[slots[1]].activation.state=3;
+        g->enemies.navigation[slots[0]].distance=1600;g->spawn.actors[slots[1]].activation.state=3;
         CHECK(ssa_native_game_tick(g)==1 && source_instances(&a,identities[0],0x4e)==1 && !source_instances(&a,identities[1],0x4e));
-        g->enemies.navigation[slots[0]].distance=401;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x4e));
-        g->enemies.navigation[slots[0]].distance=400;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x4e));
-        g->enemies.navigation[slots[0]].distance=399;CHECK(ssa_native_game_tick(g)==1 && source_instances(&a,identities[0],0x4e)==1);
+        g->enemies.navigation[slots[0]].distance=1601;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x4e));
+        g->enemies.navigation[slots[0]].distance=1600;CHECK(ssa_native_game_tick(g)==1 && !source_instances(&a,identities[0],0x4e));
+        g->enemies.navigation[slots[0]].distance=1599;CHECK(ssa_native_game_tick(g)==1 && source_instances(&a,identities[0],0x4e)==1);
         for(i=0;i<2;++i){g->enemies.active[slots[i]]=(uint8_t)active[i];g->enemies.navigation[slots[i]]=nav[i];g->spawn.actors[slots[i]]=saved[i];}
     }
     ++world_audio_cases;

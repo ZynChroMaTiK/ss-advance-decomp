@@ -5,7 +5,7 @@ static void event(SsaPickupGame *g, enum SsaPickupEvent kind, unsigned a, unsign
 }
 
 static int touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
-                     uint32_t override_item,unsigned repeat_weapon,unsigned pc_pickups) {
+                     uint32_t override_item,unsigned repeat_weapon,unsigned pc_pickups,unsigned collect_owned) {
     static const uint8_t weapons[10]={2,3,4,6,0,5,10,8,9,7};
     static const uint8_t ammo_weapons[10]={2,3,8,0,6,10,4,5,9,7};
     static const uint8_t amounts[10]={10,10,1,0,5,5,50,50,5,5};
@@ -45,6 +45,9 @@ static int touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
             }
         }else if(!accepted && pc_pickups){
             accepted=ssa_inventory_add_ammo(inv,g->rules,weapon,g->rules->ammo_capacity[weapon-1]>>1,ammo_players);
+            /* PC weapons remain collectible even with full/infinite
+             * ammo. Preserve errors, caps and the current weapon animation. */
+            if(!accepted && collect_owned)accepted=1;
         }
         message=0x8b+weapon;
         if (weapon==8) sound=0x1d;
@@ -88,9 +91,9 @@ static int touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
 }
 int ssa_pickup_touch_alternate(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
                      uint32_t override_item,unsigned repeat_weapon)
-{return touch(g,p,pickup,override_item,repeat_weapon,0);}
+{return touch(g,p,pickup,override_item,repeat_weapon,0,0);}
 int ssa_pickup_touch_pc(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,
-                     uint32_t override_item,unsigned repeat_weapon)
-{return touch(g,p,pickup,override_item,repeat_weapon,1);}
+                     uint32_t override_item,unsigned repeat_weapon,unsigned collect_owned)
+{return collect_owned>1?-1:touch(g,p,pickup,override_item,repeat_weapon,1,collect_owned);}
 int ssa_pickup_touch(SsaPickupGame *g,const SsaPickupPlayer *p,SsaPickup *pickup,uint32_t override_item)
 {return ssa_pickup_touch_alternate(g,p,pickup,override_item,0);}

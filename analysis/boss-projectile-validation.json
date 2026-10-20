@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "checks": 415,
+  "boss_types": 2,
+  "self_blast_cases": 2,
+  "children": 4,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "scope": "Boss projectile ownership/contact/splash regression on isolated native map geometry.",
+  "source_sha256": {
+    "tests/test_boss_projectiles.c": "03a6e275787a7805ad0e6c4256674e9337f09fbb7a4f5ed59dd91db5883f5498",
+    "src/combat_runtime.c": "b69599554761edb8fcf2405248805f5a66d77167a8e88b202275202b53dfcb3b",
+    "src/combat_runtime_internal.h": "dbd7054c762c4eb587321da57aadad97e7e244e549d3ae7ad1b506121c76fc53",
+    "src/projectile_runtime.c": "b74bca25e20f67d98d96adb15634e355cda576d62cfe0733ae3814940d0567d3",
+    "src/native_game.c": "ef277ccf21c9177aa084a3b4d6b7e09792e0d2e5b77e67b9ffa5db94c08f2aa6",
+    "include/ssa/combat_runtime.h": "a9b9ffe003b068a305d3a9bb9bdfcbe7a015a7b6ac2a2bff173199a1edd84cdf"
+  }
+}

@@ -14,7 +14,10 @@ typedef struct SsaAudioListener {SsaAudioPoint position;int32_t right_x,right_y;
 typedef enum SsaAudioSourceCommand {
     SSA_AUDIO_SOURCE_PLAY,SSA_AUDIO_SOURCE_LOOP,SSA_AUDIO_SOURCE_MOVE,
     SSA_AUDIO_SOURCE_STOP,SSA_AUDIO_SOURCE_RETIRE,
-    SSA_AUDIO_SOURCE_CUE_TWICE,SSA_AUDIO_SOURCE_CANCEL_REPEAT
+    SSA_AUDIO_SOURCE_CUE_TWICE,SSA_AUDIO_SOURCE_CANCEL_REPEAT,
+    /* Positioned enemy effects use four times the ordinary world falloff
+     * distance. MOVE/STOP/RETIRE still address the same lifetime identity. */
+    SSA_AUDIO_SOURCE_ENEMY_PLAY,SSA_AUDIO_SOURCE_ENEMY_LOOP
 } SsaAudioSourceCommand;
 typedef struct SsaAudioTrack {
     uint32_t pc,bank,stack[3];
@@ -29,7 +32,7 @@ typedef struct SsaAudioPlayer {
     unsigned song,active,priority,count,tempo;
     uint64_t clock,serial,source;
     SsaAudioPoint position;
-    unsigned positioned,source_loop,local_priority,paused;
+    unsigned positioned,source_loop,local_priority,paused,enemy_range;
     unsigned cue_repeats,cue_started;
     uint64_t cue_frames,cue_gap;
     double left,right,target_left,target_right;

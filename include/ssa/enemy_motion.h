@@ -15,6 +15,7 @@ typedef struct SsaEnemyMotionOps {
 } SsaEnemyMotionOps;
 typedef struct SsaEnemyCrowd {
     const SsaEntity *blocker; /* Direction preference only; never dereferenced. */
+    SsaEntity *contact; /* First enemy hit in this move, even after a sidestep. */
     int side;
     unsigned axis,updating;
 } SsaEnemyCrowd;
