@@ -1,0 +1,19 @@
+{
+  "result": "pass",
+  "scope": "Compile the shared effect for ARM7TDMI; this is not a hardware timing test.",
+  "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 14.3.Rel1 (Build arm-14.174)) 14.3.1 20250623",
+  "object_sizes": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n   8416\t      0\t      0\t   8416\t   20e0\t/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/godrays.o\n   2380\t      0\t      0\t   2380\t    94c\t/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/godrays_reference.o\n   1100\t      0\t      0\t   1100\t    44c\t/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/actor_raster.o\n",
+  "undefined_symbols": "\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/godrays.o:\n         U __aeabi_ldivmod\n         U __aeabi_uidivmod\n         U __aeabi_uldivmod\n         U memcmp\n         U memcpy\n\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/godrays_reference.o:\n         U __aeabi_ldivmod\n         U memset\n         U ssa_actor_raster_depth\n         U ssa_godray_dither\n         U ssa_godray_palette\n         U ssa_godray_sample\n         U ssa_godrays_draw\n\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/build/godrays-arm/actor_raster.o:\n         U ssa_actor_assets_image\n",
+  "stack_usage": {
+    "godrays": "/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:63:15:vertex\t72\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:70:16:distance.isra\t16\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:12:5:ssa_godray_palette\t88\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:29:10:ssa_godray_sample\t24\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:37:10:ssa_godray_dither\t32\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays.c:111:5:ssa_godrays_draw\t1632\tstatic\n",
+    "godrays_reference": "/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays_reference.c:17:13:reference_span\t152\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/godrays_reference.c:51:5:ssa_godrays_reference\t960\tstatic\n",
+    "actor_raster": "/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/actor_raster.c:7:12:raster\t72\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/actor_raster.c:55:5:ssa_actor_raster_draw\t24\tstatic\n/mnt/c/SeriousEngine/Coding/ss-advance-decomp/src/actor_raster.c:57:5:ssa_actor_raster_depth\t24\tstatic\n"
+  },
+  "source_sha256": {
+    "src/godrays.c": "c39d05d2d041231bfb22c50c822f15dd080eb3aaeac21c666064c253856c84e8",
+    "src/godrays_reference.c": "a59eb5d2dc567d0afd01b2934cf6605b9372065b344cda3286063308a4c42314",
+    "src/actor_raster.c": "d1a9d805849cf2f6544d2da18d15df2d85bc95a642d10dcea1b533cd862fb9fc",
+    "include/ssa/godrays.h": "f3ccd4d5082daa1cfd2a0c0f80f187b7eb188ae795e44a407fd732b3985352ab",
+    "include/ssa/godrays_reference.h": "3c5a1f249e1a9ba3cfb4dca32a8a931d4c548dc206cd4feb650f1281b65d836b"
+  }
+}

@@ -1,5 +1,72 @@
 # Technical audit follow-up, 2026-10-20
 
+## Rendering and menu cache follow-up, 2026-10-21
+
+The audit follow-up implements the measured rendering hot spots without changing
+resolution, texture art, simulation timing or sprite priority:
+
+- Floor/ceiling and water sampling share caller-owned, 512-entry world-texel
+  scratch. Each software view and synchronous hardware row job starts empty.
+  Keys include texel coordinates, plane height, material color and surface kind.
+  Only the unfaded near range is cached; distance fading and the reflection
+  stencil remain per pixel. No mutable cache is shared by worker threads or
+  retained across moving sectors, animation frames or palette changes.
+- Sprite wall transforms, near clipping and live portal heights are prepared
+  once per view. Each sprite still applies its own origin/height gates and wall
+  silhouette clipping. Subject/shadow/overlay submission uses one shared helper;
+  original stable painter order and floor-overlapping sprite art are preserved.
+- Reflections collect height/row intervals in one stencil scan, in original
+  first-appearance order. They reuse shadow preparation and actor ordering, and
+  avoid redundant geometry-signature work per reflected height and godray pass.
+  Every mirror retains its own camera-dependent clipping preparation.
+- Vulkan uses hashed material and texture lookups without sorting submissions.
+  Texture entries own a byte copy and expanded palette indices. First use in
+  each pass compares current bytes, including mip and generated shadow art;
+  stale addresses are integer keys, never dereferenced. Unchanged content stays
+  uploaded, changed ranges and the live palette are uploaded, and buffer growth
+  copies the complete retained content. Retention resets at the next pass after
+  4 million texels or 4,096 entries; entries cannot be evicted mid-submission.
+- Settings and Graphics row descriptors now drive label/slider coordinates,
+  ranges and GBA-disabled styling/hit testing together. Stable action IDs,
+  translations, saved settings and existing positions remain unchanged.
+
+The benchmark now includes eight scenes: start with/without decals, water with/
+without reflections, reflected shadows, godrays, and a synthetic 64-sprite scene
+with/without shadows. The crowd fixture changes render inputs only; it does not
+advance or bypass gameplay. Measurements exclude simulation, audio and display
+presentation. Larger GPU scheduling/readback changes remain outside this pass.
+
+Validation and paired timings are recorded in
+`render-refactors-validation.json`. Three alternating paired runs, 60 frames per
+case at1920x1080 on the RTX4060 Laptop GPU, produced these medians:
+
+| Scene | Before (ms) | After (ms) | Render time reduction |
+| --- | ---: | ---: | ---: |
+| Start, decals off | 8.165 | 8.061 | 1.3% |
+| Start, decals on | 10.442 | 8.569 | 17.9% |
+| Pool, decals | 16.512 | 11.266 | 31.8% |
+| Pool, reflections | 38.318 | 27.694 | 27.7% |
+| Pool, reflections and shadows | 41.051 | 27.736 | 32.4% |
+| Godrays | 23.816 | 19.167 | 19.5% |
+| 64 sprites | 12.838 | 11.535 | 10.2% |
+| 64 sprites and shadows | 12.522 | 11.048 | 11.8% |
+
+The 1.3% plain-start difference is small enough to treat as timing noise. These
+are isolated renderer measurements, not gameplay FPS guarantees. Pixel, depth,
+water-mask hashes and actor/wall counts match before/after in all eight Vulkan
+cases across all three pairs, and in eight480x320 Software cases. All39 menu
+captures are byte-identical across three languages.
+
+Validation: the static-runtime Windows Release build passes; all11 focused
+CTest checks pass; Vulkan passes6,564,616 assertions,30 paired scenes and the
+muted frontend resize smoke with zero validation errors. Texture regressions
+cover same-address byte changes, palette changes, mip-only changes, changed
+image dimensions, repeated material sharing, buffer growth and cache eviction.
+ASan/UBSan with leak checks passes surface decals (56,872,820 checks), PC renderer
+(11,803,544) and sprite shadows (14,408). Settings/core audio and the hidden,
+muted Windows Settings UI pass. No campaign playthrough was run.
+
+
 ## Render-loop optimization, 2026-10-21
 
 The hardware scene finish now gathers depth, actor/wall statistics, decals and

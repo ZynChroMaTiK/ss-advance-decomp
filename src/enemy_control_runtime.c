@@ -113,7 +113,7 @@ static int event(void *ctx,const SsaEnemyControl *v,const SsaEnemyControlEvent *
     case SSA_ENEMY_CONTROL_PROJECTILE: {
         SsaProjectileCreateRequest q={(uint16_t)args[0],source,args[1],args[2],args[3],(uint32_t)args[4],0};
         const SsaEntity *target=v->navigation->target; /* exact original source+20, including NULL */
-        if(c->r->converted_combat && (source->body.flags&0x400) && target){
+        if(c->r->converted_combat && target && ((source->body.flags|target->body.flags)&0x400)){
             q.heading=ssa_direction(c->r->math,
                 (int16_t)(((uint32_t)target->body.x-(uint32_t)source->body.x)>>16),
                 (int16_t)(((uint32_t)target->body.y-(uint32_t)source->body.y)>>16));
@@ -182,6 +182,7 @@ static int run(void *ctx,SsaCombatScope *scope) {
     SsaEnemyNavigationOps nav={visibility,nearest,path,turn,move,finish,c};
     SsaEnemyControlOps ops={&nav,aim,event,c};int result;int32_t speed=c->frame->speed_factor;
     c->scope=scope;r->game.blocking_entity=s->world->blocking_entity;
+    r->game.prion_targets=r->converted_combat;
     v->animation_done=a->animation_flags;v->drain_period=a->parameter34;v->drain_countdown=a->parameter36;
     if(a->activation.state==1 && a->activation.health>0 && prion_tactics(c,&speed)<0)return -1;
     if(a->entity.type>=0xd7){

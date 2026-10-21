@@ -38,8 +38,9 @@ typedef struct SsaWeaponRuntime {
     unsigned chainsaw_range; /* PC trace units;0 retains the ROM range. */
     unsigned automatic_damage_phase; /* Fractional GBA ticks, mode2 chainsaw. */
     uint64_t automatic_phase;
-    /* PC click buffering: retain a press until one attack is committed.
-     * The pending requested weapon is0 when empty; release alone preserves it. */
+    /* PC click buffering: retain a ready press until one attack is committed.
+     * Reload/recovery and nearby buttons discard new clicks. The pending
+     * requested weapon is0 when empty; release alone preserves accepted clicks. */
     unsigned buffer_fire,fire_pending_weapon;
     /* PC policy: queue changes until firing completes. Continuous weapons
      * coast through the current animation cycle without additional attacks. */
@@ -47,6 +48,7 @@ typedef struct SsaWeaponRuntime {
     unsigned time_strike_requires_target; /* PC weapon9: valid living enemy or no shot. */
     unsigned time_strike_empty_pending; /* Buffered visual-only gesture until ready. */
     unsigned fire_inhibited; /* PC variant handoff: finish the current shot, buffer new clicks. */
+    unsigned discard_fire; /* PC magazine reload: discard clicks rather than buffering them. */
     unsigned double_colt,switch_blocked; /* PC dual firing clock / independent hand recoil gate. */
     unsigned colt_pair,colt_pair_pending; /* PC dual input queues two alternating starts. */
     unsigned alternate_shotgun; /* PC fourteen-pellet pattern,5base damage each. */

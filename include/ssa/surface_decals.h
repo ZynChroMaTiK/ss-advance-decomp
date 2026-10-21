@@ -2,6 +2,7 @@
 #define SSA_SURFACE_DECALS_H
 #include <stddef.h>
 #include <stdint.h>
+#include "ssa/surface_sample_cache.h"
 /* Optional native art, not recovered ROM content. Seamless128x128 stain masks
  * sample at2 world units/texel, matching wall density. No gameplay state. */
 enum { SSA_SURFACE_STAIN_TILES=48, SSA_SURFACE_DECAL_TILES=49,
@@ -17,7 +18,9 @@ typedef struct SsaSurfaceDecalAtlas {
     uint8_t masks[2][SSA_SURFACE_DECAL_VARIATIONS][SSA_SURFACE_DECAL_TILES][SSA_SURFACE_STAIN_SIZE*SSA_SURFACE_STAIN_SIZE];
     uint16_t thresholds[2][SSA_SURFACE_DECAL_VARIATIONS][SSA_SURFACE_STAIN_SIZE*SSA_SURFACE_STAIN_SIZE];
 } SsaSurfaceDecalAtlas;
+struct SsaWaterScene;
 typedef struct SsaSurfaceDecals {
+    const struct SsaWaterScene *edge_scene; /* Borrowed shared boundary index; stable per level. */
     const SsaSurfaceDecalAtlas *atlas; /* Immutable process-owned storage; never free. */
     uint8_t shades[256],connections[SSA_SURFACE_DECAL_TILES],corners[SSA_SURFACE_DECAL_TILES];
     uint8_t water_floor[256]; /* Classified from the original, unfaded palette. */
@@ -37,6 +40,12 @@ int ssa_surface_decals_init(SsaSurfaceDecals *,const uint16_t palette[256],unsig
 uint8_t ssa_surface_decals_texel(const SsaSurfaceDecals *,unsigned ceiling,int32_t texel_x,int32_t texel_y);
 uint8_t ssa_surface_decals_sample(const SsaSurfaceDecals *,unsigned ceiling,uint8_t color,
     double world_x,double world_y,double distance);
+/* Height-aware surface composition adds wall-edge tiles using the shared
+ * read-only boundary index. Water/sky remain excluded. */
+uint8_t ssa_surface_decals_sample_plane(const SsaSurfaceDecals *,unsigned ceiling,uint8_t color,
+    double world_x,double world_y,double height,double distance);
+uint8_t ssa_surface_decals_sample_cached(const SsaSurfaceDecals *,SsaSurfaceSampleCache *,
+    unsigned ceiling,uint8_t color,double x,double y,double height,double distance);
 /* Reference renderer overlay: use original plane visibility intervals before
  * drawing actors; sky is excluded and wall/plane geometry remains unchanged. */
 int ssa_surface_decals_reference(const SsaSurfaceDecals *,const struct SsaPlanePool *,

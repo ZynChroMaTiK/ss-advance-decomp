@@ -1,6 +1,7 @@
 #include "ssa/surface_decals.h"
 #include "ssa/plane_renderer.h"
 #include "ssa/render_view.h"
+#include "ssa/water.h"
 #include <string.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -219,6 +220,21 @@ uint8_t ssa_surface_decals_sample(const SsaSurfaceDecals *d,unsigned ceiling,uin
     threshold=d->atlas->thresholds[ceiling][d->variations[ceiling][cell_index(tx,ty)]][y*128+x];
     return threshold<coverage?d->shades[color]:color;
 }
+uint8_t ssa_surface_decals_sample_plane(const SsaSurfaceDecals *d,unsigned ceiling,uint8_t color,
+    double x,double y,double height,double distance)
+{
+    if(d && ssa_surface_edge_decal(d->edge_scene,d,ceiling,color,x,y,height,distance))return d->shades[color];
+    return ssa_surface_decals_sample(d,ceiling,color,x,y,distance);
+}
+uint8_t ssa_surface_decals_sample_cached(const SsaSurfaceDecals *d,SsaSurfaceSampleCache *cache,
+    unsigned ceiling,uint8_t color,double x,double y,double height,double distance)
+{
+    int hit;SsaSurfaceSample *entry=ssa_surface_sample_slot(cache,x,y,height,distance,ceiling,color,&hit);
+    uint8_t result;if(hit)return (uint8_t)entry->value;
+    result=ssa_surface_decals_sample_plane(d,ceiling,color,x,y,height,distance);
+    if(entry)entry->value=result;
+    return result;
+}
 int ssa_surface_decals_reference(const SsaSurfaceDecals *d,const SsaPlanePool *pool,const SsaRenderCamera *camera,uint8_t *fb,size_t capacity)
 {
     unsigned i;double eye,sine,cosine,cx,cy;
@@ -234,7 +250,7 @@ int ssa_surface_decals_reference(const SsaSurfaceDecals *d,const SsaPlanePool *p
             if(bottom>=120)return -1;
             for(y=(int)top;y<=(int)bottom;++y){double distance=(eye-p->height)*(0x55b05a/65536.0)*1.5/(y+0.5-60);
                 double lateral=(x+0.5-60)/(0x55b05a/65536.0),wx=cx+(sine+cosine*lateral)*distance,wy=cy+(cosine-sine*lateral)*distance;
-                fb[y*120+x]=ssa_surface_decals_sample(d,ceiling,(uint8_t)p->color,wx,wy,distance);
+                fb[y*120+x]=ssa_surface_decals_sample_plane(d,ceiling,(uint8_t)p->color,wx,wy,p->height,distance);
             }
         }
     }

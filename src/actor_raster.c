@@ -4,11 +4,11 @@ static int32_t signed32(uint32_t x) { return x<=0x7fffffffu?(int32_t)x:-(int32_t
 static int32_t asr(uint32_t x,unsigned n) {
     return signed32((x>>n)|((x&0x80000000u)?~(UINT32_MAX>>n):0u));
 }
-int ssa_actor_raster_draw(const SsaActorAssets *a,const SsaActorProjection *p,
-    const int16_t *clips,size_t clip_count,uint8_t *fb,size_t fb_size) {
+static int raster(const SsaActorAssets *a,const SsaActorProjection *p,
+    const int16_t *clips,size_t clip_count,uint8_t *fb,size_t fb_size,uint16_t *depth,uint16_t value) {
     const SsaActorImage *im;uint32_t dx,dy,fx=0,fy=0,scale,yscale;
     int y,h,pass,col;
-    if(!a||!p||!a->loaded||!fb||fb_size<14400||p->clipped_width<0||p->left<0||
+    if(!a||!p||!a->loaded||(!fb && !depth)||fb_size<14400||p->clipped_width<0||p->left<0||
        p->left>120||p->clipped_width>120-p->left||p->height<0)return -1;
     im=ssa_actor_assets_image(a,p->animation,p->frame_flags&0x3fffffffu);
     if(!im||!im->pixels||!im->width||!im->height)return -1;
@@ -44,9 +44,15 @@ int ssa_actor_raster_draw(const SsaActorAssets *a,const SsaActorProjection *p,
                 if(sy>=im->height)return -1;
                 if(!pass)continue;
                 pixel=im->pixels[(size_t)sx*im->height+sy];
-                if(pixel)fb[(size_t)row*120+(unsigned)p->left+(unsigned)col]=pixel;
+                if(pixel){size_t at=(size_t)row*120+(unsigned)p->left+(unsigned)col;
+                    if(fb)fb[at]=pixel;
+                    if(depth)depth[at]=value;}
             }
         }
     }
     return 1;
 }
+int ssa_actor_raster_draw(const SsaActorAssets *a,const SsaActorProjection *p,
+    const int16_t *clips,size_t count,uint8_t *fb,size_t size){return raster(a,p,clips,count,fb,size,NULL,0);}
+int ssa_actor_raster_depth(const SsaActorAssets *a,const SsaActorProjection *p,
+    const int16_t *clips,size_t count,uint16_t *depth,size_t size,uint16_t value){return raster(a,p,clips,count,NULL,size,depth,value);}

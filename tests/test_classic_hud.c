@@ -301,6 +301,23 @@ static void netricsa_notification(SsaNativeGame *g,SsaNativeGame *copy,const uin
     CHECK(ssa_native_game_classic_hud_layers(g,white,background,sizeof white)==1 && !memcmp(copy,g,sizeof(*g)));
     CHECK(!background[28*240+100] && !background[28*240+99]);
     CHECK(ssa_sprite_image_indices(&g->sprite_assets.images[79],sprite,40,sizeof sprite)==1);
+    { /* Expected corrected lettering, including the y descender and shadows. */
+        static const char *rows[10]={
+            "+#+         #",
+            "#.#         #         #",
+            "# # ##+ ##+ # # # +## . ##+ +##",
+            "### #.# ..# # # # #.. # #.# #.#",
+            "#.# # # +## # # # +#+ # # # # #",
+            "# # # # #.# # # # ..# # # # # #",
+            "# # # # +## # +## ##+ # # # +## # # #",
+            ". . . . ... . ..# ... . . . ..# . . .",
+            "              ##+           ##+",
+            "              ...           ..."
+        };
+        memset(sprite,0,sizeof sprite);
+        for(y=0;y<10;++y)for(x=0;rows[y][x];++x){unsigned c=(unsigned)rows[y][x];
+            sprite[y*40+x]=(uint8_t)(c=='#'?0x4c:c=='+'?0x4d:c=='.'?0x90:0);}
+    }
     for(y=0;y<16;++y)for(x=0;x<40;++x){
         unsigned source=sprite[y*40+x],index=white[(28+y)*240+100+x];
         CHECK((index!=0)==(source!=0) && !background[(28+y)*240+100+x]);
@@ -709,7 +726,7 @@ int main(int argc,char **argv)
     CHECK(ssa_classic_hud_blend555(0x7fff,0,0)==0 && ssa_classic_hud_blend555(0x7fff,0,255)==0x7fff);
     CHECK(ssa_classic_hud_blend888(0xffffff,0,128)==0x808080);
     for(i=0;i<2;++i)for(k=0;k<=100;++k){settings.hud_style=i;settings.sound_volume=k;
-        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[8]==15);
+        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[3]==19);
         CHECK(ssa_settings_decode(&loaded,encoded,16)==1 && !memcmp(&settings,&loaded,sizeof settings));}
     settings.hud_style=2;CHECK(ssa_settings_encode(&settings,encoded,16)==-1);
     CHECK(ssa_pc_renderer_resize(&pc,480,320)==1);

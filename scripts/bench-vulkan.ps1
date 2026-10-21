@@ -19,9 +19,11 @@ try {
     $result=Get-Content -LiteralPath $stdout -Raw | ConvertFrom-Json
     $report=[ordered]@{scope='Isolated render wall time; no gameplay/audio/presentation or campaign run';native=$result;source_sha256=[ordered]@{}}
     foreach($path in @('tests/bench_vulkan.c','platform/win32/vulkan_renderer.c','platform/win32/vulkan_renderer.h',
-        'platform/vulkan/scene.vert','platform/vulkan/scene.frag','src/pc_scene.c','src/pc_renderer_pitch.inc','include/ssa/pc_hardware.h')){
+        'platform/vulkan/scene.vert','platform/vulkan/scene.frag','src/pc_scene.c','src/pc_renderer_pitch.inc','include/ssa/pc_hardware.h',
+        'src/pc_actor_clip.inc','src/pc_godrays.inc','src/surface_decals.c','src/water.c','src/water_edges.inc',
+        'include/ssa/surface_sample_cache.h','src/sprite_shadows.c','tests/godray_fixture.h')){
         $report.source_sha256[$path]=(Get-FileHash -LiteralPath (Join-Path $root $path) -Algorithm SHA256).Hash.ToLowerInvariant()
     }
     [IO.File]::WriteAllText((Join-Path $root "analysis/$name-vulkan.json"),($report | ConvertTo-Json -Depth 6)+[Environment]::NewLine)
-    $result.cases | Format-Table scene,decals,reflections,ms,fps
+    $result.cases | Format-Table scene,decals,reflections,shadows,godrays,ms,fps
 } finally {$env:SSA_VULKAN_VALIDATION=$previous}

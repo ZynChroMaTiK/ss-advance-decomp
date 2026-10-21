@@ -75,6 +75,40 @@ static void reset(SsaNativeGame *g,unsigned slots[3])
     }
     g->spawn.actors[slots[0]].entity.body.flags=(uint16_t)((g->spawn.actors[slots[0]].entity.body.flags|0x400)&~0x800u);
 }
+static void healthy_targets(SsaNativeGame *g,unsigned slots[3])
+{
+    unsigned mode;SsaEnemyNavigation *n=nav(g,slots[0]);
+    SsaScriptActor *a=&g->spawn.actors[slots[0]],*b=&g->spawn.actors[slots[1]];
+    SsaEntity *player=&g->players[0].entity,*expected;
+    int32_t x=player->body.x,y=player->body.y;
+    for(mode=0;mode<7;++mode){
+        reset(g,slots);a->entity.body.flags&=UINT16_C(0xfbff);
+        b->entity.body.flags|=0x400;expected=&b->entity;
+        n->target=player;n->phase=0;n->target_timer=1000;
+        /* A closer ordinary ally must never become a target. */
+        place(g,slots[2],x+320*65536,y);
+        if(mode==1){place(g,slots[1],x+768*65536,y);expected=player;}
+        if(mode==2){b->activation.health=0;expected=player;}
+        if(mode==3){b->entity.body.flags|=0x20;expected=player;}
+        if(mode==4){b->entity.body.z+=1024*65536;expected=player;}
+        if(mode==5){b->entity.body.flags&=UINT16_C(0xfbff);expected=player;}
+        if(mode==6){g->spawn.actors[slots[2]].entity.body.flags|=0x400;expected=&g->spawn.actors[slots[2]].entity;}
+        tick(g);CHECK(n->target==expected);++unconverted;
+        CHECK(g->enemies.game.player==player && g->game.cd_game.player==player);
+        if(mode==0){
+            /* Distance changes override a still-live retarget timer both ways. */
+            place(g,slots[1],x+768*65536,y);tick(g);CHECK(n->target==player);++unconverted;
+            place(g,slots[1],x+448*65536,y);tick(g);CHECK(n->target==&b->entity);++unconverted;
+        }
+    }
+    /* Turning the PC policy off retains the recovered player-facing behavior. */
+    reset(g,slots);a->entity.body.flags&=UINT16_C(0xfbff);b->entity.body.flags|=0x400;
+    g->entities.nearest_converted=0;n->phase=0;n->target=&b->entity;
+    {SsaEnemyMotion facing={&a->entity,0,0,0,0};
+     CHECK(ssa_enemy_face(&facing,player,&g->math)==0);tick(g);
+     CHECK(n->desired_facing==facing.desired_facing);++unconverted;}
+    g->entities.nearest_converted=1;
+}
 typedef struct Melee {SsaEntity *target,*source;unsigned amount;} Melee;
 static int melee_damage(void *ctx,SsaCombatScope *scope)
 {Melee *m=ctx;return ssa_combat_scope_melee(scope,m->target,m->source,m->amount);}
@@ -89,7 +123,7 @@ static void damage_balance(SsaNativeGame *g,unsigned slots[3])
         if(mask&1)a->entity.body.flags|=0x400;
         if(mask&2)b->entity.body.flags|=0x400;
         g->combat.prion_balance=policy;
-        if(policy && mask)expected=kind==0?15:60;
+        /* Conversion never scales melee, projectile or explosion damage. */
         if(kind==0)CHECK(ssa_combat_scope_run(&g->combat,&g->combat_ops,melee_damage,&m)==0);
         else if(kind==1)CHECK(ssa_combat_runtime_damage(&g->combat,&b->entity,&projectile,&a->entity,30,&g->combat_ops)==0);
         else {
@@ -181,6 +215,7 @@ int main(int argc,char **argv)
         int32_t x,y;current_type=type;g=fixture(rom,type,slots,0);n=nav(g,slots[0]);
         x=g->players[0].entity.body.x;y=g->players[0].entity.body.y;
         conversion_health(g,slots);damage_balance(g,slots);tactics(g,slots,type);
+        healthy_targets(g,slots);
         for(current_case=0;current_case<7;++current_case){
             reset(g,slots);expected=&g->spawn.actors[slots[1]].entity;
             /* A stale player preference and long original timer must not win. */
@@ -217,8 +252,8 @@ int main(int argc,char **argv)
             n->waypoint_x=(uint16_t)(target->entity.body.x/65536);n->waypoint_y=(uint16_t)(y/65536);g->enemies.crowd_slide=slide;
             melee_step(g,slots[0],mode!=5,slide);
             if(mode==2 || mode==4 || mode==5)CHECK(target->activation.health==old);
-            else{if(target->activation.health!=old-(type==0xd0 || type==0xd6?20:10))fprintf(stderr,"slide%u mode%u health%d->%d moved%u flags%x/%x\n",slide,mode,old,target->activation.health,n->move_result,a->entity.body.flags,target->entity.body.flags);
-                CHECK(target->activation.health==old-(type==0xd0 || type==0xd6?20:10));++melee_hits;}
+            else{if(target->activation.health!=old-(type==0xd0 || type==0xd6?40:20))fprintf(stderr,"slide%u mode%u health%d->%d moved%u flags%x/%x\n",slide,mode,old,target->activation.health,n->move_result,a->entity.body.flags,target->entity.body.flags);
+                CHECK(target->activation.health==old-(type==0xd0 || type==0xd6?40:20));++melee_hits;}
             /* Previous contact must never damage a distant enemy on a later
              * update, including a navigation pass which makes no move. */
             old=target->activation.health;place(g,slots[1],x+1024*65536,y);
@@ -230,7 +265,11 @@ int main(int argc,char **argv)
             g->entities.nearest_converted=1;g->enemies.crowd_slide=1;
         }
         if(type==0xcf || type==0xd1 || type==0xd2 || type==0xd3 || type==0xd4 || type==0xd6){
+            unsigned healthy;
+            for(healthy=0;healthy<2;++healthy){
             reset(g,slots);n->target=&g->spawn.actors[slots[1]].entity;n->phase=2;n->navigation_flags=1;
+            if(healthy){g->spawn.actors[slots[0]].entity.body.flags&=UINT16_C(0xfbff);
+                g->spawn.actors[slots[1]].entity.body.flags|=0x400;}
             n->waypoint_x=(uint16_t)((x+448*65536)/65536);n->waypoint_y=(uint16_t)(y/65536);
             g->spawn.actors[slots[0]].activation.facing=n->desired_facing=192;
             g->spawn.actors[slots[0]].activation.timer=0;
@@ -238,6 +277,8 @@ int main(int argc,char **argv)
             tick(g);
             for(i=0;i<100;++i)if(g->projectiles.active[i] && g->projectiles.projectiles[i].source==&g->spawn.actors[slots[0]].entity)break;
             CHECK(i<100 && g->projectiles.projectiles[i].entity->body.velocity_x>0);++shots;
+            for(i=0;i<100;++i)if(g->projectiles.active[i])CHECK(ssa_projectile_runtime_release(&g->projectiles,i)==0);
+            }
         }
         reset(g,slots);g->spawn.actors[slots[0]].entity.body.flags&=UINT16_C(0xfbff);
         n->phase=0;n->target=&g->spawn.actors[slots[1]].entity;
@@ -247,6 +288,8 @@ int main(int argc,char **argv)
         reset(g,slots);g->spawn.actors[slots[1]].activation.health=g->spawn.actors[slots[2]].activation.health=0;
         g->players[0].inventory.health=0;n->target=&g->spawn.actors[slots[1]].entity;
         tick(g);CHECK(!n->target);++idle_cases;
+        g->spawn.actors[slots[0]].entity.body.flags&=UINT16_C(0xfbff);
+        tick(g);CHECK(!n->target);++idle_cases;
         ++cases;ssa_native_game_free(g);free(g);
     }
     {unsigned slots[3];SsaNativeGame *g=fixture(rom,0xce,slots,1);SsaEntity *a=&g->spawn.actors[slots[0]].entity;
@@ -254,6 +297,21 @@ int main(int argc,char **argv)
      place(g,slots[2],a->body.x+128*65536,a->body.y);
      g->spawn.actors[slots[2]].entity.body.z=a->body.z+a->body.height/2-g->spawn.actors[slots[2]].entity.body.height/2;
      tick(g);CHECK(nav(g,slots[0])->target==&g->spawn.actors[slots[2]].entity);++boss_targets;
+     for(type=0xd7;type<=0xd8;++type){
+         SsaScriptActor *boss=&g->spawn.actors[slots[2]];SsaEnemyNavigation *n=nav(g,slots[2]);unsigned i;
+         reset(g,slots);boss->entity.type=(uint16_t)type;boss->entity.body.flags&=UINT16_C(0xf7ff);
+         place(g,slots[0],boss->entity.body.x+384*65536,boss->entity.body.y);
+         n->target=&g->players[0].entity;
+         tick(g);CHECK(n->target==a);++unconverted;
+         /* The boss's own projectile path must use the same chosen enemy. */
+         boss->activation.state=2;boss->animation_frame=9;boss->entity.body.flags&=UINT16_C(0xefff);
+         tick(g);
+         for(i=0;i<100;++i)if(g->projectiles.active[i] && g->projectiles.projectiles[i].source==&boss->entity)break;
+         CHECK(i<100 && g->projectiles.projectiles[i].entity->body.velocity_x>0);++shots;
+         for(i=0;i<100;++i)if(g->projectiles.active[i])CHECK(ssa_projectile_runtime_release(&g->projectiles,i)==0);
+         place(g,slots[0],boss->entity.body.x+1024*65536,boss->entity.body.y);
+         tick(g);CHECK(n->target==&g->players[0].entity);++unconverted;
+     }
      ssa_native_game_free(g);free(g);}
     free(rom);printf("{\"result\":\"pass\",\"checks\":%u,\"converted_types\":%u,\"frames\":%u,\"target_selections\":%u,\"melee_hits\":%u,\"ranged_shots\":%u,\"unconverted_cases\":%u,\"no_target_cases\":%u,\"boss_targets\":%u,\"damage_cases\":%u,\"range_holds\":%u,\"chase_cases\":%u,\"health_cases\":%u}\n",checks,cases,frames,selections,melee_hits,shots,unconverted,idle_cases,boss_targets,damage_cases,range_holds,chase_cases,health_cases);return 0;
 }

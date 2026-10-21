@@ -19,22 +19,22 @@
   "native_callback_failures": 19,
   "total_rom_comparisons": 11994,
   "source_sha256": {
-    "enemy_ranged.c": "2c16d0f0693bef8b11928906b3a2990a21819c24eb3fa24aa256c5c6ccfa877c",
-    "enemy_control.c": "a5736eccf3b30516971b1ad0059887f08c2cf4b882564015e5d4bfa4afd455b9",
+    "enemy_ranged.c": "61e1bd5a7e6a40cadeac1b557498686a8223717a889fd455b05595a81dbaea1d",
+    "enemy_control.c": "b09224c777d2ea269564c015baa7945b2261b472c787e63b547799fa86997770",
     "enemy_activation.c": "a2ff0e31fa5757ae632cef8c3f95b848fcc366bd337adeadfcb46090aa3082e2",
     "entity_timer.c": "5458e899b807857e78f1b1bf75df9bc1e395756be64250439172b500691ec94e",
     "enemy_lifecycle.c": "c772ffe9be914b485bb4af51baa4907dafb52e730198f47539d4ff93b2ee3627",
-    "enemy_motion.c": "ffb4c9c71836ba71dab088d052850876efe25e24e9719a123dbfe3c8141442bd",
-    "player_hazards.c": "3f08b34a8fae81f155d62f514478cb3d83261637f9e0a30343e5670ff99e2954",
+    "enemy_motion.c": "c37c0bf48e9690c8d45f104aab12c1be8d137f638cc4aa148409762e5a7b06b7",
+    "player_hazards.c": "2a83b5599585721b46d4bcd9e50305180ecb94d528809cdea3f826da367b7f0c",
     "movement.c": "f05daaaaf302c515d431590810ecc3eed8609dda8942aa632e99db8915cc6193",
-    "world.c": "0c3b7854ff09c13c3c048ab1e3d84bb9b7ac890e8bc40ccb840c20138f63a77b",
+    "world.c": "f51e1a9e37804f0707513de12fbd16446e28bb2d671193c992acdd972aea50c9",
     "physics.c": "b8edd39792964a9cc70214dc9d3728e838ed649a99bde1608e54007e2b636e98",
     "geometry.c": "eb05def9a8577f147e13f2998a3c1e31d49f67c0a1a30aa2dda16ea83675d7e6",
     "slide.c": "39392c091753f33fa066952f172c36e38aab7c2c7b788e7bc3caaddbb7abedf7",
     "horizontal.c": "4fcdfce3a54a01c8bac0cd252161633c51496a2e631a1985a78657ff0138d46f",
     "map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34"
   },
-  "fixture_sha256": "f8adecf07c60c186aadd28e5300870ffba0d92b996007eeebc7c596818406b7e",
+  "fixture_sha256": "4a594629e0d42e92a16e3289d63f6680150757a081f38eb0fce501caf80f9b19",
   "navigation_stub_sha256": "2e9b9e1b9aeb79a706f5a21589691f093802e3fd0cf0c48af2e105c01e8d3b18",
   "sanitizer_fixture_sha256": "7d3658a12682a342b328bbb933f4db10cf6b39d198f804897fb38870f31a0a0b"
 }

@@ -5,7 +5,7 @@ r=Path(__file__).resolve().parents[1];b=r/'build/native-tests';b.mkdir(parents=T
 sources=sorted((r/'src').glob('*.c'));binary=b/'test_immediate_use'
 subprocess.run(['gcc','-std=c11','-O1','-g','-Wall','-Wextra','-Werror','-pedantic',
  '-fsanitize=address,undefined','-fno-sanitize-recover=all','-no-pie','-I',str(r/'include'),
- str(r/'tests/test_immediate_use.c'),*map(str,sources),'-o',str(binary)],check=True)
+ str(r/'tests/test_immediate_use.c'),*map(str,sources),'-lm','-o',str(binary)],check=True)
 p=subprocess.run([str(binary),str(r/'orig/SSA.gba')],capture_output=True,text=True,
  env={**os.environ,'ASAN_OPTIONS':'detect_leaks=1'},timeout=180)
 print(p.stdout,end='');print(p.stderr,end='');p.check_returncode();report=json.loads(p.stdout)

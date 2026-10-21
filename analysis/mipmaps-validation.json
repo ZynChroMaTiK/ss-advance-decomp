@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "checks": 4275,
+  "changed_pixels": 881,
+  "source_sha256": {
+    "src/pc_scene.c": "8e0b08314aa69a5e323d24bb1296835c8fe81516dd1cdca443649ed75296e7c8",
+    "src/pc_renderer_pitch.inc": "3b26374bdeb1eb152ce678f225e415a5ab767eac1b072a658548729438d43451",
+    "src/settings.c": "bca81a110cbe838ed9e3d53d8979412da00d76fe2944e62b54bdc72a02fc7af2",
+    "src/menu.c": "0c57e4fd8a06fa6f3700c6c3528ce0d851a2fe84f182164f1b272231911d1870",
+    "include/ssa/settings.h": "03d5776a69969a72cb265dd5522df4c43db94f7edc71bf5c318cb500b9cb018f",
+    "include/ssa/pc_hardware.h": "b67d0a07b6fbb632dcc81da09c2fd84e1fa22815c9595484f19945128cd9fde8",
+    "src/native_settings.c": "b5a2bf4c44243b4287b2dde65ca7f5b5947bbf689c9867a931e7b2c39b1b6ea0",
+    "platform/win32/vulkan_renderer.c": "5045cfec7c5d1288b7a96d1e43e05ff74fe893fd2c231ab5c4ce4a30601973ec",
+    "platform/vulkan/scene.frag": "169a1c35444a023f6f0d4bc3186d99ce0e02a3787148f185e6f1371dee7e7d14",
+    "tests/test_mipmaps.c": "e5d44b3806c97a504cf60f3c6b5a989de30cf7d72a28e17588727e74854e00ee"
+  }
+}

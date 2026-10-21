@@ -7,7 +7,7 @@ static unsigned checks;
 static void aiming(const uint8_t *rom)
 {
     SsaNativeGame *g=calloc(1,sizeof(*g));SsaSettings s=SSA_SETTINGS_DEFAULT;
-    int32_t slopes[120];uint16_t headings[120];unsigned markers[120],targets[120],mode,i;
+    int32_t slopes[120],markers[120];uint16_t headings[120];unsigned targets[120],mode,i;
     CHECK(g);
     s.vertical_aim=0; /* Explicitly exercise the optional original aiming mode. */
     for(mode=0;mode<2;++mode){
@@ -48,12 +48,30 @@ int main(int argc,char **argv)
     CHECK(ssa_native_game_apply_settings(g,&s)==-1);
     CHECK(ssa_native_game_init(g,rom,0x800000,0)==1);
     CHECK(g->fov_offset==SSA_FOV_DEFAULT_OFFSET);
+    {SsaPcInputSample input;
+        CHECK(ssa_native_game_apply_settings(g,&s)==1);
+        CHECK(g->input.yaw_per_count==64);
+        ssa_pc_input_enable(&g->input,1);ssa_pc_input_focus(&g->input,1);
+        CHECK(ssa_pc_input_relative(&g->input,10,10)==1);
+        CHECK(ssa_pc_input_sample(&g->input,&input)==1 && input.yaw_delta==640 && input.pitch_delta==-640);
+        s.mouse_sensitivity=0;
+        CHECK(ssa_native_game_apply_settings(g,&s)==1);
+        CHECK(ssa_pc_input_relative(&g->input,10,10)==1);
+        CHECK(ssa_pc_input_sample(&g->input,&input)==1 && input.yaw_delta==60 && input.pitch_delta==-60);
+        s.mouse_sensitivity=SSA_MOUSE_RANGE;
+        CHECK(ssa_native_game_apply_settings(g,&s)==1);
+        CHECK(ssa_pc_input_relative(&g->input,-10,-10)==1);
+        CHECK(ssa_pc_input_sample(&g->input,&input)==1 && input.yaw_delta==-1920 && input.pitch_delta==1920);
+        CHECK(ssa_pc_input_sensitivity(&g->input,0)==-1 && g->input.yaw_per_count==192);
+        s.mouse_sensitivity=SSA_MOUSE_DEFAULT;
+        CHECK(ssa_native_game_apply_settings(g,&s)==1);
+    }
     s.fov_offset=60;
     s.alternate_weapons=1;s.hud_style=SSA_HUD_CLASSIC;
-    s.surface_decals=s.water_reflections=s.weapon_bobbing=1;s.renderer=SSA_RENDER_GBA;
+    s.sprite_shadows=s.godrays=s.surface_decals=s.water_reflections=s.weapon_bobbing=1;s.renderer=SSA_RENDER_GBA;
     CHECK(ssa_native_game_apply_settings(g,&s)==1);
     CHECK(g->gba_view && g->hud_style==SSA_HUD_CLASSIC && g->alternates.enabled);
-    CHECK(g->surface_decals_enabled && g->water_reflections && g->weapon_bobbing);
+    CHECK(g->surface_decals_enabled && g->water_reflections && g->weapon_bobbing && g->godrays_enabled && g->sprite_shadows_enabled);
     CHECK(g->fov_offset==60);
     g->weapon.fire_inhibited=g->weapon.switch_blocked=g->weapon.colt_pair_pending=1;
     g->alternates.rounds[0]=3;g->alternates.rounds[1]=4;

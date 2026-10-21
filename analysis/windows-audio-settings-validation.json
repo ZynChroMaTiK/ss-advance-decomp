@@ -2,17 +2,17 @@
     "result":  "pass",
     "core":  {
                  "result":  "pass",
-                 "checks":  39878,
+                 "checks":  39995,
                  "music_sequences":  26,
                  "soundfont_seconds":  208,
                  "peak":  32760,
                  "hybrid_music":  true,
                  "music_limited_frames":  237192,
-                 "cpu_seconds":  4.41
+                 "cpu_seconds":  6.43
              },
     "windows":  {
                     "result":  "pass",
-                    "checks":  23781,
+                    "checks":  23860,
                     "score_paths":  6,
                     "midi_only":  false,
                     "hidden_window":  true,
@@ -24,12 +24,12 @@
     "source_sha256":  {
                           "src/audio.c":  "59afb456e49668283cf6f6d3aeb4cb8f83a31cb1b4205f0e5d54a85dcec8c9c7",
                           "src/audio/soundfont.c":  "9f129b39456f91ea01b62d9c384c1633d26422aec51de356e529cc7974bae4b0",
-                          "src/menu.c":  "23ca2fbfeda5a7f7d787bb86f9d304dfb0770811b0e7aa959ce13ac91a25901a",
-                          "src/settings.c":  "2675a3a2b79b7d75cced1964d87b27773edd0c2d7832cb0a876778e934aae86b",
+                          "src/menu.c":  "1127428a91662065d093e6f3cad25b4e16d3dd900617240d0cd4f213635fc060",
+                          "src/settings.c":  "9ee3112bbe970fcc858333ec76e9cec56d8048789bcab56374d072a99d9c54ae",
                           "include/ssa/audio.h":  "b6db2e0252f451175f38438daef9de82cad247d534e8381e67e1bb3f83ceaec1",
                           "include/ssa/soundfont.h":  "073a88a9de2010b6311512e4f1bc1dd610c83dedc778394b536c873ddc41a632",
-                          "include/ssa/menu.h":  "3ee1cf0509a490d58961db66e2edd35deff44a79c49ed6bd2f5b7f2cd5ffc891",
-                          "include/ssa/settings.h":  "88dff27f1b77d5a98a1e7a559485815542eadc325e0debcbd6c74180cef5356f",
+                          "include/ssa/menu.h":  "5653afe9b296e233e295d0596509e495432c2dd606d1b95f0f4a8ba4e6bc4223",
+                          "include/ssa/settings.h":  "482f8a389b59acd42883710180335db210457b65666b3df759461b0d4bc2f689",
                           "platform/win32/audio_win32.c":  "3a370b89325d7b99206063a580120f4adb3c6991e114a4313d85fab12198e8d4",
                           "platform/win32/audio_win32.h":  "bcaa8a50b6e91aea0c44bec23566c293fb6e642c44930e61dbb9c38096d4b5c1",
                           "platform/win32/midi_win32.c":  "ad23849cad82e7f6508f07f865ee2634bb89b772d6b2053543192a70169e0449",
@@ -37,8 +37,8 @@
                           "include/ssa/music_instrument.h":  "485cd06b76033ea185e83f2cd796935995876c9734b56a2dae4e54467ce15d4d",
                           "platform/win32/game.c":  "81548e40a21d67c6538444cbb5d13bbed07456870f309f8fd81b8c461d438f6d",
                           "platform/win32/profile_win32.c":  "99200b54be93595a53c754bbf66413d86342ad73dc65308856b7825f550c799a",
-                          "tests/test_audio_settings.c":  "1b427dd8e3fbc44939852ed197aceece411a86e162eaa640bfaa1604f706a5cc",
-                          "tests/test_settings_win32.c":  "9168d96970117c89d84a5968a28e95c8bfab08726a95756d855c649bcd9087d6",
+                          "tests/test_audio_settings.c":  "5fb9c05e09d282e589e8722c4a7fe3cce74ee15df937f641e4bccba3fada38ab",
+                          "tests/test_settings_win32.c":  "454d2a55a0f444a97359c1955b3e8e4fab463daa218e64ebdbfc7e78289abcdd",
                           "third_party/TinySoundFont/tsf.h":  "70d55963c98f60ebb81518eaa1f25d46888d5180eb5f5289fd6b74ffc177d197"
                       },
     "soundfont_sha256":  "ae2e56711dc40835d3f97d975d80eadb2abdc76dc9da8b055f7a3c18dab20974",

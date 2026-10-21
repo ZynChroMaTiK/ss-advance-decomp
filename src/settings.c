@@ -19,16 +19,43 @@ int ssa_settings_equal(const SsaSettings *a,const SsaSettings *b){
 }
 int ssa_settings_encode(const SsaSettings *s,uint8_t *b,size_t n){uint32_t c;unsigned i;
     if(!ssa_settings_valid(s) || !b || n!=SSA_SETTINGS_BYTES)return -1;
-    memcpy(b,"SSA-OPT",7);b[7]=(uint8_t)(s->vertical_aim|(s->fov_offset<<1)|((s->renderer>>1)<<7));b[8]=(uint8_t)(15|(s->water_reflections<<4)|(s->surface_decals<<5)|(s->weapon_bobbing<<6)|(s->aspect_ratio<<7));b[9]=(uint8_t)(s->music_style|((s->renderer&1)<<2)|(s->jump_enabled<<3)|(s->ingame_netricsa<<4)|(s->thirdperson_enabled<<5)|(s->display_mode<<6)|(s->alternate_weapons<<7));
-    /* Version15 uses byte7 bit7 for the renderer's second bit. Earlier
-     * software/GBA values, all other choices, size and CRC stay intact. */
-    b[10]=(uint8_t)(s->music_volume|(s->automap_enabled<<7));b[11]=(uint8_t)(s->sound_volume|(s->hud_style<<7));
+    /* v19 adds sprite shadows in byte10 bit7, preserving the compact
+     * v18 mouse layout and16-byte CRC record. Older records decode below. */
+    memcpy(b,"SSA",3);b[3]=19;
+    b[4]=(uint8_t)(s->music_style|(s->renderer<<2)|(s->display_mode<<4)|(s->hud_style<<5)|(s->aspect_ratio<<6));
+    b[5]=(uint8_t)(s->music_volume|(s->automap_enabled<<7));
+    b[6]=(uint8_t)(s->sound_volume|(s->jump_enabled<<7));
+    b[7]=(uint8_t)(s->fov_offset|(s->vertical_aim<<6)|(s->thirdperson_enabled<<7));
+    /* Keep both v18 axis bytes equal for compatibility. Existing unequal
+     * v18 values migrate to the horizontal setting when decoded. */
+    b[8]=b[9]=(uint8_t)s->mouse_sensitivity;
+    b[10]=(uint8_t)(s->ingame_netricsa|(s->alternate_weapons<<1)|(s->weapon_bobbing<<2)|
+        (s->surface_decals<<3)|(s->water_reflections<<4)|(s->mipmaps<<5)|(s->godrays<<6)|(s->sprite_shadows<<7));
+    b[11]=0;
     c=crc(b);for(i=0;i<4;++i)b[12+i]=(uint8_t)(c>>(8*i));return 1;
 }
 int ssa_settings_decode(SsaSettings *s,const uint8_t *b,size_t n){uint32_t c=0;unsigned i,version;SsaSettings next;
-    if(!s || !b || n!=SSA_SETTINGS_BYTES || memcmp(b,"SSA-OPT",7))return -1;
-    version=b[8]&15;
-    if(version<1 || version>15 || (b[7] & (version>=15?0:version>=14?128:version>=13?254:255)) || (version<12 && (b[8]&16)) || (version<9 && (b[8]&128)) || (version<10 && (b[8]&64)) || (version<11 && (b[8]&32)))return -1;
+    if(!s || !b || n!=SSA_SETTINGS_BYTES)return -1;
+    if(!memcmp(b,"SSA",3) && (b[3]==18 || b[3]==19)){
+        if((b[4]&128) || (b[3]==18 && (b[10]&128)) || b[11] || b[9]>SSA_MOUSE_RANGE)return -1;
+        for(i=0;i<4;++i)c|=(uint32_t)b[12+i]<<(8*i);
+        if(c!=crc(b))return -1;
+        next=(SsaSettings)SSA_SETTINGS_DEFAULT;
+        next.music_style=b[4]&3;next.renderer=(b[4]>>2)&3;
+        next.display_mode=(b[4]>>4)&1;next.hud_style=(b[4]>>5)&1;next.aspect_ratio=(b[4]>>6)&1;
+        next.music_volume=b[5]&127;next.automap_enabled=b[5]>>7;
+        next.sound_volume=b[6]&127;next.jump_enabled=b[6]>>7;
+        next.fov_offset=b[7]&63;next.vertical_aim=(b[7]>>6)&1;next.thirdperson_enabled=b[7]>>7;
+        next.mouse_sensitivity=b[8];
+        next.ingame_netricsa=b[10]&1;next.alternate_weapons=(b[10]>>1)&1;next.weapon_bobbing=(b[10]>>2)&1;
+        next.surface_decals=(b[10]>>3)&1;next.water_reflections=(b[10]>>4)&1;
+        next.mipmaps=(b[10]>>5)&1;next.godrays=(b[10]>>6)&1;next.sprite_shadows=b[3]>=19?b[10]>>7:0;
+        if(!ssa_settings_valid(&next))return -1;
+        *s=next;return 1;
+    }
+    if((b[0]&127)!='S' || memcmp(b+1,"SA-O",4) || (b[5]&127)!='P' || (b[6]&127)!='T')return -1;
+    version=b[8]&15;if(b[0]&128){if(!version)return -1;version+=16;}else if(!version)version=16;
+    if(version<1 || version>17 || (version<17 && b[5]!='P') || (version<16 && b[6]!='T') || (b[7] & (version>=15?0:version>=14?128:version>=13?254:255)) || (version<12 && (b[8]&16)) || (version<9 && (b[8]&128)) || (version<10 && (b[8]&64)) || (version<11 && (b[8]&32)))return -1;
     for(i=0;i<4;++i)c|=(uint32_t)b[12+i]<<(8*i);
     if(c!=crc(b))return -1;
     next=(SsaSettings)SSA_SETTINGS_DEFAULT;
@@ -49,6 +76,8 @@ int ssa_settings_decode(SsaSettings *s,const uint8_t *b,size_t n){uint32_t c=0;u
     if(version>=13)next.vertical_aim=b[7]&1;
     if(version>=14)next.fov_offset=(b[7]>>1)&63;
     if(version>=15)next.renderer|=(b[7]>>7)<<1;
+    next.mipmaps=version>=16?b[6]>>7:0; /* Preserve prior native appearance. */
+    next.godrays=version>=17?b[5]>>7:next.surface_decals; /* Retain the former coupled effect. */
     if(!ssa_settings_valid(&next))return -1;
     *s=next;return 1;
 }

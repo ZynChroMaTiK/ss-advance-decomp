@@ -68,9 +68,12 @@ static int projectile(Call *p,unsigned type,int32_t speed)
 static int knockback(Call *p,SsaEnemyControlGame *g,const SsaMathTables *math)
 {
     SsaEntity *e=p->c->activation->entity;int32_t sine,cosine,delta,impulse;int64_t product;
+    /* Contact still hits the actual player, even while pursuing a Prion victim. */
+    SsaEntity *target=g->prion_targets && g->blocking_entity &&
+        (g->blocking_entity->body.flags&0x10)?g->blocking_entity:g->player;
     uint16_t angle=ssa_direction(math,
-        (int16_t)half((uint16_t)(((uint32_t)g->player->body.x-(uint32_t)e->body.x)>>16)),
-        (int16_t)half((uint16_t)(((uint32_t)g->player->body.y-(uint32_t)e->body.y)>>16)));
+        (int16_t)half((uint16_t)(((uint32_t)target->body.x-(uint32_t)e->body.x)>>16)),
+        (int16_t)half((uint16_t)(((uint32_t)target->body.y-(uint32_t)e->body.y)>>16)));
     delta=half(angle)-(half((uint16_t)((unsigned)p->c->activation->facing<<8))-32768);
     if(delta>32768)delta-=65536;else if(delta< -32768)delta+=65536;
     if(delta<0)delta=-delta;
@@ -78,7 +81,7 @@ static int knockback(Call *p,SsaEnemyControlGame *g,const SsaMathTables *math)
     ssa_sincos(math,(uint16_t)delta,&sine,&cosine);(void)sine;
     product=(int64_t)p->c->navigation->speed*cosine;
     impulse=bits((uint32_t)((uint64_t)product>>16));
-    return emit(p,SSA_ENEMY_CONTROL_KNOCKBACK,g->player,impulse,angle,0,0,0,0);
+    return emit(p,SSA_ENEMY_CONTROL_KNOCKBACK,target,impulse,angle,0,0,0,0);
 }
 static int walk(Call *p)
 {

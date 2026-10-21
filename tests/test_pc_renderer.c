@@ -8,6 +8,7 @@
 #include <limits.h>
 static unsigned checks;
 #define CHECK(x) do{if(!(x)){fprintf(stderr,"pc renderer line%d: %s\n",__LINE__,#x);abort();}++checks;}while(0)
+#include "sprite_clip_fixture.h"
 static void put32(uint8_t *p,uint32_t n){p[0]=(uint8_t)n;p[1]=(uint8_t)(n>>8);p[2]=(uint8_t)(n>>16);p[3]=(uint8_t)(n>>24);}
 static void snapshot(const SsaPcRenderer *r,const char *path){
  uint8_t h[54]={0};FILE *f=fopen(path,"wb");CHECK(f);h[0]='B';h[1]='M';put32(h+2,54+r->width*r->height*4);
@@ -56,6 +57,7 @@ int main(int argc,char **argv){
  unsigned i,changed=0,third=0,fallbacks=0;uint32_t *old;
  CHECK(argc>=2 && g && copy && rom);f=fopen(argv[1],"rb");CHECK(f);CHECK(fread(rom,1,0x800000,f)==0x800000);fclose(f);
  CHECK(ssa_native_game_init(g,rom,0x800000,0)==1);CHECK(ssa_native_game_step(g)==1);
+ sprite_clip_fixture(&r,g);
  background_fov(g);
  for(i=0;i<sizeof(sizes)/sizeof(sizes[0]);++i){
   size_t p;CHECK(ssa_pc_renderer_resize(&r,sizes[i][0],sizes[i][1])==1);*copy=*g;

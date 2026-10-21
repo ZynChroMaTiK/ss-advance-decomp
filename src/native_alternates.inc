@@ -50,7 +50,7 @@ int ssa_native_game_alternate_weapons(SsaNativeGame *g,unsigned enabled,unsigned
     g->actor_scene.screen_mirrors=enabled;
     g->pickup.repeat_weapon=enabled && !g->alternates.dual_colts?2:0;
     g->pickup.collect_owned_weapons=1;
-    g->weapon.fire_inhibited=g->weapon.double_colt=g->weapon.switch_blocked=0;
+    g->weapon.fire_inhibited=g->weapon.discard_fire=g->weapon.double_colt=g->weapon.switch_blocked=0;
     g->weapon.colt_pair=0;if(!enabled)g->weapon.colt_pair_pending=0;
     if(enabled && start_mode==SSA_ALTERNATE_NEW_GAME){
         SsaInventory *inventory=&g->players[0].inventory;
@@ -74,7 +74,7 @@ int ssa_native_game_alternate_weapons(SsaNativeGame *g,unsigned enabled,unsigned
 static void alternate_before(SsaNativeGame *g)
 {
     SsaWeaponControl *w=&g->gameplay.weapon;int32_t target;
-    g->weapon.fire_inhibited=g->weapon.double_colt=g->weapon.switch_blocked=0;
+    g->weapon.fire_inhibited=g->weapon.discard_fire=g->weapon.double_colt=g->weapon.switch_blocked=0;
     g->weapon.colt_pair=g->alternates.enabled && w->requested==2 && g->alternates.requested_variant;
     g->weapon.alternate_shotgun=g->alternates.enabled;
     if(g->alternates.dual_colts && !(g->players[0].inventory.weapons&2) && !g->players[0].inventory.pending_count){
@@ -107,6 +107,7 @@ static void alternate_before(SsaNativeGame *g)
             g->alternates.reload_phase=1;g->alternates.reload_dual=g->alternates.variant;
         }
         if(g->alternates.reload_phase){
+            g->weapon.discard_fire=1; /* Includes the tick which completes reload. */
             g->weapon.fire_inhibited=g->weapon.switch_blocked=1;
             if(g->alternates.reload_phase==1){
                 if(!(w->flags&0x400) && !alternate_hands_busy(g)){

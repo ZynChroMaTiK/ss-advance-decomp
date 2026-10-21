@@ -1,0 +1,24 @@
+{
+  "result": "pass",
+  "checks": 14408,
+  "native_shadow_pixels": 816,
+  "gba_shadow_pixels": 112,
+  "sanitizers": "ASan/UBSan/leaks=1",
+  "source_sha256": {
+    "src/sprite_shadows.c": "e5b6daf62cea42ec4aeda7eb85a3d5132b40d78634d43af89bb5c7e345835b64",
+    "src/sprite_shadow_texture.inc": "1e1293ab6189ec562c171b650177d760223f579620b2403f991aaf803312cd5d",
+    "include/ssa/sprite_shadows.h": "2377419fb450829d6bf875f4402a9c34e76aa44fdd7150884af71ac20c9b6de8",
+    "src/native_game.c": "2c9f93218646a7c2e5777452f7224039abfeb48ea494234323cb3e6bc4985522",
+    "src/pc_scene.c": "57b6caa64a8aabbe4ac77f9884452cf01cf69bd9124ca951e73f59728e5aef22",
+    "src/pc_renderer_pitch.inc": "21647c21be8a1c6449b737c1562fa9969f5fd4022e8db8c11944724a19742e12",
+    "src/menu.c": "1127428a91662065d093e6f3cad25b4e16d3dd900617240d0cd4f213635fc060",
+    "src/settings.c": "9ee3112bbe970fcc858333ec76e9cec56d8048789bcab56374d072a99d9c54ae",
+    "include/ssa/settings.h": "482f8a389b59acd42883710180335db210457b65666b3df759461b0d4bc2f689",
+    "tests/test_sprite_shadows.c": "95344e8b4f3445ee63b16ab7cf67d14c8d914c833a28b7b979540f17f265330a",
+    "tests/sprite_shadow_fixture.h": "de09475ccd6238ce4d8ae36c8363514c12e7dec6a9b3aaa82f78c04816bfa4f2",
+    "src/actor_queue.c": "831495d8ce5839e8dfdd89d18ea41700b993dadd62dcbcf37d4a9ba4cb57d16b",
+    "src/actor_scene.c": "c87def95684812aceec293c42e2336fe0fc7c7999e15625bd2c891a8222bc53f",
+    "include/ssa/actor_queue.h": "a89f2e6eccd0a9a57319b964d3ad7fff9bd554dc65809493ec5340deb5cb36f3",
+    "include/ssa/actor_scene.h": "b6dd99b8f6c7fc38da4e0ace535e8ce490c25524cc3c542ecb2e39d8fd6d76bf"
+  }
+}

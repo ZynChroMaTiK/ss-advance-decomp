@@ -1,6 +1,7 @@
 #include "ssa/native_game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 static unsigned checks,cases,buttons,clicks,level_now,mode_now;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"use map%u mode%u line%d: %s\n",level_now,mode_now,__LINE__,#x);exit(1);}}while(0)
 static unsigned u16(const uint8_t *p){return p[0]|(unsigned)p[1]<<8;}
@@ -59,6 +60,8 @@ static void button_case(const uint8_t *rom,unsigned level,unsigned index,unsigne
     if(mode==4)g->gameplay.immediate_use=0; /* Original ready weapon cannot activate yet. */
     clicks=0;CHECK(ssa_native_game_bind_audio(g,&audio)==1);
     if(mode!=5)press(g); /* No key must never activate a button. */
+    if(mode==0){CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,1)==1);
+        CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,0)==1);}
     CHECK(ssa_native_game_tick(g)==1);
     if(mode==4 || mode==5){
         CHECK(!(e->flags&1) && !clicks);
@@ -69,6 +72,15 @@ static void button_case(const uint8_t *rom,unsigned level,unsigned index,unsigne
     if(mode!=2)CHECK(g->gameplay.weapon_action<0xdc00);
     if(mode==3)CHECK(g->gameplay.weapon.current==3 && (g->gameplay.weapon.flags&0x400) && g->weapon_game.shots[2]==1);
     press(g);CHECK(ssa_native_game_tick(g)==1 && clicks==1); /* Original one-shot latch. */
+    if(mode==0){unsigned i;uint32_t shots[10];
+        CHECK(!g->weapon.fire_pending_weapon && !g->weapon.colt_pair_pending);
+        memcpy(shots,g->weapon_game.shots,sizeof shots);
+        CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,1)==1);
+        CHECK(ssa_pc_input_runtime_button(&g->input_runtime,1,0)==1);
+        CHECK(ssa_native_game_tick(g)==1 && !g->weapon.fire_pending_weapon);
+        g->players[0].motion.movement.heading+=32768;
+        for(i=0;i<90;++i)CHECK(ssa_native_game_tick(g)==1 && !memcmp(shots,g->weapon_game.shots,sizeof shots));
+    }
     CHECK(!g->error_line);++cases;ssa_native_game_free(g);free(g);
 }
 int main(int argc,char **argv){

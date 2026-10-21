@@ -1,4 +1,30 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native port findings — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="porting.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-port-findings">Native port findings</h1>
+<p>Sprite shadows (2026-10-21): Graphics now offers independent size-scaled
+player/enemy/item billboard sprites, Off by default, in all three renderers.
+Each shadow is drawn immediately behind its subject with wall silhouette
+clipping; the former floor-projected sampling pass has been removed.
+Settings v19 preserves the16-byte record and reads v1..18. Visual-effect rows
+are88/96/104/112; Back remains144. See <a href="sprite-shadows.html">sprite-shadows.md</a>.</p>
+<p>Graphics now holds Surface decals, Water reflections and Godrays below
+Mipmapping. Extras retains eight gameplay/presentation rows. Saved values,
+defaults and v18 settings layout are unchanged; all three effects remain
+available in GBA, Software and Vulkan.</p>
+<p>Settings now has one Mouse sensitivity slider above FOV, with
+10..300% range and100% preserving the previous64 heading-units/count speed.
+The shared horizontal/vertical value applies immediately and persists across levels.
+Settings v18 retains16 bytes and the CRC, using a compact header/payload while
+reading v1..17 unchanged; v1..17 mouse values migrate to100%, and v18 uses its saved horizontal value. See
+<a href="mouse-sensitivity.html">mouse-sensitivity.md</a>.</p>
+<p>Extras now has an independent Godrays toggle below Water reflections, default
+Off for fresh settings. Settings v17 preserves the16-byte CRC layout, reads
+v1..16, and migrates the previous coupled Surface decals choice to Godrays.
+All three renderers and reflections honor the separate choice; see
+<a href="surface-decals.html">surface-decals.md</a>.</p>
+<p>Graphics now offers original-asset mipmapping for Software and Vulkan, locked On
+for GBA. World textures, sprites and reflected scenes use the ROM's existing mip
+images. Settings v16 preserves the16-byte format and reads versions1..15; fresh
+settings enable mips while migrated native preferences retain their previous
+appearance. See <a href="mipmaps.html">mipmaps.md</a> for selection and validation details.</p>
 <p>Vulkan is now an optional Windows hardware scene backend, selectable in Graphics
 when available. Walls, floor/ceiling polygons, actors and mirrored scenes use GPU
 rasterization; HUD, decals/water composition and presentation retain their CPU
@@ -546,4 +572,16 @@ handoff and immediate E-button policy, superseding older timing checkpoints.
 Boss/post-boss audio loops now use gameplay music2/19/20; focused126730assertions
 pass. Later D8 natural progression, interchapter presentation and original feature
 parity remain unfinished. See enemy-boss.md and current campaign reports.</p>
+<h3 id="sprite-floor-clipping-2026-10-21">Sprite floor clipping (2026-10-21)</h3>
+<p>Software/Vulkan now use the recovered GBA wall-silhouette rules for actors,
+including death/explosion artwork crossing its floor. Shared clipping operates
+before pitch and reflection transforms; nearer solid walls and portal bounds
+still hide actors. GBA remains unchanged. See <a href="sprite-clipping.html">sprite-clipping.md</a>
+for implementation and focused regression results.</p>
+<h3 id="floorceiling-edge-decals-2026-10-21">Floor/ceiling edge decals (2026-10-21)</h3>
+<p>Surface decals now includes randomly placed, connected grime strips at dry
+floor and ceiling boundaries. An8KiB stored binary atlas uses the existing
+surface palette and2-unit texels, with matching ports and empty/end variants.
+All renderers share the live boundary sampler and existing shoreline index.
+See <a href="surface-decals.html">surface-decals.md</a> for ownership and validation.</p>
 </details><script type="module" src="../reference.js"></script></main></body></html>

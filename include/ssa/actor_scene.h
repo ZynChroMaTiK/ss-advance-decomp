@@ -30,4 +30,6 @@ int ssa_actor_scene_draw(SsaActorScene *,const SsaRenderCamera *,uint32_t game_f
     const SsaActorSource *,size_t count);
 int ssa_actor_scene_draw_offsets(SsaActorScene *,const SsaRenderCamera *,uint32_t game_flags,
     const SsaActorSource *,size_t count,const int32_t *z_offsets);
+int ssa_actor_scene_draw_layers(SsaActorScene *,const SsaRenderCamera *,uint32_t game_flags,
+    const SsaActorSource *,size_t count,const int32_t *z_offsets,SsaActorUnderlay,void *);
 #endif

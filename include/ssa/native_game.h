@@ -7,6 +7,7 @@ enum { SSA_NATIVE_CAMPAIGN_LEVELS=12 };
 #include "ssa/pc_input_runtime.h"
 #include "ssa/enemy_control_runtime.h"
 #include "ssa/actor_scene.h"
+#include "ssa/sprite_shadows.h"
 #include "ssa/render_view.h"
 #include "ssa/hud_sprites.h"
 #include "ssa/hud_notice.h"
@@ -21,6 +22,7 @@ enum { SSA_NATIVE_CAMPAIGN_LEVELS=12 };
 #include "ssa/settings.h"
 #include "ssa/surface_decals.h"
 #include "ssa/water.h"
+#include "ssa/godrays_reference.h"
 
 /* Campaign-session dossier discoveries and individual read acknowledgements. */
 typedef struct SsaNetricsaJournal {
@@ -52,17 +54,22 @@ typedef struct SsaNativeGame {
     unsigned music_mode,music_serial;
     unsigned gba_view; /* Level camera/autoaim, with the original cursor projected onto its shot. */
     unsigned vertical_aim; /* Opt-in mouse pitch; GBA rendering always uses original autoaim. */
+    unsigned mipmaps; /* Original ROM mip assets; GBA always enables them. */
     unsigned fov_offset; /* Native horizontal FOV at3:2, in degrees above60. */
     unsigned hud_style,hud_suppressed; /* Suppressed only for clean frontend captures. */
     unsigned weapon_bobbing; /* PC first-person weapon/flash motion; default0. */
     int32_t weapon_bob_x,weapon_bob_y; /* Shared nonnegative8.8 offsets for both hands. */
     unsigned pc_weapon_separate; /* Unshifted art for bob overflow beyond3:2. */
     SsaSpriteOam pc_weapon_oam,pc_hud_oam,pc_center_hud_oam;
+    unsigned sprite_shadows_enabled;
+    uint8_t shadow_colors[4][256];
+    unsigned godrays_enabled; /* Independent optional light shafts; default0. */
     unsigned surface_decals_enabled; /* Optional floor/ceiling detail; default0. */
     SsaSurfaceDecals surface_decals;
     unsigned water_reflections; /* Saved Extras feature; default0. */
     SsaWaterScene water_scene;
     SsaWaterRender water_render;
+    SsaGodrayReference godrays;
     struct SsaPcRenderer *water_renderer;
     SsaNetricsaJournal journal;
     uint16_t hud_netricsa_ticks; /*2s analysis, then3s inbox travel/hold/return. */

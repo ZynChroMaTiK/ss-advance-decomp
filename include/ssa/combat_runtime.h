@@ -14,7 +14,7 @@ typedef struct SsaCombatRuntime {
     SsaCombatExplosion explosion;
     unsigned reserved_count, player_count, updating;
     unsigned boss_projectile_immunity; /* PC: D7/D8 ignore only their own projectile hits/blasts. */
-    unsigned prion_balance; /* PC: current-health boost and enemy-only combat/attack policy. */
+    unsigned prion_balance; /* PC: current-health boost and enemy-target pursuit/ranged policy. */
 } SsaCombatRuntime;
 typedef struct SsaCombatRuntimeOps {
     /* Only SOUND and NETWORK are forwarded; rewards update score natively.

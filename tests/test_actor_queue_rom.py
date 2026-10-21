@@ -13,7 +13,7 @@ class ActorProjection(C.Structure):
  _fields_=[('reserved',C.c_uint32)]+[(n,C.c_int16) for n in ('x','y','width','height')]+[('frame_flags',C.c_uint32),('scale',C.c_int32)]+[(n,C.c_int16) for n in ('world_x','world_y','bottom_z','top_z')]+[('animation',C.c_uint16),('clip_offset',C.c_uint16),('left',C.c_int16),('clipped_width',C.c_int16)]
 class Actor(C.Structure):_fields_=[('previous',C.c_uint16),('next',C.c_uint16),('depth',C.c_int32),('projection',C.c_uint16),('clip_offset',C.c_uint16)]
 class WallClip(C.Structure):_fields_=[('flags',C.c_uint32),('bottom_height',C.c_int16),('top_height',C.c_int16),('top',P(C.c_uint8)),('bottom',P(C.c_uint8)),('top_size',C.c_size_t),('bottom_size',C.c_size_t),('top_x',C.c_int16),('bottom_x',C.c_int16)]
-class Queue(C.Structure):_fields_=[('visibility',P(Visibility)),('wall_clips',WallClip*100),('projections',ActorProjection*32),('actors',Actor*32),('clip_words',C.c_int16*7684),('draw_order',C.c_uint16*32),('projection_count',C.c_uint16),('actor_count',C.c_uint16),('draw_count',C.c_uint16),('clip_cursor',C.c_uint32),('updating',C.c_uint)]
+class Queue(C.Structure):_fields_=[('visibility',P(Visibility)),('wall_clips',WallClip*100),('projections',ActorProjection*32),('actors',Actor*32),('clip_words',C.c_int16*7684),('draw_order',C.c_uint16*32),('projection_count',C.c_uint16),('actor_count',C.c_uint16),('draw_count',C.c_uint16),('clip_cursor',C.c_uint32),('updating',C.c_uint),('fixed_screen_mask',C.c_uint32)]
 BUILD=ROOT/'build/native-tests';BUILD.mkdir(parents=True,exist_ok=True)
 sources=['actor_queue.c','geometry.c','map_assets.c','movement.c']
 sources+=['actor_raster.c','actor_assets.c']

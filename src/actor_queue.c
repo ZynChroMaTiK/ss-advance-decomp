@@ -43,7 +43,7 @@ int ssa_actor_queue_begin(SsaActorQueue *q,SsaWorldVisibility *v)
         previous=index;index=v->walls[index].next;
     }
     if(v->tail!=previous)return -1;
-    q->visibility=v;q->actor_count=q->projection_count=q->draw_count=0;q->clip_cursor=0;return 1;
+    q->visibility=v;q->actor_count=q->projection_count=q->draw_count=0;q->clip_cursor=0;q->fixed_screen_mask=0;return 1;
 }
 int ssa_actor_queue_allocate(SsaActorQueue *q)
 {
@@ -207,7 +207,8 @@ int ssa_actor_queue_order(SsaActorQueue *q)
     q->draw_count=(uint16_t)count;q->updating=0;return 1;
 failure:q->updating=0;return -1;
 }
-int ssa_actor_queue_draw(SsaActorQueue *q,const SsaActorAssets *assets,uint8_t *framebuffer,size_t size)
+int ssa_actor_queue_draw_layers(SsaActorQueue *q,const SsaActorAssets *assets,uint8_t *framebuffer,size_t size,
+    SsaActorUnderlay underlay,void *context)
 {
     unsigned i;int result=-1;
     if(!assets || !assets->loaded || !framebuffer || size<14400 || ssa_actor_queue_order(q)<0)return -1;
@@ -215,9 +216,43 @@ int ssa_actor_queue_draw(SsaActorQueue *q,const SsaActorAssets *assets,uint8_t *
     for(i=q->draw_count;i>0;--i) {
         const SsaActorRecord *record=q->actors+q->draw_order[i-1];
         if(record->projection>=q->projection_count || record->clip_offset>=SSA_ACTOR_CLIP_WORDS)goto done;
+        if(underlay && underlay(context,q,q->draw_order[i-1],framebuffer,size)<0)goto done;
         if(ssa_actor_raster_draw(assets,q->projections+record->projection,
             q->clip_words+record->clip_offset,SSA_ACTOR_CLIP_WORDS-record->clip_offset,framebuffer,size)<0)goto done;
     }
     result=1;
 done:q->updating=0;return result;
+}
+
+int ssa_actor_queue_draw(SsaActorQueue *q,const SsaActorAssets *assets,uint8_t *fb,size_t size)
+{return ssa_actor_queue_draw_layers(q,assets,fb,size,NULL,NULL);}
+int ssa_actor_queue_sprite_clips(const SsaActorQueue *q,int32_t depth,int32_t wx,int32_t wy,
+    int bottom,int top,int left,int right,int16_t clips[240])
+{
+    unsigned index,seen=0;int x;
+    if(!valid(q) || !clips || left<0 || right>=120 || right<left)return -1;
+    for(x=left;x<=right;++x){clips[x*2]=-1;clips[x*2+1]=120;}
+    index=q->visibility->head;
+    while(index!=65535){const SsaVisibleWall *w;const SsaActorWallClip *c;int low,high,behind,from,to;unsigned flags;
+        if(++seen>q->actor_count+q->visibility->wall_count)return -1;
+        if(index&0x8000){unsigned a=index&0x7fff;if(a>=q->actor_count)return -1;index=q->actors[a].next;continue;}
+        if(index>=q->visibility->wall_count)return -1;
+        w=&q->visibility->walls[index];c=&q->wall_clips[index];index=w->next;
+        if(w->left>right || w->right<left)continue;
+        low=w->depth_left;high=w->depth_right;if(low>high){int t=low;low=high;high=t;}
+        behind=depth<low?1:depth>high?0:side(q,w->segment_flags&0x7fff,wx,wy);
+        if(behind<0)return -1;
+        if(!behind)continue;
+        from=w->left>left?w->left:left;to=w->right<right?w->right:right;flags=c->flags;
+        if(flags==3 && c->bottom_height==32767 && c->top_height==INT16_MIN){
+            for(x=from;x<=to;++x){clips[x*2]=120;clips[x*2+1]=-1;}continue;}
+        if(bottom>=c->bottom_height)flags&=~1u;
+        if(top<=c->top_height)flags&=~2u;
+        if(flags>=1 && flags<=3)for(x=from;x<=to;++x){int value;
+            if(flags&1){if(clip_byte(c->bottom,c->bottom_size,c->bottom_x,x,&value)<0)return -1;
+                if(value!=-2 && clips[x*2+1]>value)clips[x*2+1]=(int16_t)value;}
+            if(flags&2){if(clip_byte(c->top,c->top_size,c->top_x,x,&value)<0)return -1;
+                if(value!=-2 && clips[x*2]<value)clips[x*2]=(int16_t)value;}}
+    }
+    return 1;
 }

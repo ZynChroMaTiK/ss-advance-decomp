@@ -418,7 +418,15 @@ int ssa_native_game_draw(SsaNativeGame *g)
         if(ssa_pc_renderer_reflect(&g->water_renderer,g,&g->render_view.camera,0,&g->water_render,NULL,
             g->world_scene.framebuffer+SSA_SCENE_FRAME_PREFIX)<0)return -1;}
     n=g->spawn.pool.active_count;
-    if(ssa_actor_scene_draw_offsets(&g->actor_scene,&g->render_view.camera,g->frame_game.flags,g->sources,n,g->source_z_offsets)<0){fprintf(stderr,"Native reference actor rendering failed (%u sources).\n",n);return -1;}
+    if(g->sprite_shadows_enabled){SsaSpriteShadows shadows;
+        if(ssa_sprite_shadows_prepare(&shadows,&g->map,&g->actor_assets,g->sources,n,&g->players[0].entity,
+            &g->surface_decals,g->shadow_colors[0])<0 ||
+           ssa_sprite_shadows_reference(&shadows,&g->actor_scene,&g->render_view.camera,g->frame_game.flags,
+            g->sources,n,g->source_z_offsets)<0)return -1;
+    }else if(ssa_actor_scene_draw_offsets(&g->actor_scene,&g->render_view.camera,g->frame_game.flags,g->sources,n,g->source_z_offsets)<0){
+        fprintf(stderr,"Native reference actor rendering failed (%u sources).\n",n);return -1;}
+    g->godrays.triangles=0;
+    if(g->godrays_enabled && ssa_godrays_reference(&g->godrays,&g->actor_scene,&g->render_view.camera,g->palette_effect.colors)<0)return -1;
     if(ssa_display_compose_gameplay(&g->registers,pixels,14400,
        g->palette_effect.colors,g->sprite_assets.palette,
        &g->oam,g->cache.tiles,sizeof(g->cache.tiles),g->rgb555,SSA_DISPLAY_PIXELS,
@@ -794,7 +802,9 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_classic_hud_text_load(&g->hud_text,rom,size)==1);
     INIT(ssa_sprite_cache_init(&g->cache)==1);
     INIT(ssa_palette_effect_init(&g->palette_effect,rom,size,level)==1);
+    INIT(ssa_godray_palette(&g->godrays.palette,g->palette_effect.colors)==1);
     INIT(ssa_surface_decals_init(&g->surface_decals,g->palette_effect.colors,level)==1);
+    ssa_sprite_shadow_palette(g->shadow_colors,g->palette_effect.colors);
     INIT(ssa_sprite_oam_init(&g->oam,rom,size)==1);INIT(ssa_display_registers_default(&g->registers)==1);
     INIT(ssa_actor_animation_set(&g->player_animation,g->players[0].animation,g->players[0].animation_ticks)==1);
     INIT(ssa_actor_animation_runtime_init(&g->actor_runtime,&g->spawn,&g->actor_animations,reserved,states,n+1)==0);
@@ -827,6 +837,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_pc_input_init(&g->input,64)==1);INIT(ssa_pc_input_runtime_init(&g->input_runtime,&g->input,&g->game,0)==0);
     INIT(ssa_map_texture_bindings_init(&g->bindings,&g->map,&g->textures,(unsigned)ssa_texture_assets_family(level))==1);
     INIT(ssa_water_scene_init(&g->water_scene,&g->bindings,&g->math,&g->sky,g->palette_effect.colors)==1);
+    g->surface_decals.edge_scene=&g->water_scene;
     INIT(ssa_world_scene_init(&g->world_scene,&g->bindings,&g->math,&g->visibility_tables,&g->wall_tables,&g->sky,level)==1);
     INIT(ssa_actor_scene_init(&g->actor_scene,&g->world_scene,&g->world,&g->actor_assets,&g->math)==1);
     g->render_view.math=&g->math;g->render_view.players[0].flags=4;g->render_view.ticks=1;

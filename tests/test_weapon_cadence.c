@@ -124,9 +124,15 @@ static void quick_clicks(const uint8_t *rom,unsigned weapon){
     tap(g);CHECK(ssa_native_game_tick(g)==1 && !g->weapon_game.shots[weapon-1]);
     CHECK(g->weapon.fire_pending_weapon==weapon);await_click(g,weapon,0);
     CHECK(g->players[0].inventory.ammo[weapon-1]==(weapon<=2?999:300-spent));
-    /* Another short click during the previous attack/reload must reach one
-     * more shot; it must neither reset cadence nor run continuously. */
-    tap(g);await_click(g,weapon,1);
+    /* Reload/recovery drops a released click. Automatics and Colt recoil
+     * retain their cadence buffering; a fresh ready click always works. */
+    tap(g);
+    if(weapon!=2 && !g->weapon_rules.continuous[weapon-1]){
+        CHECK(ssa_native_game_tick(g)==1 && !g->weapon.fire_pending_weapon);
+        for(i=0;i<90;++i)CHECK(ssa_native_game_tick(g)==1 && g->weapon_game.shots[weapon-1]==1);
+        tap(g);
+    }
+    await_click(g,weapon,1);
     CHECK(g->players[0].inventory.ammo[weapon-1]==(weapon<=2?999:300-2*spent));
     for(i=0;i<90;++i)CHECK(ssa_native_game_tick(g)==1 && g->weapon_game.shots[weapon-1]==2);
     CHECK(!(g->gameplay.weapon.flags&0x400));

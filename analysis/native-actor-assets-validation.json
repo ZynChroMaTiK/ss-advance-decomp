@@ -14,9 +14,9 @@
   "asan_ubsan_assertions": 37860,
   "source_sha256": {
     "src/actor_assets.c": "6a817118496e1d8eee12532055a2aa0aaa5d0cbf79f3942d1aa4dd8e8aec0544",
-    "src/actor_raster.c": "550377f8818a0d3f9112ef85e3a64785ace0e582be0342e4c0988130d1d7de65",
+    "src/actor_raster.c": "d1a9d805849cf2f6544d2da18d15df2d85bc95a642d10dcea1b533cd862fb9fc",
     "include/ssa/actor_assets.h": "3c5e4b100ced3c8eb74ae7ac385f71ef622644003e5c2b63b3fc93d19949e332",
-    "include/ssa/actor_raster.h": "4016d1120a8d64382dae16c55f16eda55b1076499154c71eb3702256f46981c0",
+    "include/ssa/actor_raster.h": "d0091db80ccc2ab0299da3c406ffcd2536fda7cc733a28c6db1dfa6d269020d0",
     "tests/test_actor_assets.py": "5bc3e3da85a7ec08a13b30abdee021e243e957da18bb9aa01b394d2b51623323",
     "tests/test_actor_assets.c": "46f7839921d3fcc172832f1963a5e689bb18de237baed166a8c971356a5b0f34"
   }

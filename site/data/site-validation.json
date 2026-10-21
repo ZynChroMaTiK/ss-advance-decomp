@@ -1,12 +1,11 @@
 {
   "status": "PASS",
   "checks": {
-    "html_links_and_inline_scripts": 756,
+    "html_links_and_inline_scripts": 1211,
     "viewer_javascript": "syntax and DOM bindings",
     "geometry_helpers": "executed against all exported levels",
     "css": "parsed",
     "vendor": "pinned SHA256 verified",
-    "embedded_atlas_hashes": "PASS",
     "rom": "unchanged"
   },
   "levels": 16,
@@ -17,8 +16,9 @@
   "http": {
     "status": "PASS",
     "prefix": "/ss-advance-decomp/",
-    "http_resources": 386,
-    "javascript_mime": "PASS"
+    "http_resources": 395,
+    "javascript_mime": "PASS",
+    "removed_2d_resources": "404"
   },
   "browser_webgl_visual_qa": "unavailable: no browser connected"
 }

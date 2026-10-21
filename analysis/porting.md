@@ -1,5 +1,37 @@
 # Native port findings
 
+Sprite shadows (2026-10-21): Graphics now offers independent size-scaled
+player/enemy/item billboard sprites, Off by default, in all three renderers.
+Each shadow is drawn immediately behind its subject with wall silhouette
+clipping; the former floor-projected sampling pass has been removed.
+Settings v19 preserves the16-byte record and reads v1..18. Visual-effect rows
+are88/96/104/112; Back remains144. See [sprite-shadows.md](sprite-shadows.md).
+
+
+Graphics now holds Surface decals, Water reflections and Godrays below
+Mipmapping. Extras retains eight gameplay/presentation rows. Saved values,
+defaults and v18 settings layout are unchanged; all three effects remain
+available in GBA, Software and Vulkan.
+
+Settings now has one Mouse sensitivity slider above FOV, with
+10..300% range and100% preserving the previous64 heading-units/count speed.
+The shared horizontal/vertical value applies immediately and persists across levels.
+Settings v18 retains16 bytes and the CRC, using a compact header/payload while
+reading v1..17 unchanged; v1..17 mouse values migrate to100%, and v18 uses its saved horizontal value. See
+[mouse-sensitivity.md](mouse-sensitivity.md).
+
+Extras now has an independent Godrays toggle below Water reflections, default
+Off for fresh settings. Settings v17 preserves the16-byte CRC layout, reads
+v1..16, and migrates the previous coupled Surface decals choice to Godrays.
+All three renderers and reflections honor the separate choice; see
+[surface-decals.md](surface-decals.md).
+
+Graphics now offers original-asset mipmapping for Software and Vulkan, locked On
+for GBA. World textures, sprites and reflected scenes use the ROM's existing mip
+images. Settings v16 preserves the16-byte format and reads versions1..15; fresh
+settings enable mips while migrated native preferences retain their previous
+appearance. See [mipmaps.md](mipmaps.md) for selection and validation details.
+
 Vulkan is now an optional Windows hardware scene backend, selectable in Graphics
 when available. Walls, floor/ceiling polygons, actors and mirrored scenes use GPU
 rasterization; HUD, decals/water composition and presentation retain their CPU
@@ -521,3 +553,21 @@ handoff and immediate E-button policy, superseding older timing checkpoints.
 Boss/post-boss audio loops now use gameplay music2/19/20; focused126730assertions
 pass. Later D8 natural progression, interchapter presentation and original feature
 parity remain unfinished. See enemy-boss.md and current campaign reports.
+
+
+### Sprite floor clipping (2026-10-21)
+
+Software/Vulkan now use the recovered GBA wall-silhouette rules for actors,
+including death/explosion artwork crossing its floor. Shared clipping operates
+before pitch and reflection transforms; nearer solid walls and portal bounds
+still hide actors. GBA remains unchanged. See [sprite-clipping.md](sprite-clipping.md)
+for implementation and focused regression results.
+
+
+### Floor/ceiling edge decals (2026-10-21)
+
+Surface decals now includes randomly placed, connected grime strips at dry
+floor and ceiling boundaries. An8KiB stored binary atlas uses the existing
+surface palette and2-unit texels, with matching ports and empty/end variants.
+All renderers share the live boundary sampler and existing shoreline index.
+See [surface-decals.md](surface-decals.md) for ownership and validation.

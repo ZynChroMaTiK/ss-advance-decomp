@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native sprite clipping, 2026-10-21 — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="sprite-clipping.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-sprite-clipping-2026-10-21">Native sprite clipping, 2026-10-21</h1>
+<p>Death sprites and explosion artwork can extend below an actor's logical floor.
+The native per-pixel world depth test sliced off those texels. Raising the
+sprite or adding a depth bias would move original artwork or expose walls.</p>
+<h2 id="original-rendering-rule">Original rendering rule</h2>
+<p>The recovered <code>actor_queue.c</code> insertion (08001238), <code>wall_renderer.c</code> wall
+results, and <code>actor_projection.c</code> agree on a different rule: actors are painted
+back-to-front through wall silhouette clips. Floor and ceiling pixels do not
+independently depth-test the sprite. Wall depth endpoints choose front/behind;
+when those depths straddle the actor, its XY origin chooses the wall side.
+Portal bottom/top silhouettes are gated by the actor body's bottom/top Z,
+not the artwork's opaque texel bounds. One-sided and closed walls hide the
+whole overlapping interval. The existing explicit <code>step_adjust</code> crop remains.
+These recovered routines already have ROM differential validation; their GBA
+implementation is unchanged by this correction.</p>
+<h2 id="shared-native-implementation">Shared native implementation</h2>
+<p><code>pc_actor_clip.inc</code> owns reusable clipping scratch. <code>pc_renderer_pitch.inc</code>
+projects nearer wall intervals into the upright billboard plane, applies the
+original body-height silhouette gates, splits at interval endpoints, and clips
+against the resulting linear upper/lower bounds. The visible pieces are
+triangulated before camera pitch and near/water-plane clipping. This preserves
+native resolution, FOV and vertical aim without scaling a 120-column GBA mask.</p>
+<p>Software and Vulkan now use those same prepared actor triangles and stable
+far-to-near ordering, including reflections. They do not retest those triangles
+against floor/ceiling depth. The returned actor depth remains geometric for
+later effects. Transparent texels still discard; fixed-screen weapon effects
+paint after all world actors. Vulkan retains its two batched pipelines and no
+longer needs a sprite depth bias. World geometry still uses normal depth tests.</p>
+<p>Native floating-point coverage is not claimed pixel-identical to GBA's integer
+rasterizer. GBA's original clipping/rasterization path remains intact.</p>
+<h2 id="validation">Validation</h2>
+<p><code>tests/sprite_clip_fixture.h</code> runs through both real backends. A grounded sprite
+extends below its own floor at three pitch/FOV combinations. It must retain
+thousands of covered pixels that the old depth test discarded; lowering all
+floors must not expose any additional sprite rows. A sprite behind a real
+one-sided wall must remain fully hidden at each tested pitch. Existing Vulkan
+priority/transparent-layer and paired scene/reflection checks still run.</p>
+<ul>
+<li>ASan/UBSan PC renderer: 11,803,544 checks, seven sizes, jump and chase views.</li>
+<li>Vulkan: 6,487,023 checks, 28 paired scene draws, zero validation errors;
+hidden frontend launch/resize smoke passes.</li>
+<li>All ten focused CTests pass, including decals, godrays, HUD and mipmaps.</li>
+<li>Windows frontend and 128 native libraries rebuilt. No campaign replay.</li>
+</ul>
+</main></body></html>

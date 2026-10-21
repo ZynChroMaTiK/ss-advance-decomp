@@ -16,4 +16,8 @@
 int ssa_actor_raster_draw(const SsaActorAssets *,const SsaActorProjection *,
     const int16_t *clip_words,size_t clip_word_count,
     uint8_t *framebuffer,size_t framebuffer_size);
+/* Identical opaque texel coverage/clipping into a caller-owned depth mask;
+ * size is the number of uint16_t elements. Transparent texels remain untouched. */
+int ssa_actor_raster_depth(const SsaActorAssets *,const SsaActorProjection *,
+    const int16_t *,size_t,uint16_t *,size_t,uint16_t);
 #endif

@@ -1,0 +1,24 @@
+{
+  "result": "pass",
+  "checks": 655734,
+  "real_views_with_shafts": 3,
+  "gba_changed_pixels": 1127,
+  "source_sha256": {
+    "src/pc_scene.c": "7850b10cfb07dc011325d9549d8a39e9a743f3f7e8438bb66c0db7f963f82fa7",
+    "src/pc_godrays.inc": "57dcfb4681e3a7b8548a391dc04f40dd403f632d753500c7ca34ec0e32767fd1",
+    "src/pc_renderer_pitch.inc": "c2ad8af94d7b28e7dbd0f7a5d305cd4ca8c25eba73b5ea051c5936e946d43ce3",
+    "src/godrays.c": "c39d05d2d041231bfb22c50c822f15dd080eb3aaeac21c666064c253856c84e8",
+    "src/godrays_reference.c": "a59eb5d2dc567d0afd01b2934cf6605b9372065b344cda3286063308a4c42314",
+    "include/ssa/godrays.h": "f3ccd4d5082daa1cfd2a0c0f80f187b7eb188ae795e44a407fd732b3985352ab",
+    "include/ssa/godrays_reference.h": "3c5a1f249e1a9ba3cfb4dca32a8a931d4c548dc206cd4feb650f1281b65d836b",
+    "src/actor_raster.c": "d1a9d805849cf2f6544d2da18d15df2d85bc95a642d10dcea1b533cd862fb9fc",
+    "src/actor_projection.c": "8c71a5c587b6b2ff77434251a4f7a59fb16bf65e16b3c1821f92012770da51c8",
+    "src/actor_queue.c": "ecfadb97deb08cb27a89a065bf72ca00f6d2e69fed584746e5fb8f9014fc6534",
+    "include/ssa/actor_queue.h": "69082cae372d8d509f0a6bd76fce39d23c11e69d7f301b2de488cd90f90e5612",
+    "src/native_game.c": "44f69039f0f8b101ffcbe909f165d4796e2ecb8bbe8e06c73eff46be3d53ec51",
+    "include/ssa/pc_renderer.h": "3320abf1eab1590010424c0febc8376cf7e49418bb42efbacf465d588f56b924",
+    "tests/test_godrays.c": "a33e97f8e601506ee68e822476de3f6217e91fdc5fc57b6c393aaac1685a9ca6",
+    "tests/test_godrays.py": "9f7e6d5153193433e8189f22e35a92a19a54911d9c925b2b1a579788e2e364b4",
+    "tests/godray_fixture.h": "f1355298cbcdd0b469519238aa21bc2a1108b0c6290b15db53ce709294767436"
+  }
+}

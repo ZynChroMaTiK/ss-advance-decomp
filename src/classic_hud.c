@@ -4,6 +4,23 @@
 #include "classic_time_strike.inc"
 #include "classic_tommy_ammo.inc"
 
+/* Correct the retained "Analising..." bitmap without changing the ROM asset.
+ * The lowercase y uses the same three-pixel strokes, descender and shadow as
+ * its g. Make room by shifting "sing..." two pixels within the 40px canvas. */
+static void analysing_bitmap(uint8_t *pixels)
+{
+    static const uint8_t glyph[10][3]={
+        {0,0,0},{0,0,0},{0x4c,0,0x4c},{0x4c,0,0x4c},
+        {0x4c,0,0x4c},{0x4c,0,0x4c},{0x4d,0x4c,0x4c},
+        {0x90,0x90,0x4c},{0x4c,0x4c,0x4d},{0x90,0x90,0x90}
+    };
+    unsigned y;
+    for(y=0;y<16;++y){uint8_t *row=pixels+y*40;
+        memmove(row+18,row+16,22);
+        memset(row+14,0,4);
+        if(y<10)memcpy(row+14,glyph[y],3);
+    }
+}
 static int image_palette(const SsaSpriteAssets *a,unsigned id,int left,int top,uint8_t *out,const uint8_t *swap)
 {
     uint8_t pixels[2048];const SsaSpriteImage *im;unsigned x,y;
@@ -11,6 +28,7 @@ static int image_palette(const SsaSpriteAssets *a,unsigned id,int left,int top,u
     im=&a->images[id];
     if(!im->width || !im->height || (size_t)im->width*im->height>sizeof pixels ||
        ssa_sprite_image_indices(im,pixels,im->width,sizeof pixels)!=1)return -1;
+    if(id==79 && im->width==40 && im->height==16)analysing_bitmap(pixels);
     for(y=0;y<im->height;++y)for(x=0;x<im->width;++x){int xx=left+(int)x,yy=top+(int)y;
         unsigned color=pixels[y*im->width+x];
         if(color && xx>=0 && xx<240 && yy>=0 && yy<160)

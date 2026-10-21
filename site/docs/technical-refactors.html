@@ -1,4 +1,114 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Technical audit follow-up, 2026-10-20 — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="technical-refactors.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="technical-audit-follow-up-2026-10-20">Technical audit follow-up, 2026-10-20</h1>
+<h2 id="rendering-and-menu-cache-follow-up-2026-10-21">Rendering and menu cache follow-up, 2026-10-21</h2>
+<p>The audit follow-up implements the measured rendering hot spots without changing
+resolution, texture art, simulation timing or sprite priority:</p>
+<ul>
+<li>Floor/ceiling and water sampling share caller-owned, 512-entry world-texel
+scratch. Each software view and synchronous hardware row job starts empty.
+Keys include texel coordinates, plane height, material color and surface kind.
+Only the unfaded near range is cached; distance fading and the reflection
+stencil remain per pixel. No mutable cache is shared by worker threads or
+retained across moving sectors, animation frames or palette changes.</li>
+<li>Sprite wall transforms, near clipping and live portal heights are prepared
+once per view. Each sprite still applies its own origin/height gates and wall
+silhouette clipping. Subject/shadow/overlay submission uses one shared helper;
+original stable painter order and floor-overlapping sprite art are preserved.</li>
+<li>Reflections collect height/row intervals in one stencil scan, in original
+first-appearance order. They reuse shadow preparation and actor ordering, and
+avoid redundant geometry-signature work per reflected height and godray pass.
+Every mirror retains its own camera-dependent clipping preparation.</li>
+<li>Vulkan uses hashed material and texture lookups without sorting submissions.
+Texture entries own a byte copy and expanded palette indices. First use in
+each pass compares current bytes, including mip and generated shadow art;
+stale addresses are integer keys, never dereferenced. Unchanged content stays
+uploaded, changed ranges and the live palette are uploaded, and buffer growth
+copies the complete retained content. Retention resets at the next pass after
+4 million texels or 4,096 entries; entries cannot be evicted mid-submission.</li>
+<li>Settings and Graphics row descriptors now drive label/slider coordinates,
+ranges and GBA-disabled styling/hit testing together. Stable action IDs,
+translations, saved settings and existing positions remain unchanged.</li>
+</ul>
+<p>The benchmark now includes eight scenes: start with/without decals, water with/
+without reflections, reflected shadows, godrays, and a synthetic 64-sprite scene
+with/without shadows. The crowd fixture changes render inputs only; it does not
+advance or bypass gameplay. Measurements exclude simulation, audio and display
+presentation. Larger GPU scheduling/readback changes remain outside this pass.</p>
+<p>Validation and paired timings are recorded in
+<code>render-refactors-validation.json</code>. Three alternating paired runs, 60 frames per
+case at1920x1080 on the RTX4060 Laptop GPU, produced these medians:</p>
+<table>
+<thead>
+<tr>
+<th>Scene</th>
+<th style="text-align:right">Before (ms)</th>
+<th style="text-align:right">After (ms)</th>
+<th style="text-align:right">Render time reduction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start, decals off</td>
+<td style="text-align:right">8.165</td>
+<td style="text-align:right">8.061</td>
+<td style="text-align:right">1.3%</td>
+</tr>
+<tr>
+<td>Start, decals on</td>
+<td style="text-align:right">10.442</td>
+<td style="text-align:right">8.569</td>
+<td style="text-align:right">17.9%</td>
+</tr>
+<tr>
+<td>Pool, decals</td>
+<td style="text-align:right">16.512</td>
+<td style="text-align:right">11.266</td>
+<td style="text-align:right">31.8%</td>
+</tr>
+<tr>
+<td>Pool, reflections</td>
+<td style="text-align:right">38.318</td>
+<td style="text-align:right">27.694</td>
+<td style="text-align:right">27.7%</td>
+</tr>
+<tr>
+<td>Pool, reflections and shadows</td>
+<td style="text-align:right">41.051</td>
+<td style="text-align:right">27.736</td>
+<td style="text-align:right">32.4%</td>
+</tr>
+<tr>
+<td>Godrays</td>
+<td style="text-align:right">23.816</td>
+<td style="text-align:right">19.167</td>
+<td style="text-align:right">19.5%</td>
+</tr>
+<tr>
+<td>64 sprites</td>
+<td style="text-align:right">12.838</td>
+<td style="text-align:right">11.535</td>
+<td style="text-align:right">10.2%</td>
+</tr>
+<tr>
+<td>64 sprites and shadows</td>
+<td style="text-align:right">12.522</td>
+<td style="text-align:right">11.048</td>
+<td style="text-align:right">11.8%</td>
+</tr>
+</tbody>
+</table>
+<p>The 1.3% plain-start difference is small enough to treat as timing noise. These
+are isolated renderer measurements, not gameplay FPS guarantees. Pixel, depth,
+water-mask hashes and actor/wall counts match before/after in all eight Vulkan
+cases across all three pairs, and in eight480x320 Software cases. All39 menu
+captures are byte-identical across three languages.</p>
+<p>Validation: the static-runtime Windows Release build passes; all11 focused
+CTest checks pass; Vulkan passes6,564,616 assertions,30 paired scenes and the
+muted frontend resize smoke with zero validation errors. Texture regressions
+cover same-address byte changes, palette changes, mip-only changes, changed
+image dimensions, repeated material sharing, buffer growth and cache eviction.
+ASan/UBSan with leak checks passes surface decals (56,872,820 checks), PC renderer
+(11,803,544) and sprite shadows (14,408). Settings/core audio and the hidden,
+muted Windows Settings UI pass. No campaign playthrough was run.</p>
 <h2 id="render-loop-optimization-2026-10-21">Render-loop optimization, 2026-10-21</h2>
 <p>The hardware scene finish now gathers depth, actor/wall statistics, decals and
 water in one parallel row pass instead of a serial full-frame pass followed by

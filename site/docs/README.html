@@ -2,7 +2,7 @@
 <p>This is a fan-made Windows port of the GBA game. It keeps the original levels,
 weapons, enemies and music, with keyboard and mouse controls and a few optional
 extras. You can play all twelve campaign levels.</p>
-<p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.3">Download v0.8.0 Alpha 3</a></strong>
+<p><strong><a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.4">Download v0.8.0 Alpha 4</a></strong>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/">Website</a>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d">Explore the maps</a></p>
 <p>It’s still an alpha, so you’ll find bugs and unfinished bits. The game runs
@@ -104,9 +104,10 @@ playtesting, so please report anything that goes wrong.</p>
 </tbody>
 </table>
 <h2 id="make-it-yours">Options</h2>
-<p>Open <strong>Options → Graphics</strong> for Display Mode, Renderer and Aspect Ratio.
-<strong>Options → Settings</strong> contains Language, Field of View, Music Style, Music
-Volume and Sounds Volume. Set a volume to 0% to mute it.
+<p>Open <strong>Options → Graphics</strong> for Display Mode, Renderer, Aspect Ratio, Mipmapping,
+Surface decals, Water reflections, Godrays and Sprite shadows.
+<strong>Options → Settings</strong> contains Language, Mouse sensitivity, Field of View,
+Music Style, Music Volume and Sounds Volume. Set a volume to 0% to mute it.
 Default volumes are 80% music and 100% sounds; existing saved choices are retained.
 <strong>Renderer</strong> offers <strong>Software</strong>, <strong>GBA</strong>, and <strong>Vulkan</strong> on supported hardware.
 Vulkan draws world geometry and sprites on the GPU, with the existing HUD and
@@ -117,6 +118,10 @@ launch Vulkan with <code>play-native.cmd --vulkan</code>.
 Below Renderer, <strong>Aspect ratio</strong> offers <strong>Native</strong> (fill the window, default)
 or <strong>3:2</strong> (preserve the original GBA view with black bars). This choice applies
 to Software and Vulkan; the GBA renderer always uses 3:2 and disables the row.
+<strong>Mouse sensitivity</strong> adjusts horizontal and vertical aiming together from
+<strong>10% to 300%</strong>, with <strong>100%</strong> preserving the previous PC control speed.
+<strong>Mipmapping</strong> uses the original smaller texture and sprite images at distance.
+It is enabled for fresh settings and always enabled in GBA mode.
 <strong>Field of view</strong> adjusts native rendering from <strong>60° to 120°</strong>, defaulting to
 <strong>70°</strong> (the existing view). This is the horizontal angle at 3:2; wider displays
 show more to the sides. GBA rendering keeps its fixed view and disables this slider.</p>
@@ -128,16 +133,18 @@ that work on your computer. See the
 NETRICSA and the automap on or off. <strong>Weapon bobbing</strong> moves first-person weapons
 and their muzzle flashes together. <strong>Jump</strong>, <strong>Alternate weapons</strong>, <strong>Automap</strong>
 and <strong>Weapon bobbing</strong> are off by default.
-<strong>Surface decals</strong> adds subtle connected stain tiles on floors and ceilings,
-and sparse animated glints and ripples on water. <strong>Water reflections</strong> adds
-scenery reflections with 50% alpha blending, at full viewport resolution in
-native mode and 240×160 in GBA mode. Both are off by default and work in
-all renderers. <strong>Vertical aim</strong> is on by default for vertical mouse aiming.
-Turn it off for original GBA auto-aim and the target-following crosshair;
-GBA rendering always retains original aiming. All ten Extras
-choices fit on one page.
+In Graphics, <strong>Surface decals</strong> adds connected stains and edge details on floors
+and ceilings, plus animated glints, ripples and shoreline waves on water.
+<strong>Water reflections</strong> adds scenery reflections with 50% alpha blending, at full
+viewport resolution in native mode and 240×160 in GBA mode. <strong>Godrays</strong> adds
+short textured light shafts beneath open skies. <strong>Sprite shadows</strong> adds
+size-scaled shadows behind players, enemies and items. These four effects are
+independent, off by default and available in all three renderers.
+<strong>Vertical aim</strong> is on by default for vertical mouse aiming. Turn it off for
+original GBA auto-aim and the target-following crosshair; GBA rendering always
+retains original aiming.
 Extras are ordered: HUD, Vertical aim, Third-person, Jump, Automap, In-game
-NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water reflections.
+NETRICSA, Alternate weapons and Weapon bobbing.
 The <strong>HUD</strong> row switches between <strong>Original</strong> (default) and <strong>Classic</strong>, a usable
 green HUD built from the retained older artwork. All graphics modes support it,
 and the game saves your choice.

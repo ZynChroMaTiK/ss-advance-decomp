@@ -78,7 +78,10 @@ cooldowns retain one update per world tick.
 Each fire press queues two alternating shots, including a click released before
 the next simulation tick. Held fire opens another pair at the next admitted
 start, completing its second shot after release. Additional click edges queue
-another pair, so a click during recoil/cadence or reload is retained. Pending
+another pair during Colt recoil/cadence. Clicks during magazine reload are
+discarded, including its completion tick; nearby button interaction also clears
+both the ordinary click and dual-pair queues. A held trigger may resume firing
+after reload, but a released click cannot cause a delayed shot. Pending
 shots still obey the magazine, reload and shot deadlines. Changing weapon or
 variant, death, pause, lost focus and disabled input cancel unstarted shots;
 an already started shot still commits normally. Single Colts keep one-shot clicks.
@@ -154,7 +157,8 @@ Weapon runtime consumes completion before the next controller admission, avoidin
 an extra idle tick. Native game_runtime routes only an active alternate shotgun's
 sprite-animation stage through weapon_runtime_animate; other objects retain the
 original animation path. Pause freezes the cycle. Queued weapon changes wait for
-the full animation, and pending quick clicks survive until the next shot.
+the full animation. New clicks during reload/recovery are discarded rather than
+firing after the animation; a fresh ready click and continuously held fire work.
 Switching the option Off restores the original animation clock on the next update.
 
 Alternate shotgun reload audio: on first entering the shell-insertion artwork

@@ -46,7 +46,7 @@ typedef struct SsaMenu {
  * Right/Confirm forwards), using original language names and localized labels.
  * Options IDs1/3/4/5/6: Credits, Clear Data, Settings, Extras, Graphics.
  * Settings owns Language, FOV and audio; Graphics owns Display mode, Renderer
- * and Aspect ratio. Extras includes jump, third-person, in-game NETRICSA,
+ * Aspect ratio and Mipmapping (fixed On in GBA). Extras includes jump, third-person, in-game NETRICSA,
  * alternate weapons, automap, HUD style, first-person weapon bobbing and surface decals.
  * No separate music toggle. Original title/main/
  * single-player/difficulty/credits/Scores/name-entry pages. The frontend owns

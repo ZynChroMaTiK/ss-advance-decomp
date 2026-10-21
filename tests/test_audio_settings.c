@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "settings_legacy.h"
 #include <time.h>
 #include <math.h>
 #include "../third_party/TinySoundFont/tsf.h"
@@ -91,7 +92,7 @@ static void hybrid_checks(const uint8_t *rom,size_t rom_size,const void *sf,size
     }
     CHECK(pcm_cases>=10);synth->reset(synth->context);free(native);free(hybrid);
 }
-static int extra_select(SsaMenu *m,unsigned row){
+static int menu_select(SsaMenu *m,unsigned row){
     unsigned guard=0;
     while(m->selection!=row && guard++<11){
         CHECK(ssa_menu_step(m,m->selection<row?SSA_MENU_DOWN:SSA_MENU_UP)==1);
@@ -114,12 +115,12 @@ int main(int argc,char **argv){
     CHECK(ssa_settings_encode(&prefs,encoded,sizeof encoded)==1);
     CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && decoded.music_volume==80 && decoded.sound_volume==100 && !decoded.music_style && decoded.renderer==SSA_RENDER_VULKAN && !decoded.jump_enabled && decoded.ingame_netricsa && decoded.thirdperson_enabled && decoded.display_mode==SSA_DISPLAY_FULLSCREEN && !decoded.alternate_weapons && !decoded.automap_enabled && !decoded.weapon_bobbing);
     prefs.alternate_weapons=1;
-    CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && encoded[8]==15 && (encoded[9]&128));
+    CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && encoded[3]==19 && (encoded[10]&2));
     CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && decoded.alternate_weapons);
     prefs.alternate_weapons=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
     prefs.alternate_weapons=0;
     prefs.automap_enabled=0;
-    CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && !(encoded[10]&128));
+    CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && !(encoded[5]&128));
     CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && !decoded.automap_enabled && decoded.music_volume==80);
     prefs.automap_enabled=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
     prefs.automap_enabled=1;
@@ -158,14 +159,14 @@ int main(int argc,char **argv){
         c=~c;for(n=0;n<4;++n)old[12+n]=(uint8_t)(c>>(n*8));
         CHECK(ssa_settings_decode(&decoded,old,16)==1 && decoded.weapon_bobbing && !decoded.surface_decals);}
     for(i=0;i<2;++i)for(j=0;j<2;++j)for(k=0;k<2;++k){prefs.aspect_ratio=i;prefs.weapon_bobbing=j;prefs.surface_decals=k;
-        CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && encoded[8]==(15|(i<<7)|(j<<6)|(k<<5)));
+        CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && ((encoded[4]>>6)&1)==i && ((encoded[10]>>2)&1)==j && ((encoded[10]>>3)&1)==k);
         CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && !memcmp(&prefs,&decoded,sizeof prefs));}
     prefs.surface_decals=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);prefs.surface_decals=0;
-    for(i=0;i<2;++i){prefs.water_reflections=i;CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && ((encoded[8]>>4)&1)==i);
+    for(i=0;i<2;++i){prefs.water_reflections=i;CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && ((encoded[10]>>4)&1)==i);
         CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && !memcmp(&prefs,&decoded,sizeof prefs));}
     prefs.water_reflections=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);prefs.water_reflections=0;
     {uint8_t old[16];uint32_t c=UINT32_MAX;unsigned n,bit;
-        CHECK(ssa_settings_encode(&prefs,old,16)==1);old[7]=0;old[8]=(uint8_t)((old[8]&0xe0)|11);
+        CHECK(settings_legacy(&prefs,old)==1);old[0]='S';old[5]='P';old[6]='T';old[7]=0;old[8]=(uint8_t)((old[8]&0xe0)|11);
         for(n=0;n<12;++n){c^=old[n];for(bit=0;bit<8;++bit)c=(c>>1)^(0xedb88320u&(0u-(c&1)));}
         c=~c;for(n=0;n<4;++n)old[12+n]=(uint8_t)(c>>(n*8));
         CHECK(ssa_settings_decode(&decoded,old,16)==1 && !decoded.water_reflections && decoded.surface_decals==prefs.surface_decals);}
@@ -181,10 +182,10 @@ int main(int argc,char **argv){
     CHECK(ssa_settings_encode(&prefs,encoded,16)==1 && ssa_settings_decode(&decoded,encoded,16)==1 && decoded.display_mode==SSA_DISPLAY_WINDOWED);
     prefs.display_mode=2;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
     CHECK(decoded.automap_enabled); /* Explicit version7 On survives a round trip. */
-    prefs=(SsaSettings){SSA_MUSIC_MIDI,70,80,SSA_RENDER_GBA,0,0,0,SSA_DISPLAY_WINDOWED,0,1,SSA_HUD_ORIGINAL,SSA_ASPECT_NATIVE,0,0,0};CHECK(ssa_settings_encode(&prefs,encoded,16)==1);
+    prefs=(SsaSettings){SSA_MUSIC_MIDI,70,80,SSA_RENDER_GBA,0,0,0,SSA_DISPLAY_WINDOWED,0,1,SSA_HUD_ORIGINAL,SSA_ASPECT_NATIVE,0,0,0,0,0,0,0,SSA_MOUSE_DEFAULT,0};CHECK(ssa_settings_encode(&prefs,encoded,16)==1);
     CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && decoded.music_style==SSA_MUSIC_MIDI && decoded.music_volume==70);
     prefs.music_style=SSA_MUSIC_STYLES;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
-    prefs=(SsaSettings){1,35,80,SSA_RENDER_SOFTWARE,1,1,1,SSA_DISPLAY_FULLSCREEN,0,1,SSA_HUD_CLASSIC,SSA_ASPECT_GBA,0,0,0};CHECK(ssa_settings_encode(&prefs,encoded,16)==1);
+    prefs=(SsaSettings){1,35,80,SSA_RENDER_SOFTWARE,1,1,1,SSA_DISPLAY_FULLSCREEN,0,1,SSA_HUD_CLASSIC,SSA_ASPECT_GBA,0,0,0,0,0,0,0,SSA_MOUSE_DEFAULT,0};CHECK(ssa_settings_encode(&prefs,encoded,16)==1);
     CHECK(ssa_settings_decode(&decoded,encoded,16)==1 && !memcmp(&prefs,&decoded,sizeof prefs));
     for(i=0;i<16;++i){memcpy(bad,encoded,16);bad[i]^=1;CHECK(ssa_settings_decode(&decoded,bad,16)==-1 && !memcmp(&prefs,&decoded,sizeof prefs));}
     prefs.music_volume=101;CHECK(ssa_settings_encode(&prefs,encoded,16)==-1);
@@ -201,10 +202,12 @@ int main(int argc,char **argv){
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.display_mode==SSA_DISPLAY_FULLSCREEN);
         CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==1);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.renderer==SSA_RENDER_GBA);
-        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==3); /* Disabled aspect is skipped. */
-        CHECK(ssa_menu_pointer(m,120,60,1)==0 && m->selection==3);
-        CHECK(ssa_menu_pointer(m,176,76,1)==0 && m->selection==3 && m->settings.fov_offset==10);
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==4); /* Disabled aspect and mipmapping are skipped. */
+        CHECK(ssa_menu_pointer(m,120,60,1)==0 && m->selection==4);
+        CHECK(ssa_menu_pointer(m,176,76,1)==0 && m->selection==4 && m->settings.fov_offset==10);
         CHECK(ssa_menu_draw(m,pixels+1,38400)==1);screenshot(argv[3],"settings-gba",lang,pixels+1);
+        {unsigned saved=m->settings.mipmaps;m->selection=3;
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.mipmaps==saved && !m->command_count);}
         m->selection=2;
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.aspect_ratio==SSA_ASPECT_NATIVE && !m->command_count);
         CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && m->selection==1);
@@ -214,25 +217,72 @@ int main(int argc,char **argv){
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.aspect_ratio==SSA_ASPECT_GBA);
         CHECK(ssa_menu_pointer(m,120,60,1)==SSA_MENU_CONFIRM && m->selection==2);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.aspect_ratio==SSA_ASPECT_NATIVE);
+        {unsigned saved=m->settings.mipmaps;
+            CHECK(ssa_menu_pointer(m,120,76,1)==SSA_MENU_CONFIRM && m->selection==3);
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.mipmaps==!saved);
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.mipmaps==saved);}
+        CHECK(ssa_menu_draw(m,pixels+1,38400)==1);screenshot(argv[3],"graphics-mipmaps",lang,pixels+1);
+        CHECK(menu_select(m,4)==1 && m->selection==4);
+        CHECK(!m->settings.surface_decals);
+        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.surface_decals);
+        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
+        screenshot(argv[3],"graphics-decals",lang,pixels+1);
+        CHECK(ssa_menu_pointer(m,120,92,1)==SSA_MENU_CONFIRM && m->selection==4);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.surface_decals);
+        CHECK(menu_select(m,5)==1 && m->selection==5);
+        CHECK(!m->settings.water_reflections);
+        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.water_reflections);
+        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
+        screenshot(argv[3],"graphics-water",lang,pixels+1);
+        CHECK(ssa_menu_pointer(m,120,100,1)==SSA_MENU_CONFIRM && m->selection==5);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.water_reflections);
+        CHECK(menu_select(m,6)==1 && m->selection==6 && !m->settings.godrays);
+        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.godrays && !m->settings.surface_decals);
+        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
+        screenshot(argv[3],"graphics-godrays",lang,pixels+1);
+        CHECK(ssa_menu_pointer(m,120,108,1)==SSA_MENU_CONFIRM && m->selection==6);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.godrays);
+        m->settings.renderer=SSA_RENDER_GBA;
+        CHECK(ssa_menu_pointer(m,120,92,1)==SSA_MENU_CONFIRM && m->selection==4);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.surface_decals);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.surface_decals);
+        CHECK(menu_select(m,7)==1 && m->selection==7 && !m->settings.sprite_shadows);
+        CHECK(ssa_menu_pointer(m,120,116,1)==SSA_MENU_CONFIRM && m->selection==7);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.sprite_shadows);
+        CHECK(ssa_settings_encode(&m->settings,encoded,16)==1 && ssa_settings_decode(&decoded,encoded,16)==1 && decoded.sprite_shadows);
+        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);screenshot(argv[3],"graphics-shadows",lang,pixels+1);
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.sprite_shadows);
+        CHECK(menu_select(m,8)==1 && m->selection==8);
+        CHECK(ssa_menu_pointer(m,120,148,1)==SSA_MENU_CONFIRM && m->selection==8);
+        m->settings.renderer=SSA_RENDER_SOFTWARE;
         CHECK(ssa_menu_step(m,SSA_MENU_BACK)==1 && m->page==SSA_MENU_OPTIONS && m->selection==6);
         CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && m->selection==4);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->page==SSA_MENU_SETTINGS && !m->selection);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->language==(lang+1)%3);
         CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && m->language==lang);
         m->settings.renderer=SSA_RENDER_GBA;
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==8);
+        CHECK(ssa_menu_pointer(m,176,68,1)==0 && m->selection==8);
         CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==4);
-        CHECK(ssa_menu_pointer(m,176,60,1)==0 && m->selection==4);
+        CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && m->selection==8);
         CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && !m->selection);
         m->settings.renderer=SSA_RENDER_SOFTWARE;
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==8);
+        CHECK(ssa_menu_pointer(m,32,44,1)==0 && !m->settings.mouse_sensitivity);
+        CHECK(ssa_menu_pointer(m,176,44,1)==0 && m->settings.mouse_sensitivity==SSA_MOUSE_RANGE);
+        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.mouse_sensitivity==SSA_MOUSE_RANGE);
+        CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && m->settings.mouse_sensitivity==SSA_MOUSE_RANGE-1);
+        CHECK(ssa_menu_pointer(m,32,44,1)==0 && !m->settings.mouse_sensitivity);
+        CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && !m->settings.mouse_sensitivity);
         CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==3);
         CHECK(m->settings.fov_offset==10);
         for(i=0;i<80;++i)CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1);
         CHECK(!m->settings.fov_offset);
         for(i=0;i<80;++i)CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1);
         CHECK(m->settings.fov_offset==60);
-        CHECK(ssa_menu_pointer(m,32,60,1)==0 && !m->settings.fov_offset);
-        CHECK(ssa_menu_pointer(m,176,60,1)==0 && m->settings.fov_offset==60);
-        CHECK(ssa_menu_pointer(m,104,60,1)==0 && m->settings.fov_offset==30);
+        CHECK(ssa_menu_pointer(m,32,68,1)==0 && !m->settings.fov_offset);
+        CHECK(ssa_menu_pointer(m,176,68,1)==0 && m->settings.fov_offset==60);
+        CHECK(ssa_menu_pointer(m,104,68,1)==0 && m->settings.fov_offset==30);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"settings-fov",lang,pixels+1);
         m->settings.fov_offset=SSA_FOV_DEFAULT_OFFSET;
@@ -253,7 +303,7 @@ int main(int argc,char **argv){
         for(i=0;i<25;++i)CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1);
         CHECK(m->settings.music_volume==100);
         CHECK(ssa_menu_pointer(m,68,108,1)==0 && m->settings.music_volume==25);
-        CHECK(ssa_menu_pointer(m,148,132,1)==0 && m->settings.sound_volume==80 && m->selection==6);
+        CHECK(ssa_menu_pointer(m,148,124,1)==0 && m->settings.sound_volume==80 && m->selection==6);
         pixels[0]=0x1234;pixels[38401]=0x4321;
         CHECK(ssa_menu_draw(m,pixels+1,38400)==1 && pixels[0]==0x1234 && pixels[38401]==0x4321);
         CHECK(m->canvas.glyph_count<128);screenshot(argv[3],"settings",lang,pixels+1);
@@ -261,69 +311,56 @@ int main(int argc,char **argv){
         CHECK(ssa_menu_step(m,0)==1);
         CHECK(ssa_menu_pointer(m,120,114,1)==SSA_MENU_CONFIRM && m->selection==5);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->page==SSA_MENU_EXTRA && !m->selection);
-        CHECK(extra_select(m,3)==1);
+        CHECK(menu_select(m,3)==1);
         CHECK(!m->settings.jump_enabled);
         CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && m->settings.jump_enabled);
         CHECK(ssa_menu_pointer(m,120,44,1)==SSA_MENU_CONFIRM && m->selection==3);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.jump_enabled);
-        CHECK(extra_select(m,2)==1 && m->selection==2);
+        CHECK(menu_select(m,2)==1 && m->selection==2);
         CHECK(ssa_menu_step(m,SSA_MENU_LEFT)==1 && !m->settings.thirdperson_enabled);
         CHECK(ssa_menu_pointer(m,120,36,1)==SSA_MENU_CONFIRM && m->selection==2);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.thirdperson_enabled);
-        CHECK(extra_select(m,5)==1 && m->selection==5);
+        CHECK(menu_select(m,5)==1 && m->selection==5);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && !m->settings.ingame_netricsa);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"extra",lang,pixels+1);
         CHECK(ssa_menu_pointer(m,120,60,1)==SSA_MENU_CONFIRM && m->selection==5);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.ingame_netricsa);
-        CHECK(extra_select(m,6)==1 && m->selection==6);
+        CHECK(menu_select(m,6)==1 && m->selection==6);
         CHECK(!m->settings.alternate_weapons);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.alternate_weapons);
         CHECK(ssa_menu_pointer(m,120,68,1)==SSA_MENU_CONFIRM && m->selection==6);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.alternate_weapons);
-        CHECK(extra_select(m,4)==1 && m->selection==4);
+        CHECK(menu_select(m,4)==1 && m->selection==4);
         CHECK(!m->settings.automap_enabled);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.automap_enabled);
         CHECK(ssa_menu_pointer(m,120,52,1)==SSA_MENU_CONFIRM && m->selection==4);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && !m->settings.automap_enabled);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"extra",lang,pixels+1);
-        CHECK(extra_select(m,0)==1 && m->selection==0);
+        CHECK(menu_select(m,0)==1 && m->selection==0);
         CHECK(m->settings.hud_style==SSA_HUD_ORIGINAL);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.hud_style==SSA_HUD_CLASSIC);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"extra-classic",lang,pixels+1);
         CHECK(ssa_menu_pointer(m,120,20,1)==SSA_MENU_CONFIRM && m->selection==0);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.hud_style==SSA_HUD_ORIGINAL);
-        CHECK(extra_select(m,7)==1 && m->selection==7);
+        CHECK(menu_select(m,7)==1 && m->selection==7);
         CHECK(!m->settings.weapon_bobbing);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.weapon_bobbing);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"extra-bobbing",lang,pixels+1);
         CHECK(ssa_menu_pointer(m,120,76,1)==SSA_MENU_CONFIRM && m->selection==7);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.weapon_bobbing);
-        CHECK(extra_select(m,8)==1 && m->selection==8);
-        CHECK(!m->settings.surface_decals);
-        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.surface_decals);
-        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
-        screenshot(argv[3],"extra-decals",lang,pixels+1);
-        CHECK(ssa_menu_pointer(m,120,84,1)==SSA_MENU_CONFIRM && m->selection==8);
-        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.surface_decals);
-        CHECK(extra_select(m,9)==1 && m->selection==9);
-        CHECK(!m->settings.water_reflections);
-        CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.water_reflections);
-        CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
-        screenshot(argv[3],"extra-water",lang,pixels+1);
-        CHECK(ssa_menu_pointer(m,120,92,1)==SSA_MENU_CONFIRM && m->selection==9);
-        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && !m->settings.water_reflections);
-        CHECK(extra_select(m,1)==1 && m->selection==1);
+        CHECK(ssa_menu_pointer(m,120,84,1)==0 && m->selection==7);
+        CHECK(menu_select(m,1)==1 && m->selection==1);
         CHECK(m->settings.vertical_aim);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && !m->settings.vertical_aim);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"extra-vertical-aim",lang,pixels+1);
         CHECK(ssa_menu_pointer(m,120,28,1)==SSA_MENU_CONFIRM && m->selection==1);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.vertical_aim);
-        CHECK(extra_select(m,10)==1 && m->selection==10);
+        CHECK(menu_select(m,8)==1 && m->selection==8);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->page==SSA_MENU_OPTIONS && m->selection==5);
         CHECK(ssa_menu_step(m,0)==1 && ssa_menu_draw(m,pixels+1,38400)==1);
         screenshot(argv[3],"options",lang,pixels+1);

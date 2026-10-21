@@ -1,8 +1,8 @@
 # Vulkan hardware scene backend
 
 The optional Windows backend uses Vulkan1.0 graphics pipelines to rasterize
-textured walls, BSP floor/ceiling triangles and billboard actors with depth
-testing and transparent palette-index rejection. It is actual geometry rendering,
+textured walls and BSP floor/ceiling triangles with depth testing, plus
+silhouette-clipped billboard actors with transparent palette-index rejection. It is actual geometry rendering,
 not an upload of the software-rendered scene. Vulkan is selectable in Options / Graphics
 alongside Software and GBA when a hardware device and pipeline initialize.
 `play-native.cmd --vulkan` overrides the saved choice for a launch.
@@ -56,37 +56,26 @@ the SDK or loose shader files.
 
 ### Stable sprite priority (2026-10-21)
 
-The recovered GBA queue inserts a new actor ahead of equal-depth actors
-(`actor_queue.c`, `record->depth>=...`) and paints the list in reverse. Thus
-near actors cover far actors and later submissions win equal-depth ties.
-Its collector visits sector lists and emits a player's secondary layer after
-the base layer. Native software uses active-source order with a0.001-unit
-depth tolerance; later overlapping sprite/layer submissions win those ties.
+The recovered GBA queue paints actors far-to-near, with later submissions
+winning equal-depth ties. Software and Vulkan now share stable billboard-plane
+ordering; source order is retained in groups spanning at most0.001 units.
+Sorting uses camera-forward XY distance before pitch, and each secondary layer
+follows its base layer. Reflections use the same ordering.
 
-Vulkan now receives actors in stable far-to-near billboard-plane order, with
-source order preserved in depth groups spanning at most0.001 units. Sorting
-uses camera-forward XY distance before pitch: different sprite heights do not
-change the order of parallel billboard planes. Each actor's secondary layer
-still follows its base layer. The same ordering applies to reflections.
-Software and GBA retain their existing render paths and submission order.
+Actor triangles are clipped on the CPU to the original GBA wall/portal
+silhouettes before submission. World triangles populate reversed depth first;
+the second pipeline paints these prepared sprites without testing or writing
+depth. This avoids slicing corpse/explosion artwork at the floor, preserves
+wall occlusion and transparent-index discard, and prevents sprite depth fights.
+There is no longer a sprite-only depth bias. Geometric depth returned to CPU
+effects is unchanged. World and actor batches normally require two draw calls.
+See [sprite-clipping.md](sprite-clipping.md) for original rules and regressions.
 
-World triangles populate reversed depth first. A second pipeline tests sorted
-sprites against that world depth without writing sprite depth. This removes
-per-pixel depth fights between coincident sprite triangles, while retaining
-wall/floor/ceiling occlusion and transparent-index discard. A sprite-only
-vertex depth adjustment approximates software's0.001-unit world tolerance;
-screen positions, UVs and the geometric depth returned to CPU effects are
-unchanged. World and sprite batches normally require just two draw calls.
-
-The GPU regression adds18 composite-image cases at different headings,
-pitches and FOVs: equal-depth priorities in both source orders, near/far actors
-submitted in either order, near-equal ties, transparent gaps and secondary
-layers. Separate primitive checks cover small sprite/wall depth ties, actual
-wall occlusion, late-submitted world geometry and unbiased returned depth.
-The RTX4060 validation run passes5,846,284 checks, including all18 priority
-cases and22 software/GPU scene comparisons, with zero validation errors.
-All8 focused CTests and the hidden180-frame Vulkan launch/resize check pass;
-the Windows frontend and128 native libraries rebuild successfully.
+The regression suite covers18 sprite-priority cases, floor-crossing artwork,
+solid wall hiding, pitch/FOV, reflections, late-submitted world primitives and
+unbiased returned depth. The latest RTX4060 run passes6,487,023 checks and28
+paired scene draws with zero validation errors. All ten focused CTests and the
+hidden180-frame Vulkan launch/resize check pass.
 
 Install the Vulkan SDK with glslangValidator for a Vulkan-enabled Windows build.
 CMake discovers it through `VULKAN_SDK`; without it, or with `-DSSA_VULKAN=OFF`,

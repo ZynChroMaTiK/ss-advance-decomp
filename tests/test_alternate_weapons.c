@@ -411,7 +411,9 @@ static void manual_reload(const uint8_t *rom){
         CHECK(g->alternates.reload_phase==2 && reload_sounds==sounds+1);
         began=g->alternates.clock;
         for(i=0;i<100 && g->alternates.reload_phase;++i){
+            tap(g); /* Every reload tick, including the completion boundary. */
             CHECK(ssa_pc_input_runtime_key(&g->input_runtime,'R',1,1)==1);tick(g);
+            CHECK(!g->weapon.fire_pending_weapon && !g->weapon.colt_pair_pending);
         }
         CHECK(i<100 && g->alternates.clock-began==(dual?1680u:1300u));
         CHECK(!g->alternates.rounds[0] && !g->alternates.rounds[1]);
@@ -630,9 +632,9 @@ static void paired_input(const uint8_t *rom){
         ++paired_clicks;
     }
     CHECK(g->alternates.rounds[0]==6 && g->alternates.rounds[1]==6 && g->alternates.reload_phase);
-    /* Clicking again during reload retains both shots after the mouse release. */
+    /* A released click during magazine reload must not queue another pair. */
     before=g->weapon_game.shots[1];tap(g);settle(g,1);
-    CHECK(g->weapon_game.shots[1]==before+2 && g->alternates.rounds[0]==1 && g->alternates.rounds[1]==1);++paired_clicks;
+    CHECK(g->weapon_game.shots[1]==before && !g->alternates.rounds[0] && !g->alternates.rounds[1]);++paired_clicks;
     /* A second quick click while the first pair is pending must not vanish. */
     before=g->weapon_game.shots[1];tap(g);tick(g);CHECK(g->weapon.colt_pair_pending==1);
     tap(g);settle(g,1);CHECK(g->weapon_game.shots[1]==before+4);paired_clicks+=2;

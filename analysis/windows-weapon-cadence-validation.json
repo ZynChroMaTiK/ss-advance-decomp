@@ -2,7 +2,7 @@
     "result":  "pass",
     "cadence":  {
                     "result":  "pass",
-                    "checks":  53141,
+                    "checks":  53371,
                     "cases":  21,
                     "click_cases":  8,
                     "cancel_cases":  12,
@@ -15,17 +15,17 @@
                     "shots_per_second":  8.532500081,
                     "simulation_hz":  60
                 },
-    "executable_sha256":  "81f3021eea62d938dbea161165737629e1d6b5bb6f4b5a498e1edecbf194b82b",
-    "checker_sha256":  "00970a51613a14e385bca09f0acb11252e463de8f2ef710d59b8801df31b87da",
+    "executable_sha256":  "fa4e060915675c8b93e391b5feae99745d9c63f62ed3231d34f28ca48f67135d",
+    "checker_sha256":  "9d51e8d172286d16f4eccaa45bffdd0a05195436acb9737976212a8ddb795cd1",
     "source_sha256":  {
-                          "src/weapon_controller.c":  "5d96046974c4d98e88f51ae2447cde2b8e908bb6f9847cc7e5cec4fa26fe7997",
-                          "src/weapon_runtime.c":  "a81e98a9196e8108a792ddc4a5e2f9173be0263b156a2ee064633b6881ea35b8",
-                          "src/native_game.c":  "ed0556806201f1dda3b95538f95384c6c9bb749f81bd402c05bab4c2ba505b95",
-                          "src/pc_input_runtime.c":  "5209c87de7352a39ef85ed527d67397c9676800942b4cc12e27194fbea37f33e",
-                          "include/ssa/weapon_controller.h":  "6d0daa7e409fbe1b0145f9481cd9ba9dcdbed506c9b90299886d230d9a38d752",
-                          "include/ssa/weapon_runtime.h":  "f91448435379d3fd889e86ff1b977a1cfd07805c6e1a2b90f37879c247dde597",
-                          "tests/test_weapon_cadence.c":  "0b71ba63e20d754650f77aee8707da66c1afeea807f75bab535af6ee4b4fdad2",
+                          "src/weapon_controller.c":  "21ba8b4a5a438f15b3687411118afca09cee497876015c2e4a863a06078023f9",
+                          "src/weapon_runtime.c":  "1410251dfb59e91501348de7aea6be0c6044d6f93fe221b341c902bca68f2ebc",
+                          "src/native_game.c":  "d034beec506064073f3b934d149396da9be44f7b3399757f3ccfc51d81da386c",
+                          "src/pc_input_runtime.c":  "4170dbf0bbc5ae27b53698bc856d30563f2144f19fc28305364c3926a736edcf",
+                          "include/ssa/weapon_controller.h":  "24f3becd2040efc167bdb1e7eaf507ddaee6fe0cfb154d0df06b5b81030a181c",
+                          "include/ssa/weapon_runtime.h":  "d60b0d7a680f082598725bd347d8ea00343b1e017f5996c0ccf2fd162f33e920",
+                          "tests/test_weapon_cadence.c":  "80f715dcd14966aa1914468d9b53761a4e7137c6aec2620a0db9932335251d06",
                           "scripts/test-weapon-cadence.ps1":  "fa67e043cd8851c5dffc468e1ea17e8a3a561db4c208f0b019ec9d23ffa04a13",
-                          "CMakeLists.txt":  "8d3129f595fa507f35e5f4bc7d7adc7575a3704306f9f69c4eb721788b69d9c5"
+                          "CMakeLists.txt":  "ece0f0f1cc6600c688e5907aa8d0f0f4cf195971bbacb8fe45a0f08e284e829c"
                       }
 }

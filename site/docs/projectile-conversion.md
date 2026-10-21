@@ -1,5 +1,34 @@
 # Weapon 7 conversion and periodic drain
 
+## Healthy enemy targeting (2026-10-21)
+
+The existing frontend `nearest_converted` policy now also selects targets for
+healthy enemies, including both bosses. They compare living players with living
+Prion-affected enemies using the same 3D body-center distance; other healthy
+enemies are excluded. Converted actors still consider every living combatant.
+Selection refreshes each behavior pass, without waiting for the old retarget
+timer. Equal distances retain active-pool order with no explicit player bias.
+
+The selected actor drives facing, pursuit, attack checks and projectile direction.
+The opt-in `prion_targets` controller field permits an unconverted ranged actor
+to fire when its aim trace reaches its selected Prion target. Ordinary allies
+do not satisfy that new attack gate. Both boss projectile paths use the selected
+actor too. If a charging CE contacts Sam while pursuing a Prion target, knockback
+still applies to the actual player contact. The temporary controller player
+projection is restored after each pass. Damage, conversion health, converted
+behavior speed and ranged tactics retain their existing policies below.
+
+The targeting regression covers healthy actors choosing and switching between
+Sam and Prion enemies, healthy ally/dead/corpse exclusion, vertical distance,
+multiple converted candidates, no live targets, all six ordinary ranged types,
+both bosses firing away from Sam toward a converted target, and the policy-off
+original facing behavior. No campaign playthrough is claimed.
+
+Validation: 8,083 targeting/combat assertions over 662 frames, including 114
+healthy-enemy cases and 14 ranged/boss shots. The default-off controller suites
+retain 27,738 ROM comparisons; all eight focused CTests and the 415 boss
+self-projectile checks pass. The Windows frontend and all 128 libraries rebuild.
+
 ## PC Prion balance (2026-10-21)
 
 The playable adapter enables `combat.prion_balance`. A successful first Prion
@@ -9,14 +38,14 @@ another hit on an already converted actor does not boost it again. The original
 conversion flag, drain period/countdown and effect-allocation failure semantics
 remain intact. The recovered default-off runtime preserves ROM behavior.
 
-When both attacker and victim are enemies and either has flag400, contact melee
-deals half damage (10 normally,20 for D0/D6), and other damage deals twice its
-previous amount. Projectile ownership and direct enemy-source explosions both
-use this rule, after splash attenuation and before original difficulty scaling.
-Melee is explicitly classified in the combat adapter, so kamikaze explosions
-are not mistaken for contact. Player attacks, attacks against the player,
-ordinary unconverted enemy pairs, and existing boss self-projectile immunity
-retain their prior behavior.
+The subsequent user correction removes the conversion-based damage multipliers.
+Melee, projectiles and explosions now retain their normal damage regardless of
+whether either enemy is Prion-affected. Contact deals20 normally,40 for D0/D6;
+there is no half-melee or double-other-damage adjustment. This also applies when
+both enemies are converted. Original splash attenuation, difficulty scaling,
+player combat and boss self-projectile immunity remain intact. The current-health
+boost, targeting and pursuit/ranged policies are unchanged. The damage matrix
+checks all four conversion combinations with the policy both enabled and disabled.
 
 Converted enemies chasing other enemies use half their previous movement
 coefficient. The six ranged types CF/D1/D2/D3/D4/D6 stop advancing when within
@@ -165,7 +194,8 @@ living candidates, the target clears and the actor does not attack.
 
 This is a requested PC policy. The recovered navigation, contact and controller
 routines retain their original behavior when the runtime option is off.
-Unconverted enemies still target the player normally. The existing behavior-clock
+The healthy-enemy extension above supersedes the earlier player-only policy.
+The existing behavior-clock
 fixture explicitly disables nearest selection to isolate its timing assertions.
 
 `test-prion-targeting` performs actual Prion impacts on all ten eligible enemy

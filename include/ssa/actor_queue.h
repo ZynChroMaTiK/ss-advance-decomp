@@ -42,6 +42,7 @@ typedef struct SsaActorQueue {
     uint16_t projection_count,actor_count,draw_count;
     uint32_t clip_cursor;
     unsigned updating;
+    uint32_t fixed_screen_mask; /* Host presentation metadata, indexed by actor. */
 } SsaActorQueue;
 
 /* Begin after fresh visibility construction and wall drawing. Borrows the
@@ -70,4 +71,11 @@ int ssa_actor_queue_order(SsaActorQueue *);
  * Uses actual decoded actor resources. Previous actors' pixels remain after a
  * later error; storage cannot alias the framebuffer. Return1/-1. */
 int ssa_actor_queue_draw(SsaActorQueue *,const SsaActorAssets *,uint8_t *framebuffer,size_t size);
+/* Optional underlay is called immediately before each actor, under the draw lock.
+ * It may read the queue and write pixels only; queue layouts remain unchanged. */
+typedef int (*SsaActorUnderlay)(void *,const SsaActorQueue *,unsigned,uint8_t *,size_t);
+int ssa_actor_queue_draw_layers(SsaActorQueue *,const SsaActorAssets *,uint8_t *,size_t,SsaActorUnderlay,void *);
+/* Read-only wall silhouettes for a wider attached sprite; right is inclusive. */
+int ssa_actor_queue_sprite_clips(const SsaActorQueue *,int32_t depth,int32_t x,int32_t y,
+    int bottom,int top,int left,int right,int16_t clips[240]);
 #endif

@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mouse sensitivity — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="mouse-sensitivity.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="mouse-sensitivity">Mouse sensitivity</h1>
+<p>Settings puts one Mouse sensitivity slider above Field of view
+and the audio controls. It spans10..300% in10% steps;100% retains the prior
+64 angle units per raw mouse count. Sensitivity defaults to100% for fresh settings,
+Clear Data and migrated saves. The same value controls both axes; changing it does not enable vertical aim
+when GBA or autoaim disables manual pitch.</p>
+<p>The grid uses language row16; mouse label/bar32/40; FOV label/bar56/64;
+music style88; music volume96/104; sounds volume112/120; Back144. Bars share
+X32..176 and percentages start at184. English/German/French use the same layout.
+Pointer adjustment and keyboard arrows use the same range and value mapping.</p>
+<p><code>ssa_pc_input_sensitivity</code> sets one positive coefficient for yaw and pitch.
+Runtime settings apply rounded64*(percent/100) units/count. Accumulated input is neither replayed nor
+rescaled when settings change. Yaw wrapping, pitch saturation, focus handling,
+menu suppression and the original autoaim policy remain intact.</p>
+<h2 id="preferences-v18">Preferences v18</h2>
+<p>The record remains16 bytes with CRC32 over bytes0..11, stored at12..15. The
+compact header is ASCII <code>SSA</code> followed by version18. New payload:</p>
+<ul>
+<li>Byte4: music style bits0..1, renderer2..3, display4, HUD5, aspect6.</li>
+<li>Byte5: music volume0..6, automap7.</li>
+<li>Byte6: sounds volume0..6, jump7.</li>
+<li>Byte7: FOV offset0..5, vertical aim6, third-person7.</li>
+<li>Bytes8/9: equal mouse slider values0..29 (percent=(value+1)*10). Existing
+two-axis v18 files migrate to the horizontal value in byte8; byte9 is still
+range-validated and both bytes are made equal on the next save.</li>
+<li>Byte10: in-game NETRICSA0, alternate weapons1, bobbing2, surface decals3,
+water reflections4, mipmapping5, godrays6.</li>
+<li>Byte11 and unused high bits are reserved and must be zero.</li>
+</ul>
+<p>Versions1..17 retain the prior decoder, with mouse sensitivity default100%. All earlier
+renderer, FOV, audio and extras migrations remain unchanged. Older executables
+reject v18 rather than silently reading the new payload as legacy preferences.</p>
+<p>Validation covers equal axis deltas/defaults/limits, all30 slider values, unequal v18 migration,
+legacy migrations, invalid records, keyboard/pointer edits, native application,
+Windows preference persistence and localized menu screenshots. No campaign
+playthrough is required for this settings/input change.</p>
+</main></body></html>

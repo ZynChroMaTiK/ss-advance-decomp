@@ -4,12 +4,16 @@
 struct SsaPcRenderer;
 /* Prepared near-clipped view geometry. Textures are column-major palette
  * indices, borrowed until end(). A backend never owns gameplay or HUD data.
- * Actor triangles arrive back-to-front in stable source/layer order. Test
- * them against world depth, but do not let sprites depth-test each other. */
+ * Actor triangles arrive clipped to GBA wall/portal silhouettes, back-to-front
+ * in stable source/layer order. Paint them without testing/writing depth;
+ * testing floor/ceiling depth would incorrectly cut their artwork. */
 typedef struct SsaPcVertex {double x,y,z,u,v;} SsaPcVertex;
 typedef struct SsaPcMaterial {
     const uint8_t *pixels;unsigned width,height,color,transparent,actor,sky,decals;
     double height_z;
+    /* Original wall mip assets; coordinates remain in base-image texels. */
+    const uint8_t *mip_pixels[2];
+    unsigned mip_width[2],mip_height[2];
 } SsaPcMaterial;
 typedef struct SsaPcSample {float u,v,z,code;} SsaPcSample;
 /* A row job may only write its assigned rows. Dispatch is synchronous: all

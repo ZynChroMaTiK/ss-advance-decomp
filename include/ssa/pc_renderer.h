@@ -21,6 +21,7 @@ typedef struct SsaPcRenderer {
     size_t ray_line_capacity;
     unsigned width,height,updating;
     uint64_t rays,wall_pixels,actor_pixels;
+    uint64_t godray_triangles; /* Visible light-curtain triangles this draw. */
     struct SsaPcGeometry *geometry;
     uint64_t geometry_builds,sky_builds;
     SsaWaterRender water;

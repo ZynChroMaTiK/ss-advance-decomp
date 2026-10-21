@@ -44,7 +44,9 @@ int ssa_enemy_control_attack(SsaEnemyControl *c,SsaEnemyControlGame *g,
     z=bits((uint32_t)a->entity->body.height-(uint32_t)sar(a->entity->body.height,2));
     if (!o->aim || o->aim(o->context,c,z,(uint16_t)(((unsigned)a->facing+128)<<8),
                          0xc000000,&target)<0) return -1;
-    if ((!target || !(target->body.flags&0x10)) && !(a->entity->body.flags&0x400)) return 0;
+    if ((!target || !(target->body.flags&0x10)) && !(a->entity->body.flags&0x400) &&
+        !(g->prion_targets && target && target==c->navigation->target &&
+          target->type>=0xcd && target->type<=0xd8 && (target->body.flags&0x400))) return 0;
     a->timer=g->attack_period[a->entity->type-0xcd]; return 1;
 }
 typedef struct Call { SsaEnemyControl *c; const SsaEnemyControlOps *o; } Call;

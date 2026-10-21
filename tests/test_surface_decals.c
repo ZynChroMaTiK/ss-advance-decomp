@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../src/water_foam.inc"
+#include "../src/water_ripples.inc"
+#include "../src/surface_edge_tiles.inc"
 static unsigned checks,draws,changed_pixels;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"decals line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
+#include "reflection_sky_fixture.h"
 static void word(FILE *f,uint32_t n,unsigned bytes){while(bytes--){fputc(n&255,f);n>>=8;}}
 static void snapshot(const char *dir,const char *name,unsigned level,const uint32_t *pixels,unsigned w,unsigned h){
     char path[1024];FILE *f;unsigned i;if(!dir)return;
@@ -14,6 +18,32 @@ static void snapshot(const char *dir,const char *name,unsigned level,const uint3
     word(f,w,4);word(f,0u-h,4);word(f,1,2);word(f,32,2);word(f,0,4);word(f,w*h*4,4);
     for(i=0;i<4;++i)word(f,0,4);
     CHECK(fwrite(pixels,4,(size_t)w*h,f)==(size_t)w*h && !fclose(f));
+}
+/* Many subpixel samples share a world texel, but distance fades, moving
+ * heights and animation epochs must retain the uncached result and stencil. */
+static void sample_cache_checks(SsaNativeGame *g)
+{
+    static const double distances[]={0,383,384,575.5,767.9,768,768.01,1024,1535.9,1536};
+    SsaWaterRender water={0};SsaSurfaceSampleCache cache={0};unsigned frame,i,j;
+    for(frame=0;frame<4;++frame){
+        memset(&cache,0,sizeof cache);
+        CHECK(ssa_water_begin(&water,&g->water_scene,&g->surface_decals,g->palette_effect.colors,
+            0,0,256,frame*47,1,1,1,1)==1);
+        for(i=0;i<4096;++i){double x=(int)(i%64)*2-64.9,y=(int)(i/64)*2-64.7;
+            unsigned color=1+i%254,ceiling=i&1;double height=(i%3)*16.0;
+            for(j=0;j<sizeof distances/sizeof *distances;++j){double distance=distances[j];uint16_t rgb;uint32_t mask;
+                CHECK(ssa_surface_decals_sample_cached(&g->surface_decals,&cache,ceiling,(uint8_t)color,x,y,height,distance)==
+                    ssa_surface_decals_sample_plane(&g->surface_decals,ceiling,(uint8_t)color,x,y,height,distance));
+                CHECK(ssa_surface_decals_sample_cached(&g->surface_decals,&cache,ceiling,(uint8_t)color,x+0.2,y+0.2,height,distance)==
+                    ssa_surface_decals_sample_plane(&g->surface_decals,ceiling,(uint8_t)color,x+0.2,y+0.2,height,distance));
+                rgb=ssa_water_rgb(&water,(uint8_t)color,x,y,height,distance,0);mask=water.mask[0];
+                CHECK(ssa_water_rgb_cached(&water,&cache,(uint8_t)color,x,y,height,distance,0)==rgb && water.mask[0]==mask);
+                rgb=ssa_water_rgb(&water,(uint8_t)color,x+0.2,y+0.2,height,distance,0);mask=water.mask[0];
+                CHECK(ssa_water_rgb_cached(&water,&cache,(uint8_t)color,x+0.2,y+0.2,height,distance,0)==rgb && water.mask[0]==mask);
+            }
+        }
+    }
+    ssa_water_free(&water);
 }
 static void water_blend_checks(void){
     SsaWaterRender *r=calloc(1,sizeof(*r));uint16_t palette[256]={0};unsigned base,env;
@@ -28,19 +58,213 @@ static void water_blend_checks(void){
             CHECK(!(result&0x8000));
         }
     }
-    /* Sparse GBA palettes retain weak highlights through stable two-color
-     * dithering, while exact palette colors remain completely unchanged. */
+    /* Even with a sparse palette, a uniform reflected color must stay
+     * uniform at every pixel; exact black/white and colored entries survive. */
     memset(palette,0,sizeof palette);palette[2]=0x7fff;
     memset(r->valid,0,sizeof r->valid);
-    {unsigned x,y,sum=0;
-        for(y=0;y<4;++y)for(x=0;x<4;++x){unsigned index=ssa_water_reflection_index(r,8|(8<<5)|(8<<10),x,y);
-            CHECK(index && index<256);sum+=palette[index]&31;
-            CHECK(ssa_water_reflection_index(r,0,x,y)==1);
-            CHECK(ssa_water_reflection_index(r,0x7fff,x,y)==2);
-        }
-        CHECK(abs((int)sum-8*16)<=16);
+    {unsigned gray,x,y;
+        for(gray=0;gray<32;++gray)for(y=0;y<8;++y)for(x=0;x<8;++x){
+            unsigned index=ssa_water_reflection_index(r,(uint16_t)(gray|(gray<<5)|(gray<<10)),x,y);
+            CHECK(index==(gray<16?1u:2u));}
     }
-    free(r);
+    /* Former magenta/green mixture artifacts now resolve to a single nearby
+     * neutral. Actual colored scenery still maps to its exact palette entry. */
+    memset(palette,0,sizeof palette);palette[1]=10|(10<<5)|(10<<10);palette[2]=0x7fff;
+    palette[3]=20|(10<<5)|(30<<10);palette[4]=12|(30<<5)|(12<<10);
+    memset(r->valid,0,sizeof r->valid);
+    {uint16_t targets[2]={12|(12<<5)|(15<<10),12|(15<<5)|(12<<10)};unsigned t,x,y;
+        for(t=0;t<2;++t)for(y=0;y<8;++y)for(x=0;x<8;++x){
+            CHECK(ssa_water_reflection_index(r,targets[t],x,y)==1);
+            CHECK(ssa_water_reflection_index(r,palette[3],x,y)==3);
+            CHECK(ssa_water_reflection_index(r,palette[4],x,y)==4);}
+    }
+    /* Fade ends at the actual material color, regardless of reflected sky
+     * or material hue, in both RGB and indexed output. Decal range is separate. */
+    {SsaSurfaceDecals d={0};unsigned color,i;static const unsigned distances[4]={384,576,768,1536};
+        static const unsigned strengths[4]={255,128,0,0};
+        static const uint16_t colors[3]={3|(8<<5)|(25<<10),8|(20<<5)|(10<<10),27|(30<<5)|(31<<10)};
+        d.loaded=1;d.water_floor[1]=1;
+        for(color=0;color<3;++color){palette[1]=colors[color];
+            CHECK(ssa_water_begin(r,NULL,&d,palette,0,0,64,0,0,1,1,1)==1);
+            for(i=0;i<4;++i){
+                CHECK(ssa_water_rgb(r,1,0,0,0,distances[i],0)==colors[color]);
+                CHECK((r->mask[0]>>24)==strengths[i]);
+                CHECK(ssa_water_index(r,1,0,0,0,distances[i],0)==1);
+                if(i>=2){CHECK(!r->mask[0]);
+                    CHECK(ssa_water_blend(r,UINT32_C(0x00010000),0x7fe0)==colors[color]);}
+            }
+        }
+    }
+    ssa_water_free(r);free(r);
+}
+static void edge_word(uint8_t *p,int value){p[0]=(uint8_t)value;p[1]=(uint8_t)((unsigned)value>>8);}
+static void water_tile_checks(void){unsigned a,b,frame,y;
+    CHECK(sizeof water_ripples+sizeof water_ripples_surface==18432);
+    for(a=0;a<WATER_RIPPLE_VARIANTS;++a){unsigned occupied=0;
+        for(b=0;b<a;++b)CHECK(memcmp(water_ripples[a],water_ripples[b],sizeof water_ripples[a]));
+        for(frame=0;frame<WATER_RIPPLE_FRAMES;++frame)for(y=0;y<WATER_RIPPLE_SIZE;++y){uint32_t row=water_ripples[a][frame][y]|water_ripples_surface[a][frame][y];
+            CHECK(!(water_ripples[a][frame][y]&water_ripples_surface[a][frame][y]));
+            CHECK(!(row&UINT32_C(0xff000000)));
+            /* Quiet birth/death and an empty border prevent popping or
+             * clipping against the neighboring unoccupied water cell. */
+            if(!frame || frame==WATER_RIPPLE_FRAMES-1 || !y || y==WATER_RIPPLE_SIZE-1)CHECK(!row);
+            CHECK(!(row&UINT32_C(0x00800001)));occupied+=row!=0;}
+        CHECK(occupied>40);}
+    CHECK(WATER_FOAM_WIDTH==64 && WATER_FOAM_VARIANTS==16);
+    CHECK(sizeof water_foam+sizeof water_foam_surface==131072);
+    for(a=0;a<WATER_FOAM_VARIANTS;++a){
+        for(b=0;b<a;++b)CHECK(memcmp(water_foam_surface[a],water_foam_surface[b],sizeof water_foam_surface[a]) ||
+            memcmp(water_foam[a],water_foam[b],sizeof water_foam[a]));
+        for(frame=0;frame<32;++frame){CHECK((water_foam_surface[a][frame][0]|water_foam[a][frame][0])==UINT32_MAX && (water_foam_surface[a][frame][1]|water_foam[a][frame][1])==UINT32_MAX);
+            for(y=0;y<16;++y){uint32_t left[2]={water_foam[a][frame][y*2],water_foam_surface[a][frame][y*2]};
+                uint32_t right[2]={water_foam[a][frame][y*2+1],water_foam_surface[a][frame][y*2+1]};
+                uint32_t base[2]={water_foam[0][frame][y*2],water_foam_surface[0][frame][y*2]};unsigned k;
+                for(k=0;k<2;++k){CHECK((left[k]&1)==(right[k]>>31));CHECK((left[k]&1)==(base[k]&1));}}}
+        /* The loop seam is an ordinary animation step, with no new crest
+         * suddenly appearing across the width of the tile. */
+        for(frame=0;frame<32;++frame){unsigned x,changes=0;
+            for(y=0;y<32;++y)for(x=0;x<32;++x)
+                changes+=((water_foam_surface[a][frame][y]^water_foam_surface[a][(frame+1)&31][y])>>x)&1;
+            CHECK(changes<160);}
+        /* The traveling wave fully dissolves before the loop restarts. */
+        for(y=4;y<32;++y){CHECK(!water_foam[a][0][y] && !water_foam_surface[a][0][y]);
+            CHECK(!water_foam[a][31][y] && !water_foam_surface[a][31][y]);}
+    }
+}
+static void surface_edge_checks(const SsaNativeGame *g,const char *dir)
+{
+    uint8_t data[132]={0},baseline[2][256*16];uint16_t palette[256]={0};
+    SsaMapAssets map={0};SsaMapTextureBindings bindings={0};SsaWaterScene scene={0};SsaSurfaceDecals d={0};
+    unsigned surface,bank,other,joins,v,x,y,hit[2]={0},empty=0;uint32_t preview[256*256];
+    CHECK(sizeof surface_edge_tiles==8192);
+    for(surface=0;surface<2;++surface)for(bank=0;bank<8;++bank){
+        for(other=0;other<bank;++other)CHECK(memcmp(surface_edge_tiles[surface][bank],surface_edge_tiles[surface][other],sizeof surface_edge_tiles[0][0]));
+        for(joins=0;joins<4;++joins)for(v=0;v<16;++v){uint64_t row=surface_edge_tiles[surface][bank][joins][v];
+            CHECK((row&1)==((joins&1)?surface_edge_tiles[surface][0][3][v]&1:0));
+            CHECK((row>>63)==((joins&2)?surface_edge_tiles[surface][0][3][v]&1:0));}
+    }
+    map.data=data;map.size=sizeof data;map.vertices=0;map.vertex_count=3;
+    map.lines=12;map.line_count=1;map.sectors=92;map.sector_count=2;bindings.map=&map;
+    edge_word(data+2,256);edge_word(data+6,-256);edge_word(data+14,1);
+    edge_word(data+26,1);edge_word(data+38,4);
+    edge_word(data+94,64);edge_word(data+112,16);edge_word(data+114,48);
+    data[102]=data[122]=1;data[103]=data[123]=2;
+    palette[1]=20|(20<<5)|(20<<10);palette[2]=16|(16<<5)|(16<<10);palette[3]=12|(12<<5)|(12<<10);
+    CHECK(ssa_surface_decals_init(&d,palette,0)==1);
+    CHECK(ssa_water_scene_init(&scene,&bindings,&g->math,&g->sky,palette)==1);d.edge_scene=&scene;
+    for(surface=0;surface<2;++surface)for(y=0;y<256;++y)for(x=0;x<16;++x){
+        double wx=-1-2*(double)x,wy=-255+2*(double)y,h=surface?64:0;unsigned color=surface+1;
+        int on=ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)color,wx,wy,h,100);
+        baseline[surface][y*16+x]=(uint8_t)on;hit[surface]+=on;empty+=!on;
+        CHECK(on==ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)color,wx+0.25,wy+0.25,h,100));
+        CHECK(!ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)color,-65,wy,h,100));
+        CHECK(!ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)color,wx,wy,h+1,100));
+        CHECK(!ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)color,wx,wy,h,1536));
+        if(on)CHECK(ssa_surface_decals_sample_plane(&d,surface,(uint8_t)color,wx,wy,h,100)==d.shades[color]);
+    }
+    CHECK(hit[0]>100 && hit[1]>100 && empty>4000);
+    /* Rendering a collinear wall as one line, reversed, or split must select
+     * precisely the same connected tiles, including negative coordinates. */
+    ssa_water_scene_free(&scene);edge_word(data+12,1);edge_word(data+14,0);edge_word(data+24,1);edge_word(data+26,0);
+    CHECK(ssa_water_scene_init(&scene,&bindings,&g->math,&g->sky,palette)==1);
+    for(surface=0;surface<2;++surface)for(y=0;y<256;++y)for(x=0;x<16;++x)
+        CHECK(baseline[surface][y*16+x]==ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)(surface+1),-1-2*(double)x,-255+2*(double)y,surface?64:0,100));
+    ssa_water_scene_free(&scene);map.line_count=2;edge_word(data+12,0);edge_word(data+14,2);edge_word(data+24,0);edge_word(data+26,1);
+    memcpy(data+52,data+12,40);edge_word(data+52,2);edge_word(data+54,1);
+    CHECK(ssa_water_scene_init(&scene,&bindings,&g->math,&g->sky,palette)==1);
+    for(surface=0;surface<2;++surface)for(y=0;y<256;++y)for(x=0;x<16;++x)
+        CHECK(baseline[surface][y*16+x]==ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)(surface+1),-1-2*(double)x,-255+2*(double)y,surface?64:0,100));
+    /* Same-height open portals are not wall joints. Live mover heights matter. */
+    edge_word(data+112,0);edge_word(data+114,64);
+    for(surface=0;surface<2;++surface)for(y=0;y<256;++y)
+        CHECK(!ssa_surface_edge_decal(&scene,&d,surface,(uint8_t)(surface+1),-1,-255+2*(double)y,surface?64:0,100));
+    edge_word(data+112,16);edge_word(data+114,48);d.water_floor[1]=1;
+    for(y=0;y<256;++y)CHECK(!ssa_surface_edge_decal(&scene,&d,0,1,-1,-255+2*(double)y,0,100));
+    d.water_floor[1]=0;
+    for(y=0;y<256;++y)for(x=0;x<256;++x){unsigned side=x/128,col=x%128;
+        int on=col<64?baseline[side][y*16+col/4]:0;
+        preview[y*256+x]=on?(side?0x686862:0x827c69):(side?0x807f78:0xa09b87);}
+    snapshot(dir,"dry-edge-tiles",0,preview,256,256);
+    ssa_water_scene_free(&scene);
+}
+static void water_edge_checks(const SsaNativeGame *g,const char *dir){
+    uint8_t data[88]={0};uint16_t palette[256]={0};SsaWaterScene scene={0};
+    SsaMapAssets map={0};SsaMapTextureBindings bindings={0};SsaSurfaceDecals d={0};
+    SsaWaterRender *r=calloc(1,sizeof(*r));unsigned frame,x,y,near=0,wide=0,far=0,animated=0,white_pixels=0,surface_pixels=0,light_pixels=0,varied=0;int found=0,surface_found=0;
+    double hit_x=0,hit_y=0;unsigned hit_frame=0;uint8_t first[40*128];uint32_t image[256*256];
+    CHECK(r);map.data=data;map.size=sizeof(data);map.vertex_count=2;map.line_count=1;map.sector_count=2;
+    map.lines=8;map.sectors=48;bindings.map=&map;
+    /* Vertical shore at X=0; water on the left, dry land on the right. */
+    edge_word(data+2,128);edge_word(data+6,-128);edge_word(data+10,1);
+    edge_word(data+22,1);edge_word(data+34,4);
+    edge_word(data+50,64);edge_word(data+70,64);data[58]=1;data[78]=2;
+    palette[1]=(uint16_t)(3|(8<<5)|(25<<10));palette[2]=0x7fff;palette[3]=(uint16_t)(12|(16<<5)|(27<<10));
+    d.loaded=1;d.seed=317;d.water_floor[1]=1;
+    CHECK(ssa_water_scene_init(&scene,&bindings,&g->math,&g->sky,palette)==1 && scene.edges);
+    CHECK(palette[scene.foam[1]]==0x7fff && scene.foam[1]==scene.glints[1] && scene.ripples[1]==3);
+    for(frame=0;frame<192;frame+=6)for(y=0;y<128;++y)for(x=0;x<40;++x){
+        double wx=-1-2*(double)x,wy=-127+2*(double)y;
+        int on=ssa_water_edge_decal(&scene,&d,1,wx,wy,0,100,frame);
+        CHECK(on==ssa_water_edge_decal(&scene,&d,1,wx,wy,0,100,frame));
+        CHECK(!ssa_water_edge_decal(&scene,&d,1,-wx,wy,0,100,frame)); /* Dry side. */
+        CHECK(!ssa_water_edge_decal(&scene,&d,1,wx,wy,16,100,frame));
+        CHECK(!ssa_water_edge_decal(&scene,&d,1,wx,wy,0,1536,frame));
+        CHECK(on==ssa_water_edge_decal(&scene,&d,1,wx,wy,0,100,frame+192)); /* Loop. */
+        CHECK(on==ssa_water_edge_decal(&scene,&d,1,wx,wy,0,100,frame+5)); /* Same six-tick frame hold as ripples. */
+        if(y<96)varied+=on!=ssa_water_edge_decal(&scene,&d,1,wx,wy+64,0,100,frame);
+        if(x<4)near+=on!=0;
+        if(x>=8 && x<16)wide+=on!=0;
+        if(x>=16)far+=on!=0;
+        CHECK(on>=0 && on<=3);
+        white_pixels+=on==1;surface_pixels+=on==3;light_pixels+=on==2;
+        if(!frame)first[y*40+x]=(uint8_t)on;else animated+=on!=first[y*40+x];
+        if(on==1 && !found && !ssa_water_glint(&d,wx,wy,100,frame) && !ssa_water_ripple(&d,wx,wy,100,frame)){
+            hit_x=wx;hit_y=wy;hit_frame=frame;found=1;}
+        if(on==3 && !surface_found && !ssa_water_glint(&d,wx,wy,100,frame) && !ssa_water_ripple(&d,wx,wy,100,frame)){
+            CHECK(ssa_water_begin(r,&scene,&d,palette,-32,0,64,frame,1,1,1,1)==1);
+            CHECK(ssa_water_rgb(r,1,wx,wy,0,100,0)==palette[1] && !r->mask[0]);
+            CHECK(ssa_water_index(r,1,wx,wy,0,100,0)==1 && !r->mask[0]);
+            r->animated_decals=0;CHECK(ssa_water_rgb(r,1,wx,wy,0,100,0)==palette[1] && r->mask[0]);
+            surface_found=1;}
+    }
+    CHECK(surface_found);
+    CHECK(varied>100); /* Longer artwork does not repeat its two halves. */
+    CHECK(surface_pixels>0 && light_pixels>white_pixels*2);
+    /* The attached meniscus persists; the wave travels outward then vanishes. */
+    {unsigned saved=d.seed;double center[2]={0},weight[2]={0};d.seed=0;
+        for(frame=0;frame<192;frame+=6){
+            for(y=0;y<32;++y)for(x=0;x<16;++x){int kind=ssa_water_edge_decal(&scene,&d,1,-1-2*(double)x,-31+2*(double)y,0,100,frame);
+                if(!x)CHECK(kind!=0);
+                if(frame>=174 && x>=2)CHECK(!kind);
+                if(kind && x>=2 && (frame==36 || frame==96)){unsigned k=frame==96;center[k]+=x;weight[k]+=1;}}}
+        CHECK(weight[0]>0 && weight[1]>0 && center[1]/weight[1]>center[0]/weight[0]+3);d.seed=saved;}
+    CHECK(near>100 && wide>1000 && !far && animated>1000 && found);
+    CHECK(ssa_water_begin(r,&scene,&d,palette,-32,0,64,hit_frame,1,1,1,1)==1);
+    CHECK(ssa_water_rgb(r,1,hit_x,hit_y,0,100,0)==palette[scene.foam[1]] && !r->mask[0]);
+    CHECK(ssa_water_index(r,1,hit_x,hit_y,0,100,0)==scene.foam[1]);
+    r->animated_decals=0;
+    CHECK(ssa_water_rgb(r,1,hit_x,hit_y,0,100,0)==palette[1] && r->mask[0]);
+    r->animated_decals=1;r->reflections=0;
+    CHECK(ssa_water_rgb(r,1,hit_x,hit_y,0,100,0)==palette[scene.foam[1]] && !r->mask[0]);
+    /* A connected water sector is not a shore; live height/door changes are. */
+    data[78]=1;CHECK(!ssa_water_edge_decal(&scene,&d,1,hit_x,hit_y,0,100,hit_frame));
+    edge_word(data+68,8);CHECK(ssa_water_edge_decal(&scene,&d,1,hit_x,hit_y,0,100,hit_frame));
+    edge_word(data+68,0);edge_word(data+70,0);CHECK(ssa_water_edge_decal(&scene,&d,1,hit_x,hit_y,0,100,hit_frame));
+    edge_word(data+70,64);data[78]=2;
+    /* Two animation phases at native texel scale, enlarged only for inspection. */
+    for(y=0;y<256;++y)for(x=0;x<256;++x){unsigned phase=x>=128?72:0;
+        double wx=-63+(int)(x%128)/2*2,wy=-127+(int)y/2*2;unsigned index=wx>=0?2:1;
+        if(wx<0){int edge=ssa_water_edge_decal(&scene,&d,1,wx,wy,0,100,phase);
+            if(edge)index=edge==3?1:edge==2?scene.ripples[1]:scene.foam[1];}
+        {unsigned c=palette[index];image[y*256+x]=((c&31)*255/31<<16)|(((c>>5)&31)*255/31<<8)|((c>>10)&31)*255/31;}}
+    snapshot(dir,"water-edge-phases",0,image,256,256);
+    ssa_water_free(r);free(r);ssa_water_scene_free(&scene);CHECK(!scene.edges);
+    /* The other orientation and a negative grid boundary must also work. */
+    edge_word(data,-128);edge_word(data+4,-128);edge_word(data+2,-128);edge_word(data+6,128);
+    CHECK(ssa_water_scene_init(&scene,&bindings,&g->math,&g->sky,palette)==1);
+    found=0;for(frame=0;frame<192;frame+=6)for(y=0;y<128;++y)
+        found+=ssa_water_edge_decal(&scene,&d,1,-127,-127+2*(double)y,0,100,frame)!=0;
+    CHECK(found>0);ssa_water_scene_free(&scene);
 }
 /* Asset coverage only: inspect campaign materials without running levels. */
 static void materials(const uint8_t *rom){
@@ -98,9 +322,14 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
     CHECK(floor_colors && base && depth && !g->water_reflections);
     while(water<256 && !g->surface_decals.water_floor[water])++water;
     CHECK(water<256);
+    for(x=1;x<256;++x)if(g->surface_decals.water_floor[x]){
+        unsigned a=g->palette_effect.colors[x]&0x7fff,b=g->palette_effect.colors[g->water_scene.ripples[x]]&0x7fff,c;
+        CHECK(a!=b); /* Every classified water color has a visible light ink. */
+        for(c=0;c<15;c+=5)CHECK(((b>>c)&31)>=((a>>c)&31));
+    }
     /* Find an actual animated sprite pixel and prove it bypasses blending. */
     for(f=0;f<128 && !found;f+=3)for(y=0;y<128 && !found;++y)for(x=0;x<128;++x)
-        if(ssa_water_glint(&g->surface_decals,x*2.0,y*2.0,100,f)){gx=x*2.0;gy=y*2.0;stamp=f;found=1;break;}
+        if(ssa_water_glint(&g->surface_decals,x*2.0,y*2.0,100,f)==1){gx=x*2.0;gy=y*2.0;stamp=f;found=1;break;}
     CHECK(found && !ssa_water_glint(&g->surface_decals,gx,gy,1536,stamp));
     CHECK(ssa_water_begin(&r->water,&g->water_scene,&g->surface_decals,g->palette_effect.colors,0,0,64,stamp,1,1,1,1)==1);
     {uint16_t light=ssa_water_rgb(&r->water,(uint8_t)water,gx,gy,0,100,0);
@@ -109,11 +338,11 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
         CHECK(!r->water.mask[0] && !r->water.passes);}
     for(f=0;f<128;++f)changes+=!ssa_water_glint(&g->surface_decals,gx,gy,100,f);
     CHECK(changes>50);
-    /* Non-glint decals keep water-colored shading, animate independently and
+    /* Non-glint artwork uses lighter water, animates independently and
      * bypass reflection blending just like the separate bright glints. */
     {unsigned got=0,off=0;double rx=0,ry=0;uint32_t tick=0;uint16_t shade;
         for(f=0;f<256 && !got;f+=12)for(y=0;y<128 && !got;++y)for(x=0;x<128;++x)
-            if(ssa_water_ripple(&g->surface_decals,x*2.0,y*2.0,100,f) &&
+            if(ssa_water_ripple(&g->surface_decals,x*2.0,y*2.0,100,f)==2 &&
                !ssa_water_glint(&g->surface_decals,x*2.0,y*2.0,100,f)){rx=x*2.0;ry=y*2.0;tick=f;got=1;break;}
         CHECK(got && !ssa_water_ripple(&g->surface_decals,rx,ry,1536,tick));
         CHECK(ssa_water_begin(&r->water,&g->water_scene,&g->surface_decals,g->palette_effect.colors,0,0,64,tick,1,1,1,1)==1);
@@ -124,7 +353,7 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
         CHECK(ssa_water_rgb(&r->water,(uint8_t)water,rx,ry,0,100,0)==shade);
         r->water.animated_decals=0;
         CHECK(ssa_water_rgb(&r->water,(uint8_t)water,rx,ry,0,100,0)==(g->palette_effect.colors[water]&0x7fff) && (r->water.mask[0]>>24));
-        for(f=0;f<256;++f)off+=!ssa_water_ripple(&g->surface_decals,rx,ry,100,f);
+        for(f=0;f<256;++f){int sample=ssa_water_ripple(&g->surface_decals,rx,ry,100,f);CHECK(sample==0 || sample==2 || sample==3);off+=!sample;}
         CHECK(off>180 && off<256);
         CHECK(!ssa_water_ripple(NULL,0,0,0,0) && !ssa_water_ripple(&g->surface_decals,65536,0,0,0));
         CHECK(ssa_water_ripple(&g->surface_decals,-127,-253,100,UINT32_MAX)==ssa_water_ripple(&g->surface_decals,-127,-253,100,UINT32_MAX));
@@ -167,6 +396,23 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
             else if(view==3)CHECK(!memcmp(reference,mirror->pixels,240*160*4));
         }
         ssa_pc_renderer_free(mirror);free(mirror);ssa_water_free(w);free(w);free(out);free(reference);}
+    /* Lighter details remain visible with reflections disabled, and the GBA
+     * indexed path uses exactly the same original-palette shade. */
+    for(unsigned ink=2;ink<=3;++ink){unsigned got=0,expected=ink==2?g->water_scene.ripples[water]:water;
+        for(f=0;f<256 && !got;f+=3)for(y=0;y<128 && !got;++y)for(x=0;x<128;++x){
+            int glint=ssa_water_glint(&g->surface_decals,x*2.0,y*2.0,100,f);
+            int sample=ssa_water_ripple(&g->surface_decals,x*2.0,y*2.0,100,f);
+            CHECK(glint>=0 && glint<=2);
+            if(sample!=(int)ink || glint)continue;
+            CHECK(ssa_water_begin(&r->water,&g->water_scene,&g->surface_decals,g->palette_effect.colors,0,0,64,f,1,1,1,1)==1);
+            CHECK(ssa_water_rgb(&r->water,(uint8_t)water,x*2.0,y*2.0,0,100,0)==(g->palette_effect.colors[expected]&0x7fff) && !r->water.mask[0]);
+            CHECK(ssa_water_index(&r->water,(uint8_t)water,x*2.0,y*2.0,0,100,0)==expected && !r->water.mask[0]);
+            r->water.reflections=0;
+            CHECK(ssa_water_index(&r->water,(uint8_t)water,x*2.0,y*2.0,0,100,0)==expected && !r->water.mask[0]);
+            r->water.reflections=1;r->water.animated_decals=0;
+            CHECK(ssa_water_rgb(&r->water,(uint8_t)water,x*2.0,y*2.0,0,100,0)==(g->palette_effect.colors[water]&0x7fff) && r->water.mask[0]);
+            got=1;break;}
+        CHECK(got);}
     /* Render-only water material fixture. Geometry, actors and game state stay
      * unchanged; replacing floor colors makes both Egypt/Rome views inspectable. */
     for(x=0;x<g->map.sector_count;++x){uint8_t *s=g->map.data+g->map.sectors+x*20;
@@ -193,6 +439,9 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
             g->frame_game.counter+=12;CHECK(ssa_pc_renderer_draw(r,g)==1 && !memcmp(depth,r->depth,480*320*sizeof(float)));
             for(x=0;x<480*320;++x)animated+=base[x]!=r->pixels[x];
             CHECK(animated>0);snapshot(dir,"water-ripples",g->level,r->pixels,480,320);draws+=2;
+            g->water_reflections=0;
+            CHECK(ssa_pc_renderer_draw(r,g)==1 && !r->water.passes && !memcmp(depth,r->depth,480*320*sizeof(float)));
+            snapshot(dir,"water-decals-no-reflections",g->level,r->pixels,480,320);++draws;
         }
         CHECK(!memcmp(&inventory,&g->players[0].inventory,sizeof inventory));draws+=4;
     }
@@ -203,6 +452,10 @@ static void water_checks(SsaNativeGame *g,SsaPcRenderer *r,const char *dir){
     CHECK(changes>10 && g->water_render.passes>0 && g->water_renderer && !g->water_renderer->rays);
     CHECK(g->water_renderer->width==240 && g->water_renderer->height==160);
     snapshot(dir,"water-gba",g->level,g->rgb888,240,160);draws+=2;
+    g->water_reflections=0;g->surface_decals_enabled=1;
+    CHECK(ssa_native_game_draw(g)==1 && !g->water_render.passes);
+    snapshot(dir,"water-gba-decals-no-reflections",g->level,g->rgb888,240,160);++draws;
+    g->water_reflections=1;g->surface_decals_enabled=0;
     if(g->level==6){SsaActorSource sources[100];unsigned changed=0;
         /* Removing render snapshots, without touching world entities, must
          * remove actual reflected sprite pixels from the second scene pass. */
@@ -452,6 +705,7 @@ static void slave_pool(SsaNativeGame *g,SsaPcRenderer *r,const uint8_t *rom,cons
         for(i=0;i<480*320;++i)if(r->water.mask[i]>>24){CHECK((r->water.mask[i]&65535)==96);++visible;}
         CHECK(visible>100 && r->water.passes==1);
         snapshot(dir,pitch?"slave-pool-pitched":"slave-pool-flat",3,r->pixels,480,320);}
+    reflection_sky_fixture(r,g);
     /* GBA visible-plane overlays: pool receives reflections and no stains;
      * the same-color stair treads produce no water stencil. */
     camera.z=224*65536;camera.cosine=-65536;pool.count=3;
@@ -464,7 +718,10 @@ static void slave_pool(SsaNativeGame *g,SsaPcRenderer *r,const uint8_t *rom,cons
     CHECK(ssa_water_begin(&r->water,&g->water_scene,&g->surface_decals,g->palette_effect.colors,
         0,0,224,0,0,1,120,120)==1);
     CHECK(ssa_water_reference(&r->water,&pool,&camera,fb,sizeof fb)==1);
-    for(y=80;y<120;++y){CHECK(r->water.mask[y*120+50]>>24);
+    /* The far two rows are beyond the shorter range or round to zero
+     * reflection strength; they retain the exact pale pool material. */
+    for(y=80;y<120;++y){CHECK(!!(r->water.mask[y*120+50]>>24)==(y>=82));
+        CHECK(fb[y*120+50]==120);
         CHECK(!r->water.mask[y*120+51] && !r->water.mask[y*120+52]);}
     g->surface_decals.level=0;CHECK(!ssa_surface_decals_water(&g->surface_decals,120,96));
     g->surface_decals.level=6;CHECK(!ssa_surface_decals_water(&g->surface_decals,120,96));
@@ -500,9 +757,11 @@ int main(int argc,char **argv){
     uint8_t *rom=malloc(0x800000);SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer r={0};FILE *f;
     uint32_t *old=malloc(480*320*4);float *depth=malloc(480*320*sizeof(float));unsigned level,pitch,i,total,reference_changed=0;
     CHECK(argc>=2 && rom && g && old && depth);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
-    water_blend_checks();materials(rom);
+    water_tile_checks();water_blend_checks();materials(rom);
     for(level=0;level<=6;level+=6){
         CHECK(ssa_native_game_init(g,rom,0x800000,level)==1 && !g->surface_decals_enabled);
+        sample_cache_checks(g);
+        if(!level){surface_edge_checks(g,argc>2?argv[2]:NULL);water_edge_checks(g,argc>2?argv[2]:NULL);}
         CHECK(ssa_native_game_tick(g)==1);masks(g,argc>2?argv[2]:NULL);
         total=0;
         for(pitch=0;pitch<3;++pitch){uint32_t frame=g->frame_game.counter;SsaInventory inventory=g->players[0].inventory;

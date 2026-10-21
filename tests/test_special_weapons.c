@@ -243,7 +243,7 @@ static void denied_strike(uint8_t *rom,size_t size,const SsaMathTables *math,
     }
     CHECK(gestures>1);
     if(mode==6)CHECK(starts==1);
-    if(mode==7)CHECK(starts==2);
+    if(mode==7)CHECK(starts==1); /* A recovery click is discarded. */
     CHECK(!t.weapon.game.shots[8] && f.players[0].inventory.ammo[8]==100 && !projectile_count(&t));
     CHECK(sound_effects==sounds && special_requests==requests && !t.weapon.game.request);
     CHECK(!(t.weapon.gameplay.weapon.flags&0x400) && !t.weapon.weapon.fire_pending_weapon && !t.weapon.weapon.time_strike_empty_pending);

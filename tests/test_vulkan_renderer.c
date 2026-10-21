@@ -6,8 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include "godray_fixture.h"
 static unsigned checks,draws,sprite_cases;static unsigned long long matched,pixels;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"Vulkan check line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
+#include "sprite_clip_fixture.h"
+#include "sprite_shadow_fixture.h"
+#include "reflection_sky_fixture.h"
 static void put32(unsigned char *p,uint32_t n){for(unsigned i=0;i<4;++i)p[i]=(unsigned char)(n>>(8*i));}
 static void snapshot(const SsaPcRenderer *r,const char *path){
     unsigned char h[54]={0};FILE *f=fopen(path,"wb");CHECK(f);h[0]='B';h[1]='M';put32(h+2,54+r->width*r->height*4);
@@ -32,6 +36,49 @@ static void quad(const SsaPcHardware *hw,float left,float top,float right,float 
     SsaPcVertex q[4]={{left,top,z,0,0},{right,top,z,m->width,0},
         {right,bottom,z,m->width,m->height},{left,bottom,z,0,m->height}};
     CHECK(hw->triangle(hw->context,q,m)==1);q[1]=q[2];q[2]=q[3];CHECK(hw->triangle(hw->context,q,m)==1);
+}
+/* Persistent uploads must observe mutation at the same address, live palette
+ * changes, dimensions and mip levels, even after an unrelated pass. */
+static void texture_cache_checks(SsaVulkanRenderer *v)
+{
+    const SsaPcHardware *hw=ssa_vulkan_backend(v);SsaPcRenderer r={0};const SsaPcSample *samples;
+    uint32_t palette[256]={0};uint8_t texels[256],mip0[64],mip1[16];SsaPcMaterial m={0};
+    CHECK(ssa_pc_renderer_resize(&r,32,32)==1);
+    m.pixels=texels;m.width=m.height=16;m.actor=m.transparent=1;
+    m.mip_pixels[0]=mip0;m.mip_pixels[1]=mip1;m.mip_width[0]=m.mip_height[0]=8;m.mip_width[1]=m.mip_height[1]=4;
+    for(unsigned pass=0;pass<12;++pass){unsigned index=1+pass%3;uint32_t color=0x102030+pass*0x010305;
+        memset(texels,index,sizeof texels);memset(mip0,index,sizeof mip0);memset(mip1,index,sizeof mip1);
+        palette[index]=color;m.width=pass&1?8:16;m.height=pass&1?32:16;
+        for(unsigned i=0;i<32*32;++i)r.pixels[i]=0;
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);
+        quad(hw,-1,-1,1,1,1,&m);CHECK(hw->end(hw->context,&r,&samples)==1);
+        CHECK(r.pixels[16*32+16]==color);
+        /* Dense geometry requests the same material repeatedly, including
+         * a second key sharing its base/mip images. */
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);
+        for(unsigned i=0;i<128;++i){m.color=i&1;quad(hw,-1,-1,1,1,1,&m);}
+        CHECK(hw->end(hw->context,&r,&samples)==1 && r.pixels[16*32+16]==color);
+    }
+    m.width=m.height=16;memset(texels,1,sizeof texels);memset(mip0,2,sizeof mip0);
+    palette[1]=0xff0000;palette[2]=0x00ff00;palette[3]=0x0000ff;
+    for(unsigned pass=0;pass<2;++pass){unsigned index=pass?2:3;
+        memset(mip1,index,sizeof mip1);
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);
+        quad(hw,-.0625f,-.0625f,.0625f,.0625f,1,&m);
+        CHECK(hw->end(hw->context,&r,&samples)==1 && r.pixels[16*32+16]==palette[index]);
+    }
+    /* Exceed the retained-entry budget, then verify eviction on the next
+     * pass without invalidating any offsets already submitted this pass. */
+    {uint8_t *many=malloc(4100);CHECK(many);memset(many,2,4100);
+        memset(&m,0,sizeof m);m.width=m.height=1;m.actor=1;
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);
+        for(unsigned i=0;i<4100;++i){m.pixels=many+i;quad(hw,-1,-1,1,1,1,&m);}
+        CHECK(hw->end(hw->context,&r,&samples)==1 && r.pixels[16*32+16]==palette[2]);
+        many[0]=3;m.pixels=many;
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);quad(hw,-1,-1,1,1,1,&m);
+        CHECK(hw->end(hw->context,&r,&samples)==1 && r.pixels[16*32+16]==palette[3]);free(many);
+    }
+    ssa_pc_renderer_free(&r);
 }
 static void primitives(SsaVulkanRenderer *v)
 {
@@ -60,9 +107,9 @@ static void primitives(SsaVulkanRenderer *v)
     CHECK(hw->triangle(hw->context,tri,&solid)==1 && hw->end(hw->context,&r,&samples)==1);
     CHECK(r.pixels[10*32+16]==0xff0000 && samples[10*32+16].z==4);
     for(unsigned y=0;y<32;++y)if(y<5 || y>=17)for(unsigned x=0;x<32;++x)CHECK(r.pixels[y*32+x]==0x123456);
-    /* A sprite may win the software-sized near tie against a wall, but not
-     * show through a genuinely nearer wall. Geometry submitted after sprites
-     * is still resolved in the world pass first. Aux depth stays unbiased. */
+    /* Actor fragments have already been silhouette-clipped by the scene.
+     * The backend must paint them even across nearer world floor samples.
+     * Geometry submitted later still resolves before the actor pass. */
     {uint8_t texel=2;SsaPcMaterial flat={0},billboard={0};palette[3]=0x0000ff;
         flat.color=1;billboard.pixels=&texel;billboard.width=billboard.height=1;
         billboard.actor=billboard.transparent=1;
@@ -73,8 +120,21 @@ static void primitives(SsaVulkanRenderer *v)
         flat.color=3;quad(hw,-0.3f,0.3f,0.3f,-0.3f,1,&flat);
         CHECK(hw->end(hw->context,&r,&samples)==1);
         CHECK(r.pixels[16*32+8]==0x00ff00 && samples[16*32+8].z>2);
-        CHECK(r.pixels[16*32+24]==0xff0000 && samples[16*32+24].z==2);
-        CHECK(r.pixels[16*32+16]==0x0000ff && samples[16*32+16].z==1);
+        CHECK(r.pixels[16*32+24]==0x00ff00 && samples[16*32+24].z>2);
+        CHECK(r.pixels[16*32+16]==0x00ff00 && samples[16*32+16].z>2);
+    }
+    /* Solid-colored authored mip fixtures expose which level the shader
+     * actually samples as a textured quad shrinks on screen. */
+    {uint8_t full[32*32],half[16*16],quarter[8*8];SsaPcMaterial m={0};unsigned level;
+        memset(full,1,sizeof full);memset(half,2,sizeof half);memset(quarter,3,sizeof quarter);palette[3]=0x0000ff;
+        m.pixels=full;m.width=m.height=32;m.mip_pixels[0]=half;m.mip_pixels[1]=quarter;
+        m.mip_width[0]=m.mip_height[0]=16;m.mip_width[1]=m.mip_height[1]=8;
+        for(level=0;level<3;++level){CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);
+            quad(hw,-1,1,1,-1,(float)(1u<<level),&m);CHECK(hw->end(hw->context,&r,&samples)==1);
+            CHECK(r.pixels[16*32+16]==palette[level+1]);}
+        m.mip_pixels[0]=m.mip_pixels[1]=NULL;
+        CHECK(hw->begin(hw->context,&r,palette,16,0,32)==1);quad(hw,-1,1,1,-1,4,&m);
+        CHECK(hw->end(hw->context,&r,&samples)==1 && r.pixels[16*32+16]==palette[1]);
     }
     ssa_pc_renderer_free(&r);
 }
@@ -130,7 +190,7 @@ int main(int argc,char **argv)
 {
     SsaVulkanRenderer *v=ssa_vulkan_open();SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer gpu={0},cpu={0};
     uint8_t *rom=malloc(0x800000);FILE *f;unsigned i;static const unsigned sizes[][2]={{1,1},{321,213},{960,640},{1280,720},{240,160}};
-    CHECK(v && g && rom && argc>=2);primitives(v);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
+    CHECK(v && g && rom && argc>=2);primitives(v);texture_cache_checks(v);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
     {SsaMenu *m=calloc(1,sizeof(*m));CHECK(m && ssa_menu_init(m,rom,0x800000,1)==1);
         CHECK(m->settings.renderer==SSA_RENDER_VULKAN);m->settings.renderer=SSA_RENDER_SOFTWARE;
         m->page=m->draw_page=SSA_MENU_GRAPHICS;m->selection=1;m->fading=m->fade_volume=0;m->vulkan_available=1;
@@ -150,7 +210,15 @@ int main(int argc,char **argv)
             CHECK(m->settings.renderer==(i?SSA_RENDER_VULKAN:SSA_RENDER_SOFTWARE));}
         free(m);}
     CHECK(ssa_native_game_init(g,rom,0x800000,0)==1 && ssa_native_game_step(g)==1);gpu.hardware=ssa_vulkan_backend(v);
+    sprite_clip_fixture(&gpu,g);sprite_clip_fixture(&cpu,g);
+    sprite_shadow_fixture(&gpu,g);sprite_shadow_fixture(&cpu,g);
     sprite_order(&gpu,g);
+    g->mipmaps=1;
+    CHECK(ssa_pc_renderer_resize(&gpu,240,160)==1);
+    g->render_pitch=0;compare(&gpu,&cpu,g);
+    g->render_pitch=4096;compare(&gpu,&cpu,g);
+    g->sprite_shadows_enabled=1;g->render_pitch=-4096;compare(&gpu,&cpu,g);
+    g->mipmaps=0;
     for(i=0;i<5;++i){CHECK(ssa_pc_renderer_resize(&gpu,sizes[i][0],sizes[i][1])==1);g->render_pitch=i%2?4096:-2048;compare(&gpu,&cpu,g);}
     CHECK(ssa_pc_renderer_resize(&gpu,960,640)==1);g->render_pitch=4096;g->surface_decals_enabled=1;g->hud_style=SSA_HUD_CLASSIC;
     compare(&gpu,&cpu,g);if(argc>2)snapshot(&gpu,argv[2]);
@@ -170,6 +238,8 @@ int main(int argc,char **argv)
     g->pc_camera.sector=9;g->pc_camera.heading=0;g->surface_decals_enabled=1;g->water_reflections=1;g->render_pitch=-4096;
     CHECK(ssa_pc_renderer_resize(&gpu,480,320)==1);compare(&gpu,&cpu,g);
     CHECK(gpu.water.passes==1 && gpu.reflection && gpu.reflection->hardware==gpu.hardware);
+    g->mipmaps=1;compare(&gpu,&cpu,g); /* Mirrored texture/sprite mip policy. */
+    reflection_sky_fixture(&gpu,g);reflection_sky_fixture(&cpu,g);
     if(argc>3)snapshot(&gpu,argv[3]);
     /* Parallel effect jobs must match serial composition exactly, including
      * animated water and the reflected scene. Use one GPU to avoid edge-rule
@@ -190,6 +260,14 @@ int main(int argc,char **argv)
         CHECK(memcmp(gpu.depth,cpu.depth,(size_t)gpu.width*gpu.height*sizeof(*gpu.depth))==0);
         CHECK(gpu.actor_pixels==cpu.actor_pixels && gpu.wall_pixels==cpu.wall_pixels);
         g->surface_decals_enabled=g->water_reflections=1;
+        {SsaRenderCamera saved=g->pc_camera;int pitch=g->render_pitch;size_t n=(size_t)gpu.width*gpu.height;
+            CHECK(godray_fixture_camera(g));g->render_pitch=0;g->water_reflections=0;g->surface_decals_enabled=0;g->godrays_enabled=1;
+            CHECK(ssa_pc_renderer_draw(&gpu,g)==1 && ssa_pc_renderer_draw(&cpu,g)==1);
+            CHECK(gpu.godray_triangles>0 && gpu.godray_triangles==cpu.godray_triangles);
+            CHECK(!memcmp(gpu.pixels,cpu.pixels,n*sizeof(*gpu.pixels)));
+            CHECK(!memcmp(gpu.depth,cpu.depth,n*sizeof(*gpu.depth)));
+            g->pc_camera=saved;g->render_pitch=pitch;g->water_reflections=1;
+        }
         cpu.hardware=NULL;if(cpu.reflection)cpu.reflection->hardware=NULL;
     }
     /* Backend is process-owned; resize, level teardown and mode switching

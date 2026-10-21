@@ -30,8 +30,8 @@ int ssa_actor_scene_free(SsaActorScene *s)
        s->world->query_active)return -1;
     memset(s,0,sizeof(*s));return 1;
 }
-int ssa_actor_scene_draw_offsets(SsaActorScene *s,const SsaRenderCamera *camera,uint32_t game_flags,
-    const SsaActorSource *sources,size_t count,const int32_t *z_offsets)
+int ssa_actor_scene_draw_layers(SsaActorScene *s,const SsaRenderCamera *camera,uint32_t game_flags,
+    const SsaActorSource *sources,size_t count,const int32_t *z_offsets,SsaActorUnderlay underlay,void *context)
 {
     int result=-1;
     if(!ready(s) || s->updating || s->queue.updating || s->projector.updating ||
@@ -45,8 +45,8 @@ int ssa_actor_scene_draw_offsets(SsaActorScene *s,const SsaRenderCamera *camera,
        s->geometry->visibility.wall_count,&s->geometry->wall_renderer,s->assets)<0)goto done;
     s->projector.camera=camera;s->projector.game_flags=game_flags;
     if(ssa_actor_collect_screen(&s->projector,s->world,sources,count,z_offsets,s->screen_mirrors,s->screen_x,s->screen_y)<0)goto done;
-    if(ssa_actor_queue_draw(&s->queue,s->assets,
-       s->geometry->framebuffer+SSA_SCENE_FRAME_PREFIX,SSA_SCENE_FRAME_BYTES)<0)goto done;
+    if(ssa_actor_queue_draw_layers(&s->queue,s->assets,
+       s->geometry->framebuffer+SSA_SCENE_FRAME_PREFIX,SSA_SCENE_FRAME_BYTES,underlay,context)<0)goto done;
     result=1;
 done:
     s->projector.camera=NULL;s->updating=0;return result;
@@ -54,3 +54,7 @@ done:
 int ssa_actor_scene_draw(SsaActorScene *s,const SsaRenderCamera *camera,uint32_t game_flags,
     const SsaActorSource *sources,size_t count)
 {return ssa_actor_scene_draw_offsets(s,camera,game_flags,sources,count,NULL);}
+
+int ssa_actor_scene_draw_offsets(SsaActorScene *s,const SsaRenderCamera *camera,uint32_t flags,
+    const SsaActorSource *sources,size_t count,const int32_t *offsets)
+{return ssa_actor_scene_draw_layers(s,camera,flags,sources,count,offsets,NULL,NULL);}

@@ -1,18 +1,20 @@
 {
   "result": "pass",
-  "checks": 11598404,
+  "checks": 11803544,
   "sizes": 7,
   "different_from_upscale": 257587,
   "chase_jump_frames": 24,
   "third_person_frames": 24,
   "collision_fallback_frames": 0,
   "source_sha256": {
-    "tests/test_pc_renderer.c": "b5c5d71ef4c952d982dbbb484aee26b695741d3278d24bf2acaff96a172400d6",
+    "tests/test_pc_renderer.c": "dfe512457405ba2c698fddc50bbef5bfae860571b6297aa6550146e9931f30f1",
     "src/pc_renderer.c": "03613c3f3ed7178034a581fed36bb54fce19c574baff26f48324ef1b57cb6dbd",
-    "src/pc_scene.c": "346a341f6074c10e8b5b5cbcb889f554e89a927e436f9cccb805fc6c0477d018",
+    "src/pc_scene.c": "57b6caa64a8aabbe4ac77f9884452cf01cf69bd9124ca951e73f59728e5aef22",
     "include/ssa/pc_scene.h": "c6adc1e951eae65544365a02a01a49bc388d9f9e2e5c2566f8ec7fb76948f5fb",
     "tests/native_build.py": "8e4bb364911877e2b816fac8ebb531a4777c086d8cf5f6bf55183d6328bd9e8d",
-    "src/pc_renderer_pitch.inc": "7f2606ea4e4a1308116706c003ea461eff534c3a26ecdc70e374ac4592851630",
-    "include/ssa/pc_renderer.h": "88f620d40806ce5bbdfc0a47dd0bbc3eace0cce6099e1a417c391605dc1fa716"
+    "src/pc_renderer_pitch.inc": "21647c21be8a1c6449b737c1562fa9969f5fd4022e8db8c11944724a19742e12",
+    "src/pc_actor_clip.inc": "32b9fc3e993863886a82a39608cb033f8751357efb729604bad39993493ce009",
+    "tests/sprite_clip_fixture.h": "e9bd783a031a32b9eeba40ffa478f8ddd54b9aa41f200f54989670a16649a030",
+    "include/ssa/pc_renderer.h": "3320abf1eab1590010424c0febc8376cf7e49418bb42efbacf465d588f56b924"
   }
 }

@@ -5,15 +5,37 @@
 enum {SELECT_TOP=40,SELECT_SPACING=16,BACK_TOP=144};
 enum {PANEL_LEFT=32,VALUE_LEFT=144,BAR_RIGHT=176,BAR_SPAN=BAR_RIGHT-PANEL_LEFT,
       BAR_HEIGHT=7};
-static const int settings_top[9]={0,24,0,0,48,80,96,120,BACK_TOP};
-static const unsigned settings_ids[6]={0,3,4,5,6,7}; /* Language, FOV, audio, Back. */
-static const int settings_bar_top[3]={56,104,128};
-static const unsigned settings_bar_row[3]={3,5,6};
-enum {GRAPHICS_TOP=24,GRAPHICS_SPACING=16};
-enum {EXTRA_TOP=16,EXTRA_ROWS=10,EXTRA_SPACING=8};
+/* Stable IDs keep actions/translations independent of display order. Each
+ * row owns its label, slider position/range and GBA availability together. */
+typedef struct MenuRow {unsigned id;int top,bar_top;unsigned maximum,gba_disabled;} MenuRow;
+static const MenuRow settings_rows[]={
+    {0,16,0,0,0}, {8,32,40,SSA_MOUSE_RANGE,0}, {3,56,64,SSA_FOV_RANGE,1},
+    {4,88,0,0,0}, {5,96,104,100,0}, {6,112,120,100,0}, {7,BACK_TOP,0,0,0}
+};
+static const MenuRow graphics_rows[]={
+    {0,24,0,0,0}, {1,40,0,0,0}, {2,56,0,0,1}, {3,72,0,0,1},
+    {4,88,0,0,0}, {5,96,0,0,0}, {6,104,0,0,0}, {7,112,0,0,0}, {8,BACK_TOP,0,0,0}
+};
+enum {SETTINGS_ROWS=sizeof settings_rows/sizeof *settings_rows,GRAPHICS_ROWS=sizeof graphics_rows/sizeof *graphics_rows-1};
+static const MenuRow *settings_row(unsigned id){
+    for(unsigned i=0;i<SETTINGS_ROWS;++i)if(settings_rows[i].id==id)return &settings_rows[i];
+    return NULL;
+}
+static unsigned *settings_bar_value(SsaMenu *m,unsigned id){
+    switch(id){
+    case 3:return &m->settings.fov_offset;
+    case 8:return &m->settings.mouse_sensitivity;
+    case 5:return &m->settings.music_volume;
+    case 6:return &m->settings.sound_volume;
+    default:return NULL;
+    }
+}
+static unsigned row_disabled(const SsaMenu *m,const MenuRow *row)
+{return row && row->gba_disabled && m->settings.renderer==SSA_RENDER_GBA;}
+enum {EXTRA_TOP=16,EXTRA_ROWS=8,EXTRA_SPACING=8};
 /* General presentation/controls, navigation, weapon rules, then visual effects.
  * IDs preserve the field/translation mapping independently of display order. */
-static const unsigned extra_ids[EXTRA_ROWS]={5,9,1,0,4,2,3,6,7,8};
+static const unsigned extra_ids[EXTRA_ROWS]={5,7,1,0,4,2,3,6};
 static const unsigned option_ids[5]={4,6,5,3,1}; /* Settings, Graphics, Extras, Clear Data, Credits. */
 
 static unsigned u32(const uint8_t *p)
@@ -123,24 +145,23 @@ unsigned ssa_menu_pointer(SsaMenu *m,int x,int y,unsigned click)
     case SSA_MENU_OPTIONS:count=5;top=74;break;
     case SSA_MENU_SETTINGS:
         if(x<16 || x>=224)return 0;
-        if(y<settings_top[1] || y>=BACK_TOP+8)return 0;
-        for(i=0;i<5 && y>=settings_top[settings_ids[i+1]+1];++i){}
-        i=settings_ids[i];
-        if(i==3 && m->settings.renderer==SSA_RENDER_GBA)return 0;
-        m->selection=i;
-        if(i==3 || i==5 || i==6){unsigned bar=i==3?0:i-4;
-            if(click && y>=settings_bar_top[bar] && y<=settings_bar_top[bar]+BAR_HEIGHT &&
-               x>=PANEL_LEFT && x<=BAR_RIGHT){unsigned *v=i==3?&m->settings.fov_offset:i==5?&m->settings.music_volume:&m->settings.sound_volume;
-                *v=(unsigned)(x-PANEL_LEFT)*(i==3?SSA_FOV_RANGE:100)/BAR_SPAN;}
-            return 0;}
+        if(y<settings_rows[0].top || y>=BACK_TOP+8)return 0;
+        for(i=0;i+1<SETTINGS_ROWS && y>=settings_rows[i+1].top;++i){}
+        {const MenuRow *row=&settings_rows[i];
+            if(row_disabled(m,row))return 0;
+            m->selection=row->id;
+            if(row->maximum){
+                if(click && y>=row->bar_top && y<=row->bar_top+BAR_HEIGHT && x>=PANEL_LEFT && x<=BAR_RIGHT)
+                    *settings_bar_value(m,row->id)=(unsigned)(x-PANEL_LEFT)*row->maximum/BAR_SPAN;
+                return 0;
+            }
+        }
         return click?SSA_MENU_CONFIRM:0;
     case SSA_MENU_GRAPHICS:
         if(x<16 || x>=224)return 0;
-        if(y>=BACK_TOP && y<BACK_TOP+8)i=3;
-        else if(y>=GRAPHICS_TOP && y<GRAPHICS_TOP+3*GRAPHICS_SPACING)i=(unsigned)(y-GRAPHICS_TOP)/GRAPHICS_SPACING;
-        else return 0;
-        if(i==2 && m->settings.renderer==SSA_RENDER_GBA)return 0;
-        m->selection=i;return click?SSA_MENU_CONFIRM:0;
+        for(i=0;i<=GRAPHICS_ROWS;++i)if(y>=graphics_rows[i].top && y<graphics_rows[i].top+8)break;
+        if(i>GRAPHICS_ROWS || row_disabled(m,&graphics_rows[i]))return 0;
+        m->selection=graphics_rows[i].id;return click?SSA_MENU_CONFIRM:0;
     case SSA_MENU_EXTRA:
         if(x<16 || x>=224)return 0;
         if(y>=EXTRA_TOP && y<EXTRA_TOP+EXTRA_ROWS*EXTRA_SPACING)m->selection=(unsigned)(y-EXTRA_TOP)/EXTRA_SPACING;
@@ -402,23 +423,28 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
         if(input&SSA_MENU_BACK){command(m,16);page(m,0);}
         break;}
     case SSA_MENU_GRAPHICS:
-        move(m,input,3);
-        if(m->settings.renderer==SSA_RENDER_GBA && m->selection==2 && (input&(SSA_MENU_UP|SSA_MENU_DOWN)))
-            m->selection=input&SSA_MENU_UP?1:3;
-        if((input&SSA_MENU_BACK) || (m->selection==3 && (input&SSA_MENU_CONFIRM))){
+        move(m,input,GRAPHICS_ROWS);
+        if(m->settings.renderer==SSA_RENDER_GBA && (m->selection==2 || m->selection==3) && (input&(SSA_MENU_UP|SSA_MENU_DOWN)))
+            m->selection=input&SSA_MENU_UP?1:4;
+        if((input&SSA_MENU_BACK) || (m->selection==GRAPHICS_ROWS && (input&SSA_MENU_CONFIRM))){
             command(m,16);page(m,SSA_MENU_OPTIONS);m->selection=6;break;}
         if(input&(SSA_MENU_LEFT|SSA_MENU_RIGHT|SSA_MENU_CONFIRM)){
             if(!m->selection){m->settings.display_mode^=1;command(m,13);}
             else if(m->selection==1){unsigned count=m->vulkan_available?SSA_RENDERERS:2;
                 m->settings.renderer=(m->settings.renderer+((input&SSA_MENU_LEFT)?count-1:1))%count;command(m,13);}
             else if(m->selection==2 && m->settings.renderer!=SSA_RENDER_GBA){m->settings.aspect_ratio^=1;command(m,13);}
+            else if(m->selection==3 && m->settings.renderer!=SSA_RENDER_GBA){m->settings.mipmaps^=1;command(m,13);}
+            else if(m->selection==4){m->settings.surface_decals^=1;command(m,13);}
+            else if(m->selection==5){m->settings.water_reflections^=1;command(m,13);}
+            else if(m->selection==6){m->settings.godrays^=1;command(m,13);}
+            else if(m->selection==7){m->settings.sprite_shadows^=1;command(m,13);}
         }
         break;
     case SSA_MENU_SETTINGS:{unsigned row;
-        for(row=0;row<6 && settings_ids[row]!=m->selection;++row){}
-        m->selection=row<6?row:0;move(m,input,5);m->selection=settings_ids[m->selection];
+        for(row=0;row<SETTINGS_ROWS && settings_rows[row].id!=m->selection;++row){}
+        m->selection=row<SETTINGS_ROWS?row:0;move(m,input,SETTINGS_ROWS-1);m->selection=settings_rows[m->selection].id;
         if(m->settings.renderer==SSA_RENDER_GBA && m->selection==3 && (input&(SSA_MENU_UP|SSA_MENU_DOWN)))
-            m->selection=input&SSA_MENU_UP?0:4;
+            m->selection=input&SSA_MENU_UP?8:4;
         if((input&SSA_MENU_BACK) || (m->selection==7 && (input&SSA_MENU_CONFIRM))){
             command(m,16);page(m,SSA_MENU_OPTIONS);m->selection=4;break;}
         if(input&(SSA_MENU_LEFT|SSA_MENU_RIGHT|SSA_MENU_CONFIRM)){
@@ -437,7 +463,10 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
                        (next==SSA_MUSIC_MIDI && m->midi_available))break;
                 }
                 m->settings.music_style=next;if(next!=previous)command(m,13);
-            }else if(m->selection<7){unsigned *v=m->selection==5?&m->settings.music_volume:&m->settings.sound_volume;
+            }else if(m->selection==8){unsigned *v=&m->settings.mouse_sensitivity;
+                if(input&SSA_MENU_LEFT){if(*v)--*v;}else if(*v<SSA_MOUSE_RANGE)++*v;
+                command(m,13);
+            }else if(m->selection==5 || m->selection==6){unsigned *v=m->selection==5?&m->settings.music_volume:&m->settings.sound_volume;
                 if(input&SSA_MENU_LEFT)*v=*v<5?0:*v-5;else *v=*v>95?100:*v+5;
                 command(m,13);}
         }
@@ -455,9 +484,7 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
             else if(id==4)m->settings.automap_enabled^=1;
             else if(id==5)m->settings.hud_style^=1;
             else if(id==6)m->settings.weapon_bobbing^=1;
-            else if(id==7)m->settings.surface_decals^=1;
-            else if(id==8)m->settings.water_reflections^=1;
-            else if(id==9)m->settings.vertical_aim^=1;
+            else if(id==7)m->settings.vertical_aim^=1;
             else break;
             command(m,13);
         }
@@ -666,45 +693,51 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
     }
     if(ssa_map_view_compose(&m->canvas,out,pixels)!=1)return -1;
     if(m->draw_page==SSA_MENU_EXTRA){
-        static const char *labels[3][12]={{"Extras","Jump","Third-person","In-game NETRICSA","Alternate weapons","Automap","HUD","Weapon bobbing","Surface decals","Water reflections","Vertical aim","Back"},
-            {"Extras","Springen","Dritte Person","NETRICSA im Spiel","Alternative Waffen","Automap","HUD","Waffenwippen","Flaechendetails","Wasserreflexionen","Vertikal zielen","Zurueck"},
-            {"Extras","Saut","Troisieme personne","NETRICSA en jeu","Armes alternatives","Carte auto","HUD","Mouvement arme","Details surfaces","Reflets eau","Visee verticale","Retour"}};
+        static const char *labels[3][10]={{"Extras","Jump","Third-person","In-game NETRICSA","Alternate weapons","Automap","HUD","Weapon bobbing","Vertical aim","Back"},
+            {"Extras","Springen","Dritte Person","NETRICSA im Spiel","Alternative Waffen","Automap","HUD","Waffenwippen","Vertikal zielen","Zurueck"},
+            {"Extras","Saut","Troisieme personne","NETRICSA en jeu","Armes alternatives","Carte auto","HUD","Mouvement arme","Visee verticale","Retour"}};
         static const char *classic[3]={"Classic","Klassisch","Classique"};
         static const char *on[3]={"On","Ein","Oui"},*off[3]={"Off","Aus","Non"};
         char line[64];
-        /* Ten translated rows exceed128 glyphs together. Keep every value
+        /* Translated rows can exceed128 glyphs together. Keep every value
          * and Back visible by overlaying small independent batches. */
         m->canvas.glyph_count=0;grid_centered(m,labels[m->language][0],0,0,3);
         if(ssa_map_view_overlay(&m->canvas,out,pixels)!=1)return -1;
         for(i=0;i<EXTRA_ROWS;++i){unsigned id=extra_ids[i];
-            unsigned value=id==0?m->settings.jump_enabled:id==1?m->settings.thirdperson_enabled:id==2?m->settings.ingame_netricsa:id==3?m->settings.alternate_weapons:id==4?m->settings.automap_enabled:id==6?m->settings.weapon_bobbing:id==7?m->settings.surface_decals:id==8?m->settings.water_reflections:m->settings.vertical_aim;
+            unsigned value=id==0?m->settings.jump_enabled:id==1?m->settings.thirdperson_enabled:id==2?m->settings.ingame_netricsa:id==3?m->settings.alternate_weapons:id==4?m->settings.automap_enabled:id==6?m->settings.weapon_bobbing:m->settings.vertical_aim;
             unsigned palette=m->selection==i?3:4;int y=EXTRA_TOP+(int)i*EXTRA_SPACING;
             m->canvas.glyph_count=0;snprintf(line,sizeof(line),"%s:",labels[m->language][id+1]);
             (void)ssa_map_view_text_line(&m->canvas,line,PANEL_LEFT,y,1,palette);
             (void)ssa_map_view_text_line(&m->canvas,id==5?(m->settings.hud_style?classic[m->language]:"Original"):value?on[m->language]:off[m->language],VALUE_LEFT,y,1,palette);
             if(ssa_map_view_overlay(&m->canvas,out,pixels)!=1)return -1;
         }
-        m->canvas.glyph_count=0;grid_centered(m,labels[m->language][11],BACK_TOP,1,m->selection==EXTRA_ROWS?3:4);
+        m->canvas.glyph_count=0;grid_centered(m,labels[m->language][9],BACK_TOP,1,m->selection==EXTRA_ROWS?3:4);
         if(ssa_map_view_overlay(&m->canvas,out,pixels)!=1)return -1;
     }
     if(m->draw_page==SSA_MENU_SETTINGS || m->draw_page==SSA_MENU_GRAPHICS){
         unsigned graphics=m->draw_page==SSA_MENU_GRAPHICS;
-        static const char *labels[3][9]={
-            {"Settings","Display mode","Renderer","Aspect ratio","Field of view","Music style","Music volume","Sounds volume","Back"},
-            {"Einstellungen","Anzeige","Renderer","Seitenformat","Sichtfeld","Musikstil","Musiklautstaerke","Effektlautstaerke","Zurueck"},
-            {"Reglages","Affichage","Rendu","Format image","Champ de vision","Style musical","Volume musique","Volume des sons","Retour"}};
+        static const char *labels[3][10]={
+            {"Settings","Display mode","Renderer","Aspect ratio","Field of view","Music style","Music volume","Sounds volume","Back","Mouse sensitivity"},
+            {"Einstellungen","Anzeige","Renderer","Seitenformat","Sichtfeld","Musikstil","Musiklautstaerke","Effektlautstaerke","Zurueck","Mausempfindlichkeit"},
+            {"Reglages","Affichage","Rendu","Format image","Champ de vision","Style musical","Volume musique","Volume des sons","Retour","Sensibilite souris"}};
+        static const char *effects[3][4]={{"Surface decals","Water reflections","Godrays","Sprite shadows"},
+            {"Flaechendetails","Wasserreflexionen","Lichtstrahlen","Sprite-Schatten"},
+            {"Details surfaces","Reflets eau","Rayons lumineux","Ombres sprites"}};
         static const char *native[3]={"Native","Nativ","Natif"};
+        static const char *mip_on[3]={"On","Ein","Oui"},*mip_off[3]={"Off","Aus","Non"};
         static const char *modes[3][2]={{"Fullscreen","Windowed"},{"Vollbild","Fenster"},{"Plein ecran","Fenetre"}};
         static const char *language[3]={"Language","Sprache","Langue"};
         /* Individual rows avoid the original128-glyph budget when localized
          * Settings labels and the new display row are present together. */
-        for(i=0;i<9;++i){char line[80];const char *value=NULL;uint16_t saved[16];int result;
-            unsigned disabled=(graphics?i==3:i==4) && m->settings.renderer==SSA_RENDER_GBA;
-            unsigned selected=graphics && i==8?3:i-1;
+        for(i=0;i<10;++i){char line[80];const char *value=NULL;uint16_t saved[16];int result;
+            const MenuRow *row=!i?NULL:graphics?&graphics_rows[i-1]:settings_row(i-1);
+            unsigned disabled=row_disabled(m,row);
+            unsigned selected=i-1;
             unsigned palette=disabled || !i || m->selection==selected?3:4;
-            int row_top=graphics?(i==8?BACK_TOP:!i?0:GRAPHICS_TOP+((int)i-1)*GRAPHICS_SPACING):settings_top[i];
+            int row_top=row?row->top:0;
             const char *label=graphics && !i?option_text(m,6):!graphics && i==1?language[m->language]:labels[m->language][i];
-            if(graphics?(i>=4 && i<=7):(i==2 || i==3))continue;
+            if(i && !row)continue;
+            if(graphics && i==9)label=labels[m->language][8];
             m->canvas.glyph_count=0;
             if(i==1)value=graphics?modes[m->language][m->settings.display_mode==SSA_DISPLAY_WINDOWED]:ssa_map_view_text(&m->canvas,237+m->language);
             else if(i==2)value=m->settings.renderer==SSA_RENDER_GBA?"GBA":m->settings.renderer==SSA_RENDER_VULKAN && m->vulkan_available?"Vulkan":"Software";
@@ -712,28 +745,32 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
             else if(i==5){value="Original";
                 if(m->settings.music_style==SSA_MUSIC_SOUNDFONT && m->soundfont_available)value="SoundFont";
                 else if(m->settings.music_style==SSA_MUSIC_MIDI && m->midi_available)value="MIDI";}
+            if(graphics && i==4){label="Mipmapping";value=(disabled || m->settings.mipmaps)?mip_on[m->language]:mip_off[m->language];}
+            if(graphics && i>=5 && i<=8){unsigned enabled=i==5?m->settings.surface_decals:i==6?m->settings.water_reflections:i==7?m->settings.godrays:m->settings.sprite_shadows;
+                label=effects[m->language][i-5];value=enabled?mip_on[m->language]:mip_off[m->language];}
             if(value)snprintf(line,sizeof(line),"%s:",label);
             else snprintf(line,sizeof(line),"%s",label);
-            if(!i || i==8)grid_centered(m,line,row_top,i?1:0,palette);
+            if(!i || i==(graphics?9u:8u))grid_centered(m,line,row_top,i?1:0,palette);
             else (void)ssa_map_view_text_line(&m->canvas,line,PANEL_LEFT,row_top,1,palette);
             if(value)(void)ssa_map_view_text_line(&m->canvas,value,VALUE_LEFT,row_top,1,palette);
-            if(i==4 || i==6 || i==7){unsigned bar=i==4?0:i-5;
-                if(i==4)snprintf(line,sizeof(line),"%u",SSA_FOV_MIN+m->settings.fov_offset);
-                else snprintf(line,sizeof(line),"%u%%",i==7?m->settings.sound_volume:m->settings.music_volume);
-                (void)ssa_map_view_text_line(&m->canvas,line,184,settings_bar_top[bar],1,palette);}
+            if(!graphics && row && row->maximum){unsigned value=*settings_bar_value(m,row->id);
+                if(row->id==3)snprintf(line,sizeof(line),"%u",SSA_FOV_MIN+value);
+                else snprintf(line,sizeof(line),"%u%%",row->id==8?(value+1)*10:value);
+                (void)ssa_map_view_text_line(&m->canvas,line,184,row->bar_top,1,palette);}
             if(disabled){unsigned j;memcpy(saved,m->canvas.palette+48,sizeof saved);
                 for(j=0;j<16;++j)m->canvas.palette[48+j]=(uint16_t)((saved[j]&0x7bde)>>1);}
             result=ssa_map_view_overlay(&m->canvas,out,pixels);
             if(disabled)memcpy(m->canvas.palette+48,saved,sizeof saved);
             if(result!=1)return -1;
         }
-        for(i=0;!graphics && i<3;++i){unsigned value=i==0?m->settings.fov_offset:i==1?m->settings.music_volume:m->settings.sound_volume;
-            unsigned maximum=i?100:SSA_FOV_RANGE,disabled=!i && m->settings.renderer==SSA_RENDER_GBA;
+        for(i=0;!graphics && i<SETTINGS_ROWS;++i){const MenuRow *row=&settings_rows[i];unsigned value,disabled;
+            if(!row->maximum)continue;
+            value=*settings_bar_value(m,row->id);disabled=row_disabled(m,row);
             for(y=0;y<=BAR_HEIGHT;++y)for(x=0;x<=BAR_SPAN;++x){unsigned c;
-                if(!y || y==BAR_HEIGHT || !x || x==BAR_SPAN)c=!disabled && m->selection==settings_bar_row[i]?0x03ff:0x4210;
-                else c=x*maximum<=value*BAR_SPAN?0x02bf:0x1084;
+                if(!y || y==BAR_HEIGHT || !x || x==BAR_SPAN)c=!disabled && m->selection==row->id?0x03ff:0x4210;
+                else c=x*row->maximum<=value*BAR_SPAN?0x02bf:0x1084;
                 if(disabled)c=(c&0x7bde)>>1;
-                out[(settings_bar_top[i]+y)*240+PANEL_LEFT+x]=(uint16_t)c;}}
+                out[(row->bar_top+y)*240+PANEL_LEFT+x]=(uint16_t)c;}}
     }
     if(m->draw_page==SSA_MENU_LEVEL_SELECT){
         static const uint8_t lock[7]={14,10,10,31,27,27,31};

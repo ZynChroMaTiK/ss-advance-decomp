@@ -17,6 +17,7 @@ typedef struct SsaEnemyControlGame {
     SsaEntity *player, *blocking_entity, *loop_source;
     int32_t player_x, player_y;
     uint16_t attack_period[12]; /* 0844BFD8, stride eight; original low halfword */
+    unsigned prion_targets; /* PC: allow firing at the selected converted enemy. Default off. */
 } SsaEnemyControlGame;
 typedef enum SsaEnemyControlEventKind {
     SSA_ENEMY_CONTROL_ANIMATION,

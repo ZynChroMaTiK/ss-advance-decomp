@@ -1,4 +1,4 @@
-"""PC Prion conversion health, enemy-only damage balance, ranged priority and nearest targeting."""
+"""PC Prion health/tactics, unscaled enemy damage and nearest hostile targeting for converted and healthy enemies, including bosses."""
 from pathlib import Path
 import hashlib,json,os,subprocess
 r=Path(__file__).resolve().parents[1];b=r/'build/native-tests';b.mkdir(parents=True,exist_ok=True)

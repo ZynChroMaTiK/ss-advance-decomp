@@ -344,7 +344,7 @@ static int run(void *context,SsaCombatScope *scope) {
     SsaCombatDamage *d=r->combat->damage;SsaWeaponControllerOps ops={aim,event,c};
     uint8_t *previous_kills=d->credited_kills;
     SsaPlayerSpawn *p=r->player->runtime->player;size_t i;int result=-1;
-    unsigned pending,held=s->held,coast=0;uint32_t previous_shots,was_firing;
+    unsigned pending,held=s->held,coast=0,button_near=0;uint32_t previous_shots,was_firing;
     c->scope=scope;
     d->source=s->source;d->credit_player=s->source->player_index+1;
     d->shot_hit_count=&r->hits[w->current-1];
@@ -365,15 +365,21 @@ static int run(void *context,SsaCombatScope *scope) {
     c->game->local_flags=r->combat->players[d->local_player]->player->motion.movement.flags;
     if(w->keys&4) {
         if(ssa_weapon_controller_cooldowns(s,c->game->ticks)<0) goto done;
-        if(!(w->flags&0x2000)) {
+        if(!(w->flags&0x2000) || r->buffer_fire) {
             const SsaMapAssets *m=r->interaction.map;
             if(ssa_player_interaction_query(&r->interaction,s->source,p->motion.facing,r->trace.math)<0) goto done;
             for(i=0;i<r->interaction.special_count;++i) {
                 const uint8_t *line=m->data+m->lines+r->interaction.special_lines[i]*40;
-                if((line[36]|(unsigned)line[37]<<8)==2) w->flags|=0x100;
+                if((line[36]|(unsigned)line[37]<<8)==2){
+                    button_near=1;if(!(w->flags&0x2000))w->flags|=0x100;
+                }
             }
         }
         if(ssa_weapon_update(s->inventory,w,r->inventory_rules,c->game->players)<0)goto done;
+        if(r->buffer_fire && button_near){
+            r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;
+            s->held&=(uint16_t)~1u;s->pressed&=(uint16_t)~1u;
+        }
         pending=r->fire_pending_weapon;
         if(pending && (pending!=w->requested || !s->inventory->ammo[pending-1] ||
            !s->source_health || (c->game->local_flags&8)))pending=r->fire_pending_weapon=0;
@@ -464,7 +470,7 @@ static int step_once(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
        r->clocked_chainsaw>SSA_CHAINSAW_GBA_CADENCE || r->chainsaw_range>32767 ||
        (r->clocked_chainsaw==SSA_CHAINSAW_GBA_CADENCE && !r->automatic_gba_clock) ||
        (r->chainsaw_range && !r->rules->range[0]) || r->buffer_fire>1 || r->fire_pending_weapon>10 ||
-       r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 || r->fire_inhibited>1 || r->double_colt>1 || r->switch_blocked>1 || r->colt_pair>1 || r->alternate_shotgun>1 || r->shotgun_animating>1 || r->shotgun_elapsed>105 ||
+       r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 || r->fire_inhibited>1 || r->discard_fire>1 || r->double_colt>1 || r->switch_blocked>1 || r->colt_pair>1 || r->alternate_shotgun>1 || r->shotgun_animating>1 || r->shotgun_elapsed>105 ||
        !game || game->players!=r->combat->player_count || !ops ||
        !ops->combat || !ops->combat->event || !ops->event || !ops->impact ||
        r->player->weapon.current<1 || r->player->weapon.current>10 ||
@@ -478,6 +484,20 @@ static int step_once(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
         r->object.flags&=~1u;
     else r->object.flags|=1;
     if(r->player->life_game.input_state==3){r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;return 0;}
+    if(r->buffer_fire){
+        unsigned current=r->player->weapon.current;
+        unsigned flags=r->player->runtime->player->motion.movement.weapon_flags;
+        /* A committed discrete shot is recovering/reloading. Colt recoil is
+         * separate from its explicit magazine reload, and accepted dual pairs
+         * still finish their second shot. A held trigger is live input, not a queue. */
+        if(r->discard_fire || (current!=2 && !r->rules->continuous[current-1] &&
+           (flags&0x1400)==0x1400)){
+            r->fire_pending_weapon=r->time_strike_empty_pending=0;
+            if(r->discard_fire)r->colt_pair_pending=0;
+            if(pressed&1)held&=(uint16_t)~1u;
+            pressed&=(uint16_t)~1u;
+        }
+    }
     if(!r->colt_pair || r->player->weapon.requested!=2)r->colt_pair_pending=0;
     if(!r->controller.inventory->health || !(r->player->runtime->player->motion.movement.flags&4))
         r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;
@@ -501,6 +521,9 @@ int ssa_weapon_runtime_step(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t hel
      * cooldowns. Presentation plays each hand's recoil at the original speed. */
     memcpy(cooldowns,r->controller.cooldown,sizeof cooldowns);
     if(ssa_weapon_runtime_animate(r,game->flags,game->ticks)<0)return -1;
+    /* Do not replay a rejected sub-tick pulse in the second Colt phase.
+     * Retain raw held input otherwise; synthesized pending fire is local. */
+    if((pressed&1) && !(r->controller.pressed&1))held&=(uint16_t)~1u;
     result=step_once(r,game,held,0,ops);
     memcpy(r->controller.cooldown,cooldowns,sizeof cooldowns);
     return result;

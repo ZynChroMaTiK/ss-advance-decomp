@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <float.h>
+#include <limits.h>
 #ifdef SSA_HAVE_VULKAN
 #define WIN32_LEAN_AND_MEAN
 #define VK_NO_PROTOTYPES
@@ -31,7 +32,12 @@
 typedef struct Buffer {VkBuffer buffer;VkDeviceMemory memory;void *mapped;VkDeviceSize size;VkMemoryPropertyFlags flags;} Buffer;
 typedef struct Image {VkImage image;VkDeviceMemory memory;VkImageView view;} Image;
 typedef struct Vertex {float x,y,z,u,v;uint32_t material;} Vertex;
-typedef struct Material {uint32_t offset,width,height,code;} Material;
+typedef struct Material {uint32_t offset,width,height,code;uint32_t mips[2][4];} Material;
+enum { LOOKUP_BUCKETS=1024, TEXTURE_CACHE_TEXELS=4*1024*1024, TEXTURE_CACHE_ENTRIES=4096 };
+typedef struct TextureEntry {
+    uintptr_t address;uint8_t *copy;size_t count;
+    unsigned width,height,offset,next,seen,dirty;
+} TextureEntry;
 struct SsaVulkanRenderer {
     HMODULE loader;PFN_vkGetInstanceProcAddr get;
 #define DECLARE(name) PFN_vk##name name;
@@ -50,6 +56,9 @@ struct SsaVulkanRenderer {
     Vertex *cpu_vertices;size_t vertex_count,vertex_capacity;
     Material *cpu_materials;SsaPcMaterial *keys;size_t material_count,material_capacity;
     uint32_t *cpu_textures;size_t texture_count,texture_capacity;
+    unsigned material_buckets[LOOKUP_BUCKETS],*material_next;
+    unsigned texture_buckets[LOOKUP_BUCKETS],texture_epoch;
+    TextureEntry *texture_entries;size_t entry_count,entry_capacity;
     SsaPcRenderer *target;float scale[2];SsaPcHardware backend;
     SsaVulkanTiming timing;
     PTP_POOL workers;TP_CALLBACK_ENVIRON worker_environment;unsigned worker_count;
@@ -187,9 +196,9 @@ static int pipeline_new(SsaVulkanRenderer *v)
     pi.stageCount=2;pi.pStages=stages;pi.pVertexInputState=&vi;pi.pInputAssemblyState=&ia;pi.pViewportState=&vp;
     pi.pRasterizationState=&rs;pi.pMultisampleState=&ms;pi.pDepthStencilState=&ds;pi.pColorBlendState=&cb;pi.pDynamicState=&dy;pi.layout=v->layout;pi.renderPass=v->pass;
     for(i=0;i<2;++i){
-        /* Sorted sprite layers test only world depth. Their own transparent
-         * quads cannot fight each other through floating-point depth ties. */
-        ds.depthWriteEnable=i?VK_FALSE:VK_TRUE;
+        /* Sprite triangles already obey the GBA wall silhouettes. Testing
+         * world planes again would slice death/explosion art at the floor. */
+        ds.depthTestEnable=ds.depthWriteEnable=i?VK_FALSE:VK_TRUE;
         result=V(CreateGraphicsPipelines)(v->device,VK_NULL_HANDLE,1,&pi,NULL,&v->pipeline[i]);
         if(result!=VK_SUCCESS)break;
     }
@@ -201,34 +210,96 @@ static int grow(void **owner,size_t *capacity,size_t count,size_t stride)
     while(n<count){if(n>SIZE_MAX/2)return 0;n*=2;}if(n>SIZE_MAX/stride)return 0;
     p=realloc(*owner,n*stride);if(!p)return 0;*owner=p;*capacity=n;return 1;
 }
+/* Lookup tables preserve triangle submission order. Texture pointers are only
+ * keys: contents are compared on first use each pass, so borrowed stack art,
+ * palette-independent mip changes and allocator address reuse remain safe. */
+static unsigned lookup_mix(uintptr_t value)
+{
+    uint64_t x=(uint64_t)value;x^=x>>33;x*=UINT64_C(0xff51afd7ed558ccd);x^=x>>33;
+    return (unsigned)x;
+}
+static unsigned material_bucket(const SsaPcMaterial *m)
+{
+    unsigned h=lookup_mix((uintptr_t)m->pixels)^m->width*31u^m->height*131u;
+    h^=m->color*197u^m->transparent*257u^m->actor*521u^m->sky*1031u^m->decals*2053u;
+    for(unsigned i=0;i<2;++i)h^=lookup_mix((uintptr_t)m->mip_pixels[i])^m->mip_width[i]*4099u^m->mip_height[i]*8191u;
+    return h&(LOOKUP_BUCKETS-1);
+}
+static int material_equal(const SsaPcMaterial *k,const SsaPcMaterial *m)
+{
+    return k->pixels==m->pixels && k->width==m->width && k->height==m->height && k->color==m->color &&
+        k->transparent==m->transparent && k->actor==m->actor && k->sky==m->sky && k->decals==m->decals &&
+        !memcmp(k->mip_pixels,m->mip_pixels,sizeof m->mip_pixels) &&
+        !memcmp(k->mip_width,m->mip_width,sizeof m->mip_width) && !memcmp(k->mip_height,m->mip_height,sizeof m->mip_height);
+}
+static void texture_cache_clear(SsaVulkanRenderer *v)
+{
+    for(size_t i=0;i<v->entry_count;++i)free(v->texture_entries[i].copy);
+    v->entry_count=0;v->texture_count=256;memset(v->texture_buckets,0,sizeof v->texture_buckets);
+}
+static int texture_offset(SsaVulkanRenderer *v,const uint8_t *pixels,unsigned width,unsigned height,uint32_t *offset)
+{
+    size_t count=(size_t)width*height;TextureEntry *e;
+    unsigned bucket=(lookup_mix((uintptr_t)pixels)^width*31u^height*131u)&(LOOKUP_BUCKETS-1),link=v->texture_buckets[bucket];
+    if(!pixels || !count || count/width!=height)return 0;
+    while(link){e=&v->texture_entries[link-1];
+        if(e->address==(uintptr_t)pixels && e->width==width && e->height==height)break;
+        link=e->next;}
+    if(!link){uint8_t *copy;
+        if(count>UINT32_MAX-v->texture_count || v->entry_count>=UINT_MAX ||
+           !grow((void **)&v->cpu_textures,&v->texture_capacity,v->texture_count+count,sizeof(uint32_t)) ||
+           !grow((void **)&v->texture_entries,&v->entry_capacity,v->entry_count+1,sizeof(TextureEntry)))return 0;
+        copy=malloc(count);if(!copy)return 0;
+        e=&v->texture_entries[v->entry_count++];
+        *e=(TextureEntry){(uintptr_t)pixels,copy,count,width,height,(unsigned)v->texture_count,v->texture_buckets[bucket],0,1};
+        v->texture_buckets[bucket]=(unsigned)v->entry_count;v->texture_count+=count;
+    }else e=&v->texture_entries[link-1];
+    if(e->seen!=v->texture_epoch){
+        if(e->dirty || memcmp(e->copy,pixels,count)){
+            memcpy(e->copy,pixels,count);
+            for(size_t i=0;i<count;++i)v->cpu_textures[e->offset+i]=pixels[i];
+            e->dirty=1;
+        }
+        e->seen=v->texture_epoch;
+    }
+    *offset=e->offset;return 1;
+}
 static int begin(void *context,SsaPcRenderer *r,const uint32_t palette[256],double focal,unsigned first,unsigned row_end)
 {
     SsaVulkanRenderer *v=context;
     if(v->failed || v->recording || first>=row_end || row_end>r->height)return -1;
     v->first_row=first;v->end_row=row_end;
     if(!grow((void **)&v->cpu_textures,&v->texture_capacity,256,sizeof(uint32_t)))return -1;
-    memcpy(v->cpu_textures,palette,256*sizeof(uint32_t));v->texture_count=256;v->vertex_count=v->material_count=0;
+    /* Bound retained content across map changes; queued passes have already
+     * completed before begin, so clearing never invalidates in-flight offsets. */
+    if(v->texture_count>TEXTURE_CACHE_TEXELS || v->entry_count>TEXTURE_CACHE_ENTRIES)texture_cache_clear(v);
+    if(!v->texture_count)v->texture_count=256;
+    if(!++v->texture_epoch){for(size_t i=0;i<v->entry_count;++i)v->texture_entries[i].seen=0;v->texture_epoch=1;}
+    memcpy(v->cpu_textures,palette,256*sizeof(uint32_t));v->vertex_count=v->material_count=0;
+    memset(v->material_buckets,0,sizeof v->material_buckets);
     v->scale[0]=(float)(2*focal/r->width);v->scale[1]=(float)(-2*focal/r->height);v->target=r;v->recording=1;return 1;
 }
 static int triangle(void *context,const SsaPcVertex points[3],const SsaPcMaterial *m)
 {
-    SsaVulkanRenderer *v=context;size_t i,index;
+    SsaVulkanRenderer *v=context;size_t i,index;unsigned bucket,link;
     if(!v->recording)return -1;
-    for(index=0;index<v->material_count;++index){const SsaPcMaterial *k=&v->keys[index];
-        if(k->pixels==m->pixels && k->width==m->width && k->height==m->height && k->color==m->color &&
-           k->transparent==m->transparent && k->actor==m->actor && k->sky==m->sky && k->decals==m->decals)break;}
+    bucket=material_bucket(m);link=v->material_buckets[bucket];
+    while(link && !material_equal(&v->keys[link-1],m))link=v->material_next[link-1];
+    index=link?link-1:v->material_count;
     if(index==v->material_count){Material mat={0};
+        if(v->material_count>=UINT32_C(0x7fffffff))return -1;
         if(v->material_count==v->material_capacity){size_t cap=v->material_capacity?v->material_capacity*2:256;
-            Material *materials=realloc(v->cpu_materials,cap*sizeof(*materials));SsaPcMaterial *keys;
-            if(!materials)return -1;v->cpu_materials=materials;keys=realloc(v->keys,cap*sizeof(*keys));if(!keys)return -1;v->keys=keys;v->material_capacity=cap;}
+            Material *materials=realloc(v->cpu_materials,cap*sizeof(*materials));SsaPcMaterial *keys;unsigned *next;
+            if(!materials)return -1;v->cpu_materials=materials;keys=realloc(v->keys,cap*sizeof(*keys));if(!keys)return -1;v->keys=keys;
+            next=realloc(v->material_next,cap*sizeof(*next));if(!next)return -1;v->material_next=next;v->material_capacity=cap;}
         mat.code=m->color|(m->decals<<8)|(m->sky<<10)|(m->actor<<11)|(m->pixels?4096u:0u)|(m->transparent<<13);
-        if(m->pixels){size_t count=(size_t)m->width*m->height;size_t same;
-            mat.width=m->width;mat.height=m->height;
-            for(same=0;same<index;++same)if(v->keys[same].pixels==m->pixels && v->keys[same].width==m->width && v->keys[same].height==m->height)break;
-            if(same<index)mat.offset=v->cpu_materials[same].offset;
-            else{if(count>UINT32_MAX-v->texture_count || !grow((void **)&v->cpu_textures,&v->texture_capacity,v->texture_count+count,sizeof(uint32_t)))return -1;
-                mat.offset=(uint32_t)v->texture_count;for(i=0;i<count;++i)v->cpu_textures[v->texture_count++]=m->pixels[i];}}
-        v->cpu_materials[index]=mat;v->keys[index]=*m;++v->material_count;
+        if(m->pixels){mat.width=m->width;mat.height=m->height;
+            if(!texture_offset(v,m->pixels,m->width,m->height,&mat.offset))return -1;}
+        if(m->mip_pixels[0])for(unsigned level=0;level<2;++level){
+            mat.mips[level][1]=m->mip_width[level];mat.mips[level][2]=m->mip_height[level];
+            if(!texture_offset(v,m->mip_pixels[level],m->mip_width[level],m->mip_height[level],&mat.mips[level][0]))return -1;}
+        v->cpu_materials[index]=mat;v->keys[index]=*m;
+        v->material_next[index]=v->material_buckets[bucket];v->material_buckets[bucket]=(unsigned)++v->material_count;
     }
     if(v->vertex_count>UINT32_MAX-3 || !grow((void **)&v->cpu_vertices,&v->vertex_capacity,v->vertex_count+3,sizeof(Vertex)))return -1;
     if(index>UINT32_C(0x7fffffff))return -1;
@@ -239,6 +310,7 @@ static int triangle(void *context,const SsaPcVertex points[3],const SsaPcMateria
 static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samples)
 {
     double start=wall_time(),submitted,completed;
+    int new_textures=v->textures.size<v->texture_count*4;
     size_t n=(size_t)r->width*r->height;VkDeviceSize colors=n*4,aux_offset=(colors+15)&~(VkDeviceSize)15,bytes=aux_offset+n*sizeof(SsaPcSample),zero=0;
     size_t first_pixel=(size_t)v->first_row*r->width,row_pixels=(size_t)(v->end_row-v->first_row)*r->width;
     VkDescriptorBufferInfo buffers[2];VkWriteDescriptorSet writes[2]={{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET},{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET}};
@@ -255,7 +327,12 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
        !buffer_size(v,&v->upload,colors,VK_BUFFER_USAGE_TRANSFER_SRC_BIT,0) ||
        !buffer_size(v,&v->readback,bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,1))return 0;
     if(v->vertex_count)memcpy(v->vertices.mapped,v->cpu_vertices,v->vertex_count*sizeof(Vertex));
-    memcpy(v->textures.mapped,v->cpu_textures,v->texture_count*4);
+    if(new_textures)memcpy(v->textures.mapped,v->cpu_textures,v->texture_count*4);
+    else memcpy(v->textures.mapped,v->cpu_textures,256*sizeof(uint32_t));
+    for(size_t t=0;t<v->entry_count;++t){TextureEntry *e=&v->texture_entries[t];
+        if(e->dirty && !new_textures)memcpy((uint32_t *)v->textures.mapped+e->offset,v->cpu_textures+e->offset,e->count*4);
+        e->dirty=0;
+    }
     if(v->material_count)memcpy(v->materials.mapped,v->cpu_materials,v->material_count*sizeof(Material));
     memcpy((uint8_t *)v->upload.mapped+first_pixel*4,r->pixels+first_pixel,row_pixels*4);
     buffers[0]=(VkDescriptorBufferInfo){v->textures.buffer,0,v->texture_count*4};
@@ -422,6 +499,7 @@ void ssa_vulkan_close(SsaVulkanRenderer *v)
     if(v->debug && v->destroy_debug)v->destroy_debug(v->instance,v->debug,NULL);
     if(v->instance && V(DestroyInstance))V(DestroyInstance)(v->instance,NULL);
     if(v->loader)FreeLibrary(v->loader);
+    texture_cache_clear(v);free(v->texture_entries);free(v->material_next);
     free(v->cpu_vertices);free(v->cpu_materials);free(v->keys);free(v->cpu_textures);free(v->cpu_samples);free(v);
 }
 const SsaPcHardware *ssa_vulkan_backend(SsaVulkanRenderer *v){return v?&v->backend:NULL;}

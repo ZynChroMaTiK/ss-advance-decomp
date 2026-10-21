@@ -161,7 +161,8 @@ Quick clicks during raising retain one visual-only attempt until the weapon
 is ready. The empty-attempt latch is set after the final adjacent-aim retry,
 so original auto-aim assistance still works. A target entering the ray while
 an empty gesture waits cannot turn that attempt into a charged shot. A second
-click during the first gesture queues a second gesture. Focus loss, disabled
+click during the gesture's recovery is now discarded, matching the no-reload-queue
+input policy. Focus loss, disabled
 controls, pause, weapon changes and respawn clear pending state as appropriate. Valid discrete Time Strike
 attempts consume their buffered click at animation start; target loss at commit
 cannot create a second automatic gesture. The weapon-handoff regression passes

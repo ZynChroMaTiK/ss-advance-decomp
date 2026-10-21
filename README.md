@@ -4,7 +4,7 @@ This is a fan-made Windows port of the GBA game. It keeps the original levels,
 weapons, enemies and music, with keyboard and mouse controls and a few optional
 extras. You can play all twelve campaign levels.
 
-**[Download v0.8.0 Alpha 3](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.3)**
+**[Download v0.8.0 Alpha 4](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.4)**
 · [Website](https://zynchromatik.github.io/ss-advance-decomp/)
 · [Explore the maps](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
 
@@ -68,9 +68,10 @@ playtesting, so please report anything that goes wrong.
 
 ## Options
 
-Open **Options → Graphics** for Display Mode, Renderer and Aspect Ratio.
-**Options → Settings** contains Language, Field of View, Music Style, Music
-Volume and Sounds Volume. Set a volume to 0% to mute it.
+Open **Options → Graphics** for Display Mode, Renderer, Aspect Ratio, Mipmapping,
+Surface decals, Water reflections, Godrays and Sprite shadows.
+**Options → Settings** contains Language, Mouse sensitivity, Field of View,
+Music Style, Music Volume and Sounds Volume. Set a volume to 0% to mute it.
 Default volumes are 80% music and 100% sounds; existing saved choices are retained.
 **Renderer** offers **Software**, **GBA**, and **Vulkan** on supported hardware.
 Vulkan draws world geometry and sprites on the GPU, with the existing HUD and
@@ -81,6 +82,10 @@ launch Vulkan with `play-native.cmd --vulkan`.
 Below Renderer, **Aspect ratio** offers **Native** (fill the window, default)
 or **3:2** (preserve the original GBA view with black bars). This choice applies
 to Software and Vulkan; the GBA renderer always uses 3:2 and disables the row.
+**Mouse sensitivity** adjusts horizontal and vertical aiming together from
+**10% to 300%**, with **100%** preserving the previous PC control speed.
+**Mipmapping** uses the original smaller texture and sprite images at distance.
+It is enabled for fresh settings and always enabled in GBA mode.
 **Field of view** adjusts native rendering from **60° to 120°**, defaulting to
 **70°** (the existing view). This is the horizontal angle at 3:2; wider displays
 show more to the sides. GBA rendering keeps its fixed view and disables this slider.
@@ -94,16 +99,18 @@ Under **Options → Extras**, you can turn jumping, third-person view, in-game
 NETRICSA and the automap on or off. **Weapon bobbing** moves first-person weapons
 and their muzzle flashes together. **Jump**, **Alternate weapons**, **Automap**
 and **Weapon bobbing** are off by default.
-**Surface decals** adds subtle connected stain tiles on floors and ceilings,
-and sparse animated glints and ripples on water. **Water reflections** adds
-scenery reflections with 50% alpha blending, at full viewport resolution in
-native mode and 240×160 in GBA mode. Both are off by default and work in
-all renderers. **Vertical aim** is on by default for vertical mouse aiming.
-Turn it off for original GBA auto-aim and the target-following crosshair;
-GBA rendering always retains original aiming. All ten Extras
-choices fit on one page.
+In Graphics, **Surface decals** adds connected stains and edge details on floors
+and ceilings, plus animated glints, ripples and shoreline waves on water.
+**Water reflections** adds scenery reflections with 50% alpha blending, at full
+viewport resolution in native mode and 240×160 in GBA mode. **Godrays** adds
+short textured light shafts beneath open skies. **Sprite shadows** adds
+size-scaled shadows behind players, enemies and items. These four effects are
+independent, off by default and available in all three renderers.
+**Vertical aim** is on by default for vertical mouse aiming. Turn it off for
+original GBA auto-aim and the target-following crosshair; GBA rendering always
+retains original aiming.
 Extras are ordered: HUD, Vertical aim, Third-person, Jump, Automap, In-game
-NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water reflections.
+NETRICSA, Alternate weapons and Weapon bobbing.
 The **HUD** row switches between **Original** (default) and **Classic**, a usable
 green HUD built from the retained older artwork. All graphics modes support it,
 and the game saves your choice.

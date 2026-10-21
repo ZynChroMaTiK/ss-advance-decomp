@@ -106,7 +106,7 @@ static int cd_presentation(void *context,const SsaEnemyCd *cd,SsaEnemyCdEvent ev
  * navigation pointers. The distance is between body centers in3D, at1/256-unit
  * precision; differences/squares fit64bits even across the full coordinate
  * range. Equal distances retain active order with no player/type preference. */
-static int converted_target(SsaEntityRuntime *r,SsaEntity *source,SsaEntity **out)
+static int hostile_target(SsaEntityRuntime *r,SsaEntity *source,SsaEntity **out)
 {
     SsaScriptSpawn *s=r->combat->spawn;SsaEntity *best=NULL;uint64_t distance=UINT64_MAX;
     unsigned i,j;
@@ -121,7 +121,8 @@ static int converted_target(SsaEntityRuntime *r,SsaEntity *source,SsaEntity **ou
                 SsaPlayerSpawn *p=r->players[j]->runtime->player;
                 living=p->inventory.health>0 && (p->motion.movement.flags&4);break;
             }
-        }else if(e->type>=0xcd && e->type<=0xd8 && s->actors[slot].owned)
+        }else if(e->type>=0xcd && e->type<=0xd8 && s->actors[slot].owned &&
+                 ((source->body.flags|e->body.flags)&0x400))
             living=s->actors[slot].activation.health>0;
         if(!living)continue;
         dx=((int64_t)e->body.x-source->body.x)/256;
@@ -134,10 +135,10 @@ static int converted_target(SsaEntityRuntime *r,SsaEntity *source,SsaEntity **ou
 }
 static int converted_select(SsaEntityRuntime *r,SsaEntity *e,SsaEnemyNavigation *n,SsaEntity **target)
 {
-    if(!r->nearest_converted || !(e->body.flags&0x400) || e->type<0xcd || e->type>0xd6 ||
+    if(!r->nearest_converted || e->type<0xcd || e->type>0xd8 ||
        (e->body.flags&0x20))
         return 0;
-    if(converted_target(r,e,target)<0)return -1;
+    if(hostile_target(r,e,target)<0)return -1;
     if(n->target!=*target){n->phase=0;n->navigation_flags&=UINT8_C(0xfe);}
     n->target=*target;n->target_timer=600;
     return 1;

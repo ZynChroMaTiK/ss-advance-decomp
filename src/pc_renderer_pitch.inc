@@ -4,14 +4,20 @@ typedef SsaPcVertex PitchVertex;
 typedef struct PitchPoint {double x,y;} PitchPoint;
 typedef struct PitchPlane {PitchPoint p[3];unsigned sector;} PitchPlane;
 typedef struct HardwareRowStats {unsigned actors,walls;} HardwareRowStats;
+#include "pc_actor_clip.inc"
+typedef struct ReflectionSpan {unsigned key,first,last;int next;} ReflectionSpan;
 typedef struct SsaPcGeometry {
+    ActorClipScratch actor_clip;
+    ReflectionSpan *reflection_spans;size_t reflection_capacity;
     PitchPlane *planes;size_t count,capacity;
     uint64_t signature;
     uint32_t *sky_axes;unsigned sky_width,sky_height;
     HardwareRowStats *row_stats;unsigned row_capacity;
+    SsaGodrayPalette godray_palette;
+    uint8_t godray_nearest[32768],godray_valid[4096];
 } SsaPcGeometry;
 static void geometry_free(SsaPcRenderer *r)
-{if(r->geometry){free(r->geometry->planes);free(r->geometry->sky_axes);free(r->geometry->row_stats);free(r->geometry);r->geometry=NULL;}}
+{if(r->geometry){actor_clip_free(&r->geometry->actor_clip);free(r->geometry->planes);free(r->geometry->reflection_spans);free(r->geometry->sky_axes);free(r->geometry->row_stats);free(r->geometry);r->geometry=NULL;}}
 typedef SsaPcMaterial PitchMaterial;
 static PitchVertex pitch_vertex(const Camera *c,double x,double y,double z,double u,double v)
 {
@@ -31,7 +37,7 @@ static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchV
     double bx=r->width/2.0+b.x*c->focal/b.z,by=r->height/2.0-b.y*c->focal/b.z;
     double dx=r->width/2.0+d.x*c->focal/d.z,dy=r->height/2.0-d.y*c->focal/d.z;
     double area=orient(ax,ay,bx,by,dx,dy),minx=ax,maxx=ax,miny=ay,maxy=ay;
-    double aq=1/a.z,bq=1/b.z,dq=1/d.z,qx,ux,vx;
+    double aq=1/a.z,bq=1/b.z,dq=1/d.z,qx,ux,vx,qy,uy,vy;
     double au=a.u*aq,bu=b.u*bq,du=d.u*dq,av=a.v*aq,bv=b.v*bq,dv=d.v*dq;
     double xx[3]={ax,bx,dx},yy[3]={ay,by,dy};int top,bottom,y;unsigned i;
     if(area>-1e-10 && area<1e-10)return;
@@ -51,6 +57,9 @@ static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchV
     qx=((by-dy)*(aq-dq)+(dy-ay)*(bq-dq))/area;
     ux=((by-dy)*(au-du)+(dy-ay)*(bu-du))/area;
     vx=((by-dy)*(av-dv)+(dy-ay)*(bv-dv))/area;
+    qy=((dx-bx)*(aq-dq)+(ax-dx)*(bq-dq))/area;
+    uy=((dx-bx)*(au-du)+(ax-dx)*(bu-du))/area;
+    vy=((dx-bx)*(av-dv)+(ax-dx)*(bv-dv))/area;
     for(y=top;y<bottom;++y){
         double py=y+0.5,lo=DBL_MAX,hi=-DBL_MAX,wa,wb,q,uq,vq;int left,right,x;
         for(i=0;i<3;++i){unsigned j=(i+1)%3;
@@ -65,18 +74,24 @@ static void pitch_triangle(SsaPcRenderer *r,const Camera *c,PitchVertex a,PitchV
         q=dq+wa*(aq-dq)+wb*(bq-dq);uq=du+wa*(au-du)+wb*(bu-du);vq=dv+wa*(av-dv)+wb*(bv-dv);
         for(x=left;x<right;++x,q+=qx,uq+=ux,vq+=vx){
         double z;size_t at=(size_t)y*r->width+(unsigned)x;unsigned color=m->color;
-        if(q<=0 || q*((double)r->depth[at]+0.001)<1)continue;
+        if(q<=0 || (!m->actor && q*((double)r->depth[at]+0.001)<1))continue;
         z=1/q;
         if(m->pixels){double u=uq*z,v=vq*z;
             if(m->transparent && (u<0 || v<0 || u>=m->width || v>=m->height))continue;
-            color=m->pixels[(size_t)wrap(u,m->width)*m->height+wrap(v,m->height)];
+            {const uint8_t *pixels=m->pixels;unsigned width=m->width,height=m->height;
+                if(m->mip_pixels[0]){double dux=(ux-u*qx)*z,dvx=(vx-v*qx)*z,duy=(uy-u*qy)*z,dvy=(vy-v*qy)*z;
+                    double footprint2=fmax(dux*dux+dvx*dvx,duy*duy+dvy*dvy);
+                    unsigned level=footprint2>=16?2:footprint2>=4?1:0;
+                    if(level){pixels=m->mip_pixels[level-1];width=m->mip_width[level-1];height=m->mip_height[level-1];
+                        u*= (double)width/m->width;v*= (double)height/m->height;}}
+                color=pixels[(size_t)wrap(u,width)*height+wrap(v,height)];}
             if(m->transparent && !color)continue;
         }
         if(c->water && at<c->water->capacity)c->water->mask[at]=0;
         if(m->decals==1 && c->water && ssa_surface_decals_water(c->water->decals,color,m->height_z))
-            r->pixels[at]=rgb(ssa_water_rgb(c->water,(uint8_t)color,uq*z,vq*z,m->height_z,z,at));
+            r->pixels[at]=rgb(ssa_water_rgb_cached(c->water,c->samples,(uint8_t)color,uq*z,vq*z,m->height_z,z,at));
         else {if(m->decals && c->decals && !(m->decals==1 && ssa_surface_decals_water(c->decals,color,m->height_z)))
-                color=ssa_surface_decals_sample(c->decals,m->decals-1,(uint8_t)color,uq*z,vq*z,z);
+                color=ssa_surface_decals_sample_cached(c->decals,c->samples,m->decals-1,(uint8_t)color,uq*z,vq*z,m->height_z,z);
             if(!m->sky)r->pixels[at]=c->palette[color];}
         r->depth[at]=(float)z;
         if(m->actor)++r->actor_pixels;else if(m->pixels)++r->wall_pixels;
@@ -225,7 +240,10 @@ static void pitched_wall(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c
 {
     const SsaTextureImage *im=texture(g,side,layer);PitchMaterial material={0};PitchVertex q[4];
     if(high<=low)return;
-    if(im){material.pixels=im->pixels;material.width=im->width;material.height=im->height;}
+    if(im){unsigned level;material.pixels=im->pixels;material.width=im->width;material.height=im->height;
+        if(g->mipmaps || g->gba_view)for(level=1;level<3;++level){const SsaTextureImage *lower=texture_level(g,side,layer,level);
+            if(!lower)lower=im;
+            material.mip_pixels[level-1]=lower->pixels;material.mip_width[level-1]=lower->width;material.mip_height[level-1]=lower->height;}}
     q[0]=pitch_vertex(c,ax,ay,low,along/2,(origin-low)/2);
     q[1]=pitch_vertex(c,bx,by,low,(along+len)/2,(origin-low)/2);
     q[2]=pitch_vertex(c,bx,by,high,(along+len)/2,(origin-high)/2);
@@ -235,7 +253,6 @@ static void pitched_wall(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c
 static int pitched_world(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c)
 {
     const SsaMapAssets *m=&g->map;unsigned i;
-    if(pitched_geometry(r,g)<0)return -1;
     if(flat_sky(r,g,c)<0)return -1;
     pitched_planes(r,g,c);
     for(i=0;i<m->line_count;++i){const uint8_t *l=m->data+m->lines+(size_t)i*40,*a,*b,*s,*side,*back;
@@ -260,11 +277,100 @@ static int pitched_world(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c
     }
     return 1; /* This path rasterizes geometry; it does not cast column rays. */
 }
+/* Camera transforms and live portal heights are shared by all sprite layers
+ * in this view. Actor origin/height gates remain in actor_silhouette. */
+static int actor_clip_prepare(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c)
+{
+    const SsaMapAssets *map=&g->map;ActorClipScratch *scratch=&r->geometry->actor_clip;unsigned i;
+    if(actor_clip_reserve(scratch,map->line_count)<0)return -1;
+    scratch->view_count=0;
+    for(i=0;i<map->line_count;++i){const uint8_t *line=map->data+map->lines+(size_t)i*40,*a,*b,*sector;
+        ActorViewWall w={0};unsigned direction,si;double t;
+        a=map->data+map->vertices+(size_t)u16(line)*4;b=map->data+map->vertices+(size_t)u16(line+2)*4;
+        w.ax=s16(a);w.ay=s16(a+2);w.bx=s16(b);w.by=s16(b+2);w.flags=u16(line+26);
+        w.cam_side=orient(w.ax,w.ay,w.bx,w.by,c->x,c->y);direction=w.cam_side>0;
+        if(direction && !(w.flags&4))continue;
+        w.ad=(w.ax-c->x)*c->sine+(w.ay-c->y)*c->cosine;
+        w.bd=(w.bx-c->x)*c->sine+(w.by-c->y)*c->cosine;
+        if(fmax(w.ad,w.bd)<=0.05)continue;
+        si=u16(line+12+direction*2);if(si>=map->sector_count)continue;
+        sector=map->data+map->sectors+(size_t)si*20;w.ff=s16(sector);w.fc=s16(sector+2);
+        if(w.flags&4){si=u16(line+12+(direction^1u)*2);if(si>=map->sector_count)continue;
+            sector=map->data+map->sectors+(size_t)si*20;w.bf=s16(sector);w.bc=s16(sector+2);}
+        w.al=(w.ax-c->x)*c->cosine-(w.ay-c->y)*c->sine;
+        w.bl=(w.bx-c->x)*c->cosine-(w.by-c->y)*c->sine;
+        w.near_ad=w.ad;w.near_bd=w.bd;
+        if(w.near_ad<0.05){t=(0.05-w.near_ad)/(w.near_bd-w.near_ad);w.al+=(w.bl-w.al)*t;w.near_ad=0.05;}
+        if(w.near_bd<0.05){t=(0.05-w.near_bd)/(w.near_ad-w.near_bd);w.bl+=(w.al-w.bl)*t;w.near_bd=0.05;}
+        scratch->view[scratch->view_count++]=w;
+    }
+    return 1;
+}
+/* Each projected wall contributes a linear top/bottom bound over its X
+ * interval. Split at interval endpoints, intersect bounds, then submit only
+ * visible triangles. No screen-resolution mask or per-pixel world-depth bias. */
+static void actor_silhouette(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c,
+    const SsaBody *body,double left,double right,double top,double bottom,
+    unsigned flip,double unit,const PitchMaterial *material)
+{
+    ActorClipScratch *scratch=&r->geometry->actor_clip;
+    double x=body->x/65536.0,y=body->y/65536.0;
+    double depth=(x-c->x)*c->sine+(y-c->y)*c->cosine;
+    double lateral=(x-c->x)*c->cosine-(y-c->y)*c->sine;
+    unsigned i,j,count=0,cut_count=2;size_t stride=2*(scratch->capacity-1)+8;
+    (void)g;
+    if(depth<=0.05)return;
+    left+=lateral;right+=lateral;
+    scratch->cuts[0]=left;scratch->cuts[1]=right;
+    for(i=0;i<scratch->view_count;++i){const ActorViewWall *v=&scratch->view[i];
+        double ad=v->ad,bd=v->bd,al,bl,lo,hi,actor_side;unsigned clip=0;
+        int ff=v->ff,fc=v->fc,bf=v->bf,bc=v->bc;double low=0,high=0;ActorClipWall wall={0};
+        if(depth<fmin(ad,bd))continue;
+        actor_side=orient(v->ax,v->ay,v->bx,v->by,x,y);
+        if(depth<=fmax(ad,bd) && ((actor_side>0)==(v->cam_side>0)))continue;
+        if(!(v->flags&4) || bc<=ff || bf>=fc)clip=4;
+        else {
+            if((ff>bf && body->z/65536.0<ff) || (ff<=bf && bf>c->z))clip|=1;
+            if((fc<bc && floor((body->z+(double)body->height)/65536.0)>fc) || (fc>=bc && bc<c->z))clip|=2;
+            low=fmax(ff,bf);high=fmin(fc,bc);
+        }
+        if(!clip)continue;
+        ad=v->near_ad;bd=v->near_bd;al=v->al;bl=v->bl;
+        al*=depth/ad;bl*=depth/bd;
+        if(fabs(bl-al)<1e-9)continue;
+        lo=fmax(left,fmin(al,bl));hi=fmin(right,fmax(al,bl));if(hi<=lo)continue;
+        wall.left=lo;wall.right=hi;wall.flags=clip;
+        wall.bottom_slope=(low-c->z)*depth*(1/bd-1/ad)/(bl-al);
+        wall.bottom_offset=c->z+(low-c->z)*depth/ad-wall.bottom_slope*al;
+        wall.top_slope=(high-c->z)*depth*(1/bd-1/ad)/(bl-al);
+        wall.top_offset=c->z+(high-c->z)*depth/ad-wall.top_slope*al;
+        scratch->walls[count++]=wall;scratch->cuts[cut_count++]=lo;scratch->cuts[cut_count++]=hi;
+    }
+    qsort(scratch->cuts,cut_count,sizeof(*scratch->cuts),actor_cut_compare);
+    for(i=1;i<cut_count;++i){double lo=scratch->cuts[i-1],hi=scratch->cuts[i],mid=(lo+hi)*0.5;
+        ActorClipPoint *p=scratch->points,*out=p+stride;unsigned n=4;
+        if(hi-lo<1e-9)continue;
+        p[0]=(ActorClipPoint){lo,top};p[1]=(ActorClipPoint){hi,top};
+        p[2]=(ActorClipPoint){hi,bottom};p[3]=(ActorClipPoint){lo,bottom};
+        for(j=0;j<count && n;++j){const ActorClipWall *w=&scratch->walls[j];ActorClipPoint *swap;
+            if(mid<w->left || mid>w->right)continue;
+            if(w->flags&4){n=0;break;}
+            if(w->flags&1){n=actor_clip_height(p,n,out,w->bottom_slope,w->bottom_offset,1);swap=p;p=out;out=swap;}
+            if(w->flags&2){n=actor_clip_height(p,n,out,w->top_slope,w->top_offset,0);swap=p;p=out;out=swap;}
+        }
+        for(j=1;j+1<n;++j){PitchVertex tri[3];unsigned k,indices[3]={0,j,j+1};
+            for(k=0;k<3;++k){ActorClipPoint a=p[indices[k]];double u=(a.x-left)/unit;
+                tri[k]=pitch_vertex(c,x+(a.x-lateral)*c->cosine,y-(a.x-lateral)*c->sine,a.z,
+                    flip?material->width-u:u,(top-a.z)/unit);}
+            pitch_polygon(r,c,tri,3,material);
+        }
+    }
+}
 static void pitched_actor(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c,const SsaActorSource *s)
 {
     const SsaActorResource *resource;const SsaActorImage *im;const SsaBody *body;
-    unsigned dirs,flip=0,image,bit;int dir,cut=0;uint16_t facing;double unit,left,right,top,bottom,x,y;
-    PitchMaterial material={0};PitchVertex q[4];
+    unsigned dirs,flip=0,image,bit;int dir,cut=0;uint16_t facing;double unit,left,right,top,bottom;
+    PitchMaterial material={0};
     if(!s->entity || !s->animation || s->animation>=SSA_ACTOR_RESOURCE_COUNT || s->frame>=65534 ||
        (s->flags&128) || ((s->flags&64) && (g->frame_game.flags&1)))return;
     body=&s->entity->body;resource=&g->actor_assets.resources[s->animation];
@@ -275,18 +381,29 @@ static void pitched_actor(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *
     if(dir>8){dir=16-dir;flip=1;}
     dirs=resource->directions-1u;if(!dirs){dir=0;flip=0;}else while(dirs<=7){dirs*=2;dir/=2;}
     image=(unsigned)s->frame+1+(unsigned)dir*resource->frames;
+    {double depth=(body->x/65536.0-c->x)*c->sine+(body->y/65536.0-c->y)*c->cosine;
+        bit=actor_mip(g,resource,c->focal/fmax(.05,depth),&image);}
     im=ssa_actor_assets_image(&g->actor_assets,s->animation,image);if(!im)return;
-    bit=0;while(bit<5 && !(resource->mip_flags&(1u<<bit)))++bit;
-    unit=bit==0?4.0/3:bit==1?2:bit==2?8.0/3:bit==3?4:8;
+    unit=actor_unit(bit);
     if(body->step_adjust){cut=body->floor+body->step_adjust-body->z/65536;if(cut<0)cut=0;}
     if(cut>=(int)im->height)return;
     left=(flip?-(im->origin_x+(int)im->width):im->origin_x)*unit;right=left+im->width*unit;
     top=body->z/65536.0-im->origin_y*unit;bottom=top-(im->height-cut)*unit;
-    x=body->x/65536.0;y=body->y/65536.0;
     material.pixels=im->pixels;material.width=im->width;material.height=im->height;material.transparent=material.actor=1;
-    q[0]=pitch_vertex(c,x+left*c->cosine,y-left*c->sine,top,flip?im->width:0,0);
-    q[1]=pitch_vertex(c,x+right*c->cosine,y-right*c->sine,top,flip?0:im->width,0);
-    q[2]=pitch_vertex(c,x+right*c->cosine,y-right*c->sine,bottom,flip?0:im->width,im->height-cut);
-    q[3]=pitch_vertex(c,x+left*c->cosine,y-left*c->sine,bottom,flip?im->width:0,im->height-cut);
-    pitch_polygon(r,c,q,4,&material);
+    actor_silhouette(r,g,c,body,left,right,top,bottom,flip,unit,&material);
+}
+
+/* The shadow is an ordinary transparent billboard in its subject's painter
+ * layer. It has no floor triangles or depth offset and is always drawn first. */
+static void pitched_shadow(SsaPcRenderer *r,const SsaNativeGame *g,const Camera *c,const SsaActorSource *s,unsigned source)
+{
+    const SsaSpriteShadow *v;SsaBody ground;PitchMaterial material={0};double radius;
+    if(!c->shadows || source>=SSA_SHADOW_LIMIT || c->shadows->indices[source]<0 || !s->entity ||
+       (s->flags&128) || ((s->flags&64) && (g->frame_game.flags&1)))return;
+    v=&c->shadows->sprites[c->shadows->indices[source]];radius=v->radius;
+    ground=s->entity->body;ground.z=v->floor*65536;ground.height=0;
+    material.pixels=v->pixels;material.width=SSA_SHADOW_WIDTH;material.height=SSA_SHADOW_HEIGHT;
+    material.transparent=material.actor=1;
+    actor_silhouette(r,g,c,&ground,-radius,radius,v->floor+radius*.25,v->floor-radius*.25,0,
+        radius*2/SSA_SHADOW_WIDTH,&material);
 }

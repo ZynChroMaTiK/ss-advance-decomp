@@ -1,0 +1,351 @@
+{
+  "result": "pass",
+  "date": "2026-10-21",
+  "scope": "Rendering/cache/menu refactors; focused and synthetic render tests, no campaign playthrough",
+  "benchmark": {
+    "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "width": 1920,
+    "height": 1080,
+    "frames_per_case": 60,
+    "paired_runs": 3,
+    "order": [
+      "before-after",
+      "after-before",
+      "before-after"
+    ],
+    "cases": [
+      {
+        "scene": "start",
+        "decals": 0,
+        "reflections": 0,
+        "shadows": 0,
+        "godrays": 0,
+        "before": {
+          "ms": 8.165,
+          "prepare_ms": 0.622,
+          "wait_ms": 4.625,
+          "readback_ms": 0.64,
+          "effects_ms": 1.217
+        },
+        "after": {
+          "ms": 8.061,
+          "prepare_ms": 0.626,
+          "wait_ms": 4.621,
+          "readback_ms": 0.639,
+          "effects_ms": 1.187
+        },
+        "render_time_reduction_percent": 1.27,
+        "identical_output": {
+          "pixel_hash": "60bf0bf523904da2",
+          "depth_hash": "f126fe4c3118c739",
+          "water_hash": "cbf29ce484222325",
+          "actor_pixels": 7218,
+          "wall_pixels": 1283660
+        }
+      },
+      {
+        "scene": "start",
+        "decals": 1,
+        "reflections": 0,
+        "shadows": 0,
+        "godrays": 0,
+        "before": {
+          "ms": 10.442,
+          "prepare_ms": 0.693,
+          "wait_ms": 4.726,
+          "readback_ms": 0.681,
+          "effects_ms": 2.413
+        },
+        "after": {
+          "ms": 8.569,
+          "prepare_ms": 0.614,
+          "wait_ms": 4.723,
+          "readback_ms": 0.645,
+          "effects_ms": 1.665
+        },
+        "render_time_reduction_percent": 17.94,
+        "identical_output": {
+          "pixel_hash": "7eda1e99de93fc9e",
+          "depth_hash": "f126fe4c3118c739",
+          "water_hash": "cbf29ce484222325",
+          "actor_pixels": 7218,
+          "wall_pixels": 1283660
+        }
+      },
+      {
+        "scene": "pool",
+        "decals": 1,
+        "reflections": 0,
+        "shadows": 0,
+        "godrays": 0,
+        "before": {
+          "ms": 16.512,
+          "prepare_ms": 0.773,
+          "wait_ms": 4.742,
+          "readback_ms": 0.711,
+          "effects_ms": 8.605
+        },
+        "after": {
+          "ms": 11.266,
+          "prepare_ms": 0.676,
+          "wait_ms": 4.637,
+          "readback_ms": 0.699,
+          "effects_ms": 3.919
+        },
+        "render_time_reduction_percent": 31.77,
+        "identical_output": {
+          "pixel_hash": "6148ed7dc5b6b44f",
+          "depth_hash": "43e138af2fe2908a",
+          "water_hash": "cbf29ce484222325",
+          "actor_pixels": 0,
+          "wall_pixels": 784180
+        }
+      },
+      {
+        "scene": "pool",
+        "decals": 1,
+        "reflections": 1,
+        "shadows": 0,
+        "godrays": 0,
+        "before": {
+          "ms": 38.318,
+          "prepare_ms": 1.491,
+          "wait_ms": 7.657,
+          "readback_ms": 1.445,
+          "effects_ms": 17.128
+        },
+        "after": {
+          "ms": 27.694,
+          "prepare_ms": 1.306,
+          "wait_ms": 7.315,
+          "readback_ms": 1.287,
+          "effects_ms": 9.147
+        },
+        "render_time_reduction_percent": 27.73,
+        "identical_output": {
+          "pixel_hash": "9ec07bc26df1c86d",
+          "depth_hash": "43e138af2fe2908a",
+          "water_hash": "6ff4b86fdf850c75",
+          "actor_pixels": 0,
+          "wall_pixels": 784180
+        }
+      },
+      {
+        "scene": "pool-shadows",
+        "decals": 1,
+        "reflections": 1,
+        "shadows": 1,
+        "godrays": 0,
+        "before": {
+          "ms": 41.051,
+          "prepare_ms": 1.566,
+          "wait_ms": 8.908,
+          "readback_ms": 1.482,
+          "effects_ms": 17.002
+        },
+        "after": {
+          "ms": 27.736,
+          "prepare_ms": 1.392,
+          "wait_ms": 7.438,
+          "readback_ms": 1.395,
+          "effects_ms": 9.252
+        },
+        "render_time_reduction_percent": 32.44,
+        "identical_output": {
+          "pixel_hash": "444eba5aeb3aff17",
+          "depth_hash": "1d05836963a5c064",
+          "water_hash": "6ff4b86fdf850c75",
+          "actor_pixels": 1064,
+          "wall_pixels": 784180
+        }
+      },
+      {
+        "scene": "godrays",
+        "decals": 1,
+        "reflections": 0,
+        "shadows": 0,
+        "godrays": 1,
+        "before": {
+          "ms": 23.816,
+          "prepare_ms": 0.96,
+          "wait_ms": 6.585,
+          "readback_ms": 0.958,
+          "effects_ms": 5.32
+        },
+        "after": {
+          "ms": 19.167,
+          "prepare_ms": 0.877,
+          "wait_ms": 4.951,
+          "readback_ms": 0.947,
+          "effects_ms": 3.605
+        },
+        "render_time_reduction_percent": 19.52,
+        "identical_output": {
+          "pixel_hash": "0143c265af3d293a",
+          "depth_hash": "b1cde01d65ef6a33",
+          "water_hash": "97d30483e5dd6325",
+          "actor_pixels": 11008,
+          "wall_pixels": 933996
+        }
+      },
+      {
+        "scene": "crowded",
+        "decals": 1,
+        "reflections": 0,
+        "shadows": 0,
+        "godrays": 0,
+        "before": {
+          "ms": 12.838,
+          "prepare_ms": 0.818,
+          "wait_ms": 5.723,
+          "readback_ms": 0.858,
+          "effects_ms": 2.574
+        },
+        "after": {
+          "ms": 11.535,
+          "prepare_ms": 0.724,
+          "wait_ms": 5.96,
+          "readback_ms": 0.785,
+          "effects_ms": 1.807
+        },
+        "render_time_reduction_percent": 10.15,
+        "identical_output": {
+          "pixel_hash": "4cfb85da3f240665",
+          "depth_hash": "64b7c1b2f7eb3629",
+          "water_hash": "97d30483e5dd6325",
+          "actor_pixels": 1816795,
+          "wall_pixels": 733
+        }
+      },
+      {
+        "scene": "crowded",
+        "decals": 1,
+        "reflections": 0,
+        "shadows": 1,
+        "godrays": 0,
+        "before": {
+          "ms": 12.522,
+          "prepare_ms": 0.822,
+          "wait_ms": 5.628,
+          "readback_ms": 0.805,
+          "effects_ms": 2.486
+        },
+        "after": {
+          "ms": 11.048,
+          "prepare_ms": 0.782,
+          "wait_ms": 5.598,
+          "readback_ms": 0.774,
+          "effects_ms": 1.852
+        },
+        "render_time_reduction_percent": 11.77,
+        "identical_output": {
+          "pixel_hash": "4cfb85da3f240665",
+          "depth_hash": "64b7c1b2f7eb3629",
+          "water_hash": "97d30483e5dd6325",
+          "actor_pixels": 1816795,
+          "wall_pixels": 733
+        }
+      }
+    ],
+    "software_hash_comparison": {
+      "cases": 8,
+      "width": 480,
+      "height": 320,
+      "frames_per_case": 12,
+      "all_identical": true
+    },
+    "excludes": [
+      "simulation",
+      "audio",
+      "display presentation"
+    ],
+    "raw_directory": "build\\technical-audit"
+  },
+  "validation": {
+    "windows_release_build": "pass",
+    "focused_ctest": {
+      "tests": 11,
+      "failures": 0
+    },
+    "vulkan": {
+      "result": "pass",
+      "checks": 6564616,
+      "draws": 30,
+      "sprite_order_cases": 18,
+      "matching_pixels": 5134975,
+      "compared_pixels": 5137174,
+      "validation_errors": 0,
+      "device": "NVIDIA GeForce RTX 4060 Laptop GPU"
+    },
+    "sanitizers": {
+      "surface-decals": {
+        "result": "pass",
+        "checks": 56872820,
+        "draws": 61,
+        "software_changed_pixels": 28374,
+        "renderers": 2,
+        "pitch_views": 3,
+        "sanitizers": "ASan/UBSan/leaks=1",
+        "scope": "Optional floor/ceiling art, world anchoring, depth and original-off behavior."
+      },
+      "pc-renderer": {
+        "result": "pass",
+        "checks": 11803544,
+        "sizes": 7,
+        "different_from_upscale": 257587,
+        "chase_jump_frames": 24,
+        "third_person_frames": 24,
+        "collision_fallback_frames": 0
+      },
+      "sprite-shadows": {
+        "result": "pass",
+        "checks": 14408,
+        "native_shadow_pixels": 816,
+        "gba_shadow_pixels": 112,
+        "sanitizers": "ASan/UBSan/leaks=1"
+      }
+    },
+    "menu_screenshots_identical": 39,
+    "windows_settings": {
+      "result": "pass",
+      "checks": 23860,
+      "score_paths": 6,
+      "midi_only": false,
+      "hidden_window": true,
+      "output_muted": true,
+      "midi_device": "Microsoft GS Wavetable Synth",
+      "midi_sequences": 26
+    },
+    "audio_settings": {
+      "result": "pass",
+      "checks": 39995,
+      "music_sequences": 26,
+      "soundfont_seconds": 208,
+      "peak": 32760,
+      "hybrid_music": true,
+      "music_limited_frames": 237192,
+      "cpu_seconds": 6.43
+    }
+  },
+  "source_sha256": {
+    "include/ssa/surface_sample_cache.h": "10e14d617b29294f8b57179c9ed5d0ace8e605366abd6172f334800f444d5cbc",
+    "include/ssa/surface_decals.h": "90e352bd2394696ee24c2f1a5645d3a30567da3495c4d0a9d4e2267def6f9b13",
+    "include/ssa/water.h": "1bb9394c2590ca4ea4e857d1edc64674562882839433e346f49c4ce47bc07efd",
+    "src/surface_decals.c": "2971e1689c04a106a53b8556edb421eb0e00906756c52dfc7ef185402540caf1",
+    "src/water.c": "8cf6c739f11767af61dd92b4507209bb17344894ed7917b4de00970d2c9aa94e",
+    "src/water_edges.inc": "31a5ad7eee8c5f556887f58d403981bcc71240336a19aed39d2ac442017623a5",
+    "src/pc_scene.c": "57b6caa64a8aabbe4ac77f9884452cf01cf69bd9124ca951e73f59728e5aef22",
+    "src/pc_renderer_pitch.inc": "21647c21be8a1c6449b737c1562fa9969f5fd4022e8db8c11944724a19742e12",
+    "src/pc_actor_clip.inc": "32b9fc3e993863886a82a39608cb033f8751357efb729604bad39993493ce009",
+    "src/pc_godrays.inc": "e53c55447833eb9f4f6d0d8b7b90159ab9831d5b338c54b53c002fafc90d41be",
+    "platform/win32/vulkan_renderer.c": "295fef8d40ad3df4824692c10a60074fa96a36ae917b724f1a509d3d385eddce",
+    "src/menu.c": "1127428a91662065d093e6f3cad25b4e16d3dd900617240d0cd4f213635fc060",
+    "tests/test_surface_decals.c": "fa458fa44f385c6e48480d2041b312854d73a5126977d9c268b8ecaf59f8452f",
+    "tests/test_vulkan_renderer.c": "a9dab4b03b476e8287d9f7cf920f78c5c36155e296e141e49d4441197b8eeb76",
+    "tests/bench_vulkan.c": "7076c3d66febc14b589cefafe0c3f2231be8ffa7e2b9dd3aad746cdf30a42c6f",
+    "tests/godray_fixture.h": "f1355298cbcdd0b469519238aa21bc2a1108b0c6290b15db53ce709294767436",
+    "scripts/bench-vulkan.ps1": "25fecb565b316ebb4071c292866a42e98b3b2008412ebff0c179905b05c11a3e",
+    "scripts/test-vulkan.ps1": "07688029e95a118b7e8aa44e2a55f414b872898b696441a8204726a44fc63b56"
+  },
+  "baseline_executable_sha256": "2efeeb583a1d8d39956e6837b758218caf0b2a7c850f7a61f33788bdce343e84"
+}

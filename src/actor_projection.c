@@ -34,6 +34,7 @@ static int emit(SsaActorProjector *p,const SsaActorSource *s,int32_t x,int32_t y
     v->bottom_z=half((uint32_t)b->z>>16);v->top_z=half((uint32_t)add(b->z,b->height)>>16);
     v->animation=s->animation;v->clip_offset=0;v->left=half((uint32_t)left);v->clipped_width=half((uint32_t)width);
     actor=ssa_actor_queue_allocate(p->queue);if(actor<0)return 1;
+    if(fixed)p->queue->fixed_screen_mask|=UINT32_C(1)<<(unsigned)actor;
     p->queue->actors[actor].projection=(uint16_t)index;
     p->queue->actors[actor].clip_offset=0;p->queue->actors[actor].depth=depth;
     return ssa_actor_queue_insert(p->queue,(unsigned)actor)<0?-1:1;

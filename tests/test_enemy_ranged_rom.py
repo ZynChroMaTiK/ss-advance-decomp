@@ -21,7 +21,7 @@ exec(compile(ast.Module(nodes,type_ignores=[]),'enemy projections','exec'))
 class Control(C.Structure):
     _fields_=[('activation',C.POINTER(Activation)),('navigation',C.POINTER(Navigation)),('drain_period',C.c_uint16),('drain_countdown',C.c_uint16),('animation_done',C.c_uint8),('destroy_requested',C.c_uint8),('bob_direction',C.c_uint8),('updating',C.c_uint)]
 class Game(C.Structure):
-    _fields_=[('activation',C.POINTER(ActivationGame)),('player',EP),('blocking_entity',EP),('loop_source',EP),('player_x',C.c_int32),('player_y',C.c_int32),('attack_period',C.c_uint16*12)]
+    _fields_=[('activation',C.POINTER(ActivationGame)),('player',EP),('blocking_entity',EP),('loop_source',EP),('player_x',C.c_int32),('player_y',C.c_int32),('attack_period',C.c_uint16*12),('prion_targets',C.c_uint)]
 class Event(C.Structure):_fields_=[('kind',C.c_int),('other',EP),('args',C.c_int32*6)]
 EVENT=C.CFUNCTYPE(C.c_int,C.c_void_p,C.POINTER(Control),C.POINTER(Event))
 AIM=C.CFUNCTYPE(C.c_int,C.c_void_p,C.POINTER(Control),C.c_int32,C.c_uint16,C.c_int32,C.POINTER(EP))
