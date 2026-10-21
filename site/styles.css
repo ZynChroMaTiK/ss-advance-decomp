@@ -6,8 +6,6 @@
 .hero .native-art{display:block;height:auto;align-self:center}
 .hero .native-art img{width:100%;height:auto;aspect-ratio:8/5;display:block;transform:none}
 .hero .native-art::after{display:none}
-.hero .native-art .art-caption{position:static;padding:18px 20px;gap:8px;border-top:1px solid var(--border);background:var(--panel)}
-.hero .native-art .art-caption strong{font-size:22px}
 /* Shared scrollbars for pages, panels, image previews and reference tables.
    Keep native controls in high-contrast mode. */
 @media(forced-colors:none){
