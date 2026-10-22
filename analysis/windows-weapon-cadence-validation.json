@@ -15,17 +15,17 @@
                     "shots_per_second":  8.532500081,
                     "simulation_hz":  60
                 },
-    "executable_sha256":  "fa4e060915675c8b93e391b5feae99745d9c63f62ed3231d34f28ca48f67135d",
-    "checker_sha256":  "9d51e8d172286d16f4eccaa45bffdd0a05195436acb9737976212a8ddb795cd1",
+    "executable_sha256":  "8738749cd1a0f38484c90814bf8b22d2a1d4531cf8dc5de0a7967cef50355871",
+    "checker_sha256":  "3ad70b2675d7f1beb6efdffea3f1e8462358c1944199f02ed324c754bcfc9248",
     "source_sha256":  {
                           "src/weapon_controller.c":  "21ba8b4a5a438f15b3687411118afca09cee497876015c2e4a863a06078023f9",
-                          "src/weapon_runtime.c":  "1410251dfb59e91501348de7aea6be0c6044d6f93fe221b341c902bca68f2ebc",
-                          "src/native_game.c":  "d034beec506064073f3b934d149396da9be44f7b3399757f3ccfc51d81da386c",
+                          "src/weapon_runtime.c":  "ecdeb99d5724ce86bea1da74378474da1a0f31d06d47fb25fd43dc96d84e039a",
+                          "src/native_game.c":  "1df5f406957ee91800538a021387d2d3d77420143a1477960d7350554da74f1d",
                           "src/pc_input_runtime.c":  "4170dbf0bbc5ae27b53698bc856d30563f2144f19fc28305364c3926a736edcf",
                           "include/ssa/weapon_controller.h":  "24f3becd2040efc167bdb1e7eaf507ddaee6fe0cfb154d0df06b5b81030a181c",
-                          "include/ssa/weapon_runtime.h":  "d60b0d7a680f082598725bd347d8ea00343b1e017f5996c0ccf2fd162f33e920",
-                          "tests/test_weapon_cadence.c":  "80f715dcd14966aa1914468d9b53761a4e7137c6aec2620a0db9932335251d06",
+                          "include/ssa/weapon_runtime.h":  "5a15d861781f079038de61457bce07ba937badd67cfee65c245ae41725698c97",
+                          "tests/test_weapon_cadence.c":  "bfa405fa39a361873899b84954d443cc396d43cfc7d177a94c3908e5a511e24b",
                           "scripts/test-weapon-cadence.ps1":  "fa67e043cd8851c5dffc468e1ea17e8a3a561db4c208f0b019ec9d23ffa04a13",
-                          "CMakeLists.txt":  "ece0f0f1cc6600c688e5907aa8d0f0f4cf195971bbacb8fe45a0f08e284e829c"
+                          "CMakeLists.txt":  "2e00067bc8c054d4351fec23eefd8d7771f827bbed794144b33408e8612d11a8"
                       }
 }

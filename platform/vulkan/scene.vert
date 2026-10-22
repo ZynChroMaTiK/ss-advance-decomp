@@ -2,7 +2,7 @@
 layout(location=0) in vec3 position;
 layout(location=1) in vec2 uv;
 layout(location=2) in uint material;
-layout(push_constant) uniform View {vec2 scale;} view;
+layout(push_constant) uniform View {vec2 scale;uint anisotropic;} view;
 layout(location=0) out vec2 texcoord;
 layout(location=1) out float distanceZ;
 layout(location=2) flat out uint mat;

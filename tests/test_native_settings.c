@@ -1,4 +1,5 @@
 #include "ssa/native_game.h"
+#include "ssa/pc_hardware.h"
 #include "ssa/settings.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,6 +67,11 @@ int main(int argc,char **argv)
         s.mouse_sensitivity=SSA_MOUSE_DEFAULT;
         CHECK(ssa_native_game_apply_settings(g,&s)==1);
     }
+    for(unsigned renderer=0;renderer<SSA_RENDERERS;++renderer)for(unsigned effects=0;effects<16;++effects){
+        s.renderer=renderer;s.vulkan_antialiasing=effects&1;s.vulkan_anisotropic=(effects>>1)&1;
+        s.vulkan_ambient_occlusion=(effects>>2)&1;s.vulkan_motion_blur=(effects>>3)&1;CHECK(ssa_native_game_apply_settings(g,&s)==1);
+        CHECK(g->vulkan_features==(renderer==SSA_RENDER_VULKAN?effects:0));}
+    s=(SsaSettings)SSA_SETTINGS_DEFAULT;
     s.fov_offset=60;
     s.alternate_weapons=1;s.hud_style=SSA_HUD_CLASSIC;
     s.sprite_shadows=s.godrays=s.surface_decals=s.water_reflections=s.weapon_bobbing=1;s.renderer=SSA_RENDER_GBA;

@@ -1,0 +1,56 @@
+{
+  "result": "pass",
+  "device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "method": "Three alternating paired runs, 30 stationary frames per each of eight scenes at 1920x1080. Moving no-motion masks 0..7: three frames per scene, 641x359. Isolated renderer; simulation, audio, presentation excluded. Moving motion-blur images are timing-dependent and are tested by focused GPU regressions instead of cross-process hashes.",
+  "runs": [
+    {
+      "effects": 8,
+      "camera": "stationary",
+      "before_run_average_ms": [
+        16.59575,
+        16.828625,
+        16.9605
+      ],
+      "after_run_average_ms": [
+        14.87325,
+        15.5035,
+        15.470625
+      ],
+      "median_before_ms": 16.828625,
+      "median_after_ms": 15.470625,
+      "reduction_percent": 8.06958381923656
+    },
+    {
+      "effects": 15,
+      "camera": "stationary",
+      "before_run_average_ms": [
+        17.966875,
+        18.2245,
+        18.335125
+      ],
+      "after_run_average_ms": [
+        17.794625,
+        17.88825,
+        18.0685
+      ],
+      "median_before_ms": 18.2245,
+      "median_after_ms": 17.88825,
+      "reduction_percent": 1.8450437597739344
+    }
+  ],
+  "exact_scene_comparisons": 112,
+  "raw_directory": "build/motion-refactor-bench",
+  "source_sha256": {
+    "platform/win32/vulkan_post.inc": "888ce12e709f4e1f1afa014ae92906830125dfb6c7ac5765b36d16853a048fa7",
+    "platform/vulkan/post.comp": "0e72cadf2fa79c349fa9938d680e9b36202691cc47f58e96a0b0e1600e9a039a",
+    "platform/win32/vulkan_renderer.h": "8fc29d0e29d0c08ce901e459dbc5a75013858e66f76cde9c912e5dcf2f4664ce",
+    "tests/test_vulkan_renderer.c": "533dfc1a1ad1d0c7050a8a6fc1d1d915ae1b10bcb425988460fea6e1eb0c2415",
+    "tests/bench_vulkan.c": "68816a5b1197b17c0662bbe7ae6e905ab7724f61f19a830c7ca30a6bec00b5fc"
+  },
+  "baseline_sha256": {
+    "build/ssa_vulkan_bench-before-motion-refactor.exe": "f9b400c1811a15af4c0599ffc14ccf516d8f065797dac46d670864e1ba4274f0",
+    "build/vulkan_post-before-motion-refactor.inc": "d686e4357477a136fafbbcf8f8091cbfad2197b06a863fe4d542afb3db5e95cf",
+    "build/post-before-motion-refactor.comp": "02ded65f507cc649ef48a414d0daac61698894ccf943b0b70c239be0a4d84310"
+  },
+  "after_executable_sha256": "d0fbafa0f92b166b824f32d4e0903af707eb588c33917c57947e447257eb0f15"
+}

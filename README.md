@@ -4,11 +4,11 @@ This is a fan-made Windows port of the GBA game. It keeps the original levels,
 weapons, enemies and music, with keyboard and mouse controls and a few optional
 extras. You can play all twelve campaign levels.
 
-**[Download v0.8.0 Alpha 4](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.4)**
+**[Download v0.8.0 Beta 1](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-beta.1)**
 · [Website](https://zynchromatik.github.io/ss-advance-decomp/)
 · [Explore the maps](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
 
-It’s still an alpha, so you’ll find bugs and unfinished bits. The game runs
+It’s now a beta, so you’ll find bugs and unfinished bits. The game runs
 directly on Windows—there’s no emulator to set up.
 
 ## Download and play
@@ -57,9 +57,9 @@ playtesting, so please report anything that goes wrong.
 | Space | Jump (enable in Extras) |
 | H | Switch between first- and third-person view |
 | E | Use doors and switches |
-| 1–0 / mouse wheel | Choose a weapon |
+| 1–0 / mouse wheel | Choose a weapon (8: Time Strike, 9: cannon, 0: UMT) |
 | Q | Return to the previous weapon |
-| R | Reload Colts (Alternate weapons) |
+| R | Reload Colts (Enhanced weapons) |
 | Tab / N | Open or close NETRICSA |
 | M | Open or close the automap (enable in Extras) |
 | + / − / mouse wheel in automap | Zoom the map |
@@ -82,6 +82,12 @@ launch Vulkan with `play-native.cmd --vulkan`.
 Below Renderer, **Aspect ratio** offers **Native** (fill the window, default)
 or **3:2** (preserve the original GBA view with black bars). This choice applies
 to Software and Vulkan; the GBA renderer always uses 3:2 and disables the row.
+**VSync** synchronizes presentation on supported systems in all three renderers.
+It defaults to On; existing saved On/Off choices are retained.
+Vulkan also offers optional **Antialiasing**, **Anisotropic filtering**,
+**Ambient occlusion** and **Motion blur**, all Off by default. Anisotropic filtering
+keeps magnified textures sharp; ambient occlusion follows world texels. Motion blur
+affects the scene while keeping weapons and HUD sharp.
 **Mouse sensitivity** adjusts horizontal and vertical aiming together from
 **10% to 300%**, with **100%** preserving the previous PC control speed.
 **Mipmapping** uses the original smaller texture and sprite images at distance.
@@ -97,7 +103,7 @@ that work on your computer. See the
 
 Under **Options → Extras**, you can turn jumping, third-person view, in-game
 NETRICSA and the automap on or off. **Weapon bobbing** moves first-person weapons
-and their muzzle flashes together. **Jump**, **Alternate weapons**, **Automap**
+and their muzzle flashes together. **Jump**, **Enhanced weapons**, **Automap**
 and **Weapon bobbing** are off by default.
 In Graphics, **Surface decals** adds connected stains and edge details on floors
 and ceilings, plus animated glints, ripples and shoreline waves on water.
@@ -110,9 +116,10 @@ independent, off by default and available in all three renderers.
 original GBA auto-aim and the target-following crosshair; GBA rendering always
 retains original aiming.
 Extras are ordered: HUD, Vertical aim, Third-person, Jump, Automap, In-game
-NETRICSA, Alternate weapons and Weapon bobbing.
+NETRICSA, Enhanced weapons and Weapon bobbing.
 The **HUD** row switches between **Original** (default) and **Classic**, a usable
-green HUD built from the retained older artwork. All graphics modes support it,
+green HUD built from the retained older artwork. Its custom crosshair changes
+from green to yellow to red with the target enemy's remaining health. All graphics modes support it,
 and the game saves your choice.
 Classic also shows a centered weapon selector when switching weapons. The selected
 weapon and its ammo highlight white immediately; the selector hides after three seconds or when firing.
@@ -136,7 +143,7 @@ Original HUD preserves the GBA layout and pixel padding: lives upper left,
 weapon icon upper right, score/time top center, status bars lower left and ammo
 lower right. GBA rendering keeps the original coordinates intact; PC rendering
 anchors those same groups to the window edges without changing their padding.
-Existing saved choices are retained. Turn Alternate weapons on to use
+Existing saved choices are retained. Turn Enhanced weapons on to use
 single/dual Colts with reloads and a different double-shotgun spread. Once you
 have both Colts, press **2** again to switch between one and two guns.
 

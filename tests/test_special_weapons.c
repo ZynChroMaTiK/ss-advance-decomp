@@ -84,10 +84,31 @@ static void special_case(uint8_t *rom,size_t size,const SsaMathTables *math,
     }
     projectile_cleanup(&t);cleanup(&f);
 }
+typedef struct StrikeAudio {SsaNativeGame *game;unsigned firing,landing;} StrikeAudio;
+static void strike_play(void *context,unsigned id)
+{StrikeAudio *a=context;if(id==0x1e)++a->firing;}
+static void strike_stop(void *context,unsigned id){(void)context;(void)id;}
+static void strike_at(void *context,unsigned id,const SsaAudioPoint *point)
+{
+    StrikeAudio *a=context;unsigned i;
+    if(id!=0x1e)return;
+    CHECK(point);
+    for(i=0;i<100;++i){const SsaProjectile *p=&a->game->projectiles.projectiles[i];
+        if(a->game->projectiles.active[i] && p->entity->type==0xe3 && p->state==1 &&
+           point->x==p->entity->body.x && point->y==p->entity->body.y && point->z==p->entity->body.z){
+            CHECK(p->entity->body.z==(int32_t)p->entity->body.floor*65536);
+            ++a->landing;return;
+        }
+    }
+    CHECK(0); /* Cue must occur at a real object's landing position. */
+}
 static void native_special(const uint8_t *rom,unsigned weapon,unsigned third)
 {
     SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer renderer={0};unsigned i,j,target=100,slot=100;
+    StrikeAudio audio={g,0,0};SsaNativeAudioOps audio_ops={0};
     CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1);
+    audio_ops.play=strike_play;audio_ops.stop=strike_stop;audio_ops.play_at=strike_at;audio_ops.context=&audio;
+    CHECK(ssa_native_game_bind_audio(g,&audio_ops)==1);
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     g->damage.god_mode=1;CHECK(ssa_native_game_tick(g)==1);
     if(weapon==9){
@@ -127,7 +148,7 @@ static void native_special(const uint8_t *rom,unsigned weapon,unsigned third)
     CHECK(g->player.view.third_person==third);
     if(weapon==9){
         for(j=0;j<100;++j)if(g->projectiles.active[j] && g->projectiles.projectiles[j].entity->type==0xe3){slot=j;break;}
-        CHECK(slot<100);
+        CHECK(slot<100 && audio.firing==1 && !audio.landing);
     }
     {uint32_t request=g->damage.hurt_flash;uint8_t counter=g->palette_effect.counter;
         CHECK(ssa_pc_renderer_resize(&renderer,320,240)==1);
@@ -144,6 +165,13 @@ static void native_special(const uint8_t *rom,unsigned weapon,unsigned third)
             CHECK(at<g->spawn.pool.active_count && (int64_t)before.z+g->source_z_offsets[at]==z);
             if(i==14 || i==35){CHECK(ssa_native_game_draw(g)==1);CHECK(ssa_pc_renderer_draw(&renderer,g)==1);}
             CHECK(!memcmp(&before,&fall->entity->body,sizeof before));
+            CHECK(audio.landing==(fall->state==1?1u:0u));
+            if(fall->state==1){
+                g->frame_game.flags|=1;
+                CHECK(ssa_native_game_tick(g)==1 && audio.landing==1);
+                CHECK(ssa_native_game_draw(g)==1 && audio.landing==1);
+                g->frame_game.flags&=(uint16_t)~1u;
+            }
         }
     }
     CHECK(i<120 && !g->damage.hurt_flash);
@@ -152,7 +180,8 @@ static void native_special(const uint8_t *rom,unsigned weapon,unsigned third)
     CHECK(ssa_native_game_tick(g)==1);
     CHECK(!memcmp(g->palette_effect.colors,g->sprite_assets.background_palette[0],512));
     CHECK(g->weapon_game.shots[weapon-1]==1 && g->players[0].inventory.ammo[weapon-1]==1);
-    if(weapon==9){CHECK(!g->projectiles.active[slot]);CHECK(!g->spawn.actors[target].activation.health);}
+    if(weapon==9){CHECK(!g->projectiles.active[slot]);CHECK(!g->spawn.actors[target].activation.health);
+        CHECK(audio.firing==1 && audio.landing==1);}
     if(weapon==8 && !third){
         /* A hurt flash must expire so a later hit can trigger its sound again. */
         unsigned sounds=g->sound_serial;

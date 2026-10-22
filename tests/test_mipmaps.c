@@ -37,7 +37,7 @@ int main(int argc,char **argv){
         for(i=0;i<60*40;++i)different+=r.pixels[i]!=before[i];
         g->mipmaps=0;CHECK(ssa_pc_scene_draw(&r,g)==1 && !memcmp(before,r.pixels,sizeof before));}
     CHECK(different>20 && frame==g->frame_game.counter);
-    {Spy *spy=calloc(1,sizeof(*spy));SsaPcHardware hw={spy,begin,triangle,end,NULL};SsaEntity entity={0};
+    {Spy *spy=calloc(1,sizeof(*spy));SsaPcHardware hw={spy,begin,triangle,end,NULL,NULL};SsaEntity entity={0};
         SsaActorSource saved=g->sources[0];unsigned count=g->spawn.pool.active_count,mode;int32_t sn,cs;
         const SsaActorResource *resource=&g->actor_assets.resources[63];CHECK(spy && resource->mip_flags==10);
         ssa_sincos(&g->math,g->pc_camera.heading,&sn,&cs);

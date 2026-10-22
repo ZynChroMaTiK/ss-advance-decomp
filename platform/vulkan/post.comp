@@ -1,0 +1,129 @@
+#version 450
+layout(local_size_x=8,local_size_y=8) in;
+layout(std430,binding=0) readonly buffer Input {uint source[];};
+layout(std430,binding=1) buffer Work {uint image[];};
+layout(push_constant) uniform Post {uint width,height,flags,pass;float focal,previousFocal,exposure,padding;vec4 previous[3];} p;
+uint count(){return p.width*p.height;}
+uint address(ivec2 q){q=clamp(q,ivec2(0),ivec2(p.width,p.height)-1);return uint(q.y)*p.width+uint(q.x);}
+vec3 unpackColor(uint c){return vec3((c>>16)&255u,(c>>8)&255u,c&255u)/255.0;}
+uint packColor(vec3 c){uvec3 b=uvec3(clamp(c,0.0,1.0)*255.0+0.5);return (b.r<<16)|(b.g<<8)|b.b;}
+vec4 rawSurface(ivec2 q){uint at=((count()+3u)&~3u)+4u*address(q);
+    vec4 s=uintBitsToFloat(uvec4(source[at],source[at+1u],source[at+2u],source[at+3u]));
+    return s;}
+vec4 surface(ivec2 q){vec4 s=rawSurface(q);
+    // The retained GPU attachment is unmodified. Match the former CPU mask.
+    if((uint(s.w)&(1024u|2048u))!=0u)s.z=uintBitsToFloat(0x7f7fffffu);
+    return s;}
+float depth(ivec2 q){return surface(q).z;}
+bool valid(float z){return z>0.0 && z<1e20;}
+vec3 position(ivec2 q,float z){return vec3((vec2(q)+0.5-vec2(p.width,p.height)*0.5)*vec2(1,-1)*z/p.focal,-z);}
+// Surface UVs are base-image texels on walls and world units on flat
+// planes (two world units per texel). Solve a local planar UV chart in view
+// space, then project its texel center back to the depth buffer. All covered
+// pixels of a magnified texel evaluate AO at that same sample; no AO blur.
+ivec2 texelSample(ivec2 q){
+    vec4 s=surface(q);if(!valid(s.z))return q;
+    ivec2 h=q.x>0?ivec2(-1,0):ivec2(1,0),v=q.y>0?ivec2(0,-1):ivec2(0,1);
+    vec4 sh=surface(q+h),sv=surface(q+v);
+    vec4 other=surface(q-h);
+    if(q.x>0 && q.x+1<int(p.width) && abs(other.z-s.z)<abs(sh.z-s.z)){h=-h;sh=other;}
+    other=surface(q-v);
+    if(q.y>0 && q.y+1<int(p.height) && abs(other.z-s.z)<abs(sv.z-s.z)){v=-v;sv=other;}
+    if(!valid(sh.z) || !valid(sv.z))return q;
+    uint kind=uint(s.w)&(1024u|2048u|4096u);
+    if((uint(sh.w)&(1024u|2048u|4096u))!=kind || (uint(sv.w)&(1024u|2048u|4096u))!=kind)return q;
+    float scale=(kind&4096u)!=0u?1.0:0.5;
+    vec2 uv=s.xy*scale,du=(sh.xy-s.xy)*scale,dv=(sv.xy-s.xy)*scale;
+    float determinant=du.x*dv.y-du.y*dv.x;if(abs(determinant)<1e-10)return q;
+    vec3 center=position(q,s.z),dh=position(q+h,sh.z)-center,dj=position(q+v,sv.z)-center;
+    vec2 offset=floor(uv)+0.5-uv;
+    center+=dh*((offset.x*dv.y-offset.y*dv.x)/determinant)
+           +dj*((du.x*offset.y-du.y*offset.x)/determinant);
+    if(!valid(-center.z))return q;
+    vec2 projected=center.xy*vec2(1,-1)*p.focal/(-center.z)+vec2(p.width,p.height)*0.5;
+    ivec2 at=ivec2(floor(projected+0.001));
+    if(any(lessThan(at,ivec2(0))) || any(greaterThanEqual(at,ivec2(p.width,p.height))))return q;
+    vec4 target=surface(at);
+    // Never sample the other side of a wall or a foreground sprite merely
+    // because it hides the texel center. Subpixel texels naturally use q.
+    if(!valid(target.z) || (uint(target.w)&(1024u|2048u|4096u))!=kind || abs(target.z+center.z)>2.0)return q;
+    return at;
+}
+float occlusion(ivec2 q){
+    float z=depth(q);if(!valid(z))return 1.0;
+    vec3 center=position(q,z);
+    float l=depth(q+ivec2(-1,0)),r=depth(q+ivec2(1,0)),u=depth(q+ivec2(0,-1)),d=depth(q+ivec2(0,1));
+    ivec2 h=abs(l-z)<abs(r-z)?ivec2(-1,0):ivec2(1,0);
+    ivec2 v=abs(u-z)<abs(d-z)?ivec2(0,-1):ivec2(0,1);
+    float hz=h.x<0?l:r,vz=v.y<0?u:d;
+    if(!valid(hz) || !valid(vz))return 1.0;
+    vec3 dx=(position(q+h,hz)-center)*float(h.x);
+    vec3 dy=(position(q+v,vz)-center)*float(v.y);
+    vec3 normal=cross(dx,dy);if(dot(normal,normal)<1e-12)return 1.0;
+    normal=normalize(normal);if(dot(normal,center)>0.0)normal=-normal;
+    const vec2 directions[8]=vec2[8](vec2(1,0),vec2(.707,.707),vec2(0,1),vec2(-.707,.707),
+        vec2(-1,0),vec2(-.707,-.707),vec2(0,-1),vec2(.707,-.707));
+    const float radius=48.0;
+    float pixels=clamp(radius*p.focal/z,2.0,40.0),shade=0.0;
+    for(int i=0;i<8;++i)for(int ring=1;ring<=2;++ring){
+        ivec2 sampleQ=q+ivec2(round(directions[i]*pixels*float(ring)*0.5));
+        if(any(lessThan(sampleQ,ivec2(0))) || any(greaterThanEqual(sampleQ,ivec2(p.width,p.height))))continue;
+        float sampleZ=depth(sampleQ);if(!valid(sampleZ))continue;
+        vec3 delta=position(sampleQ,sampleZ)-center;float distance2=dot(delta,delta);
+        if(distance2<0.01 || distance2>radius*radius)continue;
+        float angle=max(0.0,dot(normal,delta)*inversesqrt(distance2)-0.12);
+        shade+=angle*(1.0-distance2/(radius*radius));
+    }
+    return clamp(1.0-shade*(1.5/16.0),0.65,1.0);
+}
+// AA reads the AO intermediate only when AO ran; otherwise read input directly.
+vec3 colorAt(ivec2 q){uint at=address(q);return unpackColor((p.flags&4u)!=0u?image[at]:source[at]);}
+vec3 linearColor(vec2 q){ivec2 a=ivec2(floor(q));vec2 f=fract(q);
+    return mix(mix(colorAt(a),colorAt(a+ivec2(1,0)),f.x),
+               mix(colorAt(a+ivec2(0,1)),colorAt(a+ivec2(1,1)),f.x),f.y);}
+float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
+vec3 antialias(ivec2 q){
+    vec3 center=colorAt(q);
+    float nw=luma(colorAt(q+ivec2(-1,-1))),ne=luma(colorAt(q+ivec2(1,-1)));
+    float sw=luma(colorAt(q+ivec2(-1,1))),se=luma(colorAt(q+ivec2(1,1))),m=luma(center);
+    float low=min(m,min(min(nw,ne),min(sw,se))),high=max(m,max(max(nw,ne),max(sw,se)));
+    if(high-low<max(1.0/32.0,high/8.0))return center;
+    vec2 direction=vec2(-((nw+ne)-(sw+se)),(nw+sw)-(ne+se));
+    float reduce=max((nw+ne+sw+se)*(0.25/8.0),1.0/128.0);
+    direction=clamp(direction/(min(abs(direction.x),abs(direction.y))+reduce),vec2(-8),vec2(8));
+    vec3 a=0.5*(linearColor(vec2(q)-direction/6.0)+linearColor(vec2(q)+direction/6.0));
+    vec3 b=a*0.5+0.25*(linearColor(vec2(q)-direction*0.5)+linearColor(vec2(q)+direction*0.5));
+    float lb=luma(b);return lb<low || lb>high?a:b;
+}
+uint motionInput(ivec2 q){uint at=address(q);
+    return (p.flags&5u)!=0u?image[((p.flags&5u)==5u?count():0u)+at]:source[at];}
+uint motionBlur(ivec2 q){
+    uint original=motionInput(q);if(p.exposure<=0.0)return original;
+    vec4 centerSample=rawSurface(q);bool sky=(uint(centerSample.w)&1024u)!=0u || !valid(centerSample.z);
+    float z=sky?100000.0:centerSample.z;
+    vec3 current=position(q,z);current.z=-current.z;
+    vec4 point=vec4(current,sky?0.0:1.0);
+    vec3 previous=vec3(dot(p.previous[0],point),dot(p.previous[1],point),dot(p.previous[2],point));
+    if(previous.z<=0.05)return original;
+    vec2 oldPixel=previous.xy*vec2(1,-1)*p.previousFocal/previous.z+vec2(p.width,p.height)*0.5-0.5;
+    vec2 velocity=(oldPixel-vec2(q))*p.exposure;float speed=length(velocity);
+    if(speed<0.5)return original;
+    velocity*=min(1.0,24.0/speed);int taps=int(clamp(ceil(speed),2.0,12.0));
+    vec3 sum=unpackColor(original);float weight=1.0;
+    for(int i=0;i<taps;++i){ivec2 at=ivec2(floor(vec2(q)+0.5+velocity*(float(i)/float(taps-1)-0.5)));
+        if(any(lessThan(at,ivec2(0))) || any(greaterThanEqual(at,ivec2(p.width,p.height))))continue;
+        vec4 neighbor=rawSurface(at);bool otherSky=(uint(neighbor.w)&1024u)!=0u || !valid(neighbor.z);
+        if(sky!=otherSky || (!sky && abs(neighbor.z-z)>max(4.0,z*0.05)))continue;
+        sum+=unpackColor(motionInput(at));weight+=1.0;
+    }
+    return packColor(sum/weight);
+}
+void main(){
+    ivec2 q=ivec2(gl_GlobalInvocationID.xy);
+    if(q.x>=int(p.width) || q.y>=int(p.height))return;
+    uint at=address(q);
+    if(p.pass==0u)image[at]=packColor(unpackColor(source[at])*occlusion(texelSample(q)));
+    else if(p.pass==1u)image[((p.flags&4u)!=0u?count():0u)+at]=packColor(antialias(q));
+    // Blur reads the preceding region; with AO+AA it can reuse region zero.
+    else image[((p.flags&5u)==1u || (p.flags&5u)==4u?count():0u)+at]=motionBlur(q);
+}

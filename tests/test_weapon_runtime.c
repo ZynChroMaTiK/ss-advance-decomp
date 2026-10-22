@@ -234,6 +234,17 @@ static void chainsaw_range_cases_run(uint8_t *rom,size_t size,const SsaMathTable
             CHECK(i<700 && t.game.shots[0]==87 && !t.weapon.automatic_damage_phase);
             CHECK(a->activation.health==(difficulty==0?161:difficulty==1?416:660));
             CHECK(t.weapon.hits[0]==86 && f.players[0].inventory.ammo[0]==100);
+            /* PC boost doubles base bite damage, before original difficulty
+             * rounding. Range,85-bite timing and unlimited ammo stay intact. */
+            CHECK(weapon_tick(&t,0,0)==0);weapon_animate(&t);
+            t.weapon.double_chainsaw=1;a->activation.health=2500;
+            for(i=0;i<700 && t.game.shots[0]<172;++i){
+                a->entity.body.flags&=UINT16_C(0xfffe);
+                CHECK(weapon_tick(&t,1,i==0)==0);weapon_animate(&t);
+            }
+            CHECK(i<700 && t.game.shots[0]==172 && !t.weapon.automatic_damage_phase);
+            CHECK(a->activation.health==2500-(difficulty==0?1752:difficulty==1?1168:680));
+            CHECK(t.weapon.hits[0]==171 && f.players[0].inventory.ammo[0]==100);
         }
         CHECK(found);++chainsaw_range_cases;weapon_cleanup(&t);cleanup(&f);
     }

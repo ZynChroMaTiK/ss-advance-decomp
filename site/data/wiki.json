@@ -1060,11 +1060,11 @@
       ],
       "image": "assets/netricsa/netricsa-00.png",
       "original_text_id": 84,
-      "summary": "Sam’s close-range weapon. Keep cutting without using any ammo.",
+      "summary": "Samâ€™s close-range weapon. Keep cutting without using any ammo.",
       "sections": [
         {
           "title": "About it",
-          "text": "A forestry tool put to a very different use. You’ll need to get close to make it count."
+          "text": "A forestry tool put to a very different use. Youâ€™ll need to get close to make it count."
         },
         {
           "title": "Playing tips",
@@ -1118,7 +1118,7 @@
         },
         {
           "title": "Playing tips",
-          "text": "Fires both shells when you’ve got them, or a single shot when only one remains. The Alternate weapons option changes its spread."
+          "text": "Fires both shells when youâ€™ve got them, or a single shot when only one remains. The Enhanced weapons option changes its spread."
         }
       ],
       "sources": [
@@ -1169,11 +1169,11 @@
       ],
       "image": "assets/netricsa/netricsa-04.png",
       "original_text_id": 88,
-      "summary": "A fast-firing gun that gets through enemies—and your ammo—quickly.",
+      "summary": "A fast-firing gun that gets through enemiesâ€”and your ammoâ€”quickly.",
       "sections": [
         {
           "title": "About it",
-          "text": "You’ll find one early in the Pyramid Entrance Maze. Keep an eye on your ammo."
+          "text": "Youâ€™ll find one early in the Pyramid Entrance Maze. Keep an eye on your ammo."
         },
         {
           "title": "Playing tips",
@@ -1287,7 +1287,7 @@
       "sections": [
         {
           "title": "About it",
-          "text": "This weapon breaks Mental’s hold over his troops. It also slowly drains their health."
+          "text": "This weapon breaks Mentalâ€™s hold over his troops. It also slowly drains their health."
         },
         {
           "title": "Playing tips",
@@ -1396,11 +1396,11 @@
       "sections": [
         {
           "title": "About it",
-          "text": "Sam’s old-fashioned sidearm. You can find a pistol in the Upper Temple of Herkat."
+          "text": "Samâ€™s old-fashioned sidearm. You can find a pistol in the Upper Temple of Herkat."
         },
         {
           "title": "Playing tips",
-          "text": "Press 2 to select it. Enable Alternate weapons in Extras for the optional Colts. Once you’ve got both, press 2 again to switch between one and two."
+          "text": "Press 2 to select it. Enable Enhanced weapons in Extras for the optional Colts. Once youâ€™ve got both, press 2 again to switch between one and two."
         }
       ],
       "sources": [
@@ -1460,7 +1460,7 @@
         },
         {
           "title": "Playing tips",
-          "text": "Hold fire to keep shooting while you’ve got ammo. Let go to stop."
+          "text": "Hold fire to keep shooting while youâ€™ve got ammo. Let go to stop."
         }
       ],
       "sources": [
@@ -1512,7 +1512,7 @@
       ],
       "image": "assets/netricsa/netricsa-08.png",
       "original_text_id": 92,
-      "summary": "Drops a heavy object onto an enemy’s position.",
+      "summary": "Drops a heavy object onto an enemyâ€™s position.",
       "sections": [
         {
           "title": "About it",
@@ -1571,7 +1571,7 @@
         },
         {
           "title": "Playing tips",
-          "text": "Deals heavy damage to regular enemies it can target. It doesn’t hurt players or either boss."
+          "text": "Deals heavy damage to regular enemies it can target. It doesnâ€™t hurt players or either boss."
         }
       ],
       "sources": [
@@ -1994,7 +1994,7 @@
       "sections": [
         {
           "title": "About it",
-          "text": "Don’t let its speed catch you out. It closes the gap quickly."
+          "text": "Donâ€™t let its speed catch you out. It closes the gap quickly."
         },
         {
           "title": "Playing tips",
@@ -2243,7 +2243,7 @@
         },
         {
           "title": "Playing tips",
-          "text": "Keep it at a distance. It attacks on contact; despite the original guide’s description, it doesn’t fire an eye bolt in the game."
+          "text": "Keep it at a distance. It attacks on contact; despite the original guideâ€™s description, it doesnâ€™t fire an eye bolt in the game."
         }
       ],
       "sources": [
@@ -2319,7 +2319,7 @@
       "sections": [
         {
           "title": "About it",
-          "text": "One of the first enemies you’ll meet. It floats along with its legs trailing behind it."
+          "text": "One of the first enemies youâ€™ll meet. It floats along with its legs trailing behind it."
         },
         {
           "title": "Playing tips",
@@ -2561,7 +2561,7 @@
         },
         {
           "title": "Playing tips",
-          "text": "Fight it in Caesar’s Palace, the final campaign level. Expect five-shot volleys and waves of reinforcements. The full campaign is still being playtested."
+          "text": "Fight it in Caesarâ€™s Palace, the final campaign level. Expect five-shot volleys and waves of reinforcements. The full campaign is still being playtested."
         }
       ],
       "sources": [
@@ -2921,7 +2921,7 @@
         },
         {
           "title": "Fighting and using things",
-          "text": "Left-click fires. E uses doors and switches. Number keys 1–0 and the mouse wheel select weapons; Q goes back to the last weapon. R reloads Colts with Alternate weapons enabled. Enable Automap in Extras to use M, and zoom with +/minus or the mouse wheel. F11 toggles fullscreen/windowed mode. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
+          "text": "Left-click fires. E uses doors and switches. Number keys 1–0 and the mouse wheel select weapons; Q goes back to the last weapon. R reloads Colts with Enhanced weapons enabled. Enable Automap in Extras to use M, and zoom with +/minus or the mouse wheel. F11 toggles fullscreen/windowed mode. Esc/P pauses or resumes. Tab/N opens the in-game NETRICSA guide when enabled."
         }
       ],
       "related": [

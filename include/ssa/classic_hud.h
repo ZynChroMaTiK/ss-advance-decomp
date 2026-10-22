@@ -47,6 +47,11 @@ unsigned ssa_classic_hud_alpha(unsigned x,unsigned y,unsigned ticks,unsigned bos
 uint32_t ssa_classic_hud_blend888(uint32_t foreground,uint32_t behind,unsigned alpha);
 uint16_t ssa_classic_hud_blend555(uint16_t foreground,uint16_t behind,unsigned alpha);
 int ssa_classic_hud_use(const SsaSpriteAssets *,uint8_t *canvas,size_t capacity);
-/* Retail HUD statistics replaced by Classic; weapons, cursor and notices stay. */
+enum {SSA_CLASSIC_CROSSHAIR_SIZE=24,SSA_CLASSIC_CROSSHAIR_PIXELS=24*24,
+      SSA_CLASSIC_CROSSHAIR_CENTER=12};
+/* Fixed19x19 supplied crosshair in24x24 storage, dot at(12,12). White without a living enemy; TFE health
+ * thresholds use green>=60%, yellow>=25%, otherwise red. OBJ palette only. */
+int ssa_classic_hud_crosshair(const SsaSpriteAssets *,int health,unsigned maximum,uint8_t pixels[SSA_CLASSIC_CROSSHAIR_PIXELS]);
+/* Retail HUD statistics/cursor replaced by Classic; weapons and notices stay. */
 int ssa_classic_hud_replaces(unsigned sprite_type);
 #endif

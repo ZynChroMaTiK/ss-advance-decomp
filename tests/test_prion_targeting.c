@@ -118,12 +118,12 @@ static void damage_balance(SsaNativeGame *g,unsigned slots[3])
     SsaEntity projectile={0},*player=&g->players[0].entity;
     unsigned policy,mask,kind;projectile.type=0x66;
     for(policy=0;policy<2;++policy)for(mask=0;mask<4;++mask)for(kind=0;kind<3;++kind){
-        unsigned expected=30;Melee m={&b->entity,&a->entity,30};
+        unsigned expected=kind==0 && mask==2?0:30;Melee m={&b->entity,&a->entity,30};
         reset(g,slots);a->entity.body.flags&=UINT16_C(0xfbff);
         if(mask&1)a->entity.body.flags|=0x400;
         if(mask&2)b->entity.body.flags|=0x400;
         g->combat.prion_balance=policy;
-        /* Conversion never scales melee, projectile or explosion damage. */
+        /* Healthy-to-converted melee is blocked; other damage is unscaled. */
         if(kind==0)CHECK(ssa_combat_scope_run(&g->combat,&g->combat_ops,melee_damage,&m)==0);
         else if(kind==1)CHECK(ssa_combat_runtime_damage(&g->combat,&b->entity,&projectile,&a->entity,30,&g->combat_ops)==0);
         else {
@@ -131,7 +131,18 @@ static void damage_balance(SsaNativeGame *g,unsigned slots[3])
              * full damage to visible ordinary enemies in this shared sector. */
             CHECK(ssa_combat_runtime_explode(&g->combat,&a->entity,&a->entity,NULL,0,30,0,&g->combat_ops)==0);
         }
-        CHECK(b->activation.health==5000-(int)expected);++damage_cases;
+        CHECK(b->activation.health==5000-(int)expected);
+        CHECK((b->entity.body.flags&1)==(expected?1:0));
+        CHECK(b->script.flags==b->entity.body.flags);++damage_cases;
+    }
+    /* Do not erase an earlier projectile/player hit, or suppress death. */
+    {Melee m={&b->entity,&a->entity,30};
+        reset(g,slots);b->entity.body.flags|=1;
+        CHECK(ssa_combat_scope_run(&g->combat,&g->combat_ops,melee_damage,&m)==0);
+        CHECK(b->activation.health==5000 && (b->entity.body.flags&1));
+        reset(g,slots);b->activation.health=10;
+        CHECK(ssa_combat_scope_run(&g->combat,&g->combat_ops,melee_damage,&m)==0);
+        CHECK(!b->activation.health && (b->entity.body.flags&1));
     }
     g->combat.prion_balance=1;
     /* Both directions of player combat retain their original damage. */
@@ -143,10 +154,10 @@ static void damage_balance(SsaNativeGame *g,unsigned slots[3])
         if(!kind)CHECK(ssa_combat_scope_run(&g->combat,&g->combat_ops,melee_damage,&m)==0);
         else if(kind==1)CHECK(ssa_combat_runtime_damage(&g->combat,player,&projectile,&a->entity,30,&g->combat_ops)==0);
         else CHECK(ssa_combat_runtime_explode(&g->combat,&a->entity,&a->entity,NULL,0,30,1,&g->combat_ops)==0);
-        CHECK(g->players[0].inventory.health==980); /* Original difficulty1: 2/3. */
+        CHECK(g->players[0].inventory.health==980 && (player->body.flags&1)); /* Original difficulty1: 2/3. */
         a->entity.body.flags&=UINT16_C(0xfffe);
         CHECK(ssa_combat_runtime_damage(&g->combat,&a->entity,&projectile,player,30,&g->combat_ops)==0);
-        CHECK(a->activation.health==4970);++damage_cases;
+        CHECK(a->activation.health==4970 && (a->entity.body.flags&1));++damage_cases;
     }
     g->damage.god_mode=1;g->players[0].inventory.health=1000;player->body.flags&=UINT16_C(0xfffe);
 }
@@ -251,9 +262,11 @@ int main(int argc,char **argv)
             place(g,slots[1],a->entity.body.x+a->entity.radius+target->entity.radius-65536,y);
             n->waypoint_x=(uint16_t)(target->entity.body.x/65536);n->waypoint_y=(uint16_t)(y/65536);g->enemies.crowd_slide=slide;
             melee_step(g,slots[0],mode!=5,slide);
-            if(mode==2 || mode==4 || mode==5)CHECK(target->activation.health==old);
+            if(mode==1 || mode==2 || mode==4 || mode==5){CHECK(target->activation.health==old);
+                CHECK(!(target->entity.body.flags&1));}
             else{if(target->activation.health!=old-(type==0xd0 || type==0xd6?40:20))fprintf(stderr,"slide%u mode%u health%d->%d moved%u flags%x/%x\n",slide,mode,old,target->activation.health,n->move_result,a->entity.body.flags,target->entity.body.flags);
-                CHECK(target->activation.health==old-(type==0xd0 || type==0xd6?40:20));++melee_hits;}
+                CHECK(target->activation.health==old-(type==0xd0 || type==0xd6?40:20));
+                CHECK(target->entity.body.flags&1);++melee_hits;}
             /* Previous contact must never damage a distant enemy on a later
              * update, including a navigation pass which makes no move. */
             old=target->activation.health;place(g,slots[1],x+1024*65536,y);

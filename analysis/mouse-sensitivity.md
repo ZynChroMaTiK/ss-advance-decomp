@@ -28,7 +28,7 @@ compact header is ASCII `SSA` followed by version18. New payload:
 - Bytes8/9: equal mouse slider values0..29 (percent=(value+1)*10). Existing
   two-axis v18 files migrate to the horizontal value in byte8; byte9 is still
   range-validated and both bytes are made equal on the next save.
-- Byte10: in-game NETRICSA0, alternate weapons1, bobbing2, surface decals3,
+- Byte10: in-game NETRICSA0, enhanced weapons1, bobbing2, surface decals3,
   water reflections4, mipmapping5, godrays6.
 - Byte11 and unused high bits are reserved and must be zero.
 

@@ -18,8 +18,9 @@ $report = [ordered]@{
     checker_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $binary).Hash.ToLowerInvariant()
     source_sha256 = [ordered]@{}
 }
-foreach ($source in @('src/native_game.c','include/ssa/native_game.h','platform/win32/game.c',
-    'tests/test_weapon_wheel_win32.c','CMakeLists.txt','scripts/test-weapon-wheel.ps1')) {
+foreach ($source in @('src/native_game.c','include/ssa/native_game.h','platform/win32/game.c','platform/win32/game_vsync.inc','platform/win32/game.manifest',
+    'include/ssa/weapon_order.h','src/weapon_select.c','include/ssa/weapon_select.h',
+    'src/weapon_runtime.c','include/ssa/weapon_runtime.h','tests/test_weapon_wheel_win32.c','CMakeLists.txt','scripts/test-weapon-wheel.ps1')) {
     $report.source_sha256[$source] = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot $source)).Hash.ToLowerInvariant()
 }
 if ($report.rom_sha1 -ne '4ff48d8c18b70a5184758f1917343ae85a70858e') { throw 'Original ROM hash differs.' }

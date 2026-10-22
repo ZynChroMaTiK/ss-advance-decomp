@@ -3,11 +3,11 @@
 For the current download, European ROM requirement, controls and setup, start with
 <a href="README.html">the player README</a>. Older counts and limitations below describe the
 work at the time; they are not a current release checklist.</p>
-<p><strong>Windows x64 prerelease: <a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.2">download v0.8.0-alpha.2</a>.</strong>
+<p><strong>Windows x64 prerelease: <a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-beta.1">download v0.8.0-beta.1</a>.</strong>
 Extract the ZIP to a writable folder, put your own ROM at <code>orig/SSA.gba</code>, and run
 <code>play-native.cmd</code>. The package includes the native executable; no build tools are
 needed. ROMs and SoundFont banks are not included. See the
-<a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/releases/v0.8.0-alpha.2.md">release notes</a> for features and known limitations.</p>
+<a href="https://github.com/ZynChroMaTiK/ss-advance-decomp/blob/main/releases/v0.8.0-beta.1.md">release notes</a> for features and known limitations.</p>
 <p><a href="https://zynchromatik.github.io/ss-advance-decomp/">Project website, features and roadmap</a>
 · <a href="https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d">3D level browser</a></p>
 <h2 id="build-from-a-fresh-checkout">Build from a fresh checkout</h2>
@@ -20,21 +20,19 @@ tools. Clone this repository, open PowerShell in its folder, and run:</p>
 <code>build/native-windows/Release/ssa_native_game.exe</code>; build it first.
 All twelve campaign levels are enabled, including Caesar's Palace.
 Campaign playthrough validation is manual at the user's request.</p>
-<p>Options starts with <strong>Settings</strong>: its first row is <strong>Display mode</strong>, choosing
-<strong>Fullscreen</strong> (borderless, default) or <strong>Windowed</strong>. Changes apply immediately
-and persist in <code>settings.dat</code>; windowed mode restores the previous window size
-and position. Then choose <strong>Software / GBA</strong> rendering,
-choose <strong>Original / SoundFont / MIDI</strong> music and
-adjust <strong>Music volume</strong> and <strong>Sounds volume</strong> with bars and percentages.
-The separate Music On/Off option is removed; set Music volume to0% to silence music.
-Options lists Settings, Extras, Language, Clear Data, then Credits at the bottom.
-<strong>Extras</strong> contains Jump, Third-person, In-game NETRICSA, Alternate weapons,
-Automap, HUD, Weapon bobbing, Surface decals and Water reflections. All nine
-items fit on one page. HUD defaults to Original; the added visual effects and
-automap default to Off. Press M for an enabled automap and F11 for display mode.
-R reloads alternate Colts rather than restarting the level.
-Jump and Alternate weapons default to Off; Third-person and In-game NETRICSA default to On. All persist with your settings.
-With Alternate weapons On, a new campaign starts with one Colt; picking up another unlocks and
+<p>Options lists Settings, Graphics, Extras, Clear Data, then Credits. Settings
+contains Language, Mouse sensitivity, Field of view, Music style, Music volume
+and Sounds volume. Graphics groups Display mode, Renderer, Aspect ratio and
+VSync; filtering/postprocessing; then scene details. Vulkan is preferred with
+Software fallback; GBA retains its original projection. VSync defaults On when
+available, and existing v22 choices are preserved. The Vulkan-only AA, sharp
+anisotropic filtering, world-texel AO and camera motion blur default Off.</p>
+<p>Extras contains HUD, Vertical aim, Third-person, Jump, Automap, In-game NETRICSA,
+Enhanced weapons and Weapon bobbing. HUD defaults to Original. Jump, Automap,
+Enhanced weapons and Weapon bobbing default Off; Third-person, in-game NETRICSA
+and vertical aim default On. Saved choices win. Press F11 for fullscreen/windowed
+mode, M for the enabled automap, and R to reload enhanced Colts.
+With Enhanced weapons On, a new campaign starts with one Colt; picking up another unlocks and
 equips dual Colts. Each Colt fires every 0.45 seconds; duals alternate hands at 0.225 seconds.
 A click fires two alternating shots even when released quickly; holding fire continues the sequence.
 Each holds six shots with unlimited reserve ammo. Reload starts when the next gun's turn
@@ -43,7 +41,7 @@ first, with the left starting 0.33 seconds later: 1.07 seconds per gun, 1.40 sec
 for the complete pair. Single Colts reload alone after six shots.
 Each reload plays a local mechanical click. Re-equipping a Colt refills its six-shot magazine;
 switching from single to dual refills only the left gun that is drawn.
-These timing and magazine rules apply only with Alternate weapons On.
+These timing and magazine rules apply only with Enhanced weapons On.
 That mode also gives the double shotgun a fixed 14-pellet pattern, with 5 base damage
 per pellet (70 for a full hit), horizontal spread up to ±6.84° and vertical rows
 at +2.58°, +0.86°, −0.86° and −2.58°. It follows free aim and GBA auto-aim.

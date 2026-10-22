@@ -250,7 +250,7 @@ static int build_oam_weapons(SsaNativeGame *g,SsaSpriteOam *out,SsaSpriteDispatc
     for(i=0;i<(left_visible?2u:1u);++i){SsaWeaponObject *hand=&objects[i?free_slot:slot];
         const SsaSpriteImage *im;unsigned bank=i?80:0;id=hand->previous_frame&0x3fff;
         if(id>=SSA_SPRITE_IMAGE_COUNT)return -1;
-        if(i && id==(objects[slot].previous_frame&0x3fff))continue;
+        if(i && id==(objects[slot].previous_frame&0x3fffu))continue;
         im=&g->sprite_assets.images[id];if(!im->tiles || im->tile_count>80)return -1;
         memcpy(g->cache.tiles+bank*64,im->tiles,(size_t)im->tile_count*64);
         cache[id].tile=(uint16_t)bank;cache[id].resident=3;

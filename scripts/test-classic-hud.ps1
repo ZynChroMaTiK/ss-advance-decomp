@@ -51,6 +51,18 @@ try {
         } finally {$capture.Dispose()}
     }
 } finally {$icon.Dispose()}
+# Verify the new crosshair against the supplied PNG, not the generated C table.
+$crosshair=[Drawing.Bitmap]::FromFile((Join-Path $root 'assets/classic-hud/crosshair-reference.png'))
+$capture=[Drawing.Bitmap]::FromFile((Join-Path $directory 'classic-crosshair-0.bmp'))
+try {
+    if($crosshair.Width -ne 19 -or $crosshair.Height -ne 19){throw 'Unexpected crosshair dimensions.'}
+    for($y=0;$y -lt 19;++$y){for($x=0;$x -lt 19;++$x){
+        $sourceColor=$crosshair.GetPixel($x,$y)
+        if(!$sourceColor.A){continue}
+        $actual=$capture.GetPixel(67+(111+$x)*3,(71+$y)*3).ToArgb() -band 0xffffff
+        if($actual -ne ($sourceColor.ToArgb() -band 0xffffff)){throw "Crosshair source pixel mismatch at$x,$y."}
+    }}
+} finally {$capture.Dispose();$crosshair.Dispose()}
 $report=[ordered]@{result='pass';core=$core;windows=$windows;physical_input_tested=$false;source_sha256=[ordered]@{}
     time_strike_reference_pixels=$referencePixels
     executable_sha256=(Get-FileHash -Algorithm SHA256 (Join-Path $root 'build/native-windows/Release/ssa_native_game.exe')).Hash.ToLowerInvariant()}

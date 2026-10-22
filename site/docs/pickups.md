@@ -22,7 +22,7 @@ Loose ammo and ammo-filling packs can store reserves before the matching weapon
 is owned; this does not grant the weapon. Duplicate owned weapon pickups add
 the same half-capacity ammunition as acquiring that weapon normally, without
 queueing acquisition or forcing a weapon switch. Ammo caps still apply; loose
-ammo remains on the ground if its pool is full. In both Alternate weapons modes,
+ammo remains on the ground if its pool is full. In both Enhanced weapons modes,
 duplicate weapons are now collected even with full or infinite ammo, including
 the equipped Colt. This emits the usual pickup sound/message and increments
 the collected-item count without queuing acquisition or restarting the weapon
@@ -39,7 +39,7 @@ Updated2026-10-20: the runtime enables `pc_pickups` unconditionally
 at initialization. `collect_owned_weapons` enables full-ammo duplicate collection
 in both modes; mode changes and campaign carry preserve this policy.
 Expanded integration covers untouched default startup,
-Alternate weapons On, and On-to-Off through native settings application.
+Enhanced weapons On, and On-to-Off through native settings application.
 Every path covers all eight finite-ammo weapons, unowned ammo, duplicate
 grants while equipped, caps, full-pool weapon collection in both modes,
 unchanged weapon animation, loose-ammo refusal, ammo packs and carry. See the

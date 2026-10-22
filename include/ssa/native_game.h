@@ -54,8 +54,10 @@ typedef struct SsaNativeGame {
     unsigned music_mode,music_serial;
     unsigned gba_view; /* Level camera/autoaim, with the original cursor projected onto its shot. */
     unsigned vertical_aim; /* Opt-in mouse pitch; GBA rendering always uses original autoaim. */
+    unsigned vulkan_features; /* AA/AF/AO flags, applied only by a hardware backend. */
     unsigned mipmaps; /* Original ROM mip assets; GBA always enables them. */
     unsigned fov_offset; /* Native horizontal FOV at3:2, in degrees above60. */
+    int crosshair_health,crosshair_y;unsigned crosshair_maximum; /* Read-only render snapshot. */
     unsigned hud_style,hud_suppressed; /* Suppressed only for clean frontend captures. */
     unsigned weapon_bobbing; /* PC first-person weapon/flash motion; default0. */
     int32_t weapon_bob_x,weapon_bob_y; /* Shared nonnegative8.8 offsets for both hands. */
@@ -171,6 +173,8 @@ int ssa_native_game_carry_capture(SsaNativeCarry *,const SsaNativeGame *);
 int ssa_native_game_automap(SsaNativeGame *,unsigned enabled);
 int ssa_native_game_hud_style(SsaNativeGame *,unsigned style);
 /* Read-only indexed Classic layer; also used by full-resolution composition. */
+/* Separate center-anchored cursor layer;1 visible,0 hidden,-1 invalid. */
+int ssa_native_game_classic_crosshair(const SsaNativeGame *,uint8_t pixels[SSA_CLASSIC_CROSSHAIR_PIXELS],int *top);
 int ssa_native_game_classic_hud(const SsaNativeGame *,uint8_t *,size_t);
 /* Same foreground plus an optional black-backing mask; both buffers240x160. */
 int ssa_native_game_classic_hud_layers(const SsaNativeGame *,uint8_t *,uint8_t *,size_t);

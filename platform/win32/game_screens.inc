@@ -131,6 +131,7 @@ static int begin_menu(App *a)
     else{a->scores.data=a->scores.defaults=a->menu->scores;a->scores.last_rank=18;}
     a->menu->settings=a->settings;
     a->menu->vulkan_available=a->vulkan!=NULL;
+    a->menu->vsync_available=a->vsync_available;
     {SsaWin32AudioStatus status=ssa_win32_audio_status(&a->audio);
         a->menu->soundfont_available=status.soundfont_available;a->menu->midi_available=status.midi_available;}
     a->menu_active=1;a->menu_last_page=65535;

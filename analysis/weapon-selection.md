@@ -1,5 +1,22 @@
 # Weapon acquisition and selection
 
+PC order update (2026-10-22): UMT is last, after cannon. Selection slots are
+Chainsaw, Colt (single/dual variants), Double Shotgun, Tommygun, Minigun,
+Rocket Launcher, Prion Gun, Time Strike, Cannon, UMT. Keys8/9/0 select the
+last three respectively. Mouse wheel, Classic HUD weapon/ammo rows, starting
+weapon choice, pickup priority and empty-ammo fallback share this order.
+`weapon_order.h` maps selection slots to unchanged internal ROM IDs; inventory,
+ammo, loadout contents, saves and Q's previous-weapon identity are unchanged.
+Native games enable `SsaWeaponRuntime.pc_weapon_order`, which uses the separate
+`ssa_weapon_update_pc`/`ssa_weapon_cycle_pc` adapters. The recovered APIs below
+retain original ROM ordering for differential validation.
+
+Validation: Windows build and weapon-wheel checker pass31,073 checks, including
+all1,023 nonempty ownership masks, key/wheel events and runtime UMT depletion.
+Classic HUD passes385,369 checks under ASan/UBSan with leak detection, and all11
+focused Windows regressions pass. Original selection still passes29,176 ROM
+comparisons,34 guards and18 pickup integration cases. No campaign playthrough.
+
 `src/weapon_select.c` implements the original pending-weapon and selection
 phase, using the native inventory structure and ROM-loaded ammunition limits.
 It contains no emulator or platform input dependency.

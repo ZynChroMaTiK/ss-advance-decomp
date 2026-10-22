@@ -1,5 +1,13 @@
 # Native weapon gameplay composition
 
+PC chainsaw update (2026-10-22): the native frontend enables `double_chainsaw`
+independently of Enhanced weapons. It doubles chainsaw base hitscan damage
+before the original difficulty calculation: Normal12/14, Easy18/21, Hard8 per
+bite. Reach remains192 units and cadence remains85 bites per584 GBA refreshes.
+Recovered controller calls and runtimes with this policy disabled are unchanged.
+The real-map runtime fixture checks original and doubled85-bite damage budgets
+on all three difficulties with GBA autoaim and free aim.
+
 `src/weapon_runtime.c` binds the recovered weapon controller, animation state,
 selection and switching to native map/entity aiming, hitscan geometry and combat.
 An actual shot from weapons 1 through 5 can now change a registered script

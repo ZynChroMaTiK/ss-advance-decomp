@@ -1,3 +1,4 @@
+#include "ssa/weapon_order.h"
 #include "ssa/classic_hud.h"
 #include "ssa/map_assets.h"
 #include <string.h>
@@ -6,19 +7,27 @@
 
 /* Correct the retained "Analising..." bitmap without changing the ROM asset.
  * The lowercase y uses the same three-pixel strokes, descender and shadow as
- * its g. Make room by shifting "sing..." two pixels within the 40px canvas. */
-static void analysing_bitmap(uint8_t *pixels)
+ * its g. Shift "sing..." two pixels within the 40px canvas, then replace s
+ * with a shaded z to spell "Analyzing...". */
+static void analyzing_bitmap(uint8_t *pixels)
 {
     static const uint8_t glyph[10][3]={
         {0,0,0},{0,0,0},{0x4c,0,0x4c},{0x4c,0,0x4c},
         {0x4c,0,0x4c},{0x4c,0,0x4c},{0x4d,0x4c,0x4c},
         {0x90,0x90,0x4c},{0x4c,0x4c,0x4d},{0x90,0x90,0x90}
     };
+    static const uint8_t z[8][3]={
+        {0,0,0},{0,0,0},{0x4d,0x4c,0x4c},{0x90,0x90,0x4c},
+        {0x90,0x4c,0x4d},{0x4c,0x90,0x90},{0x4c,0x4c,0x4d},
+        {0x90,0x90,0x90}
+    };
     unsigned y;
     for(y=0;y<16;++y){uint8_t *row=pixels+y*40;
         memmove(row+18,row+16,22);
         memset(row+14,0,4);
         if(y<10)memcpy(row+14,glyph[y],3);
+        memset(row+18,0,3);
+        if(y<8)memcpy(row+18,z[y],3);
     }
 }
 static int image_palette(const SsaSpriteAssets *a,unsigned id,int left,int top,uint8_t *out,const uint8_t *swap)
@@ -28,7 +37,7 @@ static int image_palette(const SsaSpriteAssets *a,unsigned id,int left,int top,u
     im=&a->images[id];
     if(!im->width || !im->height || (size_t)im->width*im->height>sizeof pixels ||
        ssa_sprite_image_indices(im,pixels,im->width,sizeof pixels)!=1)return -1;
-    if(id==79 && im->width==40 && im->height==16)analysing_bitmap(pixels);
+    if(id==79 && im->width==40 && im->height==16)analyzing_bitmap(pixels);
     for(y=0;y<im->height;++y)for(x=0;x<im->width;++x){int xx=left+(int)x,yy=top+(int)y;
         unsigned color=pixels[y*im->width+x];
         if(color && xx>=0 && xx<240 && yy>=0 && yy<160)
@@ -296,7 +305,8 @@ int ssa_classic_hud_weapon_wheel(const SsaSpriteAssets *a,const SsaInventory *in
     int left;const int top=103; /* Clear the armor row, even with ten entries. */
     if(!a || a->loaded!=1 || !inventory || !out || capacity<38400 ||
        selected<1 || selected>10 || white_palette(a,swap)!=1)return -1;
-    for(i=0;i<10;++i)if((inventory->weapons&(1u<<i)) && inventory->ammo[i])weapons[count++]=i+1;
+    for(i=0;i<10;++i){unsigned id=ssa_weapon_order_id(i);
+        if((inventory->weapons&(1u<<(id-1))) && inventory->ammo[id-1])weapons[count++]=id;}
     if(!count)return 1;
     left=(240-(int)(count*17-1))/2;
     for(i=0;i<count;++i){unsigned weapon=weapons[i],active=weapon==selected;
@@ -394,8 +404,34 @@ static int tommy_ammo(const SsaSpriteAssets *a,int left,int top,uint8_t *out)
         if(index && xx>=0 && xx<240 && yy>=0 && yy<160)out[yy*240+xx]=(uint8_t)index;}
     return 1;
 }
+#include "classic_crosshair.inc"
+int ssa_classic_hud_crosshair(const SsaSpriteAssets *a,int health,unsigned maximum,uint8_t pixels[SSA_CLASSIC_CROSSHAIR_PIXELS])
+{
+    unsigned r=31,g=31,b=31,i,n;uint8_t tones[2];
+    if(!a || a->loaded!=1 || !pixels)return -1;
+    if(health>0 && maximum){b=0;
+        if((uint64_t)(unsigned)health*100>=maximum*UINT64_C(60))r=0;
+        else if((uint64_t)(unsigned)health*100<maximum*UINT64_C(25))g=0;
+    }
+    /* Retail cursor images289/298 use OBJ206 (RGB5554652) for detail,
+     * against OBJ81 (739c). Reuse that shade exactly in the neutral cursor;
+     * health colors retain its original18/28 intensity ratio. */
+    for(n=0;n<2;++n){unsigned best=1,error=UINT32_MAX;
+        unsigned bright=a->palette[81]&31;
+        unsigned level=n && bright?((a->palette[206]&31)*31+bright/2)/bright:31;
+        if(r==31 && g==31 && b==31){tones[n]=(uint8_t)(n?206:81);continue;}
+        if(level>31)level=31;
+        for(i=1;i<256;++i){unsigned c=a->palette[i];
+            int dr=(int)(c&31)-(int)(r*level/31),dg=(int)((c>>5)&31)-(int)(g*level/31),db=(int)((c>>10)&31)-(int)(b*level/31);
+            unsigned d=(unsigned)(dr*dr+dg*dg+db*db);
+            if(d<error){error=d;best=i;}}
+        tones[n]=(uint8_t)best;}
+    for(i=0;i<SSA_CLASSIC_CROSSHAIR_PIXELS;++i)
+        pixels[i]=classic_crosshair_mask[i]?tones[classic_crosshair_mask[i]!=31]:0;
+    return 1;
+}
 int ssa_classic_hud_replaces(unsigned type)
-{return type==4 || (type>=5 && type<=17);}
+{return type==4 || (type>=5 && type<=18);}
 int ssa_classic_hud_draw(const SsaSpriteAssets *a,const SsaWeaponAnimations *anim,
     const SsaHudSpriteState *state,const SsaInventoryRules *rules,
     unsigned ammo_flash,unsigned health_flash,uint32_t high_score,uint8_t *out,uint8_t *background,size_t capacity)
@@ -437,7 +473,7 @@ int ssa_classic_hud_draw(const SsaSpriteAssets *a,const SsaWeaponAnimations *ani
     if(number(a,anim,seconds%60,2,0x2e,120,14,5,1,NULL,out)!=1)return -1;
     fill(out,117,15,1,1,color);fill(out,117,17,1,1,color);
     /* Bottom status: armor/health, selected weapon/ammo, eight finite ammo
-     * slots in the original weapon order3..10. Their pools are independent,
+     * slots in PC selection order, ending with UMT. Their pools are independent,
      * even when older artwork shares a bullet icon. */
     if(armor){plate(background,2,121,45,17);IMAGE(80,2,121);IMAGE(82,18,120);
         if(number(a,anim,armor,3,0x24,21,123,8,0,armor_colors,out)!=1)return -1;}
@@ -459,21 +495,22 @@ int ssa_classic_hud_draw(const SsaSpriteAssets *a,const SsaWeaponAnimations *ani
     else if(time_strike_icon(a,weapon_x,141,out)!=1)return -1;
     if(weapon>2){plate(background,weapon_x+18,141,29,17);IMAGE(82,weapon_x+18,140);
         if(number(a,anim,ammo,3,0x24,weapon_x+21,143,8,0,ammo_colors,out)!=1)return -1;}
-    for(i=0;i<8;++i){unsigned amount=state->ammo[i+2]>0?(unsigned)state->ammo[i+2]:0;
+    for(i=0;i<8;++i){unsigned slot=ssa_weapon_order_id(i+2)-1;
+        unsigned amount=state->ammo[slot]>0?(unsigned)state->ammo[slot]:0;
         int x=239-(int)ammo_count*16+(int)ammo_index*16;
         if(amount){
             ++ammo_index;
             plate(background,x,142,15,16);
-            if(i==1){if(tommy_ammo(a,x,142,out)!=1)return -1;}
-            else if(ammunition[i]){IMAGE(ammunition[i],x,142);}
-            else if(ammo_symbol(a,i==4?0:1,x,142,out)!=1)return -1;
+            if(slot==3){if(tommy_ammo(a,x,142,out)!=1)return -1;}
+            else if(ammunition[slot-2]){IMAGE(ammunition[slot-2],x,142);}
+            else if(ammo_symbol(a,slot==6?0:1,x,142,out)!=1)return -1;
             /* Highlight the selected ammo art inside the green frame. Draw
              * the meter afterward so its separate consumption cue remains. */
-            if(weapon==i+3){unsigned xx,yy;
+            if(weapon==slot+1){unsigned xx,yy;
                 for(yy=1;yy<14;++yy)for(xx=1;xx<14;++xx){unsigned at=(142+yy)*240+(unsigned)x+xx;
                     out[at]=flash_colors[out[at]];}}
-            if(ammo_meter(a,amount,rules->ammo_capacity[i+2],(ammo_flash&(1u<<(i+2)))?flash_colors:
-                rules->ammo_capacity[i+2] && amount*4<rules->ammo_capacity[i+2]?red_colors:NULL,x,142,out)!=1)return -1;
+            if(ammo_meter(a,amount,rules->ammo_capacity[slot],(ammo_flash&(1u<<(slot)))?flash_colors:
+                rules->ammo_capacity[slot] && amount*4<rules->ammo_capacity[slot]?red_colors:NULL,x,142,out)!=1)return -1;
         }
     }
     if(state->boss_present && state->boss_health>0){unsigned percent=(unsigned)state->boss_health/30;

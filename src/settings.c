@@ -19,9 +19,9 @@ int ssa_settings_equal(const SsaSettings *a,const SsaSettings *b){
 }
 int ssa_settings_encode(const SsaSettings *s,uint8_t *b,size_t n){uint32_t c;unsigned i;
     if(!ssa_settings_valid(s) || !b || n!=SSA_SETTINGS_BYTES)return -1;
-    /* v19 adds sprite shadows in byte10 bit7, preserving the compact
-     * v18 mouse layout and16-byte CRC record. Older records decode below. */
-    memcpy(b,"SSA",3);b[3]=19;
+    /* v22 adds byte11 bit4 for presentation VSync; the16-byte CRC layout
+     * and all prior fields remain intact. Older records inherit default VSync. */
+    memcpy(b,"SSA",3);b[3]=22;
     b[4]=(uint8_t)(s->music_style|(s->renderer<<2)|(s->display_mode<<4)|(s->hud_style<<5)|(s->aspect_ratio<<6));
     b[5]=(uint8_t)(s->music_volume|(s->automap_enabled<<7));
     b[6]=(uint8_t)(s->sound_volume|(s->jump_enabled<<7));
@@ -31,13 +31,13 @@ int ssa_settings_encode(const SsaSettings *s,uint8_t *b,size_t n){uint32_t c;uns
     b[8]=b[9]=(uint8_t)s->mouse_sensitivity;
     b[10]=(uint8_t)(s->ingame_netricsa|(s->alternate_weapons<<1)|(s->weapon_bobbing<<2)|
         (s->surface_decals<<3)|(s->water_reflections<<4)|(s->mipmaps<<5)|(s->godrays<<6)|(s->sprite_shadows<<7));
-    b[11]=0;
+    b[11]=(uint8_t)(s->vulkan_antialiasing|(s->vulkan_anisotropic<<1)|(s->vulkan_ambient_occlusion<<2)|(s->vulkan_motion_blur<<3)|(s->vsync<<4));
     c=crc(b);for(i=0;i<4;++i)b[12+i]=(uint8_t)(c>>(8*i));return 1;
 }
 int ssa_settings_decode(SsaSettings *s,const uint8_t *b,size_t n){uint32_t c=0;unsigned i,version;SsaSettings next;
     if(!s || !b || n!=SSA_SETTINGS_BYTES)return -1;
-    if(!memcmp(b,"SSA",3) && (b[3]==18 || b[3]==19)){
-        if((b[4]&128) || (b[3]==18 && (b[10]&128)) || b[11] || b[9]>SSA_MOUSE_RANGE)return -1;
+    if(!memcmp(b,"SSA",3) && (b[3]>=18 && b[3]<=22)){
+        if((b[4]&128) || (b[3]==18 && (b[10]&128)) || (b[11] & (b[3]>=22?224:b[3]>=21?240:b[3]>=20?248:255)) || b[9]>SSA_MOUSE_RANGE)return -1;
         for(i=0;i<4;++i)c|=(uint32_t)b[12+i]<<(8*i);
         if(c!=crc(b))return -1;
         next=(SsaSettings)SSA_SETTINGS_DEFAULT;
@@ -50,6 +50,10 @@ int ssa_settings_decode(SsaSettings *s,const uint8_t *b,size_t n){uint32_t c=0;u
         next.ingame_netricsa=b[10]&1;next.alternate_weapons=(b[10]>>1)&1;next.weapon_bobbing=(b[10]>>2)&1;
         next.surface_decals=(b[10]>>3)&1;next.water_reflections=(b[10]>>4)&1;
         next.mipmaps=(b[10]>>5)&1;next.godrays=(b[10]>>6)&1;next.sprite_shadows=b[3]>=19?b[10]>>7:0;
+        if(b[3]>=20){next.vulkan_antialiasing=b[11]&1;next.vulkan_anisotropic=(b[11]>>1)&1;
+            next.vulkan_ambient_occlusion=(b[11]>>2)&1;}
+        if(b[3]>=21)next.vulkan_motion_blur=(b[11]>>3)&1;
+        if(b[3]>=22)next.vsync=(b[11]>>4)&1;
         if(!ssa_settings_valid(&next))return -1;
         *s=next;return 1;
     }

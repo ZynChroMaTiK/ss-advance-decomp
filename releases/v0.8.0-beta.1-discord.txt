@@ -1,0 +1,23 @@
+**<:ar:716725008801595412> Serious Sam Advance ? Native PC Port <:ar:716725008801595412>**
+
+**v0.8.0 Beta 1 is out!** The original GBA game running natively on Windows, with all **12 campaign levels** and keyboard/mouse controls.
+
+**New in Beta 1**
+? Optional Vulkan antialiasing, sharp anisotropic filtering, ambient occlusion and motion blur
+? VSync enabled by default, plus rendering optimizations
+? A new Classic HUD crosshair that changes color with enemy health
+? Combat fixes, stronger chainsaw damage and reorganized Graphics settings
+
+Still includes optional jumping, third-person view, enhanced weapons with dual Colts, Classic HUD, in-game NETRICSA and an automap.
+
+It?s still a beta?bugs and unfinished features remain, and multiplayer isn?t playable yet. Feedback is welcome!
+
+Updating? Keep `save.dat`, `settings.dat` and `scores.dat`. Existing settings carry over.
+
+**Download Beta 1**
+https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-beta.1
+
+**Website, features & roadmap**
+https://zynchromatik.github.io/ss-advance-decomp/
+
+*Unofficial fan project. Requires your own European Serious Sam Advance ROM; no ROM is included.*

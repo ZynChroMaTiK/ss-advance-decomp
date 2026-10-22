@@ -1,6 +1,6 @@
-# PC alternate weapons
+# PC enhanced weapons
 
-Options > Extras > Alternate weapons enables dual Colts and the requested double-shotgun pellet pattern.
+Options > Extras > Enhanced weapons enables dual Colts and the requested double-shotgun pellet pattern.
 
 The separate Extras > Weapon bobbing toggle defaults Off and works with all
 ten weapons, including both Colt hands. It offsets weapon render copies and
@@ -41,7 +41,7 @@ default it Off.
 
 The native PC pickup rules also accept ammo without weapon ownership and owned
 weapons for their normal ammo grant, with ordinary capacity limits. This applies
-even when Alternate weapons is Off. The second-Colt acquisition has priority
+even when Enhanced weapons is Off. The second-Colt acquisition has priority
 over duplicate-ammo handling, so it still unlocks duals with a full ammo pool.
 It defaults to Off and persists in Settings v6 (16 bytes, byte9 bit7, existing
 CRC). Versions1..5 keep their previous preferences and migrate with it Off.
@@ -69,7 +69,7 @@ variant. Q remembers the previous weapon and variant. Both variants share the
 original Colt inventory bit, ammunition, HUD and NETRICSA record.
 
 The original Colt controller supplies damage, aim, sounds, ammunition and statistics.
-With Alternate weapons On, single and dual Colts use the requested0.45second
+With Enhanced weapons On, single and dual Colts use the requested0.45second
 interval per hand. Duals alternate right/left every0.225seconds. Each independently
 plays the original recoil animation at normal speed. The first shot is right-handed.
 The shared controller runs two phases per world tick for duals; an explicit firing
@@ -103,7 +103,7 @@ the right-hand deadline throughout: phase2 is right-only; phase3 includes overla
 and the left-only tail. Each hand refills and finishes its projection independently.
 Fractional deadlines carry across ticks; rendering frequency
 does not change the average rate. Each event is quantized to the next60Hz update.
-The policy is absent when Alternate weapons is Off, preserving original behavior.
+The policy is absent when Enhanced weapons is Off, preserving original behavior.
 Press R to reload partially used single or dual Colts manually. This enters the
 same recoil wait, right/left animation, sound and timing path as automatic reload;
 both selected hands refill without changing reserve ammo. Full magazines, other
@@ -134,7 +134,7 @@ Value-only campaign carry/restart snapshots include dual ownership, selection,
 the Extras policy, magazine counts and Q history. Carried counts are checked
 against the next gun if Colts remain selected; re-equipping them instead refills
 the guns being drawn. There are no new ROM writes or save-game files.
-Disabling alternate weapons restores single-Colt selection and original pickup
+Disabling enhanced weapons restores single-Colt selection and original pickup
 acceptance.
 
 The double shotgun uses14fixed pellets while this option is On: three at

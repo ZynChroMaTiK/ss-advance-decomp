@@ -11,5 +11,6 @@ report['sanitizers']='ASan/UBSan/leaks=1'
 inputs=sources+list((r/'include/ssa').glob('*.h'))+list((r/'src').glob('*.inc'))+[test,Path(__file__),r/'tests/native_build.py']
 inputs += [r/'assets/classic-hud/time-strike-reference.png', r/'scripts/import-classic-time-strike.ps1']
 inputs += [r/'assets/classic-hud/tommygun-ammo.png', r/'scripts/import-classic-tommy-ammo.ps1']
+inputs += [r/'assets/classic-hud/crosshair-reference.png', r/'scripts/import-classic-crosshair.ps1']
 report['source_sha256']={str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
 (r/'analysis/classic-hud-validation.json').write_text(json.dumps(report,indent=2)+'\n')

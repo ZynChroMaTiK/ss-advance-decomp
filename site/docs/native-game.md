@@ -110,7 +110,7 @@ a separate click-to-capture mode or prototype text overlay. Use WASD to move, mo
 aim vertically, left mouse to fire, Space to jump, H to toggle first/third-person view,
 E to use doors, and number keys 1–0 to select an owned weapon. Picked-up weapons
 also select through the original acquisition logic. Esc/P opens Pause and frees the cursor;
-R reloads Colts when Alternate weapons is enabled. Enter advances after the first
+R reloads Colts when Enhanced weapons is enabled. Enter advances after the first
 eleven exits and shows the ending after the twelfth exit; otherwise it restarts. Mouse aiming uses
 the original vertical auto-aim until the first vertical mouse input. Vertical
 input enables direct free aim, including full yaw precision, sector-plane hits

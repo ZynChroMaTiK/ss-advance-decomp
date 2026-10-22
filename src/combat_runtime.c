@@ -100,6 +100,17 @@ static int damage(void *context,SsaEntity *e,uint32_t amount) {
     g->source=old_source; g->source_owner=old_owner; g->local_flags=old_flags;
     synchronize(r); return result;
 }
+static int melee(DamageCall *c,SsaEntity *target,uint32_t amount) {
+    const SsaEntity *source=c->source;
+    /* Healthy enemies cannot melee a Prion-converted enemy. Keep ranged
+     * damage, player combat and converted attackers on the original path,
+     * including their normal pain/death reactions. */
+    if(source && target && source->type>=0xcd && source->type<=0xd8 &&
+       target->type>=0xcd && target->type<=0xd8 &&
+       !((source->body.flags|target->body.flags)&0x10) &&
+       !(source->body.flags&0x400) && (target->body.flags&0x400))return 0;
+    return damage(c,target,amount);
+}
 static int explode(DamageCall *c,SsaEntity *origin,uint32_t radius,uint32_t amount,int players) {
     SsaEntity *entities[100];
     SsaCombatRuntime *r=c->runtime;
@@ -157,7 +168,7 @@ static int cd_event(void *context,const SsaEnemyCd *cd,SsaEnemyCdEvent kind,SsaE
     CdCall *c=context;
     SsaEntity *source=cd->activation->entity;
     DamageCall hit={c->runtime,c->ops->combat,source,NULL};
-    if (kind==SSA_ENEMY_CD_CONTACT_DAMAGE) return damage(&hit,other,(uint32_t)a);
+    if (kind==SSA_ENEMY_CD_CONTACT_DAMAGE) return melee(&hit,other,(uint32_t)a);
     if (kind==SSA_ENEMY_CD_EXPLOSION) return explode(&hit,source,(uint32_t)a,(uint32_t)b,d);
     return c->ops->presentation(c->ops->context,cd,kind,other,a,b,d);
 }
@@ -205,7 +216,9 @@ int ssa_combat_scope_damage(SsaCombatScope *s,SsaEntity *e,const SsaEntity *sour
     c=(DamageCall){s->runtime,s->ops,source,owner};return damage(&c,e,amount);
 }
 int ssa_combat_scope_melee(SsaCombatScope *s,SsaEntity *e,const SsaEntity *source,uint32_t amount) {
-    return ssa_combat_scope_damage(s,e,source,NULL,amount);
+    DamageCall c;
+    if(!scope_ready(s))return -1;
+    c=(DamageCall){s->runtime,s->ops,source,NULL};return melee(&c,e,amount);
 }
 int ssa_combat_scope_explode(SsaCombatScope *s,SsaEntity *e,const SsaEntity *source,
     const SsaEntity *owner,uint32_t radius,uint32_t amount,int players) {

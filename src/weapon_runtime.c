@@ -269,7 +269,8 @@ static int event(void *context,const SsaWeaponController *s,SsaWeaponEvent *e) {
                          e->kind==SSA_WEAPON_EFFECT_INSERT))
         return ssa_projectile_runtime_weapon(r->projectiles,c->scope,s->source,e);
     if(e->kind==SSA_WEAPON_HITSCAN) {
-        SsaWeaponHit hit;int16_t health;
+        SsaWeaponHit hit;int16_t health;uint32_t amount=(uint32_t)e->args[6];
+        if(s->control->current==1 && r->double_chainsaw)amount*=2;
         e->args[4]=attack_range(r,s->control->current,e->args[4]);
         if(r->unlimited_ranged && s->control->current!=1){
             int free_aim=r->player->runtime->free_aim;
@@ -293,7 +294,7 @@ static int event(void *context,const SsaWeaponController *s,SsaWeaponEvent *e) {
             if(!health) return 0;
         }
         if(c->ops->impact(c->ops->context,r,&hit)<0) return -1;
-        return hit.target ? ssa_combat_scope_damage(c->scope,hit.target,s->source,NULL,(uint32_t)e->args[6]) : 0;
+        return hit.target ? ssa_combat_scope_damage(c->scope,hit.target,s->source,NULL,amount) : 0;
     }
     if(e->kind==SSA_WEAPON_EXPLOSION)
         return ssa_combat_scope_explode(c->scope,s->source,s->source,NULL,
@@ -375,7 +376,7 @@ static int run(void *context,SsaCombatScope *scope) {
                 }
             }
         }
-        if(ssa_weapon_update(s->inventory,w,r->inventory_rules,c->game->players)<0)goto done;
+        if((r->pc_weapon_order?ssa_weapon_update_pc:ssa_weapon_update)(s->inventory,w,r->inventory_rules,c->game->players)<0)goto done;
         if(r->buffer_fire && button_near){
             r->fire_pending_weapon=r->time_strike_empty_pending=r->colt_pair_pending=0;
             s->held&=(uint16_t)~1u;s->pressed&=(uint16_t)~1u;
@@ -467,10 +468,10 @@ static int step_once(SsaWeaponRuntime *r,SsaWeaponGame *game,uint16_t held,
     uint16_t pressed,const SsaWeaponRuntimeOps *ops) {
     WeaponCall c={r,game,ops,NULL,0,0};int result;
     if(!idle(r) || r->automatic_period>255 || r->automatic_gba_clock>1 || r->double_minigun>1 ||
-       r->clocked_chainsaw>SSA_CHAINSAW_GBA_CADENCE || r->chainsaw_range>32767 ||
+       r->clocked_chainsaw>SSA_CHAINSAW_GBA_CADENCE || r->double_chainsaw>1 || r->chainsaw_range>32767 ||
        (r->clocked_chainsaw==SSA_CHAINSAW_GBA_CADENCE && !r->automatic_gba_clock) ||
        (r->chainsaw_range && !r->rules->range[0]) || r->buffer_fire>1 || r->fire_pending_weapon>10 ||
-       r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 || r->fire_inhibited>1 || r->discard_fire>1 || r->double_colt>1 || r->switch_blocked>1 || r->colt_pair>1 || r->alternate_shotgun>1 || r->shotgun_animating>1 || r->shotgun_elapsed>105 ||
+       r->pc_weapon_order>1 || r->finish_fire_before_switch>1 || r->switch_wait>1 || r->time_strike_requires_target>1 || r->time_strike_empty_pending>1 || r->fire_inhibited>1 || r->discard_fire>1 || r->double_colt>1 || r->switch_blocked>1 || r->colt_pair>1 || r->alternate_shotgun>1 || r->shotgun_animating>1 || r->shotgun_elapsed>105 ||
        !game || game->players!=r->combat->player_count || !ops ||
        !ops->combat || !ops->combat->event || !ops->event || !ops->impact ||
        r->player->weapon.current<1 || r->player->weapon.current>10 ||

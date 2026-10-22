@@ -1,7 +1,13 @@
 /* Actual frontend input/save/audio adapter with a hidden window. */
+#include "../platform/win32/audio_win32.h"
+static unsigned frontend_audio_applies;
+static int tracked_audio_settings(SsaWin32Audio *a,const SsaSettings *settings)
+{++frontend_audio_applies;return ssa_win32_audio_settings(a,settings);}
+#define ssa_win32_audio_settings tracked_audio_settings
 #define wmain embedded_settings_game_entry
 #include "../platform/win32/game.c"
 #undef wmain
+#undef ssa_win32_audio_settings
 static unsigned checks;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"Windows settings line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
 static void key(App *a,unsigned k){
@@ -213,7 +219,7 @@ int wmain(int argc,wchar_t **argv){
         CHECK(GetClientRect(a->window,&client) && client.right==full.right-full.left && client.bottom==full.bottom-full.top);
         /* Real mouse routing on the top Settings item. */
         CHECK(ssa_ui_viewport(client.right,client.bottom,240,160,&left,&top,&width,&height));
-        point=MAKELPARAM(left+120*width/240,top+30*height/160);
+        point=MAKELPARAM(left+120*width/240,top+22*height/160);
         SendMessageW(a->window,WM_MOUSEMOVE,0,point);SendMessageW(a->window,WM_LBUTTONDOWN,MK_LBUTTON,point);
         SendMessageW(a->window,WM_LBUTTONUP,0,point);
         CHECK(ssa_menu_step(a->menu,a->menu_pressed)==1);a->menu_pressed=0;settings_change(a);
@@ -244,6 +250,7 @@ int wmain(int argc,wchar_t **argv){
             a->original_renderer=0;a->menu_active=1;a->net_active=a->screen_active=a->story_active=0;
         }
     }
+    CHECK(!frontend_audio_applies); /* Display changes do not reapply audio. */
     key(a,VK_DOWN);CHECK(a->menu->selection==1);
     key(a,VK_RIGHT);CHECK(a->original_renderer && a->settings.renderer==SSA_RENDER_GBA);
     CHECK(a->game->gba_view);
@@ -374,6 +381,7 @@ int wmain(int argc,wchar_t **argv){
     CHECK(!(a->game->players[0].motion.movement.flags&8) && !a->failed);
     a->menu_active=1;key(a,VK_LEFT);CHECK(a->settings.automap_enabled);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.automap_enabled);
+    CHECK(!frontend_audio_applies); /* Graphics/Extras never touch the music bus. */
     key(a,VK_ESCAPE);key(a,VK_UP);key(a,VK_UP);key(a,VK_RETURN);CHECK(a->menu->page==SSA_MENU_SETTINGS);
     key(a,VK_RIGHT);CHECK(a->menu->language==1);
     key(a,VK_LEFT);CHECK(a->menu->language==0);
@@ -396,10 +404,12 @@ int wmain(int argc,wchar_t **argv){
     key(a,VK_DOWN);CHECK(a->menu->selection==4);
     EnterCriticalSection(&a->audio.mutex);before=a->audio.mixer.players[0];starts=(unsigned)a->audio.mixer.starts;
     key(a,VK_RIGHT);CHECK(a->settings.music_style==1 && a->audio.mixer.synth.context);
+    CHECK(frontend_audio_applies==1);
     CHECK(a->audio.mixer.starts==starts && !memcmp(&before,&a->audio.mixer.players[0],sizeof before));
     LeaveCriticalSection(&a->audio.mutex);
     key(a,VK_DOWN);key(a,VK_LEFT);CHECK(a->settings.music_volume==75);
     key(a,VK_DOWN);key(a,VK_LEFT);key(a,VK_LEFT);CHECK(a->settings.sound_volume==90);
+    CHECK(frontend_audio_applies==4);
     CHECK(ssa_win32_settings_read(&loaded,a->settings_path) && loaded.music_style==1 && loaded.music_volume==75 && loaded.sound_volume==90);
     EnterCriticalSection(&a->audio.mutex);frames=a->audio.mixer.frames;
     CHECK(a->audio.mixer.music_volume==75 && a->audio.mixer.sound_volume==90);LeaveCriticalSection(&a->audio.mutex);

@@ -1,4 +1,15 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weapon 7 conversion and periodic drain — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="projectile-conversion.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="weapon-7-conversion-and-periodic-drain">Weapon 7 conversion and periodic drain</h1>
+<h2 id="one-way-prion-melee-2026-10-22">One-way Prion melee (2026-10-22)</h2>
+<p>Normal enemies cannot melee Prion-infected enemies. Prion-infected attackers
+can still melee normal enemies and other infected enemies. The contact query
+rejects normal attackers, and the combat melee bridge also rejects a normal
+attacker's direct melee event against an infected enemy. Both CD contact and
+other enemy controllers share the combat gate.</p>
+<p>Accepted melee hits use original damage, flinch/hit latches and death reactions;
+the earlier no-flinch change is reverted. Enemy targeting and ranged attacks
+are unchanged, as is combat against the player. The targeting fixture checks
+all conversion combinations, both collision paths, normal ranged retaliation,
+existing hit latches and lethal melee.</p>
 <h2 id="healthy-enemy-targeting-2026-10-21">Healthy enemy targeting (2026-10-21)</h2>
 <p>The existing frontend <code>nearest_converted</code> policy now also selects targets for
 healthy enemies, including both bosses. They compare living players with living
@@ -201,9 +212,10 @@ retaining the original 600-tick target preference.</p>
 <p>The controller temporarily sees the chosen actor as its target for facing,
 visibility, distance checks, reactions and attacks. The real player fields are
 restored after the call, including errors. Converted ranged attacks launch
-toward the selected actor. Enemy melee contact is hostile whenever either body
-has conversion flag400, so converted enemies can both deal and receive melee
-damage, including contact with an enemy other than their selected target.
+toward the selected actor. Enemy melee contact is hostile only when the attacker
+has conversion flag400. Converted enemies can damage normal or converted
+enemies, including contacts other than their selected target; normal enemies
+cannot melee converted enemies.
 The existing combat path applies20 damage, or40 from D0/D6. Each walking update
 captures its actual enemy collision before a crowd sidestep can replace it;
 successful sliding therefore no longer suppresses melee. Contact is reset for
@@ -219,8 +231,9 @@ The healthy-enemy extension above supersedes the earlier player-only policy.
 The existing behavior-clock
 fixture explicitly disables nearest selection to isolate its timing assertions.</p>
 <p><code>test-prion-targeting</code> performs actual Prion impacts on all ten eligible enemy
-types. The expanded melee fixture covers both directions and two converted
-enemies with crowd sliding on/off, ordinary nonhostile pairs, dead targets,
+types. The expanded melee fixture checks allowed converted-to-normal hits,
+blocked normal-to-converted hits and two converted enemies with crowd sliding
+on/off, ordinary nonhostile pairs, dead targets,
 disabled policy, and stale contact after both skipped movement and free walking.
 It also covers 80 target selections, prompt retargeting, nearest-player selection,
 dead/corpse rejection, vertical distance, six ranged attack types, a boss target

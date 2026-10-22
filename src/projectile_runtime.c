@@ -477,8 +477,15 @@ static int step_scope(void *context,SsaCombatScope *scope) {
             if(result>=0) result=result?0:1;
         }
     } else if(p->entity->type==0x64 || p->entity->type==0x68 || p->entity->type==0x6a || p->entity->type==0xe3) {
+        unsigned old_state=p->state;
         SsaProjectileExtendedOps extended={ops,create_child,finish_child,relocate,c};
         result=ssa_projectile_extended_step(&controller,&c->controller,r->math,c->motion.ticks,&extended);
+        /* Sound the falling object's first floor contact, not its later
+         * explosion. This needs no spare particle slot and cannot repeat on
+         * redraws or catch-up ticks once the landing state has committed. */
+        if(result>=0 && p->entity->type==0xe3 && !old_state && p->state==1 &&
+           r->time_strike_impact_sound && r->particle_sound &&
+           r->particle_sound(r->particle_context,r,p,r->time_strike_impact_sound)<0)result=-1;
     } else result=ssa_projectile_controller_step(&controller,&c->controller,&ops);
     sync_out(r,c->slot);
     d->credit_player=old_credit;d->shot_hit_count=old_hits;d->credited_kills=old_kills;

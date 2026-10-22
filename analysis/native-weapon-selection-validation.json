@@ -10,7 +10,7 @@
   "pickup_integration_cases": 18,
   "scope": "whole11588,11604,12038,12050 with actual1FFC/114D4/114B8 dependencies; no hooks; full player bytes; cycling ownership mask0x3FF and at least one eligible weapon",
   "total_rom_comparisons": 29176,
-  "source_sha256": "240b1f65c567febda2356ad120e2b114138b0339020255d05f7556b6a4e3f085",
+  "source_sha256": "c0896d1f29dd997deb69b9118d27e5e29c502678d49e52ccbb5e50fb915445e0",
   "compiler": "GCC C11 -O2 strict warnings, UndefinedBehaviorSanitizer",
   "result": "pass"
 }

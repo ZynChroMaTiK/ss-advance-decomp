@@ -56,7 +56,7 @@ static void cadence(const uint8_t *rom,unsigned weapon,unsigned fps){
     unsigned total=weapon==1?86:85,delay=weapon==1?7:8;
     CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1 && g->weapon.automatic_period==7 && g->weapon.automatic_gba_clock==1);
     CHECK(g->weapon.double_minigun==0 && g->weapon.clocked_chainsaw==SSA_CHAINSAW_GBA_CADENCE);
-    CHECK(g->weapon.chainsaw_range==192 && g->weapon_rules.range[0]==96);
+    CHECK(g->weapon.chainsaw_range==192 && g->weapon_rules.range[0]==96 && g->weapon.double_chainsaw==1);
     ssa_pc_input_runtime_focus(&g->input_runtime,1);ssa_pc_input_runtime_enable(&g->input_runtime,1);
     CHECK(ssa_native_game_tick(g)==1);ready(g,weapon);
     native_event_sink=g->weapon_ops.event;g->weapon_ops.event=native_event;native_flashes=0;

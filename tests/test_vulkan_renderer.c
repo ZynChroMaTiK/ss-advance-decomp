@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <math.h>
 #include "godray_fixture.h"
 static unsigned checks,draws,sprite_cases;static unsigned long long matched,pixels;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"Vulkan check line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
@@ -186,11 +187,233 @@ static void sprite_order(SsaPcRenderer *r,SsaNativeGame *g)
     g->spawn.pool.active_count=count;g->pc_camera.heading=(uint16_t)heading;g->render_pitch=pitch;g->fov_offset=fov;
     free(world);free(a_image);free(b_image);
 }
+static void post_checks(SsaVulkanRenderer *v)
+{
+    SsaPcRenderer r={0};const SsaPcHardware *hw=ssa_vulkan_backend(v);unsigned changed=0;
+    CHECK(hw->postprocess && ssa_pc_renderer_resize(&r,63,47)==1);
+    r.effect_capacity=63*47;r.effect_samples=calloc(r.effect_capacity,sizeof(*r.effect_samples));CHECK(r.effect_samples);
+    for(unsigned flags=1;flags<8;++flags){r.hardware_features=flags;
+        for(unsigned i=0;i<63*47;++i){r.pixels[i]=0xabcdef;r.effect_samples[i].z=100;}
+        CHECK(hw->postprocess(hw->context,&r,48)==1);
+        for(unsigned i=0;i<63*47;++i)CHECK(r.pixels[i]==0xabcdef);
+    }
+    r.hardware_features=SSA_PC_AA;
+    for(unsigned y=0;y<47;++y)for(unsigned x=0;x<63;++x)r.pixels[y*63+x]=x>y?0xffffff:0;
+    CHECK(hw->postprocess(hw->context,&r,48)==1);
+    for(unsigned i=0;i<63*47;++i)changed+=r.pixels[i]!=0 && r.pixels[i]!=0xffffff;
+    CHECK(changed>20);
+    /* The direct AA path needs no depth allocation and must match AA after
+     * neutral AO, including borders, odd extents, resize and buffer reuse. */
+    for(unsigned pass=0;pass<3;++pass){
+        unsigned w=pass==0?63:pass==1?1:127,h=pass==0?47:pass==1?1:65;
+        size_t n=(size_t)w*h;uint32_t *direct=malloc(n*sizeof(*direct));CHECK(direct);
+        CHECK(ssa_pc_renderer_resize(&r,w,h)==1);
+        free(r.effect_samples);r.effect_samples=NULL;r.effect_capacity=0;
+        for(size_t i=0;i<n;++i)r.pixels[i]=(uint32_t)(i*2654435761u)&0xffffff;
+        r.hardware_features=SSA_PC_AA;CHECK(hw->postprocess(hw->context,&r,48)==1);
+        memcpy(direct,r.pixels,n*sizeof(*direct));
+        r.effect_samples=calloc(n,sizeof(*r.effect_samples));r.effect_capacity=n;CHECK(r.effect_samples);
+        for(size_t i=0;i<n;++i){r.pixels[i]=(uint32_t)(i*2654435761u)&0xffffff;r.effect_samples[i].z=FLT_MAX;}
+        r.hardware_features=SSA_PC_AA|SSA_PC_AO;CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(!memcmp(direct,r.pixels,n*sizeof(*direct)));
+        for(size_t i=0;i<n;++i)r.pixels[i]=(uint32_t)(i*2654435761u)&0xffffff;
+        r.hardware_features=SSA_PC_AA;CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(!memcmp(direct,r.pixels,n*sizeof(*direct)));free(direct);
+    }
+    CHECK(ssa_pc_renderer_resize(&r,63,47)==1);
+    r.hardware_features=SSA_PC_AO;changed=0;
+    for(unsigned y=0;y<47;++y)for(unsigned x=0;x<63;++x){r.pixels[y*63+x]=0xc0c0c0;r.effect_samples[y*63+x].z=x<31?80.0f:100.0f;}
+    CHECK(hw->postprocess(hw->context,&r,48)==1);
+    for(unsigned i=0;i<63*47;++i){CHECK(r.pixels[i]<=0xc0c0c0 && r.pixels[i]>=0x7c7c7c);changed+=r.pixels[i]!=0xc0c0c0;}
+    CHECK(changed>20 && r.pixels[23*63+10]==0xc0c0c0);
+    for(unsigned i=0;i<63*47;++i){r.pixels[i]=0x203040;r.effect_samples[i].z=FLT_MAX;}
+    CHECK(hw->postprocess(hw->context,&r,48)==1);
+    for(unsigned i=0;i<63*47;++i)CHECK(r.pixels[i]==0x203040);
+    CHECK(ssa_pc_renderer_resize(&r,1,1)==1);r.hardware_features=SSA_PC_AA|SSA_PC_AO;r.pixels[0]=0x987654;r.effect_samples[0].z=100;
+    CHECK(hw->postprocess(hw->context,&r,1)==1 && r.pixels[0]==0x987654);
+    ssa_pc_renderer_free(&r);
+}
+static void motion_checks(SsaVulkanRenderer *v)
+{
+    const SsaPcHardware *hw=ssa_vulkan_backend(v);SsaPcRenderer r={0};uint32_t original[63*47],baseline[63*47];
+    CHECK(ssa_pc_renderer_resize(&r,63,47)==1);r.effect_capacity=63*47;
+    r.effect_samples=calloc(r.effect_capacity,sizeof(*r.effect_samples));CHECK(r.effect_samples);
+    r.motion.axes[0]=r.motion.axes[4]=r.motion.axes[8]=1;
+    for(unsigned y=0;y<47;++y)for(unsigned x=0;x<63;++x){unsigned i=y*63+x;
+        original[i]=(x/2)%2?0xffffff:0;r.effect_samples[i].z=100;}
+    for(unsigned effects=0;effects<8;++effects){unsigned changed=0;
+        unsigned base_passes=((effects&SSA_PC_AA)!=0)+((effects&SSA_PC_AO)!=0),before;
+        r.hardware_features=effects;r.motion.valid=0;memcpy(r.pixels,original,sizeof original);
+        CHECK(hw->postprocess(hw->context,&r,48)==1);memcpy(baseline,r.pixels,sizeof baseline);
+        r.hardware_features=effects|SSA_PC_MOTION;r.motion.valid=1;r.motion.origin[0]=0;++r.motion.epoch;
+        before=ssa_vulkan_timing(v).post_passes;
+        memcpy(r.pixels,original,sizeof original);CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(ssa_vulkan_timing(v).post_passes-before==base_passes);
+        CHECK(!memcmp(baseline,r.pixels,sizeof baseline)); /* First frame. */
+        before=ssa_vulkan_timing(v).post_passes;
+        r.motion.origin[0]=16;memcpy(r.pixels,original,sizeof original);
+        CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(ssa_vulkan_timing(v).post_passes-before==base_passes+1);
+        for(unsigned i=0;i<63*47;++i)changed+=r.pixels[i]!=baseline[i];CHECK(changed>0);
+        before=ssa_vulkan_timing(v).post_passes;
+        memcpy(r.pixels,original,sizeof original);CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(!memcmp(baseline,r.pixels,sizeof baseline)); /* Stationary. */
+        CHECK(ssa_vulkan_timing(v).post_passes-before==base_passes);
+        for(unsigned cut=0;cut<5;++cut){r.motion.origin[0]+=16;before=ssa_vulkan_timing(v).post_passes;
+            if(cut==0)r.motion.valid=0;else if(cut==1){r.motion.valid=1;++r.motion.scene;}
+            else if(cut==2)++r.motion.cut;else if(cut==3)++r.motion.epoch;else r.motion.origin[0]+=200;
+            memcpy(r.pixels,original,sizeof original);CHECK(hw->postprocess(hw->context,&r,48)==1);
+            CHECK(!memcmp(baseline,r.pixels,sizeof baseline));
+            CHECK(ssa_vulkan_timing(v).post_passes-before==base_passes);}
+        /* A skipped cut must become the next frame's history. */
+        before=ssa_vulkan_timing(v).post_passes;r.motion.origin[0]+=16;
+        memcpy(r.pixels,original,sizeof original);CHECK(hw->postprocess(hw->context,&r,48)==1);
+        CHECK(ssa_vulkan_timing(v).post_passes-before==base_passes+1);
+        CHECK(memcmp(baseline,r.pixels,sizeof baseline));
+    }
+    /* No metadata allocation/upload is required by an identity motion frame. */
+    free(r.effect_samples);r.effect_samples=NULL;r.effect_capacity=0;
+    r.hardware_features=SSA_PC_MOTION;++r.motion.epoch;
+    unsigned before=ssa_vulkan_timing(v).post_passes;
+    memcpy(r.pixels,original,sizeof original);CHECK(hw->postprocess(hw->context,&r,48)==1);
+    CHECK(!memcmp(original,r.pixels,sizeof original));
+    CHECK(hw->postprocess(hw->context,&r,48)==1 && ssa_vulkan_timing(v).post_passes==before);
+    ssa_pc_renderer_free(&r);
+}
+static void retained_ao_checks(SsaVulkanRenderer *v)
+{
+    const SsaPcHardware *hw=ssa_vulkan_backend(v);SsaPcRenderer main={0},reflection={0};
+    const SsaPcSample *samples;uint32_t palette[256]={0};SsaPcMaterial material={0};
+    palette[1]=0xc0c0c0;palette[2]=0x203040;
+    CHECK(ssa_pc_renderer_resize(&reflection,17,13)==1);
+    for(unsigned pass=0;pass<3;++pass){unsigned width=pass==1?129:63,height=pass==1?71:47;
+        size_t n=(size_t)width*height;uint32_t *input=malloc(n*4),*output=malloc(n*4);SsaPcSample *host=malloc(n*sizeof(*host));
+        CHECK(input && output && host && ssa_pc_renderer_resize(&main,width,height)==1);
+        main.hardware_features=SSA_PC_AO|(pass==1?SSA_PC_AA:0);
+        memset(main.pixels,0,n*4);material.color=1;material.actor=0;
+        CHECK(hw->begin(hw->context,&main,palette,48,0,height)==1);
+        quad(hw,-200,-200,200,200,100,&material);quad(hw,-200,-200,0,200,80,&material);
+        material.actor=1;material.color=2;quad(hw,5,-5,10,5,70,&material);
+        CHECK(hw->end(hw->context,&main,&samples)==1);
+        memcpy(input,main.pixels,n*4);memcpy(host,samples,n*sizeof(*host));
+        for(size_t i=0;i<n;++i)if((unsigned)host[i].code&(1024|2048))host[i].z=FLT_MAX;
+        /* Overwrite and resize the shared GPU attachments before main AO. */
+        reflection.hardware_features=SSA_PC_AF;material.actor=0;
+        CHECK(hw->begin(hw->context,&reflection,palette,8,0,13)==1);
+        quad(hw,-20,-20,20,20,1,&material);CHECK(hw->end(hw->context,&reflection,&samples)==1);
+        CHECK(!main.effect_samples && hw->postprocess(hw->context,&main,48)==1);
+        memcpy(output,main.pixels,n*4);
+        /* Compare retained raw GPU metadata with the former masked host path. */
+        memcpy(main.pixels,input,n*4);main.effect_samples=host;main.effect_capacity=n;
+        CHECK(hw->postprocess(hw->context,&main,48)==1 && !memcmp(output,main.pixels,n*4));
+        free(main.effect_samples);main.effect_samples=NULL;main.effect_capacity=0;free(input);free(output);
+    }
+    ssa_pc_renderer_free(&main);ssa_pc_renderer_free(&reflection);
+}
+static void texel_ao_checks(SsaVulkanRenderer *v)
+{
+    const SsaPcHardware *hw=ssa_vulkan_backend(v);SsaPcRenderer r={0};unsigned changed=0;
+    uint32_t wall[128*64];CHECK(ssa_pc_renderer_resize(&r,128,64)==1);
+    r.effect_capacity=128*64;r.effect_samples=calloc(r.effect_capacity,sizeof(*r.effect_samples));CHECK(r.effect_samples);
+    r.hardware_features=SSA_PC_AO;
+    /* Eight screen pixels per base texel. Flat-plane UVs use world units;
+     * wall UVs already use texels. Both must produce the same hard grid. */
+    for(unsigned plane=0;plane<2;++plane){
+        for(unsigned y=0;y<64;++y)for(unsigned x=0;x<128;++x){size_t at=y*128+x;
+            float scale=plane?2.0f:1.0f;r.pixels[at]=0xc0c0c0;
+            r.effect_samples[at]=(SsaPcSample){(x+0.5f)*scale/8.0f,(y+0.5f)*scale/8.0f,x<32?80.0f:100.0f,plane?256.0f:4096.0f};}
+        CHECK(hw->postprocess(hw->context,&r,96)==1);
+        for(unsigned y=8;y<56;++y)for(unsigned x=8;x<120;++x){
+            CHECK(r.pixels[y*128+x]==r.pixels[(y/8*8+4)*128+x/8*8+4]);
+            changed+=r.pixels[y*128+x]!=0xc0c0c0;}
+        if(!plane)memcpy(wall,r.pixels,sizeof wall);
+        else CHECK(!memcmp(wall,r.pixels,sizeof wall));
+    }
+    CHECK(changed>0);
+    /* A slanted plane, shifted negative UVs and a neighboring depth step.
+     * Group by world texel, not screen blocks; perspective must not split AO. */
+    for(unsigned phase=0;phase<2;++phase){
+        int keys[8192][2];uint32_t colors[8192];unsigned used=0,shaded=0;
+        for(unsigned y=0;y<64;++y)for(unsigned x=0;x<128;++x){
+            float ray=((float)x+0.5f-64)/320,z=(x<32?60.0f:80.0f)/(1-0.25f*ray);
+            r.pixels[y*128+x]=0xc0c0c0;
+            r.effect_samples[y*128+x]=(SsaPcSample){ray*z/2+phase*1.25f,
+                (32.0f-y-0.5f)*z/640-phase*0.75f,z,4096};}
+        CHECK(hw->postprocess(hw->context,&r,320)==1);
+        for(unsigned y=12;y<52;++y)for(unsigned x=40;x<112;++x){
+            SsaPcSample sample=r.effect_samples[y*128+x];int u=(int)floorf(sample.u),t=(int)floorf(sample.v);unsigned k;
+            for(k=0;k<used;++k)if(keys[k][0]==u && keys[k][1]==t)break;
+            if(k==used){keys[k][0]=u;keys[k][1]=t;colors[k]=r.pixels[y*128+x];++used;}
+            CHECK(colors[k]==r.pixels[y*128+x]);shaded+=r.pixels[y*128+x]!=0xc0c0c0;
+        }
+        CHECK(used>20 && shaded>0);
+    }
+    ssa_pc_renderer_free(&r);
+}
+static void anisotropic_checks(SsaVulkanRenderer *v)
+{
+    const SsaPcHardware *hw=ssa_vulkan_backend(v);SsaPcRenderer r={0};const SsaPcSample *samples;
+    uint32_t palette[256]={0};uint8_t texels[512*64],mip0[256*32],mip1[128*16];SsaPcMaterial m={0};
+    CHECK(ssa_pc_renderer_resize(&r,64,64)==1);palette[1]=0xffffff;palette[2]=0;palette[3]=0x808080;
+    for(unsigned x=0;x<512;++x)for(unsigned y=0;y<64;++y)texels[x*64+y]=(uint8_t)(1+(y/8)%2);
+    memset(mip0,3,sizeof mip0);memset(mip1,3,sizeof mip1);
+    m.pixels=texels;m.width=512;m.height=64;m.mip_pixels[0]=mip0;m.mip_pixels[1]=mip1;
+    m.mip_width[0]=256;m.mip_height[0]=32;m.mip_width[1]=128;m.mip_height[1]=16;
+    for(unsigned pass=0;pass<3;++pass){r.hardware_features=pass==1?SSA_PC_AF:0;
+        CHECK(hw->begin(hw->context,&r,palette,32,0,64)==1);quad(hw,-1,-1,1,1,1,&m);
+        CHECK(hw->end(hw->context,&r,&samples)==1);
+        CHECK(pass==1?(r.pixels[4*64+32]==0 && r.pixels[12*64+32]==0xffffff):r.pixels[4*64+32]==0x808080);
+        CHECK(samples[4*64+32].z==1);}
+    /* Magnification, including fractional texel edges, must retain exact
+     * palette colors and match nearest sampling pixel for pixel. */
+    {uint32_t nearest[64*64];memset(&m,0,sizeof m);m.pixels=texels;m.width=m.height=16;
+        for(unsigned x=0;x<16;++x)for(unsigned y=0;y<16;++y)texels[x*16+y]=(uint8_t)(1+((x^y)&1));
+        for(unsigned pass=0;pass<2;++pass){r.hardware_features=pass?SSA_PC_AF:0;
+            memset(r.pixels,0,64*64*sizeof(*r.pixels));
+            CHECK(hw->begin(hw->context,&r,palette,32,0,64)==1);quad(hw,-1.03f,-1.03f,1.03f,1.03f,1,&m);
+            CHECK(hw->end(hw->context,&r,&samples)==1);
+            if(!pass)memcpy(nearest,r.pixels,sizeof nearest);
+            else for(unsigned i=0;i<64*64;++i)CHECK(r.pixels[i]==nearest[i] && (r.pixels[i]==0 || r.pixels[i]==0xffffff));}
+    }
+    ssa_pc_renderer_free(&r);
+}
+static void scene_motion(SsaPcRenderer *gpu,SsaNativeGame *g,const char *path)
+{
+    SsaPcRenderer reference={0};unsigned saved=g->vulkan_features,heading=g->pc_camera.heading;size_t changed=0;
+    reference.hardware=gpu->hardware;CHECK(ssa_pc_renderer_resize(&reference,gpu->width,gpu->height)==1);
+    g->vulkan_features=SSA_PC_MOTION;CHECK(ssa_pc_renderer_draw(gpu,g)==1 && gpu->motion.valid);
+    g->pc_camera.heading=(uint16_t)(heading+256);g->vulkan_features=0;
+    CHECK(ssa_pc_renderer_draw(&reference,g)==1);g->vulkan_features=SSA_PC_MOTION;
+    CHECK(ssa_pc_renderer_draw(gpu,g)==1);
+    for(size_t i=0;i<(size_t)gpu->width*gpu->height;++i){changed+=gpu->pixels[i]!=reference.pixels[i];CHECK(gpu->depth[i]==reference.depth[i]);}
+    CHECK(changed>0);
+    if(path){char out[1024];CHECK(snprintf(out,sizeof out,"%s-motion.bmp",path)>0);snapshot(gpu,out);}
+    g->vulkan_features=0;CHECK(ssa_pc_renderer_draw(gpu,g)==1);
+    CHECK(!memcmp(gpu->pixels,reference.pixels,(size_t)gpu->width*gpu->height*4));
+    g->vulkan_features=saved;g->pc_camera.heading=(uint16_t)heading;ssa_pc_renderer_free(&reference);
+}
+static void scene_effects(SsaPcRenderer *gpu,SsaPcRenderer *cpu,SsaNativeGame *g,const char *path)
+{
+    size_t n;uint32_t *baseline,*software;float *depth;uint16_t hud=g->hud_style;unsigned effects=g->vulkan_features;
+    CHECK(ssa_pc_renderer_resize(gpu,641,359)==1 && ssa_pc_renderer_resize(cpu,641,359)==1);n=641*359;
+    baseline=malloc(n*4);software=malloc(n*4);depth=malloc(n*sizeof(float));CHECK(baseline && software && depth);
+    g->vulkan_features=0;CHECK(ssa_pc_renderer_draw(gpu,g)==1 && ssa_pc_renderer_draw(cpu,g)==1);
+    memcpy(baseline,gpu->pixels,n*4);memcpy(software,cpu->pixels,n*4);memcpy(depth,gpu->depth,n*sizeof(float));
+    for(unsigned flags=1;flags<8;++flags){size_t changed=0;g->vulkan_features=flags;
+        CHECK(ssa_pc_renderer_draw(gpu,g)==1 && ssa_pc_renderer_draw(cpu,g)==1);
+        CHECK(!gpu->effect_samples && !gpu->effect_capacity);
+        CHECK(!memcmp(depth,gpu->depth,n*sizeof(float)) && !memcmp(software,cpu->pixels,n*4));
+        for(size_t i=0;i<n;++i){CHECK(!(gpu->pixels[i]&0xff000000));changed+=gpu->pixels[i]!=baseline[i];}
+        CHECK(changed>0);}
+    if(path){char out[1024];CHECK(snprintf(out,sizeof out,"%s-effects.bmp",path)>0);snapshot(gpu,out);}
+    g->vulkan_features=0;CHECK(ssa_pc_renderer_draw(gpu,g)==1 && !memcmp(baseline,gpu->pixels,n*4));
+    g->vulkan_features=effects;g->hud_style=hud;free(depth);free(software);free(baseline);
+}
 int main(int argc,char **argv)
 {
     SsaVulkanRenderer *v=ssa_vulkan_open();SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer gpu={0},cpu={0};
     uint8_t *rom=malloc(0x800000);FILE *f;unsigned i;static const unsigned sizes[][2]={{1,1},{321,213},{960,640},{1280,720},{240,160}};
-    CHECK(v && g && rom && argc>=2);primitives(v);texture_cache_checks(v);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
+    CHECK(v && g && rom && argc>=2);primitives(v);texture_cache_checks(v);post_checks(v);motion_checks(v);retained_ao_checks(v);texel_ao_checks(v);anisotropic_checks(v);f=fopen(argv[1],"rb");CHECK(f && fread(rom,1,0x800000,f)==0x800000);fclose(f);
     {SsaMenu *m=calloc(1,sizeof(*m));CHECK(m && ssa_menu_init(m,rom,0x800000,1)==1);
         CHECK(m->settings.renderer==SSA_RENDER_VULKAN);m->settings.renderer=SSA_RENDER_SOFTWARE;
         m->page=m->draw_page=SSA_MENU_GRAPHICS;m->selection=1;m->fading=m->fade_volume=0;m->vulkan_available=1;
@@ -198,6 +421,36 @@ int main(int argc,char **argv)
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.renderer==SSA_RENDER_SOFTWARE);
         CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.renderer==SSA_RENDER_GBA);
         CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.renderer==SSA_RENDER_VULKAN);
+        for(unsigned effect=9;effect<=12;++effect){m->selection=effect;
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1);}
+        CHECK(m->settings.vulkan_antialiasing && m->settings.vulkan_anisotropic && m->settings.vulkan_ambient_occlusion && m->settings.vulkan_motion_blur);
+        for(unsigned legacy=0;legacy<2;++legacy){m->settings.renderer=legacy;
+            for(unsigned effect=9;effect<=12;++effect){m->selection=effect;CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1);}
+            CHECK(m->settings.vulkan_antialiasing && m->settings.vulkan_anisotropic && m->settings.vulkan_ambient_occlusion && m->settings.vulkan_motion_blur);
+            m->selection=7;CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==8);
+            CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && m->selection==7);
+            CHECK(ssa_menu_pointer(m,40,72,1)==0 && m->selection==7);}
+        m->settings.renderer=SSA_RENDER_VULKAN;m->selection=3;
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==10);
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==9);
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==11);
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==12);
+        CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==4);
+        m->vulkan_available=0;m->selection=9;
+        CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.vulkan_antialiasing);
+        CHECK(ssa_menu_pointer(m,40,72,1)==0);m->vulkan_available=1;
+        CHECK(ssa_menu_pointer(m,40,92,1)==SSA_MENU_CONFIRM && m->selection==12);
+        for(unsigned renderer=0;renderer<SSA_RENDERERS;++renderer){
+            m->settings.renderer=renderer;m->vsync_available=1;m->settings.vsync=0;
+            CHECK(ssa_menu_pointer(m,40,44,1)==SSA_MENU_CONFIRM && m->selection==13);
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.vsync);
+            CHECK(ssa_menu_step(m,SSA_MENU_DOWN)==1 && m->selection==(renderer==SSA_RENDER_GBA?4:3));
+            m->vsync_available=0;m->selection=13;
+            CHECK(ssa_menu_step(m,SSA_MENU_CONFIRM)==1 && m->settings.vsync);
+            CHECK(ssa_menu_pointer(m,40,44,1)==0);
+            CHECK(ssa_menu_step(m,SSA_MENU_UP)==1 && m->selection==(renderer==SSA_RENDER_GBA?1:2));
+        }
+        m->settings.renderer=SSA_RENDER_VULKAN;m->settings.vsync=0;
         m->selection=2;CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.aspect_ratio==SSA_ASPECT_GBA);
         m->page=SSA_MENU_SETTINGS;m->selection=3;CHECK(ssa_menu_step(m,SSA_MENU_RIGHT)==1 && m->settings.fov_offset==11);
         m->page=SSA_MENU_GRAPHICS;
@@ -273,6 +526,8 @@ int main(int argc,char **argv)
     /* Backend is process-owned; resize, level teardown and mode switching
      * cannot leave a live frame or an owner pointing into a freed level. */
     gpu.hardware=NULL;CHECK(ssa_pc_renderer_draw(&gpu,g)==1);gpu.hardware=ssa_vulkan_backend(v);CHECK(ssa_pc_renderer_draw(&gpu,g)==1);
+    scene_effects(&gpu,&cpu,g,argc>2?argv[2]:NULL);
+    scene_motion(&gpu,g,argc>2?argv[2]:NULL);
     CHECK(ssa_vulkan_validation_errors(v)==0);
     printf("{\"result\":\"pass\",\"checks\":%u,\"draws\":%u,\"sprite_order_cases\":%u,\"matching_pixels\":%llu,\"compared_pixels\":%llu,\"validation_errors\":%u,\"device\":\"%s\"}\n",checks,draws,sprite_cases,matched,pixels,ssa_vulkan_validation_errors(v),ssa_vulkan_device(v));
     ssa_pc_renderer_free(&gpu);ssa_pc_renderer_free(&cpu);ssa_native_game_free(g);free(g);free(rom);ssa_vulkan_close(v);return 0;

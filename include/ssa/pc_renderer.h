@@ -12,9 +12,16 @@ struct SsaPcGeometry;
  * per-pixel depth and original highest-resolution textures/actor assets.
  * HUD remains original pixel art. No preset resolution ceiling: integer/span
  * validation and allocation failure bound the available sizes. Stable owner. */
+typedef struct SsaPcMotionView {
+    float origin[3],axes[9]; /* World-space right, up, forward basis. */
+    unsigned scene,frame,cut,epoch,valid;
+} SsaPcMotionView;
 typedef struct SsaPcRenderer {
     uint32_t *pixels;
     float *depth;
+    SsaPcSample *effect_samples;size_t effect_capacity; /* Optional owned host override for standalone postprocessing; scenes retain samples on GPU. */
+    unsigned hardware_features;
+    SsaPcMotionView motion;
     struct SsaPcRayHit *hits;
     size_t hit_capacity;
     struct SsaPcRayLine *ray_lines;

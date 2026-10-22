@@ -8,6 +8,9 @@ static const Dimensions dimensions[12] = {
     {66, 32, 60}, {138, 90, 150}, {186, 70, 3000}, {186, 70, 3000}
 };
 
+unsigned ssa_enemy_initial_health(unsigned type)
+{return type>=0xcd && type<=0xd8?(unsigned)dimensions[type-0xcd].health:0;}
+
 static int event(SsaEnemyActivation *view, SsaEnemyActivationGame *game,
                  const SsaEnemyActivationOps *ops, SsaEnemyActivationEvent kind,
                  int32_t a, int32_t b, int32_t c, int32_t d)

@@ -1,4 +1,16 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native special weapons and palette effects — Advance Project</title><link rel="icon" type="image/png" href="../assets/netricsa/netricsa-22.png"><link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../reference.css"></head><body><a class="skip" href="#reference">Skip to reference</a><header class="site-header"><a href="../#development">← Download &amp; help</a><a href="../#project">Project home</a><a href="special-weapons.md" download>Download text ↓</a></header><main id="reference" class="reference" tabindex="-1"><p class="reference-note">Need help getting started? Try the <a href="README.html">player guide</a>. These notes include older work; the <a href="../#features">game overview</a> explains what’s ready now.</p><h1 id="native-special-weapons-and-palette-effects">Native special weapons and palette effects</h1>
+<h2 id="time-strike-floor-contact-audio-2026-10-22">Time Strike floor-contact audio (2026-10-22)</h2>
+<p>Native games replay Time Strike cue0x1E once when each E3 object's state changes
+from falling(0) to landed(1). The existing spatial sound callback receives the
+object's floor-contact position. The cue needs no additional entity allocation,
+and does not replace the later particle7 explosion sound or change damage/fall
+cadence. The recovered E3 controller remains unchanged; the runtime's optional
+<code>time_strike_impact_sound</code> policy is enabled by the native frontend.</p>
+<p>The special-weapon fixture observes actual native input and scheduling in both
+first- and third-person views. It checks one firing cue, no premature landing
+cue, one positioned landing cue, and no repeat during pause/redraw or the later
+explosion. Windows passes32,410 checks. The Linux runner now uses the shared
+sanitized native build helper, including its math-library link and source cache.</p>
 <h2 id="frozen-animation-render-repair">Frozen animation render repair</h2>
 <p>A normal-input level11(index10) development probe exposed an Arachnoid changing from
 walking to attack animation72 while Time Strike flag800 held00908 playback.

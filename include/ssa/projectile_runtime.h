@@ -30,6 +30,7 @@ typedef struct SsaProjectileRuntime {
     int (*particle_sound)(void *,const struct SsaProjectileRuntime *,const SsaProjectile *,unsigned);
     void *particle_context;
     unsigned time_strike_gba_clock; /* PC E3 gravity uses original update cadence. */
+    unsigned time_strike_impact_sound; /* Optional PC landing cue ID;0 disables. Uses particle_sound. */
     uint64_t time_strike_phase[100];
     uint8_t time_strike_tick_phase[100];
 } SsaProjectileRuntime;

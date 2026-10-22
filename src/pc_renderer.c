@@ -90,6 +90,15 @@ static int hud(SsaPcRenderer *r,const SsaNativeGame *g)
                         ssa_classic_hud_alpha(x,y,g->hud_netricsa_ticks,boss)):ssa_classic_hud_darken888(r->pixels[pixel]);}
                 x=end;}}
     }
+    /* Cursor always follows the view center, never a corner HUD region. */
+    {uint8_t cursor[SSA_CLASSIC_CROSSHAIR_PIXELS];int cursor_top,result=ssa_native_game_classic_crosshair(g,cursor,&cursor_top);
+        if(result<0)return -1;
+        if(result)for(i=0;i<SSA_CLASSIC_CROSSHAIR_PIXELS;++i)if(cursor[i]){int xx,yy;
+            int l=edge(left+(120-SSA_CLASSIC_CROSSHAIR_CENTER+i%SSA_CLASSIC_CROSSHAIR_SIZE)*scale,r->width),h=edge(left+(121-SSA_CLASSIC_CROSSHAIR_CENTER+i%SSA_CLASSIC_CROSSHAIR_SIZE)*scale,r->width);
+            int first=edge(top+(cursor_top+(int)(i/SSA_CLASSIC_CROSSHAIR_SIZE))*scale,r->height);
+            int last=edge(top+(cursor_top+(int)(i/SSA_CLASSIC_CROSSHAIR_SIZE)+1)*scale,r->height);
+            uint32_t color=rgb(g->sprite_assets.palette[cursor[i]]);
+            for(yy=first;yy<last;++yy)for(xx=l;xx<h;++xx)r->pixels[(size_t)yy*r->width+(unsigned)xx]=color;}}
     return 1;
 }
 int ssa_pc_renderer_draw(SsaPcRenderer *r,const SsaNativeGame *g)

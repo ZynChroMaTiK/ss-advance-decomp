@@ -35,6 +35,7 @@ typedef struct SsaWeaponRuntime {
     /* PC policy: double minigun GBA clock; chainsaw mode0 per-call,1 Tommy
      * cadence,2 measured original GBA average (requires GBA clock). */
     unsigned double_minigun,clocked_chainsaw;
+    unsigned double_chainsaw; /* PC damage boost, independent of Enhanced weapons. */
     unsigned chainsaw_range; /* PC trace units;0 retains the ROM range. */
     unsigned automatic_damage_phase; /* Fractional GBA ticks, mode2 chainsaw. */
     uint64_t automatic_phase;
@@ -45,6 +46,7 @@ typedef struct SsaWeaponRuntime {
     /* PC policy: queue changes until firing completes. Continuous weapons
      * coast through the current animation cycle without additional attacks. */
     unsigned finish_fire_before_switch,switch_wait;
+    unsigned pc_weapon_order; /* PC selection priority: UMT after cannon. */
     unsigned time_strike_requires_target; /* PC weapon9: valid living enemy or no shot. */
     unsigned time_strike_empty_pending; /* Buffered visual-only gesture until ready. */
     unsigned fire_inhibited; /* PC variant handoff: finish the current shot, buffer new clicks. */

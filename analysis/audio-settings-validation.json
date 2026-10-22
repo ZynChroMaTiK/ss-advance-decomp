@@ -1,26 +1,26 @@
 {
   "result": "pass",
-  "checks": 39995,
+  "checks": 40064,
   "music_sequences": 26,
   "soundfont_seconds": 208,
   "peak": 32760,
   "hybrid_music": true,
   "music_limited_frames": 237192,
-  "cpu_seconds": 10.82,
+  "cpu_seconds": 11.41,
   "sanitizers": "ASan/UBSan/leaks=1",
   "physical_listening_tested": false,
   "source_sha256": {
     "src/audio.c": "59afb456e49668283cf6f6d3aeb4cb8f83a31cb1b4205f0e5d54a85dcec8c9c7",
     "src/audio/soundfont.c": "9f129b39456f91ea01b62d9c384c1633d26422aec51de356e529cc7974bae4b0",
-    "src/menu.c": "f4beb5ee043686d0a6cc4aff9fcacad77731b90475a026c79f440286f7f0b156",
+    "src/menu.c": "b375c41701d413a2ad080ad42ab31361dd2de79f33dbf6b667377ae4ca193daa",
     "src/scores.c": "b5bb5db65255c8ea8d8096c50155b38e8bcd3084e5a3f360a2505ec8fbda9b9f",
     "src/map_view.c": "04e8e2710d5e9cfd62457fd5a23d8ccea34824c83fdc29e5f219bedc95c0ba4a",
     "src/map_assets.c": "139ad45f5f5d8989a863488eff398a6bfabe2bde7aaa75edc86e403849b6fc34",
-    "src/settings.c": "5339750e70a9515ab1b91f810b48717a4d9e96c9814a0ebdd94d0e1ef9dcfca7",
-    "tests/test_audio_settings.c": "5fb9c05e09d282e589e8722c4a7fe3cce74ee15df937f641e4bccba3fada38ab",
+    "src/settings.c": "a4988b51bc49b8fbc68128d8670fc4b4d53aec4029b516a4ba94b0cb0cc42cb5",
+    "tests/test_audio_settings.c": "dc814f9f244a5a05b60ae5395ad79ed74cf79f1d9421553af39889169ace08f6",
     "include/ssa/music_instrument.h": "485cd06b76033ea185e83f2cd796935995876c9734b56a2dae4e54467ce15d4d",
-    "include/ssa/settings.h": "482f8a389b59acd42883710180335db210457b65666b3df759461b0d4bc2f689",
-    "include/ssa/menu.h": "5653afe9b296e233e295d0596509e495432c2dd606d1b95f0f4a8ba4e6bc4223"
+    "include/ssa/settings.h": "c3faf865e872c1e8cc83013f4786ca55d8c6e4b5ea7d6f926cf0bc58666ff1dc",
+    "include/ssa/menu.h": "1e6c116dcf15981ec1a62a2065fec9021e5ea625306a8aac939c55e9e9bec0a6"
   },
   "soundfont_sha256": "ae2e56711dc40835d3f97d975d80eadb2abdc76dc9da8b055f7a3c18dab20974"
 }

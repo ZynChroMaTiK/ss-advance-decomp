@@ -1,3 +1,4 @@
+#include "ssa/weapon_order.h"
 #include "ssa/native_game.h"
 #include "ssa/pc_renderer.h"
 #include "ssa/pc_scene.h"
@@ -191,7 +192,7 @@ static int weapon_impact(void *p,const SsaWeaponRuntime *w,const SsaWeaponHit *h
 {
     SsaNativeGame *g=p;SsaWeaponImpactOps ops={impact_particle,p};
     return ssa_weapon_impact(&g->impact,w->controller.source,g->weapon_game.motion_index,
-        g->gameplay.weapon.current,h->target!=NULL,h->x,h->y,h->z,&ops);
+        (uint16_t)g->gameplay.weapon.current,h->target!=NULL,h->x,h->y,h->z,&ops);
 }
 /* Presentation-only exact contact; never reuse the gameplay aim workspace. */
 static int sight_target(SsaNativeGame *g,int32_t *x,int32_t *y,int32_t *height)
@@ -205,6 +206,14 @@ static int sight_target(SsaNativeGame *g,int32_t *x,int32_t *y,int32_t *height)
         heading=g->players[0].motion.movement.heading;z=g->player.camera.eye_z-source->body.z;
     }
     if(ssa_weapon_hit_query_unlimited(&g->camera_trace,source,heading,z,slope,&hit,1)<0)return -1;
+    if(g->hud_style==SSA_HUD_CLASSIC){unsigned i;
+        g->crosshair_health=0;g->crosshair_maximum=0;
+        if(hit.target && !(hit.target->body.flags&0x20))for(i=0;i<100;++i){
+            const SsaScriptActor *a=&g->spawn.actors[i];
+            if(a->owned && &a->entity==hit.target && a->activation.health>0){
+                g->crosshair_health=a->activation.health;
+                g->crosshair_maximum=ssa_enemy_initial_health(a->entity.type);break;}}
+    }
     if(hit.impact){*x=hit.x;*y=hit.y;*height=hit.z;}
     else {int64_t h=(int64_t)g->camera_trace.shoot_z+(int64_t)g->camera_trace.range*slope/65536;
         *x=g->camera_trace.end_x;*y=g->camera_trace.end_y;
@@ -222,7 +231,7 @@ static int gba_cursor(SsaNativeGame *g,SsaWeaponObject *object)
     /* Use a non-bobbing eye for the HUD, retaining the actual chase-camera
      * offset. Reuse original lowering, stair and clamp handling on copies;
      * eye recovery has already advanced this frame and must not advance twice. */
-    still.velocity_x=still.velocity_y=0;vertical.flags&=(uint16_t)~4u;
+    still.velocity_x=still.velocity_y=0;vertical.flags&=(uint16_t)(UINT16_MAX ^ 4u);
     (void)ssa_camera_step(&still,&vertical,&eye,&frame,&g->math);
     eye_z=(int64_t)g->player.pose.z+eye.eye_z-g->player.camera.eye_z;
     ssa_sincos(&g->math,g->players[0].motion.movement.heading,&sine,&cosine);
@@ -340,6 +349,14 @@ int ssa_native_game_prepare_view(SsaNativeGame *g)
         if(sight_target(g,&g->pc_pose.target_x,&g->pc_pose.target_y,&g->pc_pose.target_z)<0)return -1;
         if(!ssa_view_angles(&g->pc_pose,&g->math,&g->pc_camera.heading,&g->render_pitch))return -1;
     }
+    if(g->hud_style==SSA_HUD_CLASSIC){
+        g->crosshair_y=80;
+        if(g->gba_view || !g->vertical_aim){SsaWeaponObject cursor={0};
+            if(gba_cursor(g,&cursor)<0)return -1;
+            g->crosshair_y=cursor.y/256;
+        }else if(!g->player.pose.third_person){int32_t x,y,z;
+            if(sight_target(g,&x,&y,&z)<0)return -1;}
+    }
     n=g->spawn.pool.active_count;
     for(i=0;i<n;++i){unsigned slot=g->spawn.pool.active_slots[i];SsaScriptActor *a=&g->spawn.actors[slot];
         g->source_z_offsets[i]=0;
@@ -436,7 +453,19 @@ int ssa_native_game_draw(SsaNativeGame *g)
         for(i=0;i<38400;++i){if(canvas[i])g->rgb555[i]=ssa_classic_hud_blend555(g->sprite_assets.palette[canvas[i]]&0x7fff,g->rgb555[i],
                 ssa_classic_hud_alpha(i%240,i/240,g->hud_netricsa_ticks,g->hud.boss_present && g->hud.boss_health>0));
             else if(background[i])g->rgb555[i]=ssa_classic_hud_darken555(g->rgb555[i]);}}
+    {uint8_t cursor[SSA_CLASSIC_CROSSHAIR_PIXELS];int top,result=ssa_native_game_classic_crosshair(g,cursor,&top);unsigned i;
+        if(result<0)return -1;
+        if(result)for(i=0;i<SSA_CLASSIC_CROSSHAIR_PIXELS;++i){int y=top+(int)(i/SSA_CLASSIC_CROSSHAIR_SIZE);
+            if(cursor[i] && y>=0 && y<160)g->rgb555[y*240+120-SSA_CLASSIC_CROSSHAIR_CENTER+i%SSA_CLASSIC_CROSSHAIR_SIZE]=g->sprite_assets.palette[cursor[i]]&0x7fff;}}
     return ssa_display_rgb888(g->rgb555,SSA_DISPLAY_PIXELS,g->rgb888,SSA_DISPLAY_PIXELS)<0?-1:1;
+}
+int ssa_native_game_classic_crosshair(const SsaNativeGame *g,uint8_t pixels[SSA_CLASSIC_CROSSHAIR_PIXELS],int *top)
+{
+    if(!g || !g->loaded || !pixels || !top)return -1;
+    *top=g->crosshair_y-SSA_CLASSIC_CROSSHAIR_CENTER;memset(pixels,0,SSA_CLASSIC_CROSSHAIR_PIXELS);
+    if(g->hud_style!=SSA_HUD_CLASSIC || g->hud_suppressed || g->finished ||
+       g->players[0].inventory.health<=0 || (g->players[0].motion.movement.flags&0x18))return 0;
+    return ssa_classic_hud_crosshair(&g->sprite_assets,g->crosshair_health,g->crosshair_maximum,pixels);
 }
 int ssa_native_game_classic_hud(const SsaNativeGame *g,uint8_t *canvas,size_t capacity)
 {return ssa_native_game_classic_hud_layers(g,canvas,NULL,capacity);}
@@ -566,7 +595,7 @@ int ssa_native_game_automap(SsaNativeGame *g,unsigned enabled)
        (enabled && (g->finished || g->players[0].inventory.health<=0 || (g->frame_game.flags&1))))return -1;
     if(enabled){if(!(g->players[0].motion.movement.flags&8))g->automap_zoom=8192;
         g->players[0].motion.movement.flags|=8;}
-    else g->players[0].motion.movement.flags&=(uint16_t)~8u;
+    else g->players[0].motion.movement.flags&=(uint16_t)(UINT16_MAX ^ 8u);
     g->players[0].vertical.flags=g->players[0].motion.movement.flags;
     g->weapon.fire_inhibited=enabled;g->weapon.fire_pending_weapon=g->weapon.colt_pair_pending=0;
     /* Mode changes can present before the next simulation tick. Switch its
@@ -618,7 +647,7 @@ int ssa_native_game_tick(SsaNativeGame *g)
         g->hud_ammo_flash[i]=g->hud_ammo_flash[i]>g->frame_game.ticks?
             (uint8_t)(g->hud_ammo_flash[i]-g->frame_game.ticks):0;
     if(g->players[0].inventory.health<=0 && (g->players[0].motion.movement.flags&8)){
-        g->players[0].motion.movement.flags&=(uint16_t)~8u;
+        g->players[0].motion.movement.flags&=(uint16_t)(UINT16_MAX ^ 8u);
         g->players[0].vertical.flags=g->players[0].motion.movement.flags;g->weapon.fire_inhibited=0;
     }
     if(g->gba_view || !g->vertical_aim){g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;}
@@ -701,16 +730,18 @@ int ssa_native_game_cycle_weapon(SsaNativeGame *g,int steps)
     if(!g || !g->loaded || g->game.updating || g->gameplay.weapon.requested<1 ||
        g->gameplay.weapon.requested>10)return -1;
     if(!steps)return 0;
-    for(i=0;i<10;++i)if((g->players[0].inventory.weapons&(1u<<i)) && g->players[0].inventory.ammo[i]){
-        weapons[count]=i+1;variants[count++]=0;
-        if(i==1 && g->alternates.enabled && g->alternates.dual_colts){weapons[count]=2;variants[count++]=1;}
+    for(i=0;i<10;++i){unsigned id=ssa_weapon_order_id(i);
+        if((g->players[0].inventory.weapons&(1u<<(id-1))) && g->players[0].inventory.ammo[id-1]){
+            weapons[count]=id;variants[count++]=0;
+            if(id==2 && g->alternates.enabled && g->alternates.dual_colts){weapons[count]=2;variants[count++]=1;}
+        }
     }
     if(!count)return 0;
     direction=steps<0?-1:1;if(magnitude<0)magnitude=-magnitude;
     for(i=0;i<count;++i)if(weapons[i]==g->gameplay.weapon.requested && variants[i]==g->alternates.requested_variant){current=i;found=1;break;}
-    if(!found){unsigned requested=g->gameplay.weapon.requested*2+g->alternates.requested_variant;
-        if(direction>0){current=count-1;for(i=0;i<count;++i)if(weapons[i]*2+variants[i]>requested){current=(i+count-1)%count;break;}}
-        else{current=0;for(i=0;i<count;++i)if(weapons[i]*2+variants[i]<requested)current=(i+1)%count;}
+    if(!found){unsigned requested=ssa_weapon_order_rank(g->gameplay.weapon.requested)*2+g->alternates.requested_variant;
+        if(direction>0){current=count-1;for(i=0;i<count;++i)if(ssa_weapon_order_rank(weapons[i])*2+variants[i]>requested){current=(i+count-1)%count;break;}}
+        else{current=0;for(i=0;i<count;++i)if(ssa_weapon_order_rank(weapons[i])*2+variants[i]<requested)current=(i+1)%count;}
     }
     next=current;
     hops=(unsigned)((magnitude-1)%count)+1;
@@ -769,7 +800,7 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->touch_ops=(SsaPickupRuntimeOps){pickup_event,g};
     INIT(ssa_pickup_runtime_init(&g->pickup,&g->combat,&g->inventory_rules,&g->touch_ops)==0);
     /* Always allow unowned ammo and duplicate guns for ammo, independent of
-     * alternate weapons. That option changes only the second Colt policy. */
+     * enhanced weapons. That option changes only the second Colt policy. */
     g->pickup.pc_pickups=1;
     g->pickup.collect_owned_weapons=1;
     INIT(ssa_enemy_queries_init(&g->queries,&g->spawn,&g->math,reserved,n+1)==0);
@@ -781,6 +812,12 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     INIT(ssa_sprite_pool_allocate(&g->sprite_pool,&object)==1);INIT(object==&g->weapon.object);
     INIT(ssa_weapon_runtimes_start(weapons,gameplays,&g->combat,&g->inventory_rules,&g->weapon_rules,
         &g->weapon_animations,&g->loadouts,setting,0)==0);
+    /* Select the strongest starting weapon in PC order without changing the
+     * ROM loadout contents or the recovered initialization routine. */
+    g->gameplay.weapon.requested=1;
+    INIT(ssa_weapon_cycle_pc(&g->players[0].inventory,&g->gameplay.weapon,-1)>0);
+    g->gameplay.weapon.current=g->gameplay.weapon.requested;
+    INIT(ssa_weapon_runtime_respawn(&g->weapon,(uint16_t)(g->gameplay.weapon.current-1),3)==0);
     INIT(ssa_weapon_runtime_bind_projectiles(&g->weapon,&g->projectiles)==0);
     g->weapon.unlimited_ranged=1;g->projectiles.unlimited_player_range=1;
     g->projectiles.ballistic_player_rockets=1;
@@ -790,13 +827,15 @@ int ssa_native_game_init_loadout(SsaNativeGame *g,const uint8_t *rom,size_t size
     g->projectiles.ceiling_impacts=1;
     g->weapon.time_strike_requires_target=1;
     g->projectiles.time_strike_gba_clock=1;
+    g->projectiles.time_strike_impact_sound=0x1e;
     /* Tommy/minigun: seven original GBA refreshes per shot. Chainsaw uses
      * its original measured mean (85 intervals/584 refreshes), with PC reach. */
     g->weapon.automatic_period=7;g->weapon.automatic_gba_clock=1;
     g->weapon.double_minigun=0;g->weapon.clocked_chainsaw=SSA_CHAINSAW_GBA_CADENCE;
-    g->weapon.chainsaw_range=192;
+    g->weapon.chainsaw_range=192;g->weapon.double_chainsaw=1;
     g->weapon.buffer_fire=1;
     g->weapon.finish_fire_before_switch=1;
+    g->weapon.pc_weapon_order=1;
     INIT(ssa_hud_sprites_create(&g->sprite_pool,1,0,level)==74);
     INIT(ssa_hud_glyphs_load(&g->hud,rom,size)==1);INIT(ssa_hud_notice_init(&g->hud_notice,rom,size,0)==1);
     INIT(ssa_classic_hud_text_load(&g->hud_text,rom,size)==1);

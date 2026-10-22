@@ -59,7 +59,7 @@ int ssa_pc_renderer_resize(SsaPcRenderer *r,unsigned w,unsigned h)
 }
 void ssa_pc_renderer_free(SsaPcRenderer *r)
 {if(!r || r->updating)return;if(r->reflection){ssa_pc_renderer_free(r->reflection);free(r->reflection);}
- ssa_water_free(&r->water);geometry_free(r);free(r->pixels);free(r->depth);free(r->hits);free(r->ray_lines);memset(r,0,sizeof(*r));}
+ ssa_water_free(&r->water);geometry_free(r);free(r->pixels);free(r->depth);free(r->effect_samples);free(r->hits);free(r->ray_lines);memset(r,0,sizeof(*r));}
 static int compare(const void *a,const void *b)
 {const SsaPcRayHit *x=a,*y=b;return x->distance<y->distance?-1:x->distance>y->distance?1:x->line<y->line?-1:x->line>y->line;}
 static int prepare_ray_lines(SsaPcRenderer *r,const SsaMapAssets *m,const Camera *c)
@@ -418,6 +418,7 @@ static int reflect_prepared(SsaPcRenderer **owner,const SsaNativeGame *g,const S
         c.sky_shift=c.pc>0?c.focal*c.ps/c.pc:(c.ps>=0?(double)height:-(double)height);
         c.focal*=c.zoom;
         for(i=0;i<256;++i)c.palette[i]=rgb(g->palette_effect.colors[i]);
+        r->hardware_features=g->vulkan_features&SSA_PC_AF; /* Reflection filtering; main view handles post effects. */
         r->updating=1;r->rays=r->wall_pixels=r->actor_pixels=r->godray_triangles=0;
         if(!r->hardware)for(p=(size_t)c.top*width;p<(size_t)c.bottom*width;++p)r->depth[p]=FLT_MAX;
         if(pitched_world(r,g,&c)<0){r->updating=0;return -1;}
@@ -473,6 +474,15 @@ int ssa_pc_scene_draw(SsaPcRenderer *r,const SsaNativeGame *g)
     c.focal*=c.zoom;
     for(i=0;i<256;++i)c.palette[i]=rgb(g->palette_effect.colors[i]);
     n=(size_t)r->width*r->height;
+    {unsigned features=r->hardware?g->vulkan_features:0;
+        if((features^r->hardware_features)&SSA_PC_MOTION)++r->motion.epoch;
+        r->hardware_features=features;}
+    r->motion.origin[0]=(float)c.x;r->motion.origin[1]=(float)c.y;r->motion.origin[2]=(float)c.z;
+    {float axes[9]={(float)c.cosine,(float)-c.sine,0,
+        (float)(-c.sine*c.ps),(float)(-c.cosine*c.ps),(float)c.pc,
+        (float)(c.sine*c.pc),(float)(c.cosine*c.pc),(float)c.ps};memcpy(r->motion.axes,axes,sizeof axes);}
+    r->motion.scene=g->level;r->motion.frame=g->frame_game.counter;r->motion.cut=g->player.pose.third_person;
+    r->motion.valid=!(g->frame_game.flags&1) && !g->finished && g->players[0].inventory.health>0;
     /* Hardware replaces every consumed depth sample; flat_sky initializes
      * all colors before upload. Only software needs the initial depth clear. */
     if(!r->hardware){
@@ -500,6 +510,8 @@ int ssa_pc_scene_draw(SsaPcRenderer *r,const SsaNativeGame *g)
         }
     }
     if(g->godrays_enabled && godrays_draw(r,g,&c)<0){r->updating=0;return -1;}
+    if(r->hardware && r->hardware->postprocess && (r->hardware_features&(SSA_PC_AA|SSA_PC_AO|SSA_PC_MOTION)) &&
+       r->hardware->postprocess(r->hardware->context,r,c.focal)<0){r->updating=0;return -1;}
     for(i=0;i<g->spawn.pool.active_count;++i)if(g->sources[i].flags&0x2000)screen_actor(r,g,&c,&g->sources[i]);
     r->updating=0;return 1;
 }

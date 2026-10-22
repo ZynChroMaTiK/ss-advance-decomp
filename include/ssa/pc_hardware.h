@@ -1,6 +1,7 @@
 #ifndef SSA_PC_HARDWARE_H
 #define SSA_PC_HARDWARE_H
 #include <stdint.h>
+enum {SSA_PC_AA=1,SSA_PC_AF=2,SSA_PC_AO=4,SSA_PC_MOTION=8};
 struct SsaPcRenderer;
 /* Prepared near-clipped view geometry. Textures are column-major palette
  * indices, borrowed until end(). A backend never owns gameplay or HUD data.
@@ -27,6 +28,8 @@ typedef struct SsaPcHardware {
     /* Samples retain full-width indexing, valid only in begin's row interval,
      * and remain borrowed until the next begin/end on this backend. */
     int (*end)(void *,struct SsaPcRenderer *,const SsaPcSample **);
+    /* Optional GPU scene effects, before fixed-screen effects and HUD. */
+    int (*postprocess)(void *,struct SsaPcRenderer *,double focal);
     void (*rows)(void *,unsigned first,unsigned end,SsaPcRows,void *);
 } SsaPcHardware;
 #endif

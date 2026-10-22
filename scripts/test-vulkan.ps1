@@ -28,9 +28,9 @@ try {
     }
     $report=[ordered]@{result='pass';validation_layers=[bool]$Validation;native=$result;frontend=$frontend;source_sha256=[ordered]@{}}
     foreach($path in @('CMakeLists.txt','include/ssa/surface_sample_cache.h','src/surface_decals.c','src/water.c','src/water_edges.inc','src/pc_scene.c','src/pc_renderer_pitch.inc','src/pc_actor_clip.inc','src/sprite_shadows.c','src/sprite_shadow_texture.inc','include/ssa/sprite_shadows.h','tests/sprite_clip_fixture.h','src/pc_renderer.c','include/ssa/pc_renderer.h','include/ssa/pc_hardware.h',
-        'platform/win32/vulkan_renderer.c','platform/win32/vulkan_renderer.h','platform/vulkan/scene.vert','platform/vulkan/scene.frag',
-        'platform/win32/game.c','platform/win32/game_screens.inc','src/settings.c','include/ssa/settings.h','src/menu.c','include/ssa/menu.h',
-        'tests/test_vulkan_renderer.c','tests/reflection_sky_fixture.h','tests/sprite_shadow_fixture.h','tests/godray_fixture.h','src/pc_godrays.inc','src/godrays.c','include/ssa/godrays.h','tests/test_settings_fields.c','scripts/test-vulkan.ps1')){
+        'platform/win32/vulkan_renderer.c','platform/win32/vulkan_post.inc','platform/vulkan/post.comp','src/native_settings.c','include/ssa/native_game.h','platform/win32/vulkan_renderer.h','platform/vulkan/scene.vert','platform/vulkan/scene.frag',
+        'platform/win32/game.c','platform/win32/game_vsync.inc','platform/win32/game.manifest','platform/win32/game_screens.inc','src/settings.c','include/ssa/settings.h','src/menu.c','include/ssa/menu.h',
+        'tests/test_vulkan_renderer.c','tests/test_native_settings.c','tests/bench_vulkan.c','tests/reflection_sky_fixture.h','tests/sprite_shadow_fixture.h','tests/godray_fixture.h','src/pc_godrays.inc','src/godrays.c','include/ssa/godrays.h','tests/test_settings_fields.c','scripts/test-vulkan.ps1')){
         $report.source_sha256[$path]=(Get-FileHash -LiteralPath (Join-Path $root $path) -Algorithm SHA256).Hash.ToLowerInvariant()
     }
     [IO.File]::WriteAllText((Join-Path $root 'analysis/vulkan-validation.json'),($report | ConvertTo-Json -Depth 6)+[Environment]::NewLine)

@@ -30,17 +30,31 @@ int main(void)
     SSA_SETTINGS_FIELDS(CHECK_FIELD)
 #undef CHECK_FIELD
     CHECK(base.vertical_aim && base.mipmaps && !base.godrays);
-    CHECK(bytes[3]==19 && base.mouse_sensitivity==9);
+    CHECK(bytes[3]==22 && base.mouse_sensitivity==9);
     for(unsigned x=0;x<=SSA_MOUSE_RANGE;++x){
         next=base;next.mouse_sensitivity=x;
         CHECK(ssa_settings_encode(&next,encoded,sizeof encoded)==1);
         CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && ssa_settings_equal(&next,&decoded));
     }
-    CHECK(!base.sprite_shadows);
-    memcpy(encoded,bytes,sizeof bytes);encoded[3]=18;checksum(encoded);
+    CHECK(!base.vulkan_motion_blur && !base.sprite_shadows && !base.vulkan_antialiasing && !base.vulkan_anisotropic && !base.vulkan_ambient_occlusion);
+    CHECK(base.vsync);
+    next=base;next.vsync=0;
+    CHECK(ssa_settings_encode(&next,encoded,sizeof encoded)==1);
+    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && !decoded.vsync);
+
+    memcpy(encoded,bytes,sizeof bytes);encoded[3]=21;encoded[11]=15;checksum(encoded);
+    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && decoded.vsync && decoded.vulkan_motion_blur);
+    encoded[11]|=16;checksum(encoded);CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==-1);
+    memcpy(encoded,bytes,sizeof bytes);encoded[3]=20;encoded[11]=7;checksum(encoded);
+    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && !decoded.vulkan_motion_blur && decoded.vulkan_ambient_occlusion);
+    encoded[11]|=8;checksum(encoded);CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==-1);
+    memcpy(encoded,bytes,sizeof bytes);encoded[3]=19;encoded[11]=0;checksum(encoded);
+    CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && ssa_settings_equal(&base,&decoded));
+    encoded[11]=1;checksum(encoded);CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==-1);
+    memcpy(encoded,bytes,sizeof bytes);encoded[3]=18;encoded[11]=0;checksum(encoded);
     CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && !decoded.sprite_shadows);
     /* Existing two-axis v18 saves retain horizontal speed for both axes. */
-    memcpy(encoded,bytes,sizeof bytes);encoded[3]=18;encoded[8]=20;encoded[9]=3;checksum(encoded);
+    memcpy(encoded,bytes,sizeof bytes);encoded[3]=18;encoded[11]=0;encoded[8]=20;encoded[9]=3;checksum(encoded);
     CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && decoded.mouse_sensitivity==20);
     CHECK(ssa_settings_encode(&decoded,encoded,sizeof encoded)==1 && encoded[8]==20 && encoded[9]==20);
     /* v17 migrates mouse defaults and retains every existing preference. */
@@ -49,7 +63,7 @@ int main(void)
     CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==1 && ssa_settings_equal(&next,&decoded));
     /* Reject unsupported versions, reserved bits and invalid ranges, even with a valid CRC. */
     for(unsigned i=0;i<5;++i){memcpy(encoded,bytes,sizeof bytes);
-        if(!i)encoded[3]=20;else if(i==1)encoded[11]=1;else if(i==2)encoded[4]|=128;
+        if(!i)encoded[3]=23;else if(i==1)encoded[11]=32;else if(i==2)encoded[4]|=128;
         else if(i==3)encoded[8]=30;else encoded[9]=255;
         checksum(encoded);CHECK(ssa_settings_decode(&decoded,encoded,sizeof encoded)==-1);
     }

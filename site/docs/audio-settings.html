@@ -3,26 +3,53 @@
 Music On/Off row is removed; use Music volume0% to silence music. Existing
 option IDs for Credits, Clear Data, Settings and Extras remain stable; Graphics is ID6.
 Keyboard navigation stops at the first/last visible row. Settings contains Language,
-Field of view, Music style (Original / SoundFont / MIDI), Music volume and Sounds
+Mouse sensitivity, Field of view, Music style (Original / SoundFont / MIDI), Music volume and Sounds
 volume, followed by Back. Graphics contains Display mode (Fullscreen / Windowed),
-Renderer (Software / GBA / available Vulkan) and Aspect ratio, followed by Back.
+Renderer (Software / GBA / available Vulkan), Aspect ratio and VSync; a filtering/effects
+group with Mipmapping, Anisotropic, Antialiasing, Ambient occlusion and Motion blur;
+and a scene-detail group with Surface decals, Water reflections, Godrays and
+Sprite shadows. Blank tile rows separate the groups, with Back at the bottom.
 Language retains original names and savefile persistence. FOV stays in Settings
 and is disabled in GBA mode; Aspect ratio is disabled in Graphics in GBA mode.
-Current grid rows: Settings Language24, FOV48/bar56, Music style80, Music volume96/bar104,
-Sounds volume120/bar128; Graphics rows24/40/56. Both Back rows remain144.
+Current grid rows (2026-10-22): Settings Language16, Mouse sensitivity32/bar40,
+FOV56/bar64, Music style88, Music volume104/bar112, Sounds volume120/bar128.
+Graphics: display16/24/32/40 (Display mode, Renderer, Aspect ratio, VSync), filtering/effects56/64/72/80/88, scene details104/112/120/128.
+Both Back rows remain144. Volume labels and bars moved down one8-pixel tile.
+Mouse hit regions and keyboard traversal follow the reordered descriptors;
+saved setting IDs and renderer availability are unchanged. ASan/UBSan menu/audio
+checks and Vulkan menu navigation pass; all three localized layouts inspected.
+VSync defaults On and is available for every renderer when Windows compositor
+synchronization is available. It is persisted in settings v22 byte11 bit4;
+v1..21 migrate with VSync On and retain all existing preferences. The16-byte
+CRC record is unchanged. The frontend synchronizes after presenting a visible,
+non-minimized window; hidden test windows bypass waits. Runtime failure disables
+the action without changing the saved preference or aborting gameplay.</p>
+<p>The shared GDI presenter uses <a href="https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmflush">DwmFlush</a>,
+not a Vulkan swapchain/present mode. Off removes the application's explicit wait;
+Windows still controls desktop composition. The compatibility manifest declares
+Windows8+ support so <a href="https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmiscompositionenabled">DwmIsCompositionEnabled</a>
+does not return a legacy compatibility false-negative. The DLL is optional;
+composition/display changes refresh capability. Simulation and audio clocks
+remain unchanged.</p>
+<p>Validation:40,064 ASan/UBSan menu/audio checks, all11 focused CTests,
+8,453,272 Vulkan checks with no validation errors and a hidden frontend resize
+run. The Win32 input fixture additionally tests VSync Off/On for all renderer
+choices, missing/disabled capability, failure recovery, and a successful real
+DwmFlush call (31,086 total checks). The diagnostic failure message is expected.
+English/German/French Graphics captures were inspected. No campaign playthrough.
 Earlier layout notes below are historical.
 Both volumes show a bar and percentage, bounded0..100. Up/Down selects a row;
 Left/Right changes volume by5 points or toggles a choice. Enter toggles a choice or
 raises a volume. Click a bar to set its value. Back/Esc returns to Options.
 Extras contains Jump (On / Off), Third-person (On / Off), In-game NETRICSA
-(On / Off), Alternate weapons (On / Off), Automap (On / Off), HUD (Original / Classic),
+(On / Off), Enhanced weapons (On / Off), Automap (On / Off), HUD (Original / Classic),
 Weapon bobbing (On / Off), Surface decals (On / Off), and Back. Bobbing defaults Off, moves the first-person
 weapon and muzzle flashes together, and leaves the crosshair steady. Settings
 version10 stores it in byte8 bit6; bit7 retains aspect, and the lower six bits
 hold the version. Version11 adds default-Off Surface decals in bit5 and uses
 the lower five bits for the version, retaining16 bytes and the existing CRC.
 Versions1..10 load with Surface decals Off. Versions1..9
-load with bobbing Off while retaining other preferences. Alternate weapons defaults
+load with bobbing Off while retaining other preferences. Enhanced weapons defaults
 to Off; existing Settings versions1..5 migrate with that preference disabled.
 Settings version6 introduced byte9 bit7 while retaining the16-byte CRC-protected file.
 Version7 adds Automap in byte10 bit7; music volume0..100 occupies its lower seven
@@ -288,7 +315,7 @@ covers bytes0..11. Older files must retain zero in byte7. Native settings
 application clears pitch, free-aim state and queued vertical motion when this
 option is Off or the renderer is GBA. See <code>vertical-aim.md</code>.</p>
 <p>Extras order (2026-10-20): HUD, Vertical aim, Third-person, Jump, Automap,
-In-game NETRICSA, Alternate weapons, Weapon bobbing, Surface decals, Water
+In-game NETRICSA, Enhanced weapons, Weapon bobbing, Surface decals, Water
 reflections. Rows remain Y16..88 in8-pixel increments. Display order maps to
 stable settings/translation IDs; the saved format and defaults do not change.</p>
 </main></body></html>

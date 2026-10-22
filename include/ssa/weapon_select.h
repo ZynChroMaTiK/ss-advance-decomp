@@ -24,4 +24,8 @@ int ssa_weapon_cycle(const SsaInventory *, SsaWeaponControl *, int direction);
  * animation/current-weapon commit is not performed by this original phase. */
 int ssa_weapon_update(SsaInventory *, SsaWeaponControl *,
                        const SsaInventoryRules *, unsigned player_count);
+/* PC order changes selection only; inventory/ammo retain original IDs. */
+int ssa_weapon_cycle_pc(const SsaInventory *,SsaWeaponControl *,int direction);
+int ssa_weapon_update_pc(SsaInventory *,SsaWeaponControl *,
+    const SsaInventoryRules *,unsigned player_count);
 #endif

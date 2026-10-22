@@ -1,5 +1,6 @@
 #include "ssa/native_game.h"
 #include "ssa/settings.h"
+#include "ssa/pc_hardware.h"
 int ssa_native_game_apply_settings(SsaNativeGame *g,const SsaSettings *s)
 {
     if(!g || !g->loaded || g->game.updating || g->error_line || !ssa_settings_valid(s))return -1;
@@ -9,6 +10,9 @@ int ssa_native_game_apply_settings(SsaNativeGame *g,const SsaSettings *s)
     g->vertical_aim=s->vertical_aim;
     g->fov_offset=s->fov_offset;
     g->mipmaps=g->gba_view || s->mipmaps;
+    g->vulkan_features=s->renderer==SSA_RENDER_VULKAN?
+        (s->vulkan_antialiasing?SSA_PC_AA:0)|(s->vulkan_anisotropic?SSA_PC_AF:0)|
+        (s->vulkan_ambient_occlusion?SSA_PC_AO:0)|(s->vulkan_motion_blur?SSA_PC_MOTION:0):0;
     if(g->gba_view || !g->vertical_aim){
         g->player.pitch=0;g->player.free_aim=0;g->input.pending_pitch=0;
     }

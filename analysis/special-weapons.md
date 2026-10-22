@@ -1,5 +1,20 @@
 # Native special weapons and palette effects
 
+## Time Strike floor-contact audio (2026-10-22)
+
+Native games replay Time Strike cue0x1E once when each E3 object's state changes
+from falling(0) to landed(1). The existing spatial sound callback receives the
+object's floor-contact position. The cue needs no additional entity allocation,
+and does not replace the later particle7 explosion sound or change damage/fall
+cadence. The recovered E3 controller remains unchanged; the runtime's optional
+`time_strike_impact_sound` policy is enabled by the native frontend.
+
+The special-weapon fixture observes actual native input and scheduling in both
+first- and third-person views. It checks one firing cue, no premature landing
+cue, one positioned landing cue, and no repeat during pause/redraw or the later
+explosion. Windows passes32,410 checks. The Linux runner now uses the shared
+sanitized native build helper, including its math-library link and source cache.
+
 ## Frozen animation render repair
 
 A normal-input level11(index10) development probe exposed an Arachnoid changing from

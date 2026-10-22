@@ -5,11 +5,11 @@ For the current download, European ROM requirement, controls and setup, start wi
 [the player README](README.md). Older counts and limitations below describe the
 work at the time; they are not a current release checklist.
 
-**Windows x64 prerelease: [download v0.8.0-alpha.2](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-alpha.2).**
+**Windows x64 prerelease: [download v0.8.0-beta.1](https://github.com/ZynChroMaTiK/ss-advance-decomp/releases/tag/v0.8.0-beta.1).**
 Extract the ZIP to a writable folder, put your own ROM at `orig/SSA.gba`, and run
 `play-native.cmd`. The package includes the native executable; no build tools are
 needed. ROMs and SoundFont banks are not included. See the
-[release notes](releases/v0.8.0-alpha.2.md) for features and known limitations.
+[release notes](releases/v0.8.0-beta.1.md) for features and known limitations.
 
 [Project website, features and roadmap](https://zynchromatik.github.io/ss-advance-decomp/)
 · [3D level browser](https://zynchromatik.github.io/ss-advance-decomp/#levels/1/3d)
@@ -29,21 +29,20 @@ Compilation does not require a ROM. To play, place your own game ROM at
 All twelve campaign levels are enabled, including Caesar's Palace.
 Campaign playthrough validation is manual at the user's request.
 
-Options starts with **Settings**: its first row is **Display mode**, choosing
-**Fullscreen** (borderless, default) or **Windowed**. Changes apply immediately
-and persist in `settings.dat`; windowed mode restores the previous window size
-and position. Then choose **Software / GBA** rendering,
-choose **Original / SoundFont / MIDI** music and
-adjust **Music volume** and **Sounds volume** with bars and percentages.
-The separate Music On/Off option is removed; set Music volume to0% to silence music.
-Options lists Settings, Extras, Language, Clear Data, then Credits at the bottom.
-**Extras** contains Jump, Third-person, In-game NETRICSA, Alternate weapons,
-Automap, HUD, Weapon bobbing, Surface decals and Water reflections. All nine
-items fit on one page. HUD defaults to Original; the added visual effects and
-automap default to Off. Press M for an enabled automap and F11 for display mode.
-R reloads alternate Colts rather than restarting the level.
-Jump and Alternate weapons default to Off; Third-person and In-game NETRICSA default to On. All persist with your settings.
-With Alternate weapons On, a new campaign starts with one Colt; picking up another unlocks and
+Options lists Settings, Graphics, Extras, Clear Data, then Credits. Settings
+contains Language, Mouse sensitivity, Field of view, Music style, Music volume
+and Sounds volume. Graphics groups Display mode, Renderer, Aspect ratio and
+VSync; filtering/postprocessing; then scene details. Vulkan is preferred with
+Software fallback; GBA retains its original projection. VSync defaults On when
+available, and existing v22 choices are preserved. The Vulkan-only AA, sharp
+anisotropic filtering, world-texel AO and camera motion blur default Off.
+
+Extras contains HUD, Vertical aim, Third-person, Jump, Automap, In-game NETRICSA,
+Enhanced weapons and Weapon bobbing. HUD defaults to Original. Jump, Automap,
+Enhanced weapons and Weapon bobbing default Off; Third-person, in-game NETRICSA
+and vertical aim default On. Saved choices win. Press F11 for fullscreen/windowed
+mode, M for the enabled automap, and R to reload enhanced Colts.
+With Enhanced weapons On, a new campaign starts with one Colt; picking up another unlocks and
 equips dual Colts. Each Colt fires every 0.45 seconds; duals alternate hands at 0.225 seconds.
 A click fires two alternating shots even when released quickly; holding fire continues the sequence.
 Each holds six shots with unlimited reserve ammo. Reload starts when the next gun's turn
@@ -52,7 +51,7 @@ first, with the left starting 0.33 seconds later: 1.07 seconds per gun, 1.40 sec
 for the complete pair. Single Colts reload alone after six shots.
 Each reload plays a local mechanical click. Re-equipping a Colt refills its six-shot magazine;
 switching from single to dual refills only the left gun that is drawn.
-These timing and magazine rules apply only with Alternate weapons On.
+These timing and magazine rules apply only with Enhanced weapons On.
 That mode also gives the double shotgun a fixed 14-pellet pattern, with 5 base damage
 per pellet (70 for a full hit), horizontal spread up to ±6.84° and vertical rows
 at +2.58°, +0.86°, −0.86° and −2.58°. It follows free aim and GBA auto-aim.

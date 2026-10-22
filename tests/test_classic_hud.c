@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 static unsigned checks,draws,paths;
+static const unsigned weapon_order[10]={1,2,3,4,5,6,7,9,10,8};
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"Classic HUD line%d: %s\n",__LINE__,#x);exit(1);}}while(0)
 static uint32_t hash(const uint8_t *p){unsigned i;uint32_t n=2166136261u;for(i=0;i<38400;++i)n=(n^p[i])*16777619u;return n;}
 static uint32_t hud_color(const SsaNativeGame *g,unsigned index)
@@ -61,14 +62,14 @@ static void pending_highlight(SsaNativeGame *g,SsaNativeGame *copy,unsigned sele
     *copy=*g;CHECK(ssa_native_game_classic_hud(g,canvas,sizeof canvas)==1 && !memcmp(copy,g,sizeof(*g)));
     copy->gameplay.weapon.requested=1;CHECK(ssa_native_game_classic_hud(copy,baseline,sizeof baseline)==1);
     for(slot=0;slot<10;++slot){c=g->sprite_assets.palette[canvas[103*240+35+slot*17+3]]&0x7fff;
-        CHECK(c && (slot+1==selected?((c&31)==((c>>5)&31) && (c&31)==((c>>10)&31)):!(c&0x7c1f)));}
+        CHECK(c && (weapon_order[slot]==selected?((c&31)==((c>>5)&31) && (c&31)==((c>>10)&31)):!(c&0x7c1f)));}
     /* Packed ammo interiors track selection too; their frames and idle meters
      * remain green. Inspect art left of the separate right-hand meter. */
     for(slot=0;slot<8;++slot){unsigned left=111+slot*16;
         c=g->sprite_assets.palette[canvas[142*240+left+3]]&0x7fff;CHECK(c && !(c&0x7c1f));
         for(y=143;y<156;++y)for(x=left+1;x<left+10;++x){unsigned at=y*240+x,original=g->sprite_assets.palette[baseline[at]]&0x7fff;
             c=g->sprite_assets.palette[canvas[at]]&0x7fff;
-            if(slot+3==selected && original && !(original&0x7c1f)){
+            if(weapon_order[slot+2]==selected && original && !(original&0x7c1f)){
                 CHECK((c&31)==((c>>5)&31) && (c&31)==((c>>10)&31));++white;
             }else CHECK(canvas[at]==baseline[at]);}
     }
@@ -127,6 +128,9 @@ static void weapon_wheel(SsaNativeGame *g,SsaNativeGame *copy,SsaPcRenderer *pc,
     CHECK(ssa_native_game_select_weapon(g,4)==1 && g->hud_weapon_ticks==180);
     pending_highlight(g,copy,4);
     CHECK(ssa_native_game_select_weapon(g,6)==1);pending_highlight(g,copy,6);
+    CHECK(ssa_native_game_select_weapon(g,9)==1);pending_highlight(g,copy,9);
+    CHECK(ssa_native_game_select_weapon(g,10)==1);pending_highlight(g,copy,10);
+    CHECK(ssa_native_game_select_weapon(g,8)==1);pending_highlight(g,copy,8);
     CHECK(ssa_native_game_select_weapon(g,4)==1);pending_highlight(g,copy,4);
     CHECK(ssa_native_game_draw(g)==1 && ssa_pc_renderer_draw(pc,g)==1);draws+=2;
     if(directory){screenshot(directory,"pending-gba",0,g->rgb888,240,160);
@@ -301,14 +305,14 @@ static void netricsa_notification(SsaNativeGame *g,SsaNativeGame *copy,const uin
     CHECK(ssa_native_game_classic_hud_layers(g,white,background,sizeof white)==1 && !memcmp(copy,g,sizeof(*g)));
     CHECK(!background[28*240+100] && !background[28*240+99]);
     CHECK(ssa_sprite_image_indices(&g->sprite_assets.images[79],sprite,40,sizeof sprite)==1);
-    { /* Expected corrected lettering, including the y descender and shadows. */
+    { /* Expected "Analyzing" lettering, including y/z strokes and shadows. */
         static const char *rows[10]={
             "+#+         #",
             "#.#         #         #",
             "# # ##+ ##+ # # # +## . ##+ +##",
-            "### #.# ..# # # # #.. # #.# #.#",
-            "#.# # # +## # # # +#+ # # # # #",
-            "# # # # #.# # # # ..# # # # # #",
+            "### #.# ..# # # # ..# # #.# #.#",
+            "#.# # # +## # # # .#+ # # # # #",
+            "# # # # #.# # # # #.. # # # # #",
             "# # # # +## # +## ##+ # # # +## # # #",
             ". . . . ... . ..# ... . . . ..# . . .",
             "              ##+           ##+",
@@ -706,6 +710,80 @@ static void original_equipped_layout(SsaNativeGame *g,const uint8_t *rom,SsaPcRe
         ssa_native_game_free(g);
     }
 }
+static void crosshair_checks(const uint8_t *rom,const char *directory)
+{
+    SsaNativeGame *g=calloc(1,sizeof(*g));SsaPcRenderer pc={0};
+    SsaScriptActor *actor;SsaEntity *player,blocker={0};
+    uint8_t pixels[576],shape[576];unsigned i,k,mode,slot=99,colors[6],lit=0;
+    static const int health[6]={0,24,25,59,60,200};int top;int32_t sine,cosine;
+    CHECK(g && ssa_native_game_init(g,rom,0x800000,0)==1 && ssa_native_game_step(g)==1);
+    CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==0);
+    CHECK(ssa_native_game_hud_style(g,SSA_HUD_CLASSIC)==1 && ssa_classic_hud_replaces(18));
+    CHECK(!ssa_classic_hud_replaces(2));
+    for(k=0;k<6;++k){CHECK(ssa_classic_hud_crosshair(&g->sprite_assets,health[k],100,pixels)==1);
+        colors[k]=pixels[12*24+12];CHECK(colors[k]);
+        for(i=0;i<576;++i){if(!k){shape[i]=(uint8_t)!!pixels[i];lit+=shape[i];}
+            else CHECK(!!pixels[i]==shape[i]);
+            if(i/24<3 || i/24>21 || i%24<3 || i%24>21)CHECK(!pixels[i]);
+            else {CHECK(!!pixels[i]==!!pixels[(24-i/24)*24+i%24]);
+                CHECK(!!pixels[i]==!!pixels[i/24*24+24-i%24]);}
+        }
+        CHECK(pixels[12*24+12] && !pixels[11*24+12] && !pixels[13*24+12] &&
+              !pixels[12*24+11] && !pixels[12*24+13]);
+        {unsigned shaded=0,bright=g->sprite_assets.palette[colors[k]];
+            for(i=0;i<576;++i)if(pixels[i] && pixels[i]!=colors[k]){unsigned c=g->sprite_assets.palette[pixels[i]];
+                ++shaded;CHECK((c&31)+((c>>5)&31)+((c>>10)&31)<(bright&31)+((bright>>5)&31)+((bright>>10)&31));
+                if(!k)CHECK(pixels[i]==206 && c==0x4652);}
+            CHECK(shaded==24);}
+    }
+    CHECK(lit==73 && colors[0]==81 && colors[2]==colors[3] && colors[4]==colors[5]);
+    CHECK(colors[0]!=colors[1] && colors[1]!=colors[2] && colors[2]!=colors[4]);
+    for(k=0;k<4;++k){unsigned c=g->sprite_assets.palette[colors[k==3?4:k]],r=c&31,gg=(c>>5)&31,b=(c>>10)&31;
+        CHECK(k==0?(r==gg && gg==b):k==1?(r>gg && r>b):k==2?(r>b && gg>b):(gg>r && gg>b));}
+    CHECK(ssa_enemy_initial_health(0xcd)==30 && ssa_enemy_initial_health(0xd7)==3000 && !ssa_enemy_initial_health(0xe1));
+    while(slot && g->spawn.actors[slot].owned)--slot;
+    CHECK(slot && !g->spawn.actors[slot].owned);actor=&g->spawn.actors[slot];player=&g->players[0].entity;
+    /* An isolated target in the real world query, not a mocked aim result.
+     * It is deliberately absent from the active render/controller pool. */
+    actor->owned=1;actor->entity.type=0xce;actor->entity.body.flags=2;
+    actor->entity.body.height=192*65536;actor->entity.radius=12*65536;
+    ssa_sincos(&g->math,g->players[0].motion.movement.heading,&sine,&cosine);
+    actor->entity.body.x=player->body.x+sine*48;actor->entity.body.y=player->body.y+cosine*48;
+    CHECK(ssa_world_insert(&g->world,&actor->entity)==1);actor->entity.body.z=player->body.z;
+    for(mode=0;mode<3;++mode){g->gba_view=mode==2;g->vertical_aim=mode!=1;g->player.free_aim=mode==0;
+        g->player.pitch=0;g->weapon.controller.aim_slope=0;
+        for(k=0;k<6;++k){actor->activation.health=(int16_t)health[k];
+            CHECK(ssa_native_game_prepare_view(g)==1);
+            CHECK(g->crosshair_health==health[k] && g->crosshair_maximum==(health[k]?100u:0u));
+            CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==1 && pixels[12*24+12]==colors[k]);}
+        actor->entity.body.flags|=0x20;CHECK(ssa_native_game_prepare_view(g)==1 && !g->crosshair_maximum);
+        actor->entity.body.flags&=(uint16_t)~0x20u;
+    }
+    g->gba_view=0;g->vertical_aim=g->player.free_aim=1;
+    blocker.body=actor->entity.body;blocker.body.x=player->body.x+sine*24;blocker.body.y=player->body.y+cosine*24;
+    blocker.radius=12*65536;blocker.type=0xe1;
+    CHECK(ssa_world_insert(&g->world,&blocker)==1);blocker.body.z=player->body.z;
+    CHECK(ssa_native_game_prepare_view(g)==1 && !g->crosshair_maximum);
+    CHECK(ssa_world_remove(&g->world,&blocker)==1);
+    CHECK(ssa_world_remove(&g->world,&actor->entity)==1);memset(actor,0,sizeof(*actor));
+    CHECK(ssa_native_game_draw(g)==1 && ssa_pc_renderer_resize(&pc,854,480)==1 && ssa_pc_renderer_draw(&pc,g)==1);
+    CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==1 && top==68);
+    for(i=0;i<576;++i)if(pixels[i]){
+        CHECK(g->rgb555[(top+i/24)*240+108+i%24]==(g->sprite_assets.palette[pixels[i]]&0x7fff));
+        CHECK(pc.pixels[(top+i/24)*3*854+67+(108+i%24)*3]==hud_color(g,pixels[i]));}
+    if(directory)screenshot(directory,"crosshair",0,pc.pixels,pc.width,pc.height);
+    /* A cursor over the lower HUD's Y rows must not inherit bottom anchoring. */
+    g->crosshair_y=145;CHECK(ssa_pc_renderer_resize(&pc,640,480)==1 && ssa_pc_renderer_draw(&pc,g)==1);
+    CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==1 && top==133);
+    for(i=0;i<576;++i)if(pixels[i]){
+        unsigned x=(unsigned)((108+i%24+0.5)*640/240),y=(unsigned)((top+i/24+0.5)*640/240+80.0/3);
+        CHECK(pc.pixels[y*640+x]==hud_color(g,pixels[i]));}
+    g->hud_suppressed=1;CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==0);g->hud_suppressed=0;
+    g->players[0].motion.movement.flags|=8;CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==0);
+    g->players[0].motion.movement.flags&=(uint16_t)~8u;g->players[0].inventory.health=0;
+    CHECK(ssa_native_game_classic_crosshair(g,pixels,&top)==0);
+    ssa_pc_renderer_free(&pc);ssa_native_game_free(g);free(g);
+}
 int main(int argc,char **argv)
 {
     SsaNativeGame *g=calloc(1,sizeof(*g)),*copy=malloc(sizeof(*copy));SsaPcRenderer pc={0};
@@ -726,12 +804,13 @@ int main(int argc,char **argv)
     CHECK(ssa_classic_hud_blend555(0x7fff,0,0)==0 && ssa_classic_hud_blend555(0x7fff,0,255)==0x7fff);
     CHECK(ssa_classic_hud_blend888(0xffffff,0,128)==0x808080);
     for(i=0;i<2;++i)for(k=0;k<=100;++k){settings.hud_style=i;settings.sound_volume=k;
-        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[3]==19);
+        CHECK(ssa_settings_encode(&settings,encoded,16)==1 && encoded[3]==22);
         CHECK(ssa_settings_decode(&loaded,encoded,16)==1 && !memcmp(&settings,&loaded,sizeof settings));}
     settings.hud_style=2;CHECK(ssa_settings_encode(&settings,encoded,16)==-1);
     CHECK(ssa_pc_renderer_resize(&pc,480,320)==1);
     /* The alternate starting Colt has no resolved sprite before the first
      * simulation frame. Menu style changes must not render or advance it. */
+    crosshair_checks(rom,argc>2?argv[2]:NULL);
     CHECK(ssa_native_game_init(g,rom,0x800000,0)==1);
     CHECK(ssa_native_game_alternate_weapons(g,1,SSA_ALTERNATE_NEW_GAME)==1);
     for(i=0;i<4;++i){SsaSpriteOam saved=g->oam;SsaInventory inventory=g->players[0].inventory;

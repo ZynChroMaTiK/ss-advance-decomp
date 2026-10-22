@@ -11,6 +11,7 @@
 #include <vulkan/vulkan.h>
 #include "ssa_scene_vert.h"
 #include "ssa_scene_frag.h"
+#include "ssa_post_comp.h"
 
 #define INSTANCE_FUNCTIONS(X) \
  X(DestroyInstance) X(EnumeratePhysicalDevices) X(GetPhysicalDeviceProperties) \
@@ -23,12 +24,13 @@
  X(CreateRenderPass) X(DestroyRenderPass) X(CreateFramebuffer) X(DestroyFramebuffer) \
  X(CreateDescriptorSetLayout) X(DestroyDescriptorSetLayout) X(CreateDescriptorPool) X(DestroyDescriptorPool) \
  X(AllocateDescriptorSets) X(UpdateDescriptorSets) X(CreatePipelineLayout) X(DestroyPipelineLayout) \
- X(CreateShaderModule) X(DestroyShaderModule) X(CreateGraphicsPipelines) X(DestroyPipeline) \
+ X(CreateShaderModule) X(DestroyShaderModule) X(CreateGraphicsPipelines) X(CreateComputePipelines) X(DestroyPipeline) \
  X(CreateCommandPool) X(DestroyCommandPool) X(AllocateCommandBuffers) X(ResetCommandPool) \
  X(BeginCommandBuffer) X(EndCommandBuffer) X(CmdPipelineBarrier) X(CmdCopyBufferToImage) X(CmdCopyImageToBuffer) \
  X(CmdBeginRenderPass) X(CmdEndRenderPass) X(CmdBindPipeline) X(CmdBindDescriptorSets) X(CmdBindVertexBuffers) \
- X(CmdPushConstants) X(CmdSetViewport) X(CmdSetScissor) X(CmdDraw) \
+ X(CmdPushConstants) X(CmdSetViewport) X(CmdSetScissor) X(CmdDraw) X(CmdDispatch) X(CmdCopyBuffer) \
  X(CreateFence) X(DestroyFence) X(ResetFences) X(WaitForFences) X(QueueSubmit)
+typedef enum BufferMemory {BUFFER_UPLOAD,BUFFER_READBACK,BUFFER_DEVICE} BufferMemory;
 typedef struct Buffer {VkBuffer buffer;VkDeviceMemory memory;void *mapped;VkDeviceSize size;VkMemoryPropertyFlags flags;} Buffer;
 typedef struct Image {VkImage image;VkDeviceMemory memory;VkImageView view;} Image;
 typedef struct Vertex {float x,y,z,u,v;uint32_t material;} Vertex;
@@ -51,6 +53,11 @@ struct SsaVulkanRenderer {
     VkDescriptorSetLayout descriptors;VkDescriptorPool descriptor_pool;VkDescriptorSet set;
     VkCommandPool pool;VkCommandBuffer commands;VkFence fence;
     Image color,aux,depth;
+    VkPipeline post_pipeline;VkPipelineLayout post_layout;VkDescriptorSetLayout post_descriptors;
+    VkDescriptorPool post_pool;VkDescriptorSet post_set;Buffer post_input,post_work;
+    SsaPcRenderer *post_target;unsigned post_width,post_height; /* Borrowed until consumed; GPU samples survive reflections. */
+    SsaPcRenderer *motion_target;SsaPcMotionView motion_previous;
+    double motion_time;float motion_focal;unsigned motion_width,motion_height;
     Buffer vertices,textures,materials,upload,readback;
     SsaPcSample *cpu_samples;size_t sample_capacity;
     Vertex *cpu_vertices;size_t vertex_count,vertex_capacity;
@@ -85,7 +92,7 @@ static void buffer_free(SsaVulkanRenderer *v,Buffer *b)
     if(b->memory)V(FreeMemory)(v->device,b->memory,NULL);
     memset(b,0,sizeof(*b));
 }
-static int buffer_size(SsaVulkanRenderer *v,Buffer *b,VkDeviceSize size,VkBufferUsageFlags usage,int readback)
+static int buffer_size(SsaVulkanRenderer *v,Buffer *b,VkDeviceSize size,VkBufferUsageFlags usage,BufferMemory memory)
 {
     VkBufferCreateInfo ci={VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};VkMemoryRequirements req;
     VkMemoryAllocateInfo ai={VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};VkDeviceSize capacity=65536;
@@ -99,13 +106,16 @@ static int buffer_size(SsaVulkanRenderer *v,Buffer *b,VkDeviceSize size,VkBuffer
     /* Upload memory can be uncached/write-combined. Reading each sample from
      * that mapping stalls the CPU repeatedly; downloads need HOST_CACHED.
      * Prefer coherent cached memory, but support cached non-coherent heaps. */
-    if(!(readback &&
+    if(memory==BUFFER_DEVICE){
+        if(!memory_type(v,req.memoryTypeBits,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,&ai.memoryTypeIndex))return 0;
+    }else if(!(memory==BUFFER_READBACK &&
          (memory_type(v,req.memoryTypeBits,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_CACHED_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,&ai.memoryTypeIndex) ||
           memory_type(v,req.memoryTypeBits,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_CACHED_BIT,&ai.memoryTypeIndex))) &&
        !memory_type(v,req.memoryTypeBits,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,&ai.memoryTypeIndex))return 0;
     b->flags=v->memory.memoryTypes[ai.memoryTypeIndex].propertyFlags;
     OK(V(AllocateMemory)(v->device,&ai,NULL,&b->memory));OK(V(BindBufferMemory)(v->device,b->buffer,b->memory,0));
-    OK(V(MapMemory)(v->device,b->memory,0,VK_WHOLE_SIZE,0,&b->mapped));b->size=capacity;return 1;
+    if(memory!=BUFFER_DEVICE){OK(V(MapMemory)(v->device,b->memory,0,VK_WHOLE_SIZE,0,&b->mapped));}
+    b->size=capacity;return 1;
 }
 static void image_free(SsaVulkanRenderer *v,Image *i)
 {
@@ -147,7 +157,7 @@ static int pipeline_new(SsaVulkanRenderer *v)
     VkDescriptorSetLayoutBinding bindings[2]={{0,VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,1,VK_SHADER_STAGE_FRAGMENT_BIT,NULL},{1,VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,1,VK_SHADER_STAGE_FRAGMENT_BIT,NULL}};
     VkDescriptorSetLayoutCreateInfo di={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     VkDescriptorPoolSize pool_size={VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,2};VkDescriptorPoolCreateInfo dp={VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-    VkDescriptorSetAllocateInfo da={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};VkPushConstantRange push={VK_SHADER_STAGE_VERTEX_BIT,0,8};
+    VkDescriptorSetAllocateInfo da={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};VkPushConstantRange push={VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT,0,12};
     VkPipelineLayoutCreateInfo pl={VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};VkShaderModule shaders[2]={0};unsigned i;
     VkPipelineShaderStageCreateInfo stages[2]={{VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO},{VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO}};
     VkVertexInputBindingDescription vb={0,sizeof(Vertex),VK_VERTEX_INPUT_RATE_VERTEX};
@@ -268,6 +278,8 @@ static int begin(void *context,SsaPcRenderer *r,const uint32_t palette[256],doub
 {
     SsaVulkanRenderer *v=context;
     if(v->failed || v->recording || first>=row_end || row_end>r->height)return -1;
+    if(v->post_target==r)v->post_target=NULL;
+    if(v->motion_target==r && !(r->hardware_features&SSA_PC_MOTION))v->motion_target=NULL;
     v->first_row=first;v->end_row=row_end;
     if(!grow((void **)&v->cpu_textures,&v->texture_capacity,256,sizeof(uint32_t)))return -1;
     /* Bound retained content across map changes; queued passes have already
@@ -311,6 +323,7 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
 {
     double start=wall_time(),submitted,completed;
     int new_textures=v->textures.size<v->texture_count*4;
+    int retain_surface=(r->hardware_features&(SSA_PC_AO|SSA_PC_MOTION)) && v->first_row==0 && v->end_row==r->height;
     size_t n=(size_t)r->width*r->height;VkDeviceSize colors=n*4,aux_offset=(colors+15)&~(VkDeviceSize)15,bytes=aux_offset+n*sizeof(SsaPcSample),zero=0;
     size_t first_pixel=(size_t)v->first_row*r->width,row_pixels=(size_t)(v->end_row-v->first_row)*r->width;
     VkDescriptorBufferInfo buffers[2];VkWriteDescriptorSet writes[2]={{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET},{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET}};
@@ -321,11 +334,15 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
     VkMemoryBarrier host={VK_STRUCTURE_TYPE_MEMORY_BARRIER};VkSubmitInfo si={VK_STRUCTURE_TYPE_SUBMIT_INFO};unsigned i;
     if(!target_size(v,r->width,r->height) || v->texture_count*4>v->properties.limits.maxStorageBufferRange ||
        v->material_count*sizeof(Material)>v->properties.limits.maxStorageBufferRange)return 0;
-    if(!buffer_size(v,&v->vertices,(v->vertex_count?v->vertex_count:1)*sizeof(Vertex),VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,0) ||
-       !buffer_size(v,&v->textures,v->texture_count*4,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,0) ||
-       !buffer_size(v,&v->materials,(v->material_count?v->material_count:1)*sizeof(Material),VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,0) ||
-       !buffer_size(v,&v->upload,colors,VK_BUFFER_USAGE_TRANSFER_SRC_BIT,0) ||
-       !buffer_size(v,&v->readback,bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,1))return 0;
+    if(!buffer_size(v,&v->vertices,(v->vertex_count?v->vertex_count:1)*sizeof(Vertex),VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,BUFFER_UPLOAD) ||
+       !buffer_size(v,&v->textures,v->texture_count*4,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,BUFFER_UPLOAD) ||
+       !buffer_size(v,&v->materials,(v->material_count?v->material_count:1)*sizeof(Material),VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,BUFFER_UPLOAD) ||
+       !buffer_size(v,&v->upload,colors,VK_BUFFER_USAGE_TRANSFER_SRC_BIT,BUFFER_UPLOAD) ||
+       !buffer_size(v,&v->readback,bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,BUFFER_READBACK))return 0;
+    /* Preserve the main-view chart on the device before reflected views reuse
+     * the attachments. Postprocessing only needs to upload composed RGB. */
+    if(retain_surface && (bytes>v->properties.limits.maxStorageBufferRange ||
+       !buffer_size(v,&v->post_input,bytes,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|VK_BUFFER_USAGE_TRANSFER_DST_BIT,BUFFER_DEVICE)))return 0;
     if(v->vertex_count)memcpy(v->vertices.mapped,v->cpu_vertices,v->vertex_count*sizeof(Vertex));
     if(new_textures)memcpy(v->textures.mapped,v->cpu_textures,v->texture_count*4);
     else memcpy(v->textures.mapped,v->cpu_textures,256*sizeof(uint32_t));
@@ -356,7 +373,10 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
     V(CmdBeginRenderPass)(v->commands,&pass,VK_SUBPASS_CONTENTS_INLINE);
     V(CmdSetViewport)(v->commands,0,1,&viewport);V(CmdSetScissor)(v->commands,0,1,&scissor);
     V(CmdBindDescriptorSets)(v->commands,VK_PIPELINE_BIND_POINT_GRAPHICS,v->layout,0,1,&v->set,0,NULL);
-    V(CmdBindVertexBuffers)(v->commands,0,1,&v->vertices.buffer,&zero);V(CmdPushConstants)(v->commands,v->layout,VK_SHADER_STAGE_VERTEX_BIT,0,8,v->scale);
+    V(CmdBindVertexBuffers)(v->commands,0,1,&v->vertices.buffer,&zero);{
+        struct {float scale[2];uint32_t anisotropic;} view={{v->scale[0],v->scale[1]},(r->hardware_features&SSA_PC_AF)!=0};
+        V(CmdPushConstants)(v->commands,v->layout,VK_SHADER_STAGE_VERTEX_BIT|VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof view,&view);}
+
     /* Complete world depth first, then preserve the caller's sorted actor
      * order. Normal scene submissions are just one draw per pass. */
     for(i=0;i<2;++i){size_t first=0;
@@ -371,6 +391,7 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
     V(CmdCopyImageToBuffer)(v->commands,v->color.image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,v->readback.buffer,1,&copy);
     copy.bufferOffset=aux_offset+first_pixel*sizeof(SsaPcSample);
     V(CmdCopyImageToBuffer)(v->commands,v->aux.image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,v->readback.buffer,1,&copy);
+    if(retain_surface)V(CmdCopyImageToBuffer)(v->commands,v->aux.image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,v->post_input.buffer,1,&copy);
     host.srcAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT;host.dstAccessMask=VK_ACCESS_HOST_READ_BIT;
     V(CmdPipelineBarrier)(v->commands,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_HOST_BIT,0,1,&host,0,NULL,0,NULL);
     OK(V(EndCommandBuffer)(v->commands));OK(V(ResetFences)(v->device,1,&v->fence));si.commandBufferCount=1;si.pCommandBuffers=&v->commands;
@@ -388,6 +409,7 @@ static int submit(SsaVulkanRenderer *v,SsaPcRenderer *r,const SsaPcSample **samp
         if(!grow((void **)&v->cpu_samples,&v->sample_capacity,n,sizeof(SsaPcSample)))return 0;
         memcpy(v->cpu_samples+first_pixel,*samples+first_pixel,row_pixels*sizeof(SsaPcSample));*samples=v->cpu_samples;
     }
+    if(retain_surface){v->post_target=r;v->post_width=r->width;v->post_height=r->height;}
     v->timing.prepare+=submitted-start;v->timing.wait+=completed-submitted;v->timing.readback+=wall_time()-completed;++v->timing.passes;
     return 1;
 }
@@ -419,6 +441,7 @@ static void rows(void *context,unsigned first,unsigned end,SsaPcRows run,void *d
     row_job(&job);WaitForThreadpoolWorkCallbacks(work,FALSE);CloseThreadpoolWork(work);
     v->timing.effects+=wall_time()-start;
 }
+#include "vulkan_post.inc"
 static int initialize(SsaVulkanRenderer *v)
 {
     PFN_vkCreateInstance create;VkApplicationInfo app={VK_STRUCTURE_TYPE_APPLICATION_INFO};VkInstanceCreateInfo ci={VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
@@ -449,7 +472,7 @@ static int initialize(SsaVulkanRenderer *v)
         if(!f.independentBlend || p.deviceType==VK_PHYSICAL_DEVICE_TYPE_CPU)continue;
         V(GetPhysicalDeviceQueueFamilyProperties)(devices[i],&n,NULL);queues=calloc(n,sizeof(*queues));if(!queues)continue;
         V(GetPhysicalDeviceQueueFamilyProperties)(devices[i],&n,queues);
-        for(j=0;j<n;++j)if(queues[j].queueCount && (queues[j].queueFlags&VK_QUEUE_GRAPHICS_BIT))break;free(queues);if(j==n)continue;
+        for(j=0;j<n;++j)if(queues[j].queueCount && ((queues[j].queueFlags&(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT))==(VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT)))break;free(queues);if(j==n)continue;
         score=p.deviceType==VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU?3:p.deviceType==VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU?2:1;
         if(score>best){best=score;v->physical=devices[i];v->family=j;v->properties=p;}}
     free(devices);if(!v->physical)return 0;
@@ -472,7 +495,7 @@ static int initialize(SsaVulkanRenderer *v)
         if(v->worker_count)v->workers=CreateThreadpool(NULL);}
     if(v->workers){InitializeThreadpoolEnvironment(&v->worker_environment);
         SetThreadpoolThreadMaximum(v->workers,v->worker_count);SetThreadpoolCallbackPool(&v->worker_environment,v->workers);}
-    v->backend=(SsaPcHardware){v,begin,triangle,end,rows};return 1;
+    v->backend=(SsaPcHardware){v,begin,triangle,end,postprocess,rows};return 1;
 }
 SsaVulkanRenderer *ssa_vulkan_open(void)
 {
@@ -491,6 +514,11 @@ void ssa_vulkan_close(SsaVulkanRenderer *v)
     image_free(v,&v->color);image_free(v,&v->aux);image_free(v,&v->depth);
     buffer_free(v,&v->vertices);buffer_free(v,&v->textures);buffer_free(v,&v->materials);buffer_free(v,&v->upload);buffer_free(v,&v->readback);
     for(unsigned i=0;i<2;++i)if(v->pipeline[i])V(DestroyPipeline)(v->device,v->pipeline[i],NULL);
+    buffer_free(v,&v->post_input);buffer_free(v,&v->post_work);
+    if(v->post_pipeline)V(DestroyPipeline)(v->device,v->post_pipeline,NULL);
+    if(v->post_layout)V(DestroyPipelineLayout)(v->device,v->post_layout,NULL);
+    if(v->post_pool)V(DestroyDescriptorPool)(v->device,v->post_pool,NULL);
+    if(v->post_descriptors)V(DestroyDescriptorSetLayout)(v->device,v->post_descriptors,NULL);
     if(v->layout)V(DestroyPipelineLayout)(v->device,v->layout,NULL);
     if(v->descriptor_pool)V(DestroyDescriptorPool)(v->device,v->descriptor_pool,NULL);
     if(v->descriptors)V(DestroyDescriptorSetLayout)(v->device,v->descriptors,NULL);

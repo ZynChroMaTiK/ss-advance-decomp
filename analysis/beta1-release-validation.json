@@ -1,0 +1,73 @@
+{
+  "result": "pass",
+  "version": "0.8.0-beta.1",
+  "archive_sha256": "a8c491deb85588cfd5b45e97a1ff6b37a93aa7bff23ae39ec5182c61cf194f0e",
+  "entries": [
+    "play-native.cmd",
+    "README.md",
+    "VERSION",
+    "build/native-windows/Release/ssa_native_game.exe",
+    "orig/README.md",
+    "scripts/install-soundfont.ps1",
+    "soundfonts/README.md",
+    "third_party/TinySoundFont/LICENSE",
+    "third_party/TinySoundFont/README.md",
+    "third_party/TinySoundFont/REVISION"
+  ],
+  "packaged_launcher": {
+    "result": "pass",
+    "frames": 180,
+    "health": 100,
+    "entities": 16,
+    "score": 0,
+    "hidden_window": true,
+    "render_width": 1024,
+    "render_height": 768,
+    "world_rays": 0,
+    "initial_width": 1920,
+    "initial_height": 1080,
+    "pitch": 0,
+    "buffered_presents": 1,
+    "presentation_samples": 3
+  },
+  "smoke_directory": "C:\\SeriousEngine\\Coding\\ss-advance-decomp\\build\\releases\\beta1-smoke-029b7a05d41a44f29cbde52efe3fd3b4",
+  "rom_bundled": false,
+  "personal_saves_bundled": false,
+  "executable_sha256": "8738749cd1a0f38484c90814bf8b22d2a1d4531cf8dc5de0a7967cef50355871",
+  "website_checks": [
+    "test_site.mjs",
+    "test_site_routes.mjs",
+    "test_site_viewer_loading.mjs",
+    "test_site_explorer_controls.mjs",
+    "test_site_wiki.mjs",
+    "test_site_graphics.mjs",
+    "test_site_graphics.py",
+    "test_site_http.py",
+    "test_site_audit.py",
+    "test_site_documents.py"
+  ],
+  "focused_ctests": 11,
+  "validation_reports": [
+    "vulkan-validation.json",
+    "audio-settings-validation.json",
+    "windows-audio-settings-validation.json",
+    "special-weapons-validation.json",
+    "windows-special-weapons-validation.json",
+    "prion-targeting-validation.json",
+    "windows-prion-targeting-validation.json",
+    "windows-weapon-cadence-validation.json",
+    "windows-weapon-wheel-validation.json"
+  ],
+  "source_sha256": {
+    "VERSION": "e0e66c9e911aa32bf51e47c47668f2e16503f23e9c77bdfaf40e3335d0aa2351",
+    "include/ssa/settings.h": "c3faf865e872c1e8cc83013f4786ca55d8c6e4b5ea7d6f926cf0bc58666ff1dc",
+    "src/settings.c": "a4988b51bc49b8fbc68128d8670fc4b4d53aec4029b516a4ba94b0cb0cc42cb5",
+    "src/menu.c": "b375c41701d413a2ad080ad42ab31361dd2de79f33dbf6b667377ae4ca193daa",
+    "platform/win32/game.c": "ae60486b868668e60caf5bbe34184c73539f9a88438c37187f9bf2925d7cead3",
+    "platform/win32/game_vsync.inc": "0cb4983b3fd4b82a902f10f4b2a32646dec7f52c452680a88ea1108bce8be345",
+    "platform/win32/game.manifest": "016eaf554572f7ac7897626e49111d806868de4c2f1b8562f4e313312921c9ca",
+    "site/index.html": "4a3ab29870380c89f8011376b44641e1303c1b902b5c0e059ec9ac5449ba529d",
+    "README.md": "fae2109ab0e5a1380dc84d01e0d3ab79073ac9781cb1c6e82f4849ada839fe18",
+    "releases/v0.8.0-beta.1.md": "091e30d2ee937ba8759e79d51d54e3843e5f67084be7a857913907d1daebc119"
+  }
+}

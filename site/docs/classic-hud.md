@@ -14,6 +14,36 @@ or rearrangement applies to its240x160 OAM. Software rendering anchors those
 same groups to the viewport, preserving their native distance from each edge.
 The Serious Engine positioning below describes Classic only.
 
+## Fixed crosshair (2026-10-22)
+
+Classic uses the user's exact19x19 `crosshair.png`, padded into24x24 storage
+without resizing, pixel filtering or generated shading. Its isolated center dot
+at(12,12) stays exactly on the aim coordinate. The original light/dark OBJ81/206
+colors and binary transparency match the PNG pixel for pixel without a target.
+Original HUD retains
+both original crosshair animations. Classic replaces type18 only in presentation
+OAM; its original controller and weapon/target behavior remain intact.
+
+The color thresholds follow Croteam's `PlayerWeapons.es` RenderCrosshair:
+[Serious Engine source](https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/PlayerWeapons.es).
+A living enemy is green at>=60% nominal species health, yellow at25..59%, red
+below25%; no enemy, pickups, obstructions and corpses use white. Prion health
+above the original species maximum stays green. The existing original activation
+table supplies nominal maxima without a duplicate health table.
+
+View preparation samples the existing dedicated unlimited sight trace, with no
+combat callbacks or gameplay-query changes. Native vertical aim stays centered;
+GBA and native autoaim use the existing unbobbing projected cursor, including the
+third-person correction. Classic shows the fixed crosshair for every weapon.
+A separate center-anchored layer avoids accidental corner anchoring when autoaim
+moves the cursor over other HUD rows. The GBA RGB555 and Software/Vulkan RGB888
+compositors share the art/palette helper. Death, automap and suppressed HUD hide it.
+
+Focused checks cover exact25/60% boundaries, unchanged shape, palette colors,
+real-world target/dead-target/obstruction queries, all aiming policies, GBA/native
+composition, aspect-ratio anchoring and original-HUD restoration. These are
+focused renderer checks, not a campaign playthrough.
+
 ## Serious Engine positioning
 
 The current layout follows the [Serious Engine HUD anchors](https://github.com/Croteam-official/Serious-Engine/blob/master/Sources/EntitiesMP/Common/HUD.cpp#L767)
@@ -271,7 +301,7 @@ wsl -d Ubuntu --exec /mnt/c/SeriousEngine/Coding/ss-advance-decomp/.venv-linux/b
 
 Pre-level switching fix (2026-10-19): the reported session log
 `build/logs/launch-21297-16128-9372/stderr.log` was empty. The exit was reproduced
-with Alternate weapons On, as in the saved settings. The menu's native HUD setter
+with Enhanced weapons On, as in the saved settings. The menu's native HUD setter
 tried to build OAM while the starting Colt still had unresolved previous_frameFFFF;
 the alternate weapon builder rejected that image, and settings_change marked the
 app failed without a diagnostic. Before the first simulation frame, the setter
@@ -346,7 +376,7 @@ PNG after palette conversion, and verifies that the clipped padding is transpare
 A cold-start regression also verifies repeated changes
 with the starting alternate Colt, unchanged inventory/OAM/counter and successful
 first-frame rendering. Windows frontend checks cover keyboard and mouse changes
-before gameplay with Alternate weapons Off/On in both renderers, disk round
+before gameplay with Enhanced weapons Off/On in both renderers, disk round
 trips, and pause, NETRICSA and clean
 completion captures in both renderers. Settings/localization/audio regression
 checks pass38,922 native assertions and23,381 Windows assertions, including saved
@@ -612,3 +642,7 @@ The existing real-button capture checks the prompt's silhouette and green hue.
 Both GBA and software previews were inspected. Windows HUD integration passes
 1666 checks/two renderers and the rebuilt frontend passes30 startup frames.
 No campaign replay or gameplay changes.
+
+The supplied artwork contains49 light and24 dark pixels. Health colors preserve
+its two-tone detail using the original18/28 intensity ratio and nearest existing
+palette colors; no-target uses the PNG's exact original palette colors.

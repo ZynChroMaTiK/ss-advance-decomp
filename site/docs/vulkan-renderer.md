@@ -17,6 +17,140 @@ fixed-resolution reference mode. Settings version15 retains the16-byte format,
 existing renderer values0/1, and all previous choices; byte7 bit7 adds renderer2.
 Versions1..14 still decode. Invalid renderer3 is rejected.
 
+## Optional Graphics effects (2026-10-22)
+
+Graphics offers four independent Vulkan-only toggles, all Off by default:
+Antialiasing (FXAA), Anisotropic (up to8x), Ambient occlusion (SSAO), and
+Motion blur. Graphics groups display setup at rows16/24/32/40 (including VSync), filtering and
+postprocessing at56/64/72/80/88 (Mipmapping, Anisotropic, Antialiasing, Ambient
+occlusion, Motion blur), and scene details at104/112/120/128. Blank tiles separate
+the groups; Back remains144. Software/GBA disable and skip these
+controls while retaining their saved choices. Labels render in small batches
+in all three languages, and stable action IDs are independent of row order.
+Settings v22 also stores shared presentation VSync in byte11 bit4; v21 added
+motion blur in bit3 of the same16-byte CRC record. VSync is independent of
+renderer selection, defaults On and is disabled when DWM sync is unavailable.
+Versions1..20 migrate with motion blur Off; v20's other effect choices remain
+intact. Existing renderer/audio/control preferences are unchanged.
+
+### Camera motion blur
+
+The compute pass reconstructs camera velocity from current depth and the
+previous camera basis/origin, then samples along the resulting screen-space
+vector. It reads only the current composed scene: no old color frames are
+blended, preventing persistent frame trails. Depth rejection reduces bleeding
+across foreground/background boundaries. Sky uses rotational velocity only.
+This is camera motion blur; independently moving actors have no object-velocity
+buffer. Translation and yaw/pitch are supported in first and third person.
+
+The effect runs after AO/AA and before fixed-screen actors, weapon, crosshair
+and HUD composition. Nominal exposure is1/120second, capped to one frame;
+sampling uses up to12 taps with a24-pixel vector cap. Motion under half a
+pixel stays exact. Stationary/first frames, pause/death, level changes,
+reversed frame counters, third-person changes, FOV/size changes, mode toggles,
+gaps over0.2seconds and large camera cuts reset or bypass blur. The frontend
+also invalidates history for renderer/blur toggles between scene draws.
+
+Only camera state is retained on the CPU. Motion blur shares the existing
+GPU-retained surface data and4-byte-per-pixel RGB upload. At most two working
+image regions alternate between passes: blur reuses the AO region after AA
+has finished reading it. Compute barriers cover both read-after-write and
+write-after-read dependencies. Stationary/cut frames omit the blur pass;
+when no other post effect is active, they also skip the RGB upload, compute
+submission, fence wait and RGB download. History still advances on those frames.
+The normal scene pass still retains surface metadata for enabled motion blur.
+The combined push constants occupy80 bytes (within Vulkan1.0's minimum).
+Reflections retain their own rendering settings; the composed reflected scene
+receives the main camera's final blur.
+
+Validation: all eight AA/AF/AO combinations with motion blur, stationary and
+first-frame exactness, translation blur, pause/level/view/epoch/teleport resets,
+a real level camera turn, unchanged depth and exact Off restoration. Dispatch
+counts verify no-op bypass and resumed movement after cuts across all effect
+combinations. A stationary motion-only frame needs no sample buffer.
+Vulkan passes8,453,254 checks with zero validation errors and the hidden muted
+frontend resize check. All11 focused CTests pass. ASan/UBSan audio/settings
+passes40,058 checks, including save migration and all three localized menus;
+menu and motion-blurred level captures were visually inspected. No campaign
+playthrough was run.
+
+The fragment shader performs actual anisotropic footprint sampling of indexed
+world textures. It derives the principal texel-footprint axes, samples along
+the major axis up to8 times, selects the existing ROM mip by the minor axis,
+and samples each tap with nearest-texel lookup. Magnification stays identical
+to ordinary nearest sampling, with no bilinear edge softening. Minified
+footprints still average along the compressed axis to retain anisotropic
+filtering; Above8x it widens the minor footprint.
+It supports negative/wrapped UVs and applies to reflected world textures too.
+This is shader filtering of palette-buffer assets, not a samplerAnisotropy
+switch on nonexistent sampled images. Sprites retain nearest sampling and
+transparent cutouts; flat-colored planes and CPU surface decals retain their
+existing shading paths. Disabling mipmaps still uses base textures.
+
+GPU compute postprocessing runs after scene decals/reflections/godrays and
+before fixed-screen effects, weapons, crosshair and HUD. SSAO reconstructs
+view-space positions/normals from geometric depth, takes16 bounded nearby
+samples (48 world-unit radius, max40 screen pixels), and adds subtle contact
+shading. Sky and billboard pixels are excluded to avoid dark sky or rectangular
+sprite artifacts. AO now evaluates at the projected center of each base world
+texel: wall UVs are already texels; floor/ceiling UVs use two world units per
+texel. A local planar UV chart reconstructs the center in view space before
+projecting back to the depth buffer. This follows perspective, texture origins
+and moving surfaces instead of imposing a fixed screen grid. The AO shade is
+applied without interpolation, retaining visible texel boundaries. Off-screen,
+occluded or degenerate centers use the current sample to avoid borrowing AO
+from another surface. This remains screen-space AO, not baked occlusion.
+Its color pass precedes independently toggleable edge-adaptive FXAA. No gameplay,
+aim ray, geometry depth or original sprite clipping/priority is modified.
+All-Off performs no postprocessing allocation/transfer/dispatch. Compute
+pipelines and device-local working buffers are created lazily and retained.
+AA alone now reads the color input directly in one dispatch and uploads no
+unused depth. AO alone uses one output image; combined AO+AA retains two image
+regions and two dispatches. Buffer ranges track the selected path while
+allocated capacities persist across toggles. The main-view UV/depth/material
+attachment is now copied directly into device-local postprocessing storage
+before reflections reuse the attachments. Normal AO uploads only composed RGB
+(4 bytes per pixel), eliminating its former16-byte-per-pixel CPU sample array
+and metadata upload. The existing scene readback for CPU decals/statistics
+remains. AA alone also uploads only4 bytes per pixel. See the2026-10-22 revision in
+[technical-refactors.md](technical-refactors.md) for parity checks and timings.
+
+The existing hybrid renderer requires one extra upload/readback when either
+post effect is On. Uploads use host-coherent staging; compute inputs/working
+colors stay in device-local memory. Transfer->compute, compute->compute,
+compute->transfer and transfer->host barriers plus the existing fence protect
+all passes. The surface block is16-byte aligned, including odd target sizes.
+Retained metadata belongs to one renderer and its dimensions, is invalidated
+when that target starts another draw, and is consumed by postprocessing. A
+reflection target can reuse attachments without replacing the main metadata.
+An explicit owned host-sample override supports standalone postprocessing and
+differential tests; ordinary scene rendering allocates no such array. Sky and
+sprite exclusion now occurs in the shader, with identical masked depths.
+See the [Khronos synchronization examples](https://docs.vulkan.org/guide/latest/synchronization_examples.html).
+Resizes, 1-pixel/odd targets, repeated toggles, shared reflection resources and
+teardown are covered by the Vulkan validation checks. Only the main view needs
+the post passes; reflected texture filtering occurs in each reflected draw.
+
+Validation includes synthetic flat/sky preservation, diagonal-edge smoothing,
+local depth-contact shading, elongated-footprint texture detail, all7 feature
+combinations, exact Off restoration and unchanged Software/depth outputs.
+Settings roundtrips/migration and keyboard/mouse disabled-row navigation pass.
+Menu captures were inspected in all three languages. The hardware run on an
+RTX4060 Laptop GPU passes8,453,163 checks with zero validation errors, plus
+native frontend launch/resize sanity; no campaign playthrough was run.
+New checks prove exact nearest-sampling magnification, retained anisotropic
+minification detail, constant AO within world texels on wall/flat charts,
+slanted perspective and shifted negative UVs. All11 focused CTests pass.
+The combined-effect pool capture was visually inspected. Retained-GPU versus
+masked-host metadata produces exact output across reflection attachment
+resizes, target growth/shrink and AO with/without AA.
+
+A short8-frame-per-scene1920x1080 diagnostic measured all three enabled against
+Off: level-start8.26->13.60ms; pool11.51->16.30ms; reflected pool25.50->30.85ms.
+Heavier shadow/godray/crowd scenes added roughly11..12ms. These are isolated
+render timings, not full-game FPS guarantees. See `vulkan-effects-performance.json`.
+All three remain optional because their cost depends on scene and GPU.
+
 ## Ownership and rendering
 
 `SsaPcHardware` is a borrowed scene interface, independent of Vulkan and Win32.

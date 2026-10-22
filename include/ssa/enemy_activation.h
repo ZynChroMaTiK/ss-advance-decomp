@@ -41,6 +41,8 @@ typedef struct SsaEnemyActivationOps {
  * require event callback; others permit NULL ops. Countdown, prior fields and
  * effects remain changed on callback failure. Does not run AI, movement,
  * attacks, death or the outer entity dispatcher. */
+/* Original species maximum; zero for non-enemies. */
+unsigned ssa_enemy_initial_health(unsigned type);
 int ssa_enemy_activation_step(SsaEnemyActivation *, SsaEnemyActivationGame *,
                               const SsaEnemyActivationOps *, unsigned ticks);
 #endif

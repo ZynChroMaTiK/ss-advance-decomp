@@ -6,15 +6,22 @@ enum {SELECT_TOP=40,SELECT_SPACING=16,BACK_TOP=144};
 enum {PANEL_LEFT=32,VALUE_LEFT=144,BAR_RIGHT=176,BAR_SPAN=BAR_RIGHT-PANEL_LEFT,
       BAR_HEIGHT=7};
 /* Stable IDs keep actions/translations independent of display order. Each
- * row owns its label, slider position/range and GBA availability together. */
-typedef struct MenuRow {unsigned id;int top,bar_top;unsigned maximum,gba_disabled;} MenuRow;
+ * row owns its label, slider position/range and renderer availability together. */
+typedef enum RowAvailability {ROW_ANY,ROW_NATIVE,ROW_VULKAN,ROW_VSYNC} RowAvailability;
+typedef struct MenuRow {unsigned id;int top,bar_top;unsigned maximum;RowAvailability availability;} MenuRow;
 static const MenuRow settings_rows[]={
-    {0,16,0,0,0}, {8,32,40,SSA_MOUSE_RANGE,0}, {3,56,64,SSA_FOV_RANGE,1},
-    {4,88,0,0,0}, {5,96,104,100,0}, {6,112,120,100,0}, {7,BACK_TOP,0,0,0}
+    {0,16,0,0,ROW_ANY}, {8,32,40,SSA_MOUSE_RANGE,ROW_ANY}, {3,56,64,SSA_FOV_RANGE,ROW_NATIVE},
+    {4,88,0,0,ROW_ANY}, {5,104,112,100,ROW_ANY}, {6,120,128,100,ROW_ANY}, {7,BACK_TOP,0,0,ROW_ANY}
 };
 static const MenuRow graphics_rows[]={
-    {0,24,0,0,0}, {1,40,0,0,0}, {2,56,0,0,1}, {3,72,0,0,1},
-    {4,88,0,0,0}, {5,96,0,0,0}, {6,104,0,0,0}, {7,112,0,0,0}, {8,BACK_TOP,0,0,0}
+    /* Display setup. */
+    {0,16,0,0,ROW_ANY}, {1,24,0,0,ROW_ANY}, {2,32,0,0,ROW_NATIVE}, {13,40,0,0,ROW_VSYNC},
+    /* Image filtering and postprocessing. Blank tiles separate the groups. */
+    {3,56,0,0,ROW_NATIVE}, {10,64,0,0,ROW_VULKAN}, {9,72,0,0,ROW_VULKAN},
+    {11,80,0,0,ROW_VULKAN}, {12,88,0,0,ROW_VULKAN},
+    /* Scene details. */
+    {4,104,0,0,ROW_ANY}, {5,112,0,0,ROW_ANY}, {6,120,0,0,ROW_ANY}, {7,128,0,0,ROW_ANY},
+    {8,BACK_TOP,0,0,ROW_ANY}
 };
 enum {SETTINGS_ROWS=sizeof settings_rows/sizeof *settings_rows,GRAPHICS_ROWS=sizeof graphics_rows/sizeof *graphics_rows-1};
 static const MenuRow *settings_row(unsigned id){
@@ -30,8 +37,37 @@ static unsigned *settings_bar_value(SsaMenu *m,unsigned id){
     default:return NULL;
     }
 }
+/* One mapping serves both displayed values and toggle actions. Row metadata
+ * remains the single source of renderer/capability availability. */
+static unsigned *graphics_toggle(SsaSettings *s,unsigned id)
+{
+    switch(id){
+    case 0:return &s->display_mode;
+    case 2:return &s->aspect_ratio;
+    case 3:return &s->mipmaps;
+    case 4:return &s->surface_decals;
+    case 5:return &s->water_reflections;
+    case 6:return &s->godrays;
+    case 7:return &s->sprite_shadows;
+    case 9:return &s->vulkan_antialiasing;
+    case 10:return &s->vulkan_anisotropic;
+    case 11:return &s->vulkan_ambient_occlusion;
+    case 12:return &s->vulkan_motion_blur;
+    case 13:return &s->vsync;
+    default:return NULL;
+    }
+}
 static unsigned row_disabled(const SsaMenu *m,const MenuRow *row)
-{return row && row->gba_disabled && m->settings.renderer==SSA_RENDER_GBA;}
+{
+    if(!row)return 0;
+    switch(row->availability){
+    case ROW_NATIVE:return m->settings.renderer==SSA_RENDER_GBA;
+    case ROW_VULKAN:return m->settings.renderer!=SSA_RENDER_VULKAN || !m->vulkan_available;
+    case ROW_VSYNC:return !m->vsync_available;
+    default:return 0;
+    }
+}
+
 enum {EXTRA_TOP=16,EXTRA_ROWS=8,EXTRA_SPACING=8};
 /* General presentation/controls, navigation, weapon rules, then visual effects.
  * IDs preserve the field/translation mapping independently of display order. */
@@ -422,24 +458,22 @@ int ssa_menu_step_input(SsaMenu *m,unsigned input,unsigned held)
                 else{page(m,SSA_MENU_CLEAR_DATA);m->selection=1;}}}
         if(input&SSA_MENU_BACK){command(m,16);page(m,0);}
         break;}
-    case SSA_MENU_GRAPHICS:
-        move(m,input,GRAPHICS_ROWS);
-        if(m->settings.renderer==SSA_RENDER_GBA && (m->selection==2 || m->selection==3) && (input&(SSA_MENU_UP|SSA_MENU_DOWN)))
-            m->selection=input&SSA_MENU_UP?1:4;
-        if((input&SSA_MENU_BACK) || (m->selection==GRAPHICS_ROWS && (input&SSA_MENU_CONFIRM))){
+    case SSA_MENU_GRAPHICS:{unsigned row;
+        for(row=0;row<=GRAPHICS_ROWS && graphics_rows[row].id!=m->selection;++row){}
+        m->selection=row<=GRAPHICS_ROWS?row:0;move(m,input,GRAPHICS_ROWS);
+        if(input&(SSA_MENU_UP|SSA_MENU_DOWN))while(row_disabled(m,&graphics_rows[m->selection]))
+            m->selection=(m->selection+((input&SSA_MENU_UP)?GRAPHICS_ROWS:1))%(GRAPHICS_ROWS+1);
+        const MenuRow *selected=&graphics_rows[m->selection];
+        m->selection=selected->id;
+        if((input&SSA_MENU_BACK) || (m->selection==8 && (input&SSA_MENU_CONFIRM))){
             command(m,16);page(m,SSA_MENU_OPTIONS);m->selection=6;break;}
-        if(input&(SSA_MENU_LEFT|SSA_MENU_RIGHT|SSA_MENU_CONFIRM)){
-            if(!m->selection){m->settings.display_mode^=1;command(m,13);}
-            else if(m->selection==1){unsigned count=m->vulkan_available?SSA_RENDERERS:2;
+        if((input&(SSA_MENU_LEFT|SSA_MENU_RIGHT|SSA_MENU_CONFIRM)) && !row_disabled(m,selected)){
+            unsigned *flag=graphics_toggle(&m->settings,selected->id);
+            if(flag){*flag^=1;command(m,13);}
+            else if(selected->id==1){unsigned count=m->vulkan_available?SSA_RENDERERS:2;
                 m->settings.renderer=(m->settings.renderer+((input&SSA_MENU_LEFT)?count-1:1))%count;command(m,13);}
-            else if(m->selection==2 && m->settings.renderer!=SSA_RENDER_GBA){m->settings.aspect_ratio^=1;command(m,13);}
-            else if(m->selection==3 && m->settings.renderer!=SSA_RENDER_GBA){m->settings.mipmaps^=1;command(m,13);}
-            else if(m->selection==4){m->settings.surface_decals^=1;command(m,13);}
-            else if(m->selection==5){m->settings.water_reflections^=1;command(m,13);}
-            else if(m->selection==6){m->settings.godrays^=1;command(m,13);}
-            else if(m->selection==7){m->settings.sprite_shadows^=1;command(m,13);}
         }
-        break;
+        break;}
     case SSA_MENU_SETTINGS:{unsigned row;
         for(row=0;row<SETTINGS_ROWS && settings_rows[row].id!=m->selection;++row){}
         m->selection=row<SETTINGS_ROWS?row:0;move(m,input,SETTINGS_ROWS-1);m->selection=settings_rows[m->selection].id;
@@ -693,9 +727,9 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
     }
     if(ssa_map_view_compose(&m->canvas,out,pixels)!=1)return -1;
     if(m->draw_page==SSA_MENU_EXTRA){
-        static const char *labels[3][10]={{"Extras","Jump","Third-person","In-game NETRICSA","Alternate weapons","Automap","HUD","Weapon bobbing","Vertical aim","Back"},
-            {"Extras","Springen","Dritte Person","NETRICSA im Spiel","Alternative Waffen","Automap","HUD","Waffenwippen","Vertikal zielen","Zurueck"},
-            {"Extras","Saut","Troisieme personne","NETRICSA en jeu","Armes alternatives","Carte auto","HUD","Mouvement arme","Visee verticale","Retour"}};
+        static const char *labels[3][10]={{"Extras","Jump","Third-person","In-game NETRICSA","Enhanced weapons","Automap","HUD","Weapon bobbing","Vertical aim","Back"},
+            {"Extras","Springen","Dritte Person","NETRICSA im Spiel","Verbesserte Waffen","Automap","HUD","Waffenwippen","Vertikal zielen","Zurueck"},
+            {"Extras","Saut","Troisieme personne","NETRICSA en jeu","Armes ameliorees","Carte auto","HUD","Mouvement arme","Visee verticale","Retour"}};
         static const char *classic[3]={"Classic","Klassisch","Classique"};
         static const char *on[3]={"On","Ein","Oui"},*off[3]={"Off","Aus","Non"};
         char line[64];
@@ -705,10 +739,10 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
         if(ssa_map_view_overlay(&m->canvas,out,pixels)!=1)return -1;
         for(i=0;i<EXTRA_ROWS;++i){unsigned id=extra_ids[i];
             unsigned value=id==0?m->settings.jump_enabled:id==1?m->settings.thirdperson_enabled:id==2?m->settings.ingame_netricsa:id==3?m->settings.alternate_weapons:id==4?m->settings.automap_enabled:id==6?m->settings.weapon_bobbing:m->settings.vertical_aim;
-            unsigned palette=m->selection==i?3:4;int y=EXTRA_TOP+(int)i*EXTRA_SPACING;
+            unsigned palette=m->selection==i?3:4;int row_top=EXTRA_TOP+(int)i*EXTRA_SPACING;
             m->canvas.glyph_count=0;snprintf(line,sizeof(line),"%s:",labels[m->language][id+1]);
-            (void)ssa_map_view_text_line(&m->canvas,line,PANEL_LEFT,y,1,palette);
-            (void)ssa_map_view_text_line(&m->canvas,id==5?(m->settings.hud_style?classic[m->language]:"Original"):value?on[m->language]:off[m->language],VALUE_LEFT,y,1,palette);
+            (void)ssa_map_view_text_line(&m->canvas,line,PANEL_LEFT,row_top,1,palette);
+            (void)ssa_map_view_text_line(&m->canvas,id==5?(m->settings.hud_style?classic[m->language]:"Original"):value?on[m->language]:off[m->language],VALUE_LEFT,row_top,1,palette);
             if(ssa_map_view_overlay(&m->canvas,out,pixels)!=1)return -1;
         }
         m->canvas.glyph_count=0;grid_centered(m,labels[m->language][9],BACK_TOP,1,m->selection==EXTRA_ROWS?3:4);
@@ -723,39 +757,48 @@ int ssa_menu_draw(SsaMenu *m,uint16_t *out,size_t pixels)
         static const char *effects[3][4]={{"Surface decals","Water reflections","Godrays","Sprite shadows"},
             {"Flaechendetails","Wasserreflexionen","Lichtstrahlen","Sprite-Schatten"},
             {"Details surfaces","Reflets eau","Rayons lumineux","Ombres sprites"}};
+        static const char *gpu_effects[3][4]={{"Antialiasing","Anisotropic","Ambient occlusion","Motion blur"},
+            {"Kantenglaettung","Anisotropie","Umgebungsverdeckung","Bewegungsunschaerfe"},
+            {"Anticrenelage","Anisotropie","Occlusion ambiante","Flou de mouvement"}};
         static const char *native[3]={"Native","Nativ","Natif"};
         static const char *mip_on[3]={"On","Ein","Oui"},*mip_off[3]={"Off","Aus","Non"};
         static const char *modes[3][2]={{"Fullscreen","Windowed"},{"Vollbild","Fenster"},{"Plein ecran","Fenetre"}};
         static const char *language[3]={"Language","Sprache","Langue"};
         /* Individual rows avoid the original128-glyph budget when localized
          * Settings labels and the new display row are present together. */
-        for(i=0;i<10;++i){char line[80];const char *value=NULL;uint16_t saved[16];int result;
+        for(i=0;i<(graphics?GRAPHICS_ROWS+2u:10u);++i){char line[80];const char *value=NULL;uint16_t saved[16];int result;
             const MenuRow *row=!i?NULL:graphics?&graphics_rows[i-1]:settings_row(i-1);
             unsigned disabled=row_disabled(m,row);
-            unsigned selected=i-1;
+            unsigned selected=row?row->id:i-1;
+            unsigned item=graphics && row?row->id+1:i;
             unsigned palette=disabled || !i || m->selection==selected?3:4;
             int row_top=row?row->top:0;
-            const char *label=graphics && !i?option_text(m,6):!graphics && i==1?language[m->language]:labels[m->language][i];
+            const char *label=graphics && !i?option_text(m,6):!graphics && i==1?language[m->language]:labels[m->language][item<10?item:8];
             if(i && !row)continue;
-            if(graphics && i==9)label=labels[m->language][8];
+            if(graphics && i==GRAPHICS_ROWS+1)label=labels[m->language][8];
             m->canvas.glyph_count=0;
-            if(i==1)value=graphics?modes[m->language][m->settings.display_mode==SSA_DISPLAY_WINDOWED]:ssa_map_view_text(&m->canvas,237+m->language);
-            else if(i==2)value=m->settings.renderer==SSA_RENDER_GBA?"GBA":m->settings.renderer==SSA_RENDER_VULKAN && m->vulkan_available?"Vulkan":"Software";
-            else if(i==3)value=disabled || m->settings.aspect_ratio==SSA_ASPECT_GBA?"3:2":native[m->language];
-            else if(i==5){value="Original";
+            if(item==1)value=graphics?modes[m->language][m->settings.display_mode==SSA_DISPLAY_WINDOWED]:ssa_map_view_text(&m->canvas,237+m->language);
+            else if(item==2)value=m->settings.renderer==SSA_RENDER_GBA?"GBA":m->settings.renderer==SSA_RENDER_VULKAN && m->vulkan_available?"Vulkan":"Software";
+            else if(item==3)value=disabled || m->settings.aspect_ratio==SSA_ASPECT_GBA?"3:2":native[m->language];
+            else if(item==5){value="Original";
                 if(m->settings.music_style==SSA_MUSIC_SOUNDFONT && m->soundfont_available)value="SoundFont";
                 else if(m->settings.music_style==SSA_MUSIC_MIDI && m->midi_available)value="MIDI";}
-            if(graphics && i==4){label="Mipmapping";value=(disabled || m->settings.mipmaps)?mip_on[m->language]:mip_off[m->language];}
-            if(graphics && i>=5 && i<=8){unsigned enabled=i==5?m->settings.surface_decals:i==6?m->settings.water_reflections:i==7?m->settings.godrays:m->settings.sprite_shadows;
-                label=effects[m->language][i-5];value=enabled?mip_on[m->language]:mip_off[m->language];}
+            if(graphics && row){
+                const unsigned *flag=graphics_toggle(&m->settings,row->id);
+                if(item==4)label="Mipmapping";
+                else if(item>=5 && item<=8)label=effects[m->language][item-5];
+                else if(row->id==13)label="VSync";
+                else if(row->id>=9 && row->id<=12)label=gpu_effects[m->language][row->id-9];
+                if(flag && row->id>=3)value=((row->id==3 && disabled) || *flag)?mip_on[m->language]:mip_off[m->language];
+            }
             if(value)snprintf(line,sizeof(line),"%s:",label);
             else snprintf(line,sizeof(line),"%s",label);
-            if(!i || i==(graphics?9u:8u))grid_centered(m,line,row_top,i?1:0,palette);
+            if(!i || i==(graphics?GRAPHICS_ROWS+1:8u))grid_centered(m,line,row_top,i?1:0,palette);
             else (void)ssa_map_view_text_line(&m->canvas,line,PANEL_LEFT,row_top,1,palette);
             if(value)(void)ssa_map_view_text_line(&m->canvas,value,VALUE_LEFT,row_top,1,palette);
-            if(!graphics && row && row->maximum){unsigned value=*settings_bar_value(m,row->id);
-                if(row->id==3)snprintf(line,sizeof(line),"%u",SSA_FOV_MIN+value);
-                else snprintf(line,sizeof(line),"%u%%",row->id==8?(value+1)*10:value);
+            if(!graphics && row && row->maximum){unsigned amount=*settings_bar_value(m,row->id);
+                if(row->id==3)snprintf(line,sizeof(line),"%u",SSA_FOV_MIN+amount);
+                else snprintf(line,sizeof(line),"%u%%",row->id==8?(amount+1)*10:amount);
                 (void)ssa_map_view_text_line(&m->canvas,line,184,row->bar_top,1,palette);}
             if(disabled){unsigned j;memcpy(saved,m->canvas.palette+48,sizeof saved);
                 for(j=0;j<16;++j)m->canvas.palette[48+j]=(uint16_t)((saved[j]&0x7bde)>>1);}

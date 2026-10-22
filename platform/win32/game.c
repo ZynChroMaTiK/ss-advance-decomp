@@ -1,3 +1,4 @@
+#include "ssa/weapon_order.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define _CRT_SECURE_NO_WARNINGS
@@ -86,6 +87,10 @@ typedef struct App {
     SsaPcRenderer renderer;
     SsaVulkanRenderer *vulkan;
     unsigned vulkan_requested;
+    HMODULE dwm;
+    HRESULT (WINAPI *dwm_flush)(void);
+    HRESULT (WINAPI *dwm_composition)(BOOL *);
+    unsigned vsync_available;
     HDC back_dc;HBITMAP back_bitmap;HGDIOBJ back_original;
     uint32_t *back_pixels;BITMAPINFO back_info;
     int back_width,back_height;
@@ -93,6 +98,7 @@ typedef struct App {
     uint64_t presentation_samples;
     BITMAPINFO bitmap;
 } App;
+#include "game_vsync.inc"
 static const wchar_t CLASS_NAME[]=L"SeriousSamAdvanceNativeGame";
 static const wchar_t TITLE[]=L"Serious Sam Advance";
 enum { MAP_BLACK_HOLD_TICKS=15, LEVEL_FADE_TICKS=60, PASSWORD_TEST_LEVELS=SSA_NATIVE_CAMPAIGN_LEVELS-1 };
@@ -135,7 +141,7 @@ static void release(App *a)
     a->screen_held=0;
     ssa_pc_input_runtime_focus(&a->game->input_runtime,0);
     ssa_pc_input_runtime_enable(&a->game->input_runtime,0);
-    if(held){ClipCursor(NULL);SetCursor(LoadCursorW(NULL,IDC_ARROW));}
+    if(held){ClipCursor(NULL);SetCursor(LoadCursorW(NULL,MAKEINTRESOURCEW(32512)) /* IDC_ARROW, also in non-UNICODE test builds */);}
 }
 static int confine(App *a)
 {
@@ -280,6 +286,8 @@ static int present(App *a,HDC window_dc)
     n=StretchDIBits(window_dc,0,0,w,h,0,0,w,h,a->back_pixels,&a->back_info,DIB_RGB_COLORS,SRCCOPY);
     if(n==0 || n==(int)GDI_ERROR)return presentation_error("finished frame blit");
     if(!GdiFlush())return presentation_error("display frame completion");
+    if(a->settings.vsync && a->vsync_available && IsWindowVisible(a->window) && !IsIconic(a->window))
+        presentation_sync_wait(a);
     if(a->net_active){unsigned weapons,enemies;
         if(ssa_netricsa_viewed(a->netricsa,&weapons,&enemies)!=1 ||
            ssa_native_game_netricsa_read(a->game,weapons,enemies)!=1)return presentation_error("NETRICSA read acknowledgement");}
@@ -415,6 +423,7 @@ static void settings_change(App *a)
 {
     SsaSettings next=a->menu->settings;
     a->menu->vulkan_available=a->vulkan!=NULL;
+    a->menu->vsync_available=a->vsync_available;
     if(next.renderer==SSA_RENDER_VULKAN && !a->vulkan){next.renderer=SSA_RENDER_SOFTWARE;a->menu->settings.renderer=next.renderer;}
     if(a->menu_pressed || a->menu->page!=SSA_MENU_SETTINGS){
         SsaWin32AudioStatus status=ssa_win32_audio_status(&a->audio);
@@ -424,12 +433,15 @@ static void settings_change(App *a)
        (next.music_style==SSA_MUSIC_MIDI && !a->menu->midi_available)){
         next.music_style=SSA_MUSIC_ORIGINAL;a->menu->settings.music_style=next.music_style;}
     if(ssa_settings_equal(&next,&a->settings))return;
-    if(!ssa_win32_audio_settings(&a->audio,&next)){
+    if((next.music_style!=a->settings.music_style || next.music_volume!=a->settings.music_volume ||
+        next.sound_volume!=a->settings.sound_volume) && !ssa_win32_audio_settings(&a->audio,&next)){
         a->menu->settings.music_style=a->settings.music_style;
         a->menu_notice="Music device could not be enabled.";a->menu_notice_ticks=300;return;}
     if(next.display_mode!=a->settings.display_mode && !display_mode_apply(a,next.display_mode)){
         next.display_mode=a->settings.display_mode;a->menu->settings.display_mode=next.display_mode;
         a->menu_notice="Display mode could not be changed.";a->menu_notice_ticks=300;}
+    if(next.renderer!=a->settings.renderer || next.vulkan_motion_blur!=a->settings.vulkan_motion_blur)
+        ++a->renderer.motion.epoch; /* Also reset if modes are toggled between scene draws. */
     a->settings=next;a->original_renderer=next.renderer==SSA_RENDER_GBA;
     if(ssa_native_game_apply_settings(a->game,&next)!=1){
         fprintf(stderr,"Could not apply runtime settings at frame%lu.\n",(unsigned long)a->game->frame_game.counter);
@@ -815,7 +827,9 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
             (void)fullscreen_bounds(a,MonitorFromRect(bounds,MONITOR_DEFAULTTONEAREST));return 0;}
         SetWindowPos(w,NULL,bounds->left,bounds->top,bounds->right-bounds->left,bounds->bottom-bounds->top,
             SWP_NOACTIVATE|SWP_NOZORDER);return 0;}
+    case WM_DWMCOMPOSITIONCHANGED:presentation_sync_refresh(a);return 0;
     case WM_DISPLAYCHANGE:
+        presentation_sync_refresh(a);
         if(!a->display_switching && a->display_applied && a->window_mode==SSA_DISPLAY_FULLSCREEN)
             (void)fullscreen_bounds(a,MonitorFromWindow(w,MONITOR_DEFAULTTONEAREST));
         InvalidateRect(w,NULL,FALSE);break;
@@ -963,7 +977,7 @@ static LRESULT CALLBACK proc(HWND w,UINT msg,WPARAM wp,LPARAM lp)
         }
         if((a->captured || (a->startup_test && a->transition_test && a->level_revealing)) && wp<128){
             if(down && !repeat && wp>='0' && wp<='9' && !(a->game->players[0].motion.movement.flags&8))
-                ssa_native_game_select_weapon(a->game,wp=='0'?10:(unsigned)(wp-'0'));
+                ssa_native_game_select_weapon(a->game,ssa_weapon_order_id(wp=='0'?9:(unsigned)(wp-'1')));
             else if(down && !repeat && wp=='Q' && !a->map_active && !(a->game->players[0].motion.movement.flags&8) && !(a->game->frame_game.flags&1) &&
                     a->game->input.focused && a->game->input.enabled && a->game->players[0].inventory.health>0)
                 ssa_native_game_previous_weapon(a->game);
@@ -1405,6 +1419,7 @@ int wmain(int argc,wchar_t **argv)
     }
     if(a.original_renderer)a.settings.renderer=SSA_RENDER_GBA; /* Explicit CLI override. */
     if(a.vulkan_requested)a.settings.renderer=SSA_RENDER_VULKAN;
+    presentation_sync_init(&a);
     a.vulkan=ssa_vulkan_open();
     if(a.settings.renderer==SSA_RENDER_VULKAN && !a.vulkan){
         a.settings.renderer=SSA_RENDER_SOFTWARE;
@@ -1438,7 +1453,7 @@ int wmain(int argc,wchar_t **argv)
     }
     a.bitmap.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);a.bitmap.bmiHeader.biWidth=240;a.bitmap.bmiHeader.biHeight=-160;
     a.bitmap.bmiHeader.biPlanes=1;a.bitmap.bmiHeader.biBitCount=32;a.bitmap.bmiHeader.biCompression=BI_RGB;
-    wc.cbSize=sizeof(wc);wc.lpfnWndProc=proc;wc.hInstance=instance;wc.hCursor=LoadCursorW(NULL,IDC_ARROW);wc.lpszClassName=CLASS_NAME;
+    wc.cbSize=sizeof(wc);wc.lpfnWndProc=proc;wc.hInstance=instance;wc.hCursor=LoadCursorW(NULL,MAKEINTRESOURCEW(32512)) /* IDC_ARROW, also in non-UNICODE test builds */;wc.lpszClassName=CLASS_NAME;
     if(!RegisterClassExW(&wc))goto done;registered=1;
     a.window=CreateWindowExW(0,CLASS_NAME,TITLE,WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,1280,900,NULL,NULL,instance,&a);
     if(!a.window)goto done;
@@ -1456,6 +1471,7 @@ done:
     if(registered)UnregisterClassW(CLASS_NAME,instance);
     ssa_pc_renderer_free(&a.renderer);
     ssa_vulkan_close(a.vulkan);
+    if(a.dwm)FreeLibrary(a.dwm);
     if(a.back_dc){if(a.back_original)SelectObject(a.back_dc,a.back_original);
         if(a.back_bitmap)DeleteObject(a.back_bitmap);DeleteDC(a.back_dc);}
     free(a.intermission);free(a.screen_backdrop);free(a.screen_pixels);

@@ -32,7 +32,7 @@ typedef struct SsaMenu {
     uint16_t completed_levels;
     unsigned level_scroll,selecting_level,clear_requested; /* level_scroll: chapter start0/6. */
     SsaSettings settings;
-    unsigned soundfont_available,midi_available,settings_unavailable,vulkan_available;
+    unsigned soundfont_available,midi_available,settings_unavailable,vulkan_available,vsync_available;
     unsigned quit_requested; /* PC Main-menu Quit; never a new-game result. */
     int32_t score_y,score_speed;
     unsigned score_ticks,score_leaving;
@@ -46,8 +46,8 @@ typedef struct SsaMenu {
  * Right/Confirm forwards), using original language names and localized labels.
  * Options IDs1/3/4/5/6: Credits, Clear Data, Settings, Extras, Graphics.
  * Settings owns Language, FOV and audio; Graphics owns Display mode, Renderer
- * Aspect ratio and Mipmapping (fixed On in GBA). Extras includes jump, third-person, in-game NETRICSA,
- * alternate weapons, automap, HUD style, first-person weapon bobbing and surface decals.
+ * Aspect ratio, VSync (when presentation supports it) and Mipmapping (fixed On in GBA). Extras includes jump, third-person, in-game NETRICSA,
+ * enhanced weapons, automap, HUD style, first-person weapon bobbing and surface decals.
  * No separate music toggle. Original title/main/
  * single-player/difficulty/credits/Scores/name-entry pages. The frontend owns
  * score-file persistence. Other

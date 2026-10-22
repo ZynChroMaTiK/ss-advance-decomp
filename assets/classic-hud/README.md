@@ -33,3 +33,13 @@ in `src/classic_tommy_ammo.inc`. The dynamic meter is drawn separately. Keep
 native dimensions, original OBJ palette and binary alpha when editing, rerun
 the importer and rebuild. There is no runtime PNG dependency. Do not overwrite
 the user's source image with an export of older artwork.
+
+`crosshair-reference.png` is the user's exact19x19 `crosshair.png`, copied unchanged.
+Run `scripts/import-classic-crosshair.ps1` to regenerate `src/classic_crosshair.inc`.
+The importer embeds every source pixel without resizing or generated shading,
+padding into24x24 storage at(3,3), with its isolated center dot at(12,12).
+The PNG's49 light pixels use original OBJ81 (RGB5550x739c),24 dark pixels use
+OBJ206 (0x4652), and288 transparent pixels stay transparent.
+Health colors remap those two tones to green at>=60% species health, yellow at
+25..59%, and red below25%, retaining the original18/28 shade ratio. No living
+target uses the exact original neutral palette. There is no runtime PNG dependency.
